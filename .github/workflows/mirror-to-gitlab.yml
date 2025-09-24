@@ -1,0 +1,52 @@
+name: Mirror to GitLab
+on:
+  push:
+    branches: ["**"]
+    tags: ["*"]
+  workflow_dispatch:   # manual trigger from the Actions tab
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure GitLab remote URL
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_URL:   ${{ secrets.GITLAB_URL }}
+        run: |
+          set -euo pipefail
+          AUTH_URL="$(echo "$GITLAB_URL" | sed -E "s#https://#https://oauth2:${GITLAB_TOKEN}@#")"
+          if git remote get-url gitlab >/dev/null 2>&1; then
+            git remote set-url gitlab "$AUTH_URL"
+          else
+            git remote add gitlab "$AUTH_URL"
+          fi
+
+      - name: Push branches (force only if needed)
+        run: |
+          set -euo pipefail
+          echo "Pushing branches..."
+          for b in $(git for-each-ref --format='%(refname)' refs/heads/); do
+            echo "→ $b"
+            if ! git push gitlab "$b:$b"; then
+              echo "   non-fast-forward, retrying with --force..."
+              git push -f gitlab "$b:$b"
+            fi
+          done
+
+      - name: Push tags
+        run: |
+          set -euo pipefail
+          echo "Pushing tags..."
+          git push --tags gitlab || true
+
+      - name: Prune GitLab branches that no longer exist on GitHub
+        run: |
+          set -euo pipefail
+          echo "Pruning GitLab branches not present on GitHub..."
+          git push --prune gitlab +refs/heads/*:refs/heads/*
