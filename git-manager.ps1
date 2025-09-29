@@ -1,303 +1,257 @@
 # Git Branch Management Script for Windows PowerShell
-# Handles pull from main and push with structured branch naming
+# Handles pull from default branch and push with structured branch naming
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateSet("pull", "push")]
     [string]$Action
 )
 
-# Function to display menu and get selection
+# ---------- Guard rails ----------
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "ERROR: Git is not installed or not on PATH." -ForegroundColor Red
+    exit 1
+}
+
+# ---------- Utilities ----------
 function Show-Menu {
     param(
         [string]$Title,
         [string[]]$Options
     )
-
-    Write-Host "`n$Title" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host $Title -ForegroundColor Cyan
     Write-Host ("=" * $Title.Length) -ForegroundColor Cyan
 
     for ($i = 0; $i -lt $Options.Length; $i++) {
-        Write-Host "[$($i + 1)] $($Options[$i])" -ForegroundColor Yellow
+        Write-Host ("[{0}] {1}" -f ($i + 1), $Options[$i]) -ForegroundColor Yellow
     }
 
+    $index = -1
     do {
-        $selection = Read-Host "`nSelect an option (1-$($Options.Length))"
-        $index = [int]$selection - 1
-    } while ($index -lt 0 -or $index -ge $Options.Length)
+        $selection = Read-Host ("`nSelect an option (1-{0})" -f $Options.Length)
+        $ok = [int]::TryParse($selection, [ref]$index)
+        if ($ok) { $index = $index - 1 }
+    } while (-not $ok -or $index -lt 0 -or $index -ge $Options.Length)
 
     return $Options[$index]
 }
 
-# Function to validate product name
 function Test-ProductName {
     param([string]$ProductName)
-
-    # Check if lowercase and uses hyphens for spaces
     return $ProductName -cmatch '^[a-z0-9]+(-[a-z0-9]+)*$'
 }
 
-# Function to check and setup GitHub remote
-function Test-GitHubRemote {
-    Write-Host "`n🔍 Checking GitHub remote configuration..." -ForegroundColor Blue
+# Hardcoded for GitLab downtime workflow - always use GitHub remote
+$Global:GitRemote = 'github'
+$Global:DefaultBranch = 'main'
 
-    try {
-        # Get all remotes
-        $remotes = git remote -v 2>$null
+function Test-RemotePointsToGitHub {
+    param([string]$RemoteName)
 
-        if (-not $remotes) {
-            Write-Host "❌ No remotes configured." -ForegroundColor Red
-            return $false
-        }
-
-        # Check if github remote exists
-        $githubRemote = $remotes | Where-Object { $_ -match "^github\s+" }
-
-        if (-not $githubRemote) {
-            Write-Host "❌ No 'github' remote found." -ForegroundColor Red
-            Write-Host "Current remotes:" -ForegroundColor Yellow
-            $remotes | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-            return $false
-        }
-
-        # Verify github remote points to GitHub
-        $githubPattern = "(github\.com|git@github\.com)"
-        if ($githubRemote -notmatch $githubPattern) {
-            Write-Host "❌ GitHub remote does not point to GitHub.com." -ForegroundColor Red
-            Write-Host "Current github remote:" -ForegroundColor Yellow
-            $githubRemote | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-            return $false
-        }
-
-        Write-Host "✅ GitHub remote is properly configured!" -ForegroundColor Green
-        return $true
-    }
-    catch {
-        Write-Host "❌ Error checking remotes: $_" -ForegroundColor Red
-        return $false
-    }
+    $url = git remote get-url $RemoteName 2>$null
+    if (-not $url) { return $false }
+    return ($url -match '(github\.com|git@github\.com:)')
 }
 
-# Function to setup GitHub remote
-function Set-GitHubRemote {
-    Write-Host "`n🔧 Setting up GitHub remote..." -ForegroundColor Blue
+function Ensure-RemoteConfigured {
+    if (Test-RemotePointsToGitHub -RemoteName 'github') {
+        Write-Host "`nOK: Using 'github' remote for GitHub backup." -ForegroundColor Green
+        return $true
+    }
 
-    do {
-        $repoUrl = Read-Host "`n📋 Please paste your GitHub repository URL"
+    Write-Host "`nNo 'github' remote found or it doesn't point to GitHub." -ForegroundColor Yellow
+    $setup = Read-Host "Set up the GitHub remote now? (y/N)"
+    if ($setup -notin @('y','Y')) { return $false }
 
+    while ($true) {
+        $repoUrl = Read-Host "`nPaste your GitHub repository URL (HTTPS or SSH)"
         if (-not $repoUrl) {
-            Write-Host "❌ Repository URL cannot be empty!" -ForegroundColor Red
+            Write-Host "Repository URL cannot be empty!" -ForegroundColor Red
             continue
         }
-
-        # Basic validation for GitHub URL
-        if ($repoUrl -notmatch "(github\.com|git@github\.com)" -or $repoUrl -notmatch "\.(git)?/?$") {
-            Write-Host "❌ Invalid GitHub URL format!" -ForegroundColor Red
-            Write-Host "   Examples:" -ForegroundColor Gray
-            Write-Host "   • https://github.com/username/repository.git" -ForegroundColor Gray
-            Write-Host "   • git@github.com:username/repository.git" -ForegroundColor Gray
+        if ($repoUrl -notmatch '(github\.com|git@github\.com:)' -or $repoUrl -notmatch '(\.git)?/?$') {
+            Write-Host "Invalid GitHub URL format!" -ForegroundColor Red
+            Write-Host "Examples:" -ForegroundColor Gray
+            Write-Host "  https://github.com/username/repository.git" -ForegroundColor Gray
+            Write-Host "  git@github.com:username/repository.git" -ForegroundColor Gray
             continue
         }
-
         break
-    } while ($true)
+    }
 
-    try {
-        # Check if github remote already exists
-        $existingGithub = git remote get-url github 2>$null
-
-        if ($existingGithub) {
-            Write-Host "`n⚠️  GitHub remote already exists: $existingGithub" -ForegroundColor Yellow
-            $overwrite = Read-Host "Do you want to overwrite it? (y/N)"
-
-            if ($overwrite -eq 'y' -or $overwrite -eq 'Y') {
-                git remote set-url github $repoUrl
-                Write-Host "✅ Updated github remote to: $repoUrl" -ForegroundColor Green
-            } else {
-                Write-Host "❌ Cancelled by user." -ForegroundColor Yellow
-                return $false
-            }
+    $name = 'github'
+    if (git remote 2>$null | Select-String -SimpleMatch $name) {
+        $overwrite = Read-Host "'github' remote exists. Overwrite its URL? (y/N)"
+        if ($overwrite -in @('y','Y')) {
+            git remote set-url $name $repoUrl | Out-Null
         } else {
-            git remote add github $repoUrl
-            Write-Host "✅ Added github remote: $repoUrl" -ForegroundColor Green
+            $name = Read-Host "Enter a different remote name (e.g., origin)"
+            if (-not $name) { return $false }
+            if (git remote 2>$null | Select-String -SimpleMatch $name) {
+                git remote set-url $name $repoUrl | Out-Null
+            } else {
+                git remote add $name $repoUrl | Out-Null
+            }
+        }
+    } else {
+        git remote add $name $repoUrl | Out-Null
+    }
+
+    $Global:GitRemote = $name
+    $Global:DefaultBranch = Get-DefaultBranch -RemoteName $GitRemote
+
+    Write-Host "Added/updated remote '$GitRemote' -> $repoUrl" -ForegroundColor Green
+    return $true
+}
+
+function Get-DirtyState {
+    $status = git status --porcelain
+    return [bool]$status
+}
+
+# ---------- Operations ----------
+function Invoke-PullFromDefault {
+    Write-Host "`nPulling latest from '$DefaultBranch' on '$GitRemote'..." -ForegroundColor Green
+    try {
+        $hasStash = $false
+        if (Get-DirtyState) {
+            git stash push -m ("Auto-stash before pull {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) | Out-Null
+            $hasStash = $true
         }
 
+        git checkout $DefaultBranch
+        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $DefaultBranch" }
+
+        git pull $GitRemote $DefaultBranch
+        if ($LASTEXITCODE -ne 0) { throw "Failed to pull from $GitRemote/$DefaultBranch" }
+
+        if ($hasStash) {
+            Write-Host "Restoring stashed changes..." -ForegroundColor Cyan
+            git stash pop | Out-Null
+        }
+
+        Write-Host "Pull successful." -ForegroundColor Green
         return $true
-    }
-    catch {
-        Write-Host "❌ Error setting up remote: $_" -ForegroundColor Red
+    } catch {
+        Write-Host ("ERROR: {0}" -f $_) -ForegroundColor Red
         return $false
     }
 }
 
-# Pull from main function
-function Invoke-PullFromMain {
-    Write-Host "`n🔄 Pulling latest changes from main branch..." -ForegroundColor Green
-
-    try {
-        # Stash any uncommitted changes
-        $stashResult = git stash push -m "Auto-stash before pull $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-        $hasStash = $stashResult -notmatch "No local changes to save"
-
-        # Switch to main and pull
-        git checkout main
-        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout main branch" }
-
-        git pull github main
-        if ($LASTEXITCODE -ne 0) { throw "Failed to pull from main" }
-
-        # Pop stash if we created one
-        if ($hasStash) {
-            Write-Host "`n📦 Restoring stashed changes..." -ForegroundColor Blue
-            git stash pop
-        }
-
-        Write-Host "`n✅ Successfully pulled from main!" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "`n❌ Error: $_" -ForegroundColor Red
-        exit 1
-    }
-}
-
-# Function to checkout existing branch
 function Invoke-CheckoutExistingBranch {
-    Write-Host "`n🌿 Available branches:" -ForegroundColor Blue
-
+    Write-Host "`nListing branches..." -ForegroundColor Cyan
     try {
-        # Get all branches (local and remote)
-        $branches = git branch -a | Where-Object { $_ -notmatch "HEAD" } | ForEach-Object {
-            $_.Trim() -replace '^\*?\s*', '' -replace '^remotes/[^/]+/', ''
-        } | Sort-Object | Get-Unique
+        $locals  = git branch --format="%(refname:short)"
+        $remotes = git branch -r --format="%(refname:short)" `
+                   | Where-Object { $_ -like "$GitRemote/*" } `
+                   | ForEach-Object { $_ -replace "^$GitRemote/", "" }
 
-        if (-not $branches) {
-            Write-Host "❌ No branches found." -ForegroundColor Red
+        $branches = @($locals + $remotes) | Sort-Object -Unique
+        if (-not $branches -or $branches.Count -eq 0) {
+            Write-Host "No branches found." -ForegroundColor Red
             return $false
         }
 
-        $selectedBranch = Show-Menu -Title "Select branch to checkout:" -Options $branches
+        $selected = Show-Menu -Title "Select branch to checkout:" -Options $branches
+        Write-Host ("`nChecking out branch: {0}" -f $selected) -ForegroundColor Cyan
 
-        Write-Host "`n🔄 Checking out branch: $selectedBranch" -ForegroundColor Blue
-        git checkout $selectedBranch
-        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout branch $selectedBranch" }
+        git checkout $selected
+        if ($LASTEXITCODE -ne 0) {
+            git checkout --track "$GitRemote/$selected"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $selected" }
+        }
 
-        Write-Host "✅ Successfully checked out branch: $selectedBranch" -ForegroundColor Green
+        Write-Host ("Checked out: {0}" -f $selected) -ForegroundColor Green
         return $true
-    }
-    catch {
-        Write-Host "❌ Error: $_" -ForegroundColor Red
+    } catch {
+        Write-Host ("ERROR: {0}" -f $_) -ForegroundColor Red
         return $false
     }
 }
 
-# Push with branch creation function
 function Invoke-PushWithBranch {
-    Write-Host "`n🚀 Branch management..." -ForegroundColor Green
+    Write-Host "`nBranch management..." -ForegroundColor Green
 
-    # Ask if user wants to checkout existing branch or create new one
     $branchOptions = @("Checkout existing branch", "Create new branch")
-    $selectedOption = Show-Menu -Title "What would you like to do?" -Options $branchOptions
+    $choice = Show-Menu -Title "What would you like to do?" -Options $branchOptions
 
-    if ($selectedOption -eq "Checkout existing branch") {
-        return Invoke-CheckoutExistingBranch
+    if ($choice -eq "Checkout existing branch") {
+        return (Invoke-CheckoutExistingBranch)
     }
 
-    Write-Host "`n🚀 Creating new branch..." -ForegroundColor Green
-
-    # Get branch type
+    # Create new branch
     $branchTypes = @("feat", "fix", "test", "docs", "style", "refactor", "perf", "build", "ci", "chore", "revert")
     $selectedType = Show-Menu -Title "Select branch type:" -Options $branchTypes
 
-    # Get scope
     $scopes = @("frontend", "backend", "api", "ui", "database", "auth", "config", "deployment")
     $selectedScope = Show-Menu -Title "Select scope:" -Options $scopes
 
-    # Get product name with validation
-    do {
-        $productName = Read-Host "`n🏷️  Enter product name (lowercase, use hyphens for spaces)"
-
+    while ($true) {
+        $productName = (Read-Host "`nEnter product name (lowercase, hyphens for spaces)").Trim()
         if (-not $productName) {
-            Write-Host "❌ Product name cannot be empty!" -ForegroundColor Red
+            Write-Host "Product name cannot be empty!" -ForegroundColor Red
             continue
         }
-
         if (-not (Test-ProductName -ProductName $productName)) {
-            Write-Host "❌ Invalid format! Use lowercase letters, numbers, and hyphens only." -ForegroundColor Red
-            Write-Host "   Examples: user-authentication, api-endpoints, shopping-cart" -ForegroundColor Gray
+            Write-Host "Invalid format! Use lowercase letters, numbers, and hyphens only." -ForegroundColor Red
+            Write-Host "Examples: user-authentication, api-endpoints, shopping-cart"
             continue
         }
-
         break
-    } while ($true)
+    }
 
-    # Construct branch name
     $branchName = "$selectedType/$selectedScope/$productName"
+    Write-Host ("`nBranch name: {0}" -f $branchName) -ForegroundColor Cyan
 
-    Write-Host "`n🌿 Branch name: $branchName" -ForegroundColor Cyan
-
-    # Confirm before proceeding
-    $confirm = Read-Host "`nProceed with creating and pushing this branch? (y/N)"
-    if ($confirm -ne 'y' -and $confirm -ne 'Y') {
-        Write-Host "❌ Cancelled by user." -ForegroundColor Yellow
-        exit 0
+    $confirm = Read-Host "Proceed with creating and pushing this branch? (y/N)"
+    if ($confirm -notin @('y','Y')) {
+        Write-Host "Cancelled." -ForegroundColor Yellow
+        return $false
     }
 
     try {
-        # Ensure we're on main and up to date
-        Write-Host "`n📥 Ensuring main branch is up to date..." -ForegroundColor Blue
-        git checkout main
-        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout main branch" }
+        Write-Host ("`nEnsuring '{0}' is up to date..." -f $DefaultBranch) -ForegroundColor Cyan
+        git checkout $DefaultBranch
+        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $DefaultBranch" }
 
-        git pull github main
-        if ($LASTEXITCODE -ne 0) { throw "Failed to pull latest main" }
+        git pull $GitRemote $DefaultBranch
+        if ($LASTEXITCODE -ne 0) { throw ("Failed to pull $GitRemote/$DefaultBranch") }
 
-        # Create and switch to new branch
-        Write-Host "`n🌱 Creating new branch: $branchName" -ForegroundColor Blue
+        Write-Host ("Creating branch: {0}" -f $branchName) -ForegroundColor Cyan
         git checkout -b $branchName
-        if ($LASTEXITCODE -ne 0) { throw "Failed to create branch $branchName" }
+        if ($LASTEXITCODE -ne 0) { throw "Failed to create $branchName" }
 
-        # Push to origin and set upstream
-        Write-Host "`n⬆️  Pushing branch to origin..." -ForegroundColor Blue
-        git push -u github $branchName
-        if ($LASTEXITCODE -ne 0) { throw "Failed to push branch to origin" }
+        $existsRemote = git ls-remote --heads $GitRemote $branchName 2>$null
+        if ($existsRemote) {
+            Write-Host "Warning: remote branch already exists; pushing will update its upstream." -ForegroundColor Yellow
+        }
 
-        Write-Host "`n✅ Successfully created and pushed branch: $branchName" -ForegroundColor Green
-        Write-Host "🎯 You can now start working on your changes!" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "`n❌ Error: $_" -ForegroundColor Red
-        exit 1
+        Write-Host ("Pushing to remote '{0}'..." -f $GitRemote) -ForegroundColor Cyan
+        git push -u $GitRemote $branchName
+        if ($LASTEXITCODE -ne 0) { throw "Failed to push to $GitRemote/$branchName" }
+
+        Write-Host ("Branch '{0}' created and pushed." -f $branchName) -ForegroundColor Green
+        return $true
+    } catch {
+        Write-Host ("ERROR: {0}" -f $_) -ForegroundColor Red
+        return $false
     }
 }
 
-# Main execution
-Write-Host "🔧 Git Branch Manager" -ForegroundColor Magenta
-Write-Host "===================" -ForegroundColor Magenta
+# ---------- Main ----------
+Write-Host "Git Branch Manager" -ForegroundColor Magenta
+Write-Host "=================="
 
-# Check GitHub remote setup first
-if (-not (Test-GitHubRemote)) {
-    Write-Host "`n🔧 GitHub remote setup required." -ForegroundColor Yellow
-
-    $setupRemote = Read-Host "`nWould you like to set up the GitHub remote now? (y/N)"
-    if ($setupRemote -eq 'y' -or $setupRemote -eq 'Y') {
-        if (-not (Set-GitHubRemote)) {
-            Write-Host "`n❌ Cannot proceed without GitHub remote setup." -ForegroundColor Red
-            exit 1
-        }
-    } else {
-        Write-Host "`n❌ GitHub remote is required for this script to work." -ForegroundColor Red
-        Write-Host "   Please run this script again after setting up your GitHub remote." -ForegroundColor Gray
-        exit 1
-    }
+if (-not (Ensure-RemoteConfigured)) {
+    Write-Host "`nA GitHub remote is required. Aborting." -ForegroundColor Red
+    exit 1
 }
 
 switch ($Action) {
-    "pull" {
-        Invoke-PullFromMain
-    }
-    "push" {
-        Invoke-PushWithBranch
-    }
+    "pull" { [void](Invoke-PullFromDefault) }
+    "push" { [void](Invoke-PushWithBranch) }
+    default { Write-Host "Unknown action." -ForegroundColor Red; exit 1 }
 }
 
-Write-Host "`n🏁 Operation completed!" -ForegroundColor Green
+Write-Host "`nOperation completed." -ForegroundColor Green

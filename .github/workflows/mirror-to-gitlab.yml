@@ -42,19 +42,3 @@ jobs:
             fi
           done
 
-      - name: Prune GitLab non-main branches that no longer exist on GitHub
-        run: |
-          set -euo pipefail
-          echo "Pruning GitLab non-main branches not present on GitHub..."
-          # Get all remote branches from GitLab (excluding main/master)
-          git fetch gitlab
-          for remote_branch in $(git for-each-ref --format='%(refname:short)' refs/remotes/gitlab/); do
-            branch_name=${remote_branch#gitlab/}
-            if [ "$branch_name" != "main" ] && [ "$branch_name" != "master" ]; then
-              # Check if this branch exists locally
-              if ! git show-ref --verify --quiet "refs/heads/$branch_name"; then
-                echo "Deleting remote branch: $branch_name"
-                git push gitlab --delete "$branch_name" || true
-              fi
-            fi
-          done

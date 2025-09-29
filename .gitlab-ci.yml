@@ -4,6 +4,7 @@
 stages:
   - test
   - build
+  - mirror
 
 # Variables
 variables:
@@ -54,3 +55,18 @@ build:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Mirror to GitHub at 11:50 PM daily (only runs on scheduled pipelines)
+mirror-to-github:
+  stage: mirror
+  image: alpine/git:latest
+  before_script:
+    - git config --global user.name "GitLab Mirror Bot"
+    - git config --global user.email "noreply@gitlab.com"
+  script:
+    - git clone --mirror $CI_REPOSITORY_URL temp-clone
+    - cd temp-clone
+    - git remote set-url --push origin https://$GITHUB_TOKEN@github.com/Team-CrackedHeads/ngam-je.git
+    - git push --mirror
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
