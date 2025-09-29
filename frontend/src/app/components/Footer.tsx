@@ -11,7 +11,7 @@ const Footer = () => {
   const links = [
     { href: "/", label: "Threads", icon: House },
     { href: "/messages", label: "Messages", icon: MessageSquare },
-    { href: "/ask-ai", label: "Ask AI", icon: Bot, big: true },
+    // { href: "/ask-ai", label: "Ask AI", icon: Bot, big: true },
     { href: "/profile", label: "Profile", icon: User },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
