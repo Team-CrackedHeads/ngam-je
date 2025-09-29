@@ -16,15 +16,17 @@ cache:
   key: $CACHE_KEY
   paths:
     - ~/.bun/install/cache/
-    - node_modules/
+    - frontend/node_modules/
 
 # Test job - runs on merge requests and main branch
 test:
   stage: test
   image: oven/bun:${BUN_VERSION}
   before_script:
+    - cd frontend
     - bun install --frozen-lockfile
   script:
+    - cd frontend
     - bun run lint
     - bun run test --reporter=verbose --run
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
@@ -32,9 +34,9 @@ test:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverage/cobertura-coverage.xml
+        path: frontend/coverage/cobertura-coverage.xml
     paths:
-      - coverage/
+      - frontend/coverage/
     expire_in: 1 week
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -45,12 +47,14 @@ build:
   stage: build
   image: oven/bun:${BUN_VERSION}
   before_script:
+    - cd frontend
     - bun install --frozen-lockfile
   script:
+    - cd frontend
     - bun run build
   artifacts:
     paths:
-      - .next/
+      - frontend/.next/
     expire_in: 1 hour
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
