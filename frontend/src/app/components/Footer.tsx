@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { COLORS } from "../theme";
-import { House, MessageSquare, Bot, User, Settings } from "lucide-react";
+import { House, MessageSquare, User, Settings } from "lucide-react";
 
 const Footer = () => {
   const pathname = usePathname();
