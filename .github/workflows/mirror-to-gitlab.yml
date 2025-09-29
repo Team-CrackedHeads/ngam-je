@@ -1,8 +1,7 @@
 name: Mirror to GitLab
 on:
-  push:
-    branches: ["**"]
-    tags: ["*"]
+  schedule:
+    - cron: '5 7 * * *'  # Daily at 7:05 AM UTC
   workflow_dispatch:   # manual trigger from the Actions tab
 
 jobs:
@@ -27,26 +26,35 @@ jobs:
             git remote add gitlab "$AUTH_URL"
           fi
 
-      - name: Push branches (force only if needed)
+      - name: Push non-main branches (force only if needed)
         run: |
           set -euo pipefail
-          echo "Pushing branches..."
-          for b in $(git for-each-ref --format='%(refname)' refs/heads/); do
-            echo "→ $b"
-            if ! git push gitlab "$b:$b"; then
-              echo "   non-fast-forward, retrying with --force..."
-              git push -f gitlab "$b:$b"
+          echo "Pushing non-main branches..."
+          for b in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+            if [ "$b" != "main" ] && [ "$b" != "master" ]; then
+              echo "→ refs/heads/$b"
+              if ! git push gitlab "refs/heads/$b:refs/heads/$b"; then
+                echo "   non-fast-forward, retrying with --force..."
+                git push -f gitlab "refs/heads/$b:refs/heads/$b"
+              fi
+            else
+              echo "Skipping main/master branch: $b"
             fi
           done
 
-      - name: Push tags
+      - name: Prune GitLab non-main branches that no longer exist on GitHub
         run: |
           set -euo pipefail
-          echo "Pushing tags..."
-          git push --tags gitlab || true
-
-      - name: Prune GitLab branches that no longer exist on GitHub
-        run: |
-          set -euo pipefail
-          echo "Pruning GitLab branches not present on GitHub..."
-          git push --prune gitlab +refs/heads/*:refs/heads/*
+          echo "Pruning GitLab non-main branches not present on GitHub..."
+          # Get all remote branches from GitLab (excluding main/master)
+          git fetch gitlab
+          for remote_branch in $(git for-each-ref --format='%(refname:short)' refs/remotes/gitlab/); do
+            branch_name=${remote_branch#gitlab/}
+            if [ "$branch_name" != "main" ] && [ "$branch_name" != "master" ]; then
+              # Check if this branch exists locally
+              if ! git show-ref --verify --quiet "refs/heads/$branch_name"; then
+                echo "Deleting remote branch: $branch_name"
+                git push gitlab --delete "$branch_name" || true
+              fi
+            fi
+          done

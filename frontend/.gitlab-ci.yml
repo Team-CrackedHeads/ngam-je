@@ -1,0 +1,56 @@
+# GitLab CI/CD configuration for frontend testing
+# This pipeline runs tests on merge requests and main branch
+
+stages:
+  - test
+  - build
+
+# Variables
+variables:
+  BUN_VERSION: "1.1.29"
+  CACHE_KEY: "$CI_COMMIT_REF_SLUG-bun-cache"
+
+# Cache for Bun
+cache:
+  key: $CACHE_KEY
+  paths:
+    - ~/.bun/install/cache/
+    - node_modules/
+
+# Test job - runs on merge requests and main branch
+test:
+  stage: test
+  image: oven/bun:${BUN_VERSION}
+  before_script:
+    - bun install --frozen-lockfile
+  script:
+    - bun run lint
+    - bun run test --reporter=verbose --run
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Optional: Build job to ensure the app builds successfully
+build:
+  stage: build
+  image: oven/bun:${BUN_VERSION}
+  before_script:
+    - bun install --frozen-lockfile
+  script:
+    - bun run build
+  artifacts:
+    paths:
+      - .next/
+    expire_in: 1 hour
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
