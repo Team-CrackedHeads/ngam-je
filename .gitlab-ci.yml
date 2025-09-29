@@ -26,7 +26,6 @@ test:
     - cd frontend
     - bun install --frozen-lockfile
   script:
-    - cd frontend
     - bun run lint
     - bun run test --reporter=verbose --run
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
@@ -50,7 +49,6 @@ build:
     - cd frontend
     - bun install --frozen-lockfile
   script:
-    - cd frontend
     - bun run build
   artifacts:
     paths:
