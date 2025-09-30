@@ -8,6 +8,29 @@ param(
 )
 
 # ---------- Guard rails ----------
+# Check time range restriction (12:01 AM to 7:01 AM)
+$currentTime = Get-Date
+$currentHour = $currentTime.Hour
+$currentMinute = $currentTime.Minute
+
+$isInValidTimeRange = $false
+if ($currentHour -eq 0 -and $currentMinute -ge 1) {
+    # 12:01 AM to 12:59 AM
+    $isInValidTimeRange = $true
+} elseif ($currentHour -ge 1 -and $currentHour -le 6) {
+    # 1:00 AM to 6:59 AM
+    $isInValidTimeRange = $true
+} elseif ($currentHour -eq 7 -and $currentMinute -le 1) {
+    # 7:00 AM to 7:01 AM
+    $isInValidTimeRange = $true
+}
+
+if (-not $isInValidTimeRange) {
+    Write-Host "ERROR: This script can only be executed between 12:01 AM and 7:01 AM." -ForegroundColor Red
+    Write-Host "Current time: $($currentTime.ToString('HH:mm'))" -ForegroundColor Yellow
+    exit 1
+}
+
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "ERROR: Git is not installed or not on PATH." -ForegroundColor Red
     exit 1
@@ -147,9 +170,9 @@ function Invoke-CheckoutExistingBranch {
                    | Where-Object { $_ -like "$GitRemote/*" } `
                    | ForEach-Object { $_ -replace "^$GitRemote/", "" }
 
-        $branches = @($locals + $remotes) | Sort-Object -Unique
+        $branches = @($locals + $remotes) | Sort-Object -Unique | Where-Object { $_ -ne "main" }
         if (-not $branches -or $branches.Count -eq 0) {
-            Write-Host "No branches found." -ForegroundColor Red
+            Write-Host "No branches found (excluding main branch)." -ForegroundColor Red
             return $false
         }
 
