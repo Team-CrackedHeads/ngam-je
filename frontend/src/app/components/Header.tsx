@@ -48,18 +48,17 @@ const Header = ({ username, notifications = 0 }: HeaderProps) => {
           className="relative"
           style={{ color: COLORS.text }}
         >
-          <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-          {notifications > 0 && (
-            <span
-              className="absolute top-2 right-17 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full"
-              style={{
-                backgroundColor: "red",
-                color: "white",
-              }}
-            >
-              {notifications}
-            </span>
-          )}
+          <Link href="/notifications">
+            <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+            {notifications > 0 && (
+              <Badge
+                className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold"
+                style={{ backgroundColor: "red", color: "white" }}
+              >
+                {notifications}
+              </Badge>
+            )}
+          </Link>
         </Button>
 
         {/* Logout Button */}
