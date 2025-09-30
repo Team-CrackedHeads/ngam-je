@@ -20,10 +20,7 @@ if ($currentHour -eq 0 -and $currentMinute -ge 1) {
 } elseif ($currentHour -ge 1 -and $currentHour -le 6) {
     # 1:00 AM to 6:59 AM
     $isInValidTimeRange = $true
-} elseif ($currentHour -eq 7 -and $currentMinute -le 1) {
-    # 7:00 AM to 7:01 AM
-    $isInValidTimeRange = $true
-}
+} 
 
 if (-not $isInValidTimeRange) {
     Write-Host "ERROR: This script can only be executed between 12:01 AM and 7:01 AM." -ForegroundColor Red
