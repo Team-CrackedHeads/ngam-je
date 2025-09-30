@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { COLORS } from "../theme";
 import { House, MessageSquare, User, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Footer = () => {
   const pathname = usePathname();
@@ -17,39 +18,36 @@ const Footer = () => {
 
   return (
     <footer
-      className="fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] block md:hidden"
       style={{ backgroundColor: COLORS.background }}
     >
-      <div className="flex justify-around items-center relative h-16 sm:h-20">
+      <div className="flex justify-around items-stretch relative h-16">
         {links.map((link, index) => {
           const Icon = link.icon;
+          const isActive = pathname === link.href;
+
           return (
-            <Link
+            <Button
               key={index}
-              href={link.href}
-              className="flex flex-col items-center px-3 py-1 rounded-xl transition font-medium"
+              asChild
+              variant="ghost"
+              className="flex-1 h-full flex flex-col items-center justify-center rounded-xl font-medium px-4 py-2 transition"
               style={{
-                backgroundColor:
-                  pathname === link.href ? COLORS.activeBg : "transparent",
-                color:
-                  pathname === link.href ? COLORS.textActive : COLORS.text,
-              }}
-              onMouseEnter={(e) => {
-                if (pathname !== link.href) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor =
-                    COLORS.hoverBg;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (pathname !== link.href) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor =
-                    "transparent";
-                }
+                backgroundColor: isActive ? COLORS.activeBg : "transparent",
+                color: isActive ? COLORS.textActive : COLORS.text,
               }}
             >
-              <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-[10px] sm:text-xs">{link.label}</span>
-            </Link>
+              <Link href={link.href} className="flex flex-col items-center gap-1">
+                <Icon
+                  className={`${
+                    isActive
+                      ? "w-7 h-7"
+                      : "w-5 h-5"
+                  } transition-transform duration-200`}
+                />
+                <span className="text-[10px]">{link.label}</span>
+              </Link>
+            </Button>
           );
         })}
       </div>

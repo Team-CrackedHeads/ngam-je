@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { COLORS } from "../theme";
 import { Puzzle, Bell, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { COLORS } from "../theme";
 
 type HeaderProps = {
+  username?: string;
   notifications?: number;
 };
 
-const Header = ({ notifications = 0 }: HeaderProps) => {
+const Header = ({ username, notifications = 0 }: HeaderProps) => {
   return (
     <header
       className="w-full flex justify-between items-center px-4 sm:px-6 py-3"
@@ -29,27 +32,26 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
           >
             Ngam.je
           </span>
-          <span
-            className="text-xs sm:text-sm"
-            style={{ color: COLORS.text }}
-          >
-            Reuse & Recycle
+          <span className="text-xs sm:text-sm" style={{ color: COLORS.text }}>
+            {username ? `Welcome, ${username}!` : "Welcome!"}
           </span>
         </div>
       </div>
 
       {/* Right Buttons */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 relative">
         {/* Notifications Button */}
-        <Link
-          href="/notifications"
-          className="p-2 rounded-lg transition"
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="relative"
           style={{ color: COLORS.text }}
         >
           <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
           {notifications > 0 && (
             <span
-              className="absolute -top-1 -right-1 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full"
+              className="absolute top-2 right-17 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full"
               style={{
                 backgroundColor: "red",
                 color: "white",
@@ -58,16 +60,19 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               {notifications}
             </span>
           )}
-        </Link>
+        </Button>
 
         {/* Logout Button */}
-        <Link
-          href="/logout"
-          className="p-2 rounded-lg transition"
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
           style={{ color: COLORS.text }}
         >
-          <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
-        </Link>
+          <Link href="/logout">
+            <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
+          </Link>
+        </Button>
       </div>
     </header>
   );
