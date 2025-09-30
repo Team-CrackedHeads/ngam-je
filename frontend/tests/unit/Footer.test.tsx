@@ -14,17 +14,10 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn(),
 }))
 
-// Mock Next.js Link component
+// Mock Next.js Link component with proper TypeScript support
 vi.mock('next/link', () => ({
-  default: ({ children, href, className, style, onMouseEnter, onMouseLeave, ...props }: any) => (
-    <a
-      href={href}
-      className={className}
-      style={style}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      {...props}
-    >
+  default: ({ children, href, ...props }: React.ComponentProps<'a'>) => (
+    <a href={href} {...props}>
       {children}
     </a>
   ),
@@ -290,7 +283,7 @@ describe('Footer Component', () => {
 
   describe('Edge Cases and Error Handling', () => {
     it('renders safely when pathname is undefined', () => {
-      mockUsePathname.mockReturnValue(undefined as any)
+      mockUsePathname.mockReturnValue(undefined as never)
 
       expect(() => {
         renderWithViewport(<Footer />, 'desktop')

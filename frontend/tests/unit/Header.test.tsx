@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Header from '@/app/components/Header'
@@ -8,10 +8,10 @@ import {
   type ViewportSize
 } from '@/utils/test-utils'
 
-// Mock Next.js Link component
+// Mock Next.js Link component with proper TypeScript support
 vi.mock('next/link', () => ({
-  default: ({ children, href, className, style, ...props }: any) => (
-    <a href={href} className={className} style={style} {...props}>
+  default: ({ children, href, ...props }: React.ComponentProps<'a'>) => (
+    <a href={href} {...props}>
       {children}
     </a>
   ),
@@ -246,7 +246,7 @@ describe('Header Component', () => {
 
     it('handles undefined notifications prop gracefully', () => {
       expect(() => {
-        renderWithViewport(<Header notifications={undefined as any} />, 'desktop')
+        renderWithViewport(<Header notifications={undefined as never} />, 'desktop')
       }).not.toThrow()
     })
 
