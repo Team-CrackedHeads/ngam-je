@@ -1,7 +1,7 @@
 name: Mirror to GitLab
 on:
   schedule:
-    - cron: '5 7 * * *'  # Daily at 7:05 AM UTC
+    - cron: '5 23 * * *'  # Daily at 7:05 AM KUL-TIME: UTC +8
   workflow_dispatch:   # manual trigger from the Actions tab
 
 jobs:
