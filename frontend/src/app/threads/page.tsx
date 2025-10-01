@@ -119,7 +119,9 @@ function ThreadsPage() {
       {/* main page container */}
       <div className="min-h-screen bg-gray-50 ">
         <div
-          className={`p-4 md:p-8 pb-32 md:pb-40 ${isScrolled ? "pt-20" : ""}`}
+          className={`container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40 ${
+            isScrolled ? "pt-20" : ""
+          }`}
         >
           {/* ai search section at the top - now becomes sticky when scrolled */}
           <AIAgentSearch

@@ -11,11 +11,11 @@ function AIAgentSearch({ onOpenAI, isScrolled = false }: AIAgentSearchProps) {
     <div
       onClick={onOpenAI}
       className={`
-        w-full bg-gradient-to-r rounded-xl cursor-pointer hover:shadow-md transition-all duration-300 group
+        w-full bg-gradient-to-r cursor-pointer hover:shadow-md transition-all duration-300 group
         ${
           isScrolled
-            ? "fixed top-0 left-0 right-0 z-50 p-2 lg:p-3 mb-0 shadow-lg rounded-none sm:rounded-none lg:rounded-none mx-0" // thin sticky version
-            : "mb-6 p-4 lg:p-8 lg:mb-10 lg:rounded-2xl lg:hover:shadow-2xl" // full size version
+            ? "fixed top-0 left-0 right-0 z-50 p-2 lg:p-3 mb-0 shadow-lg rounded-none mx-0" // thin sticky version
+            : "mb-6 p-4 lg:p-8 lg:mb-10 rounded-xl lg:rounded-2xl lg:hover:shadow-2xl" // full size version
         }
       `} // mrym take note cuba ubah
       style={{
