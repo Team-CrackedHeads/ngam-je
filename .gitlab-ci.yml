@@ -62,6 +62,10 @@ build:
 mirror-to-github:
   stage: mirror
   image: alpine/git:latest
+  needs: []                 # don’t wait for test/build
+  when: always              # run even if other jobs fail
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
   before_script:
     - git config --global user.name "GitLab Mirror Bot"
     - git config --global user.email "noreply@gitlab.com"
@@ -70,5 +74,3 @@ mirror-to-github:
     - cd temp-clone
     - git remote set-url --push origin https://$GITHUB_TOKEN@github.com/Team-CrackedHeads/ngam-je.git
     - git push --mirror
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
