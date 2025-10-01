@@ -1,5 +1,4 @@
 // level 1: community/category data (existing, but with category added)
-// MARYAMS
 export type ThreadData = {
   id: number;
   title: string;
@@ -18,47 +17,7 @@ export type ThreadData = {
   category: string; // new: for url routing
 };
 
-// level 2: listing card data (for category pages)
-// LUQMAN
-export type ListingData = {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  seller: string;
-  location: string;
-  time: string;
-  tags: string[];
-  imageUrl: string;
-  category: string; // which category this belongs to
-  listingType: "for-sale" | "want-to-buy";
-};
-
-// level 3: detailed product data (for individual item pages)
-// YUVA
-export type ProductData = {
-  id: string;
-  title: string;
-  subtitle: string;
-  price: number;
-  currency: string;
-  description: string;
-  images: string[];
-  tags: string[];
-  seller: {
-    name: string;
-    location: string;
-    verified: boolean;
-    timePosted: string;
-  };
-  views: number;
-  forSale: boolean;
-  protected: boolean;
-  category: string; // which category this belongs to
-  listingType: "for-sale" | "want-to-buy";
-};
-
-// community data (level 1) - updated with category
+ // community data (level 1) - updated with category
 export const MOCK_THREADS: ThreadData[] = [
   {
     id: 1,
@@ -398,8 +357,22 @@ export const MOCK_THREADS: ThreadData[] = [
     category: "electronics",
   },
 ];
+// Define the ListingData type structure as provided by you (LUQMAN)
+export type ListingData = {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  seller: string;
+  location: string;
+  time: string;
+  tags: string[];
+  imageUrl: string;
+  category: string; // which category this belongs to
+  listingType: "for-sale" | "want-to-buy";
+};
 
-// level 2: listing cards for category pages
+// Export the MOCK_LISTINGS array with the defined ListingData type
 export const MOCK_LISTINGS: ListingData[] = [
   // --- ELECTRONICS (Category: electronics) ---
 
@@ -414,7 +387,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "1 hour ago",
     tags: ["gaming", "rtx-4070", "complete-setup"],
     imageUrl:
-      "https://images.unsplash.com/photo-1593642634315-48f5414c3ad9?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/a-computer-desk-with-a-keyboard-and-a-monitor-ZNYKkG6P1uY",
     category: "electronics",
     listingType: "for-sale", // FS
   },
@@ -429,7 +402,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "2 hours ago",
     tags: ["iphone", "apple", "buy-request"],
     imageUrl:
-      "https://images.unsplash.com/photo-1695427189912-70b15af87e81?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/the-back-of-a-blue-iphone-11-YsC1myFHZbI",
     category: "electronics",
     listingType: "want-to-buy", // WTB
   },
@@ -444,7 +417,82 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "5 hours ago",
     tags: ["sony", "headphones", "audio"],
     imageUrl:
-      "https://images.unsplash.com/photo-1583341617260-eb502c349889?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/black-sony-headphones-83aEFVhHbwg",
+    category: "electronics",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "elec-004",
+    title: "DJI Mini 3 Pro Drone Combo",
+    description:
+      "Fly More Combo with extra batteries and controller screen. Low flight hours.",
+    price: "RM 2,800.00",
+    seller: "DronePilotMY",
+    location: "Klang",
+    time: "1 day ago",
+    tags: ["dji", "drone", "mini-3-pro"],
+    imageUrl:
+      "https://unsplash.com/photos/a-camera-on-a-stand-kdiTYa_C54U",
+    category: "electronics",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "elec-005",
+    title: "HP LaserJet Pro Multifunction Printer",
+    description:
+      "Black and white laser printer, scanner, and copier. Perfect for small office.",
+    price: "RM 450.00",
+    seller: "OfficeClearance",
+    location: "Johor Bahru",
+    time: "7 hours ago",
+    tags: ["printer", "hp", "office"],
+    imageUrl:
+      "https://unsplash.com/photos/white-and-gray-hp-all-in-one-printer-5AoOejjRUrA",
+    category: "electronics",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "elec-006",
+    title: "Selling: Canon EOS M50 Mark II Mirrorless Camera",
+    description:
+      "Comes with 15-45mm kit lens. Great for vlogging and beginner photography.",
+    price: "RM 1,900.00",
+    seller: "PhotoHobbyist",
+    location: "Penang",
+    time: "2 days ago",
+    tags: ["camera", "canon", "mirrorless", "vlog"],
+    imageUrl:
+      "https://unsplash.com/photos/black-canon-dslr-camera-macro-photography-4V-w8txMHHI",
+    category: "electronics",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "elec-007",
+    title: "WTB: Vintage Vinyl Turntable (Working)",
+    description:
+      "Searching for a classic, working turntable, preferably Technics or Pioneer model.",
+    price: "RM 1,000.00 (Budget)",
+    seller: "VinylJunkie",
+    location: "Ipoh",
+    time: "10 hours ago",
+    tags: ["turntable", "vinyl", "vintage", "audio"],
+    imageUrl:
+      "https://unsplash.com/photos/person-holding-silver-and-black-steel-bar-i8RVvtHqBtw",
+    category: "electronics",
+    listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "elec-008",
+    title: "Apple Watch SE (2nd Gen, 40mm) Starlight",
+    description:
+      "Less than 3 months old, worn a few times. Comes with extra sports band.",
+    price: "RM 850.00",
+    seller: "AppleFanMY",
+    location: "Kuala Lumpur",
+    time: "3 hours ago",
+    tags: ["apple-watch", "wearable", "se"],
+    imageUrl:
+      "https://unsplash.com/photos/a-black-and-white-photo-of-an-apple-watch-71bB7u-MBWk",
     category: "electronics",
     listingType: "for-sale", // FS
   },
@@ -462,7 +510,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "30 minutes ago",
     tags: ["nike", "air-max", "sneakers"],
     imageUrl:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/multicolored-nike-running-shoes-rPOPGZbP5Sc",
     category: "fashion",
     listingType: "for-sale", // FS
   },
@@ -477,7 +525,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "1 day ago",
     tags: ["vintage", "leather", "jacket"],
     imageUrl:
-      "https://images.unsplash.com/photo-1521577352984-38a3d548398e?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/a-man-wearing-a-brown-jacket-and-glasses-Tuo0DPsglnU",
     category: "fashion",
     listingType: "want-to-buy", // WTB
   },
@@ -492,7 +540,82 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "4 hours ago",
     tags: ["watch", "tissot", "luxury"],
     imageUrl:
-      "https://images.unsplash.com/photo-1609117366938-16e91f112e4b?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/a-man-in-a-suit-and-tie-holding-a-watch-5rft32q131s",
+    category: "fashion",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "fash-004",
+    title: "Original Coach Tote Bag (Black)",
+    description:
+      "Large capacity tote bag, perfect for work or travel. Used a few times, excellent condition.",
+    price: "RM 750.00",
+    seller: "BagLoverKL",
+    location: "Kuala Lumpur",
+    time: "50 minutes ago",
+    tags: ["handbag", "coach", "designer", "tote"],
+    imageUrl:
+      "https://unsplash.com/photos/black-tote-bag-9b6UhV4nLZs",
+    category: "fashion",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "fash-005",
+    title: "Ray-Ban Aviator Sunglasses (Polarized)",
+    description:
+      "Classic aviator style, polarized lenses. Only worn a few times. Comes with case.",
+    price: "RM 350.00",
+    seller: "SunShadesMY",
+    location: "Subang Jaya",
+    time: "3 hours ago",
+    tags: ["sunglasses", "ray-ban", "accessories"],
+    imageUrl:
+      "https://unsplash.com/photos/a-pair-of-sunglasses-sitting-on-top-of-a-black-surface-p3JlrHHuNqo",
+    category: "fashion",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "fash-006",
+    title: "Selling: Wedding Dress (Size M/UK 10)",
+    description:
+      "Mermaid-cut, lace detailing. Worn once, professionally dry-cleaned. Negotiable price.",
+    price: "RM 1,500.00",
+    seller: "BrideToSeller",
+    location: "Melaka",
+    time: "2 days ago",
+    tags: ["wedding", "dress", "formal"],
+    imageUrl:
+      "https://unsplash.com/photos/white-off-shoulder-wedding-dress-kzY3mKp91gI",
+    category: "fashion",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "fash-007",
+    title: "WTB: Authentic Hermes Scarf (Silk)",
+    description:
+      "Seeking a genuine Hermes silk scarf, any color/pattern. Must provide proof of authenticity.",
+    price: "RM 1,200.00 (Budget)",
+    seller: "LuxuryBuyer",
+    location: "Online",
+    time: "1 day ago",
+    tags: ["hermes", "luxury", "scarf"],
+    imageUrl:
+      "https://unsplash.com/photos/woman-wearing-brown-knitted-cardigan-standing-beside-fence-IN6KPUe8j04",
+    category: "fashion",
+    listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "fash-008",
+    title: "Uniqlo Heattech Long-Sleeve Tops (4 Pcs)",
+    description:
+      "Four pieces of Uniqlo Heattech (2 Black, 2 Grey), size M. Great for winter travel.",
+    price: "RM 100.00",
+    seller: "TravelReady",
+    location: "Petaling Jaya",
+    time: "1 hour ago",
+    tags: ["uniqlo", "heattech", "winter"],
+    imageUrl:
+      "https://unsplash.com/photos/a-man-wearing-a-white-shirt-qhEtBk_Bozc",
     category: "fashion",
     listingType: "for-sale", // FS
   },
@@ -510,7 +633,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "45 minutes ago",
     tags: ["nintendo", "switch", "oled"],
     imageUrl:
-      "https://images.unsplash.com/photo-1631407025816-773a43657ff2?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/a-nintendo-wii-game-controller-sitting-on-top-of-a-table-xNUXE7iUBo8",
     category: "gaming",
     listingType: "for-sale", // FS
   },
@@ -525,7 +648,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "2 hours ago",
     tags: ["ps5", "dualsense", "controller"],
     imageUrl:
-      "https://images.unsplash.com/photo-1621570776856-bb6b033d52d9?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/a-close-up-of-a-video-game-controller-bZ6ZpgG3u4M",
     category: "gaming",
     listingType: "for-sale", // FS
   },
@@ -540,10 +663,86 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "6 hours ago",
     tags: ["steam-deck", "pc-gaming", "portable"],
     imageUrl:
-      "https://images.unsplash.com/photo-1662998342200-a59e9a449d0e?auto=format&fit=crop&w=800&q=80",
+      "https://unsplash.com/photos/a-close-up-of-a-knife-WLAW-NGcMiw",
     category: "gaming",
     listingType: "want-to-buy", // WTB
   },
+  {
+    id: "game-004",
+    title: "Xbox Series X Console (Mint Condition)",
+    description:
+      "Used for less than a year. Includes 2 controllers and original box. Selling to upgrade PC.",
+    price: "RM 1,900.00",
+    seller: "GreenTeamMY",
+    location: "Petaling Jaya",
+    time: "4 hours ago",
+    tags: ["xbox", "series-x", "console"],
+    imageUrl:
+      "https://unsplash.com/photos/black-xbox-one-console-with-controller-DPOdCl4bGJU",
+    category: "gaming",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "game-005",
+    title: "Selling: The Last of Us Part II (PS4/PS5)",
+    description:
+      "Physical copy, excellent condition. Compatible with PS5 via backward compatibility.",
+    price: "RM 80.00",
+    seller: "GameSwapPJ",
+    location: "Subang Jaya",
+    time: "1 hour ago",
+    tags: ["ps4", "ps5", "game", "last-of-us"],
+    imageUrl:
+      "https://unsplash.com/photos/black-and-white-sketch-of-man-CrTVcBoFlxc",
+    category: "gaming",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "game-006",
+    title: "Retro Console Lot - Nintendo 64 & Games",
+    description:
+      "N64 console, 2 controllers, and 5 classic games (Mario 64, Ocarina of Time, etc.).",
+    price: "RM 700.00",
+    seller: "RetroHunter",
+    location: "Kuala Lumpur",
+    time: "1 day ago",
+    tags: ["retro", "nintendo-64", "n64"],
+    imageUrl:
+      "https://unsplash.com/photos/black-and-white-digital-device-hSNE-IbwJV4",
+    category: "gaming",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "game-007",
+    title: "WTB: Used Razer BlackShark V2 Pro Headset",
+    description:
+      "Seeking the wireless version of the Razer BlackShark V2 Pro headset. Must be in working order.",
+    price: "RM 400.00 (Budget)",
+    seller: "VoiceChatKing",
+    location: "Georgetown",
+    time: "9 hours ago",
+    tags: ["headset", "razer", "pc-gaming"],
+    imageUrl:
+      "https://unsplash.com/photos/black-and-blue-corded-headphones-Zea2Q0UK3KQ",
+    category: "gaming",
+    listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "game-008",
+    title: "Logitech G Pro X Mechanical Gaming Keyboard",
+    description:
+      "Tactile switches, tenkeyless design. Perfect for competitive gaming. Less than a year old.",
+    price: "RM 350.00",
+    seller: "PCMasterRace",
+    location: "Shah Alam",
+    time: "3 hours ago",
+    tags: ["keyboard", "logitech", "pc-gaming"],
+    imageUrl:
+      "https://unsplash.com/photos/a-person-holding-a-phone-and-a-keyboard-BgFjWcCicYA",
+    category: "gaming",
+    listingType: "for-sale", // FS
+  },
+
   // --- FURNITURE (Category: furniture) ---
 
   {
@@ -557,7 +756,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "1 day ago",
     tags: ["sofa", "minimalist", "scandinavian"],
     imageUrl:
-      "https://images.unsplash.com/photo-1595460505199-a86847844059?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1540574163026-643ea20ade25?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     category: "furniture",
     listingType: "for-sale", // FS
   },
@@ -572,7 +771,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "3 days ago",
     tags: ["desk", "vintage", "study"],
     imageUrl:
-      "https://images.unsplash.com/photo-1524758631624-972412e2f693?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1585148481101-0dea656c03a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     category: "furniture",
     listingType: "want-to-buy", // WTB
   },
@@ -587,7 +786,82 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "8 hours ago",
     tags: ["ikea", "bookcase", "storage"],
     imageUrl:
-      "https://images.unsplash.com/photo-1558299719-e93297a796b4?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1593670755950-603e1d6184b9?q=80&w=1963&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    category: "furniture",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "furn-004",
+    title: "Queen Size Bed Frame and Mattress",
+    description:
+      "Metal frame and medium-firm spring mattress. Used for 2 years. Self-pickup required.",
+    price: "RM 950.00",
+    seller: "MovingOutSale",
+    location: "Subang Jaya",
+    time: "4 hours ago",
+    tags: ["bed", "mattress", "bedroom"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1593184091721-409ccc1753d9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    category: "furniture",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "furn-005",
+    title: "Modern Glass Dining Table (6-Seater)",
+    description:
+      "Tempered glass top with stainless steel legs. Includes 6 fabric chairs.",
+    price: "RM 1,500.00",
+    seller: "DiningDeals",
+    location: "Klang",
+    time: "1 day ago",
+    tags: ["dining", "table", "glass"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1582472181599-86a60136bdf4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fE1vZGVybiUyMEdsYXNzJTIwRGluaW5nJTIwVGFibGUlMjAoNiUyMFNlYXRlcil8ZW58MHwwfDR8fHww",
+    category: "furniture",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "furn-006",
+    title: "Selling: Herman Miller Embody Office Chair",
+    description:
+      "Ergonomic chair in black. Excellent support for long hours of work. Original purchase receipt available.",
+    price: "RM 3,500.00",
+    seller: "WorkFromHomePro",
+    location: "Petaling Jaya",
+    time: "2 hours ago",
+    tags: ["office-chair", "herman-miller", "ergonomic"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1616982731841-001a8a090d86?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fEhlcm1hbiUyME1pbGxlciUyMEVtYm9keSUyME9mZmljZSUyMENoYWlyfGVufDB8MHw0fHx8MA%3D%3D",
+    category: "furniture",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "furn-007",
+    title: "WTB: Antique Chinese Cabinet or Chest",
+    description:
+      "Looking for a genuine antique Chinese-style wooden cabinet. Condition can be moderate.",
+    price: "Negotiable (Up to RM 3,000)",
+    seller: "HeritageFinder",
+    location: "Georgetown",
+    time: "6 days ago",
+    tags: ["antique", "cabinet", "chinese"],
+    imageUrl:
+      "https://plus.unsplash.com/premium_photo-1720884611740-f5e807d7c77e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8QW50aXF1ZSUyMENoaW5lc2UlMjBDYWJpbmV0JTIwb3IlMjBDaGVzdHxlbnwwfDB8NHx8fDA%3D",
+    category: "furniture",
+    listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "furn-008",
+    title: "Large Outdoor Patio Umbrella (Cantilever)",
+    description:
+      "3-meter cantilever umbrella in beige. Great for garden or balcony. Minor sun fading.",
+    price: "RM 550.00",
+    seller: "BalconyRelax",
+    location: "Johor Bahru",
+    time: "12 hours ago",
+    tags: ["outdoor", "patio", "umbrella"],
+    imageUrl:
+      "https://plus.unsplash.com/premium_photo-1676638972162-99c667d08938?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fExhcmdlJTIwT3V0ZG9vciUyMFBhdGlvJTIwVW1icmVsbGF8ZW58MHwwfDR8fHww",
     category: "furniture",
     listingType: "for-sale", // FS
   },
@@ -604,7 +878,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "2 hours ago",
     tags: ["fantasy", "fiction", "collector"],
     imageUrl:
-      "https://images.unsplash.com/photo-1521587765099-28c92b9b1e02?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1607948274673-3dc6578ebecc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     category: "books",
     listingType: "for-sale", // FS
   },
@@ -619,7 +893,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "1 day ago",
     tags: ["textbook", "finance", "education"],
     imageUrl:
-      "https://images.unsplash.com/photo-1521587765099-28c92b9b1e02?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1520467795206-62e33627e6ce?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8VXNlZCUyMFVuaXZlcnNpdHklMjBUZXh0Ym9va3MlMjAoRmluYW5jZSUyRkVjbyl8ZW58MHwwfDR8fHww",
     category: "books",
     listingType: "for-sale", // FS
   },
@@ -634,9 +908,84 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "5 days ago",
     tags: ["comic", "rare", "first-edition"],
     imageUrl:
-      "https://images.unsplash.com/photo-1524995997946-a1c2e315a713?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1598888831741-cb535295b013?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     category: "books",
     listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "book-004",
+    title: "Complete Harry Potter Series (Paperback)",
+    description:
+      "All 7 books in the standard paperback edition. Read once, excellent condition.",
+    price: "RM 200.00",
+    seller: "PotterHeadMY",
+    location: "Kuala Lumpur",
+    time: "3 hours ago",
+    tags: ["harry-potter", "fiction", "series"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1481047540402-8f3d39289bca?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Q29tcGxldGUlMjBIYXJyeSUyMFBvdHRlciUyMFNlcmllcyUyMEJvb2tzfGVufDB8MHw0fHx8MA%3D%3D",
+    category: "books",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "book-005",
+    title: "Selling: Malaysian Cookbook Collection (5 Books)",
+    description:
+      "Set of five local cookbooks, including Nonya and Malay cuisine. Great for beginners.",
+    price: "RM 120.00",
+    seller: "HomeChefKL",
+    location: "Shah Alam",
+    time: "1 hour ago",
+    tags: ["cookbook", "malaysian-cuisine", "cooking"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1570570329584-b41861c52c5b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGNvb2tib29rc3xlbnwwfDB8NHx8fDA%3D",
+    category: "books",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "book-006",
+    title: "WTB: Used Manga - Attack on Titan Vol. 1-30",
+    description:
+      "Looking for a complete or near-complete set of the Attack on Titan manga series.",
+    price: "RM 10.00 (per volume, budget)",
+    seller: "MangaFanBoy",
+    location: "Penang",
+    time: "1 day ago",
+    tags: ["manga", "attack-on-titan", "anime"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1553931122-eb3db723739f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fG1hbmdhJTIwY29taWNzJTIwY29sbGVjdGlvbnxlbnwwfDB8NHx8fDA%3D",
+    category: "books",
+    listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "book-007",
+    title: "Biography of Elon Musk (New Release)",
+    description:
+      "Hardcover copy of the latest biography. Read once, dust jacket intact.",
+    price: "RM 95.00",
+    seller: "BusinessReader",
+    location: "Subang Jaya",
+    time: "7 hours ago",
+    tags: ["biography", "non-fiction", "business"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1650178284536-2d6dff47f903?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YmlvZ3JhcGh5JTIwZWxvbnxlbnwwfDB8NHx8fDA%3D",
+    category: "books",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "book-008",
+    title: "Kids' Picture Book Bundle (20 Books)",
+    description:
+      "Mix of English and Malay storybooks for children aged 3-6. Good for reading practice.",
+    price: "RM 60.00",
+    seller: "ParentSeller",
+    location: "Bayan Lepas",
+    time: "5 hours ago",
+    tags: ["childrens-books", "kids", "education"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1469013078550-305e63b7c8f7?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2hpbGRyZW4lMjBib29rc3xlbnwwfDB8NHx8fDA%3D",
+    category: "books",
+    listingType: "for-sale", // FS
   },
 
   // --- SPORT (Category: sport) ---
@@ -652,7 +1001,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "1 hour ago",
     tags: ["road-bike", "cycling", "fitness"],
     imageUrl:
-      "https://images.unsplash.com/photo-1571407914717-386d4e511d7e?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1487803836022-91054ca05fdd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cm9hZCUyMGJpa2V8ZW58MHwwfDR8fHww",
     category: "sport",
     listingType: "for-sale", // FS
   },
@@ -667,7 +1016,7 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "7 hours ago",
     tags: ["dumbbell", "gym", "home-fitness"],
     imageUrl:
-      "https://images.unsplash.com/photo-1608240409893-68d2b2707b66?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8ZHVtYmJlbGxzfGVufDB8MHw0fHx8MA%3D%3D",
     category: "sport",
     listingType: "want-to-buy", // WTB
   },
@@ -682,13 +1031,111 @@ export const MOCK_LISTINGS: ListingData[] = [
     time: "3 days ago",
     tags: ["badminton", "yonex", "racket"],
     imageUrl:
-      "https://images.unsplash.com/photo-1616763428987-a065f299d45a?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1564226803380-91139fdcb4d0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2h1dHRsZWNvY2t8ZW58MHwwfDR8fHww",
+    category: "sport",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "sport-004",
+    title: "Adidas Predator Football Boots (Size UK 10)",
+    description:
+      "Used for one season only, excellent grip and condition. Cleats for firm ground.",
+    price: "RM 180.00",
+    seller: "FootyFanatic",
+    location: "Kuala Lumpur",
+    time: "2 hours ago",
+    tags: ["football", "adidas", "boots"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1580902394724-b08ff9ba7e8a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YWRpZGFzJTIwc2hvZXN8ZW58MHwwfDR8fHww",
+    category: "sport",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "sport-005",
+    title: "Selling: Used Golf Clubs Set (Complete)",
+    description:
+      "Full set of PING G425 irons and driver. Perfect for a mid-handicap player. Includes bag.",
+    price: "RM 4,500.00",
+    seller: "GolfLoverMY",
+    location: "Subang Jaya",
+    time: "1 day ago",
+    tags: ["golf", "clubs", "ping"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1675106643681-da7ad12e926f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z29sZiUyMGNsdWJzfGVufDB8MHw0fHx8MA%3D%3D",
+    category: "sport",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "sport-006",
+    title: "WTB: Scuba Diving BCD (Size M)",
+    description:
+      "Searching for a reliable and well-maintained Buoyancy Control Device (BCD) for diving. Brand preferred: Scubapro.",
+    price: "RM 1,500.00 (Budget)",
+    seller: "DiverJoe",
+    location: "Kota Kinabalu",
+    time: "9 hours ago",
+    tags: ["diving", "scuba", "watersports"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1549488346-6c70094776e1?auto=format&fit=crop&w=800&q=80",
+    category: "sport",
+    listingType: "want-to-buy", // WTB
+  },
+  {
+    id: "sport-007",
+    title: "Xiaomi Walking Pad Treadmill",
+    description:
+      "Foldable, under-desk treadmill. Excellent for a home office setup. Hardly used.",
+    price: "RM 900.00",
+    seller: "FitnessHome",
+    location: "Petaling Jaya",
+    time: "4 hours ago",
+    tags: ["treadmill", "home-fitness", "xiaomi"],
+    imageUrl:
+      "https://plus.unsplash.com/premium_photo-1677530095881-f49a6bcabef0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c2N1YmElMjBkaXZpbmd8ZW58MHwwfDR8fHww",
+    category: "sport",
+    listingType: "for-sale", // FS
+  },
+  {
+    id: "sport-008",
+    title: "Basketball Shoes - Nike Kobe 5 Protro (Size 11)",
+    description:
+      "Rare colorway, worn for indoor court only. Good traction remaining.",
+    price: "RM 750.00",
+    seller: "HoopsMaster",
+    location: "Johor Bahru",
+    time: "5 days ago",
+    tags: ["basketball", "nike", "kobe", "sneakers"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmFza2V0YmFsbCUyMHNob2VzfGVufDB8MHw0fHx8MA%3D%3D",
     category: "sport",
     listingType: "for-sale", // FS
   },
 ];
 
 // level 3 data: detailed products ()
+
+export type ProductData = {
+  id: string;
+  title: string;
+  subtitle: string;
+  price: number;
+  currency: string;
+  description: string;
+  images: string[];
+  tags: string[];
+  seller: {
+    name: string;
+    location: string;
+    verified: boolean;
+    timePosted: string;
+  };
+  views: number;
+  forSale: boolean;
+  protected: boolean;
+  category: string; // which category this belongs to
+  listingType: "for-sale" | "want-to-buy";
+};
+
 export const MOCK_PRODUCTS: ProductData[] = [
   // --- ELECTRONICS ---
   {
