@@ -3,42 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { COLORS } from "../../theme";
-import { CheckCircle, ShoppingCart, Tag } from "lucide-react";
+import { CheckCircle, ShoppingCart, Tag, OctagonAlert } from "lucide-react";
 
-export type User = {
-  name: string;
-  email: string;
-  verified: boolean;
-  rating: number;
-  ratingCount: number;
-  totalListings: number;
-  completedDeals: number;
-  forSale: number;
-  wantToBuy: number;
-  achievements: { label: string }[];
+export type Activity = {
+  type: string;
+  message: string;
+  date: string;
 };
 
-interface ProfilePageProps {
-  user?: User;
+interface ActivityPageProps {
+  activities?: Activity[];
 }
-
-// Placeholder user if no prop is passed
-const placeholderUser: User = {
-  name: "John Michael Smith",
-  email: "user@example.com",
-  verified: true,
-  rating: 4.8,
-  ratingCount: 24,
-  totalListings: 12,
-  completedDeals: 28,
-  forSale: 3,
-  wantToBuy: 2,
-  achievements: [
-    { label: "First Sale" },
-    { label: "Trusted Seller" },
-    { label: "Top Rated" },
-  ],
-};
 
 // Tabs configuration
 const tabs = [
@@ -47,35 +22,47 @@ const tabs = [
 ];
 
 // Placeholder activity data
-const activityFeed = [
+const placeholderActivities: Activity[] = [
   {
     type: "sale",
     message: "Sold an item: Vintage Camera",
     date: "2 hours ago",
-    icon: <Tag size={18} style={{ color: COLORS.accentTo }} />,
   },
   {
     type: "purchase",
     message: "Bought an item: Wireless Headphones",
     date: "1 day ago",
-    icon: <ShoppingCart size={18} style={{ color: COLORS.textActive }} />,
   },
   {
     type: "achievement",
     message: "Unlocked achievement: Trusted Seller",
     date: "3 days ago",
-    icon: <CheckCircle size={18} style={{ color: COLORS.accentFrom }} />,
   },
   {
-    type: "sale",
-    message: "Sold an item: Gaming Laptop",
+    type: "alert",
+    message: "Sale processing failed: ID 22481955371",
     date: "1 week ago",
-    icon: <Tag size={18} style={{ color: COLORS.accentTo }} />,
   },
 ];
 
-export default function ActivityPage({ user }: ProfilePageProps) {
-  const data = user ?? placeholderUser;
+// Utility to choose icon by type
+function getIcon(type: Activity["type"]) {
+  switch (type) {
+    case "sale":
+      return <Tag size={18} style={{ color: COLORS.accentTo }} />;
+    case "purchase":
+      return <ShoppingCart size={18} style={{ color: COLORS.textActive }} />;
+    case "achievement":
+      return <CheckCircle size={18} style={{ color: COLORS.accentFrom }} />;
+    case "alert":
+      return <OctagonAlert size={18} style={{ color: "#ff4422" }} />;
+    default:
+      return null;
+  }
+}
+
+export default function ActivityPage({ activities }: ActivityPageProps) {
+  const data = activities ?? placeholderActivities;
   const pathname = usePathname();
 
   return (
@@ -113,14 +100,14 @@ export default function ActivityPage({ user }: ProfilePageProps) {
 
         {/* Activity Feed */}
         <div className="space-y-4">
-          {activityFeed.map((activity, idx) => (
+          {data.map((activity, idx) => (
             <div
               key={idx}
               className="rounded-2xl shadow p-4 flex items-center space-x-4"
               style={{ backgroundColor: "#fff" }}
             >
               {/* Icon */}
-              <div className="flex-shrink-0">{activity.icon}</div>
+              <div className="flex-shrink-0">{getIcon(activity.type)}</div>
               {/* Content */}
               <div className="flex-1">
                 <p className="text-sm font-medium">{activity.message}</p>
