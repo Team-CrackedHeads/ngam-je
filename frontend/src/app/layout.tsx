@@ -33,7 +33,7 @@ export default function RootLayout({
         style={{"--sidebar-width": "16rem"} as React.CSSProperties}
       >
         <Header username="User" notifications={3} />
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex">
           <SidebarProvider>
             <AppSidebar />
             <main className="flex-1 overflow-auto">
