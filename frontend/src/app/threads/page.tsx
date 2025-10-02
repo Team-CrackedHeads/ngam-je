@@ -20,21 +20,16 @@ function ThreadsPage() {
   const [isAIOpen, setIsAIOpen] = useState(false);
   // controls if the create thread popup is open or closed
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  // tracks if user has scrolled down (for sticky ai search bar)
-  const [isScrolled, setIsScrolled] = useState(false);
   // infinite scroll state
   const [displayedCount, setDisplayedCount] = useState(6); // start with 6 items
   const [isLoading, setIsLoading] = useState(false); // loading state for new items
 
-  // listen for scroll events to make ai search bar sticky AND handle infinite scroll
+  // handle infinite scroll for community threads section only
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-
-      // sticky ai bar logic
-      setIsScrolled(scrollTop > 100);
 
       // infinite scroll logic - load more when near bottom
       const scrolledToBottom = scrollTop + windowHeight >= documentHeight - 200; // 200px before bottom
@@ -116,70 +111,68 @@ function ThreadsPage() {
 
   return (
     <>
-      {/* main page container */}
-      <div className="min-h-screen bg-gray-50 ">
-        <div
-          className={`container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40 ${
-            isScrolled ? "pt-20" : ""
-          }`}
-        >
-          {/* ai search section at the top - now becomes sticky when scrolled */}
-          <AIAgentSearch
-            onOpenAI={() => setIsAIOpen(true)}
-            isScrolled={isScrolled}
-          />
+      {/* snap and scroll */}
+      <div className="h-screen overflow-y-scroll snap-y snap-mandatory  scroll-smooth">
+        {/* SECTION 1: AI AGENT - FULL SCREEN */}
+        <div className="h-screen snap-start">
+          <AIAgentSearch onOpenAI={() => setIsAIOpen(true)} />
+        </div>
 
-          {/* page title and create button */}
-          <PageHeader onCreateThread={handleCreateThread} />
+        {/* SECTION 2: COMMUNITY THREADS - FULL SCREEN */}
+        <div className="min-h-screen snap-start bg-gray-50">
+          <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
+            {/* page title and create button */}
+            <PageHeader onCreateThread={handleCreateThread} />
 
-          {/* filter buttons (all, hot, top, new) */}
-          <FilterButton
-            activeFilter={activeFilter}
-            onFilterChange={handleFilterChange}
-          />
+            {/* filter buttons (all, hot, top, new) */}
+            <FilterButton
+              activeFilter={activeFilter}
+              onFilterChange={handleFilterChange}
+            />
 
-          {/* shows how many threads are displayed */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-            <p className="text-sm sm:text-base text-gray-600">
-              Showing {threadsToShow.length} of {allFilteredThreads.length}{" "}
-              threads
-              {activeFilter !== "All" && ` • Filter: ${activeFilter}`}
-            </p>
-          </div>
-
-          {/* grid of thread cards (1 column on mobile, 2 on tablet, 3 on desktop) */}
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {threadsToShow.map((thread) => (
-              <ThreadCard key={thread.id} thread={thread} />
-            ))}
-          </div>
-
-          {/* loading indicator */}
-          {isLoading && (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <span className="ml-2 text-gray-600">
-                Loading more threads...
-              </span>
+            {/* shows how many threads are displayed */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+              <p className="text-sm sm:text-base text-gray-600">
+                Showing {threadsToShow.length} of {allFilteredThreads.length}{" "}
+                threads
+                {activeFilter !== "All" && ` • Filter: ${activeFilter}`}
+              </p>
             </div>
-          )}
 
-          {/* message when all items are loaded */}
-          {displayedCount >= allFilteredThreads.length &&
-            allFilteredThreads.length > 6 && (
+            {/* grid of thread cards (1 column on mobile, 2 on tablet, 3 on desktop) */}
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {threadsToShow.map((thread) => (
+                <ThreadCard key={thread.id} thread={thread} />
+              ))}
+            </div>
+
+            {/* loading indicator */}
+            {isLoading && (
               <div className="flex items-center justify-center py-8">
-                <p className="text-gray-500">-No more items-</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2 text-gray-600">
+                  Loading more threads...
+                </span>
               </div>
             )}
 
-          {/* message shown when no threads match the filter */}
-          {allFilteredThreads.length === 0 && (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500">
-                No threads found for the selected filter.
-              </p>
-            </div>
-          )}
+            {/* message when all items are loaded */}
+            {displayedCount >= allFilteredThreads.length &&
+              allFilteredThreads.length > 6 && (
+                <div className="flex items-center justify-center py-8">
+                  <p className="text-gray-500">-No more items-</p>
+                </div>
+              )}
+
+            {/* message shown when no threads match the filter */}
+            {allFilteredThreads.length === 0 && (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-gray-500">
+                  No threads found for the selected filter.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
