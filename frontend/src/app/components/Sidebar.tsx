@@ -233,13 +233,16 @@ function NgamJeAssistantMenuItem() {
         )}
       </SidebarMenuButton>
 
-      {isOpen && (
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
         <SidebarMenuSub>
           <SidebarMenuSubItem>
             <AIAssistantCard />
           </SidebarMenuSubItem>
         </SidebarMenuSub>
-      )}
+      </div>
     </SidebarMenuItem>
   )
 }
@@ -247,7 +250,52 @@ function NgamJeAssistantMenuItem() {
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true)
   const pathname = usePathname()
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
 
+  // When collapsed, render individual nav items directly
+  if (isCollapsed) {
+    return (
+      <>
+        {navItems.map((item) => (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === item.href}
+              style={pathname === item.href ? {
+                backgroundColor: COLORS.activeBg,
+                color: COLORS.textActive
+              } : {}}
+            >
+              <Link
+                href={item.href}
+                style={{
+                  color: pathname === item.href ? COLORS.textActive : COLORS.text
+                }}
+                onMouseEnter={(e) => {
+                  if (pathname !== item.href) {
+                    e.currentTarget.style.backgroundColor = COLORS.hoverBg
+                    e.currentTarget.style.color = COLORS.textActive
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== item.href) {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = COLORS.text
+                  }
+                }}
+              >
+                <item.icon />
+                <span>{item.label}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </>
+    )
+  }
+
+  // When expanded, show grouped navigation with submenu
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -268,7 +316,10 @@ function NavigationMenuItem() {
         )}
       </SidebarMenuButton>
 
-      {isOpen && (
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
         <SidebarMenuSub>
           {navItems.map((item) => (
             <SidebarMenuSubItem key={item.href}>
@@ -305,7 +356,7 @@ function NavigationMenuItem() {
             </SidebarMenuSubItem>
           ))}
         </SidebarMenuSub>
-      )}
+      </div>
     </SidebarMenuItem>
   )
 }
