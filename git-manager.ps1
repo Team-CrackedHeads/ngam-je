@@ -316,10 +316,15 @@ function Invoke-PushWithBranch {
         return $false
     }
 
-    $branchOptions = @("Checkout existing branch", "Create new branch")
+    $currentBranch = git branch --show-current
+    $branchOptions = @("Push current branch ($currentBranch)", "Checkout existing branch", "Create new branch")
     $choice = Show-Menu -Title "What would you like to do?" -Options $branchOptions
 
-    if ($choice -eq "Checkout existing branch") {
+    if ($choice -eq "Push current branch ($currentBranch)") {
+        # Push the current branch without switching
+        Invoke-PushCurrentHead
+        return $true
+    } elseif ($choice -eq "Checkout existing branch") {
         if (Invoke-CheckoutExistingBranch) {
             # After successful checkout, push current HEAD
             Invoke-PushCurrentHead

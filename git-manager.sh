@@ -397,8 +397,10 @@ push_with_branch() {
         return 1
     fi
 
-    # Ask if user wants to checkout existing branch or create new one
-    local branch_options=("Checkout existing branch" "Create new branch")
+    # Get current branch and ask what user wants to do
+    local current_branch
+    current_branch=$(git branch --show-current)
+    local branch_options=("Push current branch ($current_branch)" "Checkout existing branch" "Create new branch")
 
     echo -e "\n${CYAN}What would you like to do?${NC}"
     echo -e "${CYAN}=========================${NC}"
@@ -410,8 +412,12 @@ push_with_branch() {
     while true; do
         echo
         read -p "Select an option (1-${#branch_options[@]}): " selection
-        if [[ "$selection" =~ ^[1-2]$ ]]; then
+        if [[ "$selection" =~ ^[1-3]$ ]]; then
             if [ "$selection" -eq 1 ]; then
+                # Push the current branch without switching
+                push_current_head
+                return 0
+            elif [ "$selection" -eq 2 ]; then
                 if checkout_existing_branch; then
                     # After successful checkout, push current HEAD
                     push_current_head
