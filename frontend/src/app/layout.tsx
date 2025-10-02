@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header username="Loser" />
+        <Header username="User" notifications={3} />
         {children}
         <Footer />
       </body>
