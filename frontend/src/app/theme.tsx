@@ -1,3 +1,4 @@
+// added white and offwhite colors for prod listing page
 export const COLORS = {
   background: "#E8EDDF",
   text: "#333533",
@@ -7,4 +8,6 @@ export const COLORS = {
   accentFrom: "#F3D172",
   accentTo: "#F5CB5C",
   accentActive: "#F5CB5C",
+  justWhite: "#FFFFFF",
+  offwhite: "#F9FAFB"
 };
