@@ -2,27 +2,36 @@
 
 import React, { useState } from "react";
 import { Heart, MessageSquare, CircleHelp } from "lucide-react";
-import { COLORS } from "@/app/theme"; // Make sure you have this
+import { COLORS } from "@/app/theme";
 
-export type ListingData = {
+// Updated type to match UnifiedListingData
+export type UnifiedListingData = {
   id: string;
   title: string;
+  subtitle?: string;
   description: string;
-  price: string;
-  seller: string;
-  location: string;
-  time: string;
-  tags: string[];
+  price: number;
+  currency: string;
+  seller: {
+    name: string;
+    location: string;
+    verified: boolean;
+    timePosted: string;
+  };
   imageUrl: string;
+  gallery?: string[];
   category: string;
   listingType: "for-sale" | "want-to-buy";
+  tags: string[];
+  views: number;
+  protected: boolean;
 };
 
 type ListingCardProps = {
-  listing: ListingData;
-  onClick?: (listing: ListingData) => void;
-  onMessage?: (listing: ListingData) => void;
-  onFAQ?: (listing: ListingData) => void;
+  listing: UnifiedListingData;
+  onClick?: (listing: UnifiedListingData) => void;
+  onMessage?: (listing: UnifiedListingData) => void;
+  onFAQ?: (listing: UnifiedListingData) => void;
 };
 
 const ListingCard: React.FC<ListingCardProps> = ({
@@ -36,23 +45,25 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const {
     id,
     title,
+    subtitle,
     description,
     price,
+    currency,
     seller,
-    location,
-    time,
     tags,
     imageUrl,
     category,
     listingType,
+    views,
+    protected: isProtected,
   } = listing;
 
   return (
-    <div 
+    <div
       className="bg-white rounded-xl shadow-sm p-4 relative cursor-pointer hover:shadow-xl transition-shadow duration-300"
       onClick={() => onClick?.(listing)}
     >
-      {/* Heart/Like Button - Updated colors */}
+      {/* Heart/Like Button */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -62,7 +73,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
       >
         <Heart
           className={`w-5 h-5 transition-colors ${
-            liked ? "text-red-500 fill-red-500" : "text-gray-400 hover:text-red-400"
+            liked
+              ? "text-red-500 fill-red-500"
+              : "text-gray-400 hover:text-red-400"
           }`}
         />
       </button>
@@ -74,32 +87,35 @@ const ListingCard: React.FC<ListingCardProps> = ({
           alt={title}
           className="w-full rounded-lg object-cover h-48 sm:h-64"
           onError={(e) => {
-            e.currentTarget.src = "https://placehold.co/800x400/cccccc/333333?text=Image+Missing";
+            e.currentTarget.src =
+              "https://placehold.co/800x400/cccccc/333333?text=Image+Missing";
           }}
         />
         {/* Themed badge */}
-        <span 
+        <span
           className="absolute top-2 left-2 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md"
           style={{
-            backgroundColor: listingType === "for-sale" ? COLORS.activeBg : "#3B82F6"
+            backgroundColor:
+              listingType === "for-sale" ? COLORS.activeBg : "#3B82F6",
           }}
         >
           {listingType === "for-sale" ? "For Sale" : "Want to Buy"}
         </span>
       </div>
 
-      {/* Title - Themed color */}
-      <h3 
+      {/* Title with subtitle */}
+      <h3
         className="mt-3 font-bold text-lg line-clamp-2"
         style={{ color: COLORS.textActive }}
       >
         {title}
+        {subtitle && <span className="text-sm font-normal"> - {subtitle}</span>}
       </h3>
-      
+
       {/* Description */}
       <p className="text-sm text-gray-600 mt-2 line-clamp-2">{description}</p>
 
-      {/* Tags - Themed colors */}
+      {/* Tags */}
       <div className="flex gap-2 mt-3 flex-wrap">
         {tags.slice(0, 3).map((tag) => (
           <span
@@ -114,26 +130,39 @@ const ListingCard: React.FC<ListingCardProps> = ({
           </span>
         ))}
         {tags.length > 3 && (
-          <span className="text-xs text-gray-500 py-1">+{tags.length - 3} more</span>
+          <span className="text-xs text-gray-500 py-1">
+            +{tags.length - 3} more
+          </span>
         )}
       </div>
 
-      {/* Price - Themed color */}
-      <div 
+      {/* Price - Updated format */}
+      <div
         className="font-bold text-xl mt-3"
         style={{ color: COLORS.textActive }}
       >
-        {price}
+        {currency} {price.toFixed(2)}
       </div>
 
-      {/* Seller info */}
+      {/* Seller info - Updated to use seller object */}
       <div className="flex items-center text-sm text-gray-500 mt-2 gap-2">
-        <span className="font-medium" style={{ color: COLORS.text }}>{seller}</span>
-        <span>• {location}</span>
-        <span>• {time}</span>
+        <span className="font-medium" style={{ color: COLORS.text }}>
+          {seller.name}
+          {seller.verified && <span className="text-green-500 ml-1">✓</span>}
+        </span>
+        <span>• {seller.location}</span>
+        <span>• {seller.timePosted}</span>
       </div>
 
-      {/* Action buttons - Themed colors */}
+      {/* Views and Protection indicators */}
+      <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+        <span>{views} views</span>
+        {isProtected && (
+          <span className="text-green-600 font-medium">🛡️ Protected</span>
+        )}
+      </div>
+
+      {/* Action buttons */}
       <div className="flex gap-3 mt-4">
         <button
           onClick={(e) => {
@@ -144,13 +173,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
           style={{
             borderColor: COLORS.accentFrom,
             color: COLORS.text,
-            backgroundColor: 'transparent'
+            backgroundColor: "transparent",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.accentFrom;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
           <MessageSquare className="w-4 h-4" />
