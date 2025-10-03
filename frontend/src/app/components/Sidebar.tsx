@@ -261,8 +261,8 @@ function NavigationMenuItem() {
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
-              isActive={pathname === item.href}
-              style={pathname === item.href ? {
+              isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
+              style={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? {
                 backgroundColor: COLORS.activeBg,
                 color: COLORS.textActive
               } : {}}
@@ -325,8 +325,8 @@ function NavigationMenuItem() {
             <SidebarMenuSubItem key={item.href}>
               <SidebarMenuSubButton
                 asChild
-                isActive={pathname === item.href}
-                style={pathname === item.href ? {
+                isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
+                style={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? {
                   backgroundColor: COLORS.activeBg,
                   color: COLORS.textActive
                 } : {}}
