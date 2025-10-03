@@ -9,5 +9,11 @@ export const COLORS = {
   accentTo: "#F5CB5C",
   accentActive: "#F5CB5C",
   justWhite: "#FFFFFF",
-  offwhite: "#F9FAFB"
+  offwhite: "#F9FAFB",
+  success: "#22C55E",
+  successBg: "#DCFCE7",
+  error: "#EF4444",
+  errorBg: "#FEF2F2",
+  warning: "#F59E0B",
+  warningBg: "#FEF3C7"
 };

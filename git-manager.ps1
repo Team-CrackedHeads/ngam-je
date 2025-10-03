@@ -4,7 +4,10 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("pull", "push")]
-    [string]$Action
+    [string]$Action,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$ForceTimeOverride
 )
 
 # ---------- Guard rails ----------
@@ -22,10 +25,14 @@ if ($currentHour -eq 0 -and $currentMinute -ge 1) {
     $isInValidTimeRange = $true
 } 
 
-if (-not $isInValidTimeRange) {
-    Write-Host "ERROR: This script can only be executed between 12:01 AM and 7:01 AM." -ForegroundColor Red
+if (-not $isInValidTimeRange -and -not $ForceTimeOverride) {
+    Write-Host "ERROR: This script can only be executed between 12:01 AM and 6:59 AM." -ForegroundColor Red
     Write-Host "Current time: $($currentTime.ToString('HH:mm'))" -ForegroundColor Yellow
+    Write-Host "Use -ForceTimeOverride to bypass this restriction for emergency use." -ForegroundColor Gray
     exit 1
+} elseif (-not $isInValidTimeRange -and $ForceTimeOverride) {
+    Write-Host "WARNING: Time restriction bypassed with -ForceTimeOverride!" -ForegroundColor Yellow
+    Write-Host "Current time: $($currentTime.ToString('HH:mm'))" -ForegroundColor Yellow
 }
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
@@ -60,6 +67,25 @@ function Show-Menu {
 function Test-ProductName {
     param([string]$ProductName)
     return $ProductName -cmatch '^[a-z0-9]+(-[a-z0-9]+)*$'
+}
+
+function Test-BranchNameValid {
+    param([string]$BranchName)
+
+    # Check for remote-tracking ref patterns (remote/branch)
+    if ($BranchName -match '^[^/]+/.+') {
+        Write-Host "ERROR: Branch name '$BranchName' looks like a remote-tracking ref." -ForegroundColor Red
+        Write-Host "This could create a bogus branch on the remote. Use a plain branch name instead." -ForegroundColor Yellow
+        return $false
+    }
+
+    # Check for other invalid patterns
+    if ($BranchName -match '^\s|\s$|^\.|/\.|\.lock$|@{|\\') {
+        Write-Host "ERROR: Branch name '$BranchName' contains invalid characters." -ForegroundColor Red
+        return $false
+    }
+
+    return $true
 }
 
 # Hardcoded for GitLab downtime workflow - always use GitHub remote
@@ -130,10 +156,55 @@ function Get-DirtyState {
     return [bool]$status
 }
 
+function Test-UncommittedChanges {
+    $status = git status --porcelain
+    if ($status) {
+        Write-Host "`nWARNING: You have uncommitted or staged changes:" -ForegroundColor Yellow
+        git status --short
+        Write-Host "`nPushes only send commits. Uncommitted changes won't be pushed." -ForegroundColor Yellow
+        $confirm = Read-Host "Continue anyway? (y/N)"
+        if ($confirm -notin @('y','Y')) {
+            Write-Host "Cancelled." -ForegroundColor Yellow
+            return $false
+        }
+    }
+    return $true
+}
+
+function Invoke-PushCurrentHead {
+    param([string]$TargetRemote = $GitRemote)
+
+    $currentBranch = git branch --show-current
+    $currentCommit = git rev-parse --short HEAD
+
+    Write-Host "`nPushing current HEAD → $TargetRemote/$currentBranch" -ForegroundColor Cyan
+    Write-Host "  Source: HEAD ($currentCommit)" -ForegroundColor Gray
+    Write-Host "  Target: $TargetRemote/$currentBranch" -ForegroundColor Gray
+
+    git push -u $TargetRemote $currentBranch
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "✅ Successfully pushed HEAD → $TargetRemote/$currentBranch" -ForegroundColor Green
+        return $true
+    } else {
+        Write-Host "❌ Failed to push HEAD → $TargetRemote/$currentBranch" -ForegroundColor Red
+        return $false
+    }
+}
+
 # ---------- Operations ----------
 function Invoke-PullFromDefault {
-    Write-Host "`nPulling latest from '$DefaultBranch' on '$GitRemote'..." -ForegroundColor Green
     try {
+        # Get the configured upstream for the default branch
+        $upstream = git config "branch.$DefaultBranch.merge" 2>$null
+        $remote = git config "branch.$DefaultBranch.remote" 2>$null
+
+        if ($upstream -and $remote) {
+            Write-Host "`nPulling latest from configured upstream for '$DefaultBranch' (${remote}/${upstream})..." -ForegroundColor Green
+        } else {
+            Write-Host "`nNo upstream configured for '$DefaultBranch', using '$GitRemote/$DefaultBranch'..." -ForegroundColor Yellow
+            $remote = $GitRemote
+        }
+
         $hasStash = $false
         if (Get-DirtyState) {
             git stash push -m ("Auto-stash before pull {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) | Out-Null
@@ -143,8 +214,14 @@ function Invoke-PullFromDefault {
         git checkout $DefaultBranch
         if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $DefaultBranch" }
 
-        git pull $GitRemote $DefaultBranch
-        if ($LASTEXITCODE -ne 0) { throw "Failed to pull from $GitRemote/$DefaultBranch" }
+        if ($upstream -and $remote) {
+            # Use git pull without arguments to respect configured upstream
+            git pull
+        } else {
+            # Fallback to explicit remote/branch
+            git pull $remote $DefaultBranch
+        }
+        if ($LASTEXITCODE -ne 0) { throw "Failed to pull from upstream" }
 
         if ($hasStash) {
             Write-Host "Restoring stashed changes..." -ForegroundColor Cyan
@@ -160,29 +237,70 @@ function Invoke-PullFromDefault {
 }
 
 function Invoke-CheckoutExistingBranch {
+    Write-Host "`nPruning stale remote references..." -ForegroundColor Cyan
+    git remote prune $GitRemote 2>$null | Out-Null
+
     Write-Host "`nListing branches..." -ForegroundColor Cyan
     try {
-        $locals  = git branch --format="%(refname:short)"
-        $remotes = git branch -r --format="%(refname:short)" `
-                   | Where-Object { $_ -like "$GitRemote/*" } `
-                   | ForEach-Object { $_ -replace "^$GitRemote/", "" }
+        # Get local branches (exclude current branch and main)
+        $locals = git branch --format="%(refname:short)" | Where-Object {
+            $_ -ne "main" -and $_ -ne $DefaultBranch -and -not $_.StartsWith("*")
+        } | Sort-Object
 
-        $branches = @($locals + $remotes) | Sort-Object -Unique | Where-Object { $_ -ne "main" }
-        if (-not $branches -or $branches.Count -eq 0) {
+        # Filter out any remote-tracking ref names (contain slash after remote name)
+        $locals = $locals | Where-Object { $_ -notmatch "^[^/]+/.+" }
+
+        $options = @()
+        $branchMap = @{}
+        $index = 0
+
+        # Add local branches first
+        if ($locals.Count -gt 0) {
+            foreach ($branch in $locals) {
+                $options += "📁 $branch (local)"
+                $branchMap[$index] = @{ Name = $branch; Type = "local" }
+                $index++
+            }
+        }
+
+        # Get remote-only branches (not tracked locally)
+        $remotes = git branch -r --format="%(refname:short)" | Where-Object {
+            $_ -like "$GitRemote/*" -and $_ -notlike "$GitRemote/HEAD*" -and $_ -notlike "$GitRemote/$DefaultBranch"
+        } | ForEach-Object { $_ -replace "^$GitRemote/", "" } | Sort-Object
+
+        # Filter remote branches that don't have local counterparts
+        $remoteOnly = $remotes | Where-Object { $_ -notin $locals -and $_ -notmatch "^[^/]+/.+" }
+
+        if ($remoteOnly.Count -gt 0) {
+            foreach ($branch in $remoteOnly) {
+                $options += "🌐 $branch (remote-only)"
+                $branchMap[$index] = @{ Name = $branch; Type = "remote" }
+                $index++
+            }
+        }
+
+        if ($options.Count -eq 0) {
             Write-Host "No branches found (excluding main branch)." -ForegroundColor Red
             return $false
         }
 
-        $selected = Show-Menu -Title "Select branch to checkout:" -Options $branches
-        Write-Host ("`nChecking out branch: {0}" -f $selected) -ForegroundColor Cyan
+        $selectedIndex = Show-Menu -Title "Select branch to checkout:" -Options $options
+        $selectedOption = $branchMap[[array]::IndexOf($options, $selectedIndex)]
+        $branchName = $selectedOption.Name
+        $branchType = $selectedOption.Type
 
-        git checkout $selected
-        if ($LASTEXITCODE -ne 0) {
-            git checkout --track "$GitRemote/$selected"
-            if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $selected" }
+        Write-Host ("`nChecking out branch: {0} ({1})" -f $branchName, $branchType) -ForegroundColor Cyan
+
+        if ($branchType -eq "local") {
+            git checkout $branchName
+            if ($LASTEXITCODE -ne 0) { throw "Failed to checkout local branch $branchName" }
+        } else {
+            # Create local tracking branch for remote-only branch
+            git checkout -b $branchName --track "$GitRemote/$branchName"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create tracking branch for $GitRemote/$branchName" }
         }
 
-        Write-Host ("Checked out: {0}" -f $selected) -ForegroundColor Green
+        Write-Host ("Checked out: {0}" -f $branchName) -ForegroundColor Green
         return $true
     } catch {
         Write-Host ("ERROR: {0}" -f $_) -ForegroundColor Red
@@ -193,11 +311,25 @@ function Invoke-CheckoutExistingBranch {
 function Invoke-PushWithBranch {
     Write-Host "`nBranch management..." -ForegroundColor Green
 
-    $branchOptions = @("Checkout existing branch", "Create new branch")
+    # Check for uncommitted changes before proceeding
+    if (-not (Test-UncommittedChanges)) {
+        return $false
+    }
+
+    $currentBranch = git branch --show-current
+    $branchOptions = @("Push current branch ($currentBranch)", "Checkout existing branch", "Create new branch")
     $choice = Show-Menu -Title "What would you like to do?" -Options $branchOptions
 
-    if ($choice -eq "Checkout existing branch") {
-        return (Invoke-CheckoutExistingBranch)
+    if ($choice -eq "Push current branch ($currentBranch)") {
+        # Push the current branch without switching
+        Invoke-PushCurrentHead
+        return $true
+    } elseif ($choice -eq "Checkout existing branch") {
+        if (Invoke-CheckoutExistingBranch) {
+            # After successful checkout, push current HEAD
+            Invoke-PushCurrentHead
+        }
+        return $true
     }
 
     # Create new branch
@@ -224,6 +356,11 @@ function Invoke-PushWithBranch {
     $branchName = "$selectedType/$selectedScope/$productName"
     Write-Host ("`nBranch name: {0}" -f $branchName) -ForegroundColor Cyan
 
+    # Validate branch name
+    if (-not (Test-BranchNameValid -BranchName $branchName)) {
+        return $false
+    }
+
     $confirm = Read-Host "Proceed with creating and pushing this branch? (y/N)"
     if ($confirm -notin @('y','Y')) {
         Write-Host "Cancelled." -ForegroundColor Yellow
@@ -247,11 +384,12 @@ function Invoke-PushWithBranch {
             Write-Host "Warning: remote branch already exists; pushing will update its upstream." -ForegroundColor Yellow
         }
 
-        Write-Host ("Pushing to remote '{0}'..." -f $GitRemote) -ForegroundColor Cyan
-        git push -u $GitRemote $branchName
-        if ($LASTEXITCODE -ne 0) { throw "Failed to push to $GitRemote/$branchName" }
-
-        Write-Host ("Branch '{0}' created and pushed." -f $branchName) -ForegroundColor Green
+        Write-Host ("Pushing branch to remote..." -f $GitRemote) -ForegroundColor Cyan
+        if (Invoke-PushCurrentHead) {
+            Write-Host ("Branch '{0}' created and pushed." -f $branchName) -ForegroundColor Green
+        } else {
+            throw "Failed to push branch $branchName"
+        }
         return $true
     } catch {
         Write-Host ("ERROR: {0}" -f $_) -ForegroundColor Red
@@ -267,6 +405,11 @@ if (-not (Ensure-RemoteConfigured)) {
     Write-Host "`nA GitHub remote is required. Aborting." -ForegroundColor Red
     exit 1
 }
+
+# Set default push remote to GitHub for routine pushes
+Write-Host "`nSetting default push remote to GitHub..." -ForegroundColor Cyan
+git config push.default simple 2>$null | Out-Null
+git config remote.pushDefault $GitRemote 2>$null | Out-Null
 
 switch ($Action) {
     "pull" { [void](Invoke-PullFromDefault) }

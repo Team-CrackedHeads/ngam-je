@@ -15,13 +15,6 @@ type HeaderProps = {
 const Header = ({ username, notifications = 0 }: HeaderProps) => {
   const pathname = usePathname();
 
-  // Same buttons as footer (Ask AI removed)
-  const navLinks = [
-    { href: "/", label: "Threads", icon: Home },
-    { href: "/messages", label: "Messages", icon: MessageCircle },
-    { href: "/profile", label: "Profile", icon: User },
-    { href: "/settings", label: "Settings", icon: Settings },
-  ];
 
   return (
     <header
@@ -54,24 +47,6 @@ const Header = ({ username, notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-        {/* Extra nav buttons (hidden on mobile, flex on md+) */}
-        <div className="hidden md:flex items-center gap-4">
-          {navLinks.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium transition"
-              style={{
-                backgroundColor:
-                  pathname === href ? COLORS.activeBg : "transparent",
-                color: pathname === href ? COLORS.textActive : COLORS.text,
-              }}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{label}</span>
-            </Link>
-          ))}
-        </div>
 
         {/* Notifications Button */}
         <Button
