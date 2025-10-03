@@ -24,7 +24,7 @@ const Footer = () => {
       <div className="flex justify-around items-stretch relative h-16">
         {links.map((link, index) => {
           const Icon = link.icon;
-          const isActive = pathname === link.href;
+          const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
 
           return (
             <Button
