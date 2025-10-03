@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
-        style={{"--sidebar-width": "16rem"} as React.CSSProperties}
+        style={{"--sidebar-width": "18rem"} as React.CSSProperties}
       >
         <Header username="User" notifications={3} />
         <div className="flex-1 flex">
