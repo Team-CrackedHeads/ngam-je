@@ -306,7 +306,7 @@ export const MOCK_THREADS: ThreadData[] = [
     description:
       "Reviews and recommendations for tents, packs, boots, and trail guides.",
     imageUrl:
-      "https://images.unsplash.com/photo-1551632811-552783d1c1a9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://plus.unsplash.com/premium_photo-1663127114654-37b84c0ed3ed?q=80&w=1150&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     comments: 205,
     views: 14200,
     upvotes: 780,
@@ -325,7 +325,7 @@ export const MOCK_THREADS: ThreadData[] = [
     description:
       "Discussing the latest and greatest in epic high fantasy novels and series.",
     imageUrl:
-      "https://images.unsplash.com/photo-1524995997946-a1c2e315a724?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://images.unsplash.com/photo-1540650659171-c24a35e9cd54?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     comments: 145,
     views: 8100,
     upvotes: 490,
@@ -344,7 +344,7 @@ export const MOCK_THREADS: ThreadData[] = [
     description:
       "Comparing Google Home, Amazon Echo, Apple HomeKit, and custom solutions.",
     imageUrl:
-      "https://images.unsplash.com/photo-1616480111162-8172905470b8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://plus.unsplash.com/premium_photo-1758492123932-31c78cdbabe2?q=80&w=772&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     comments: 288,
     views: 19300,
     upvotes: 1100,
@@ -424,10 +424,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "1 hour ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-computer-desk-with-a-keyboard-and-a-monitor-ZNYKkG6P1uY",
+      "https://images.unsplash.com/photo-1706954817491-4d8d735256e5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cnR4JTIwNDA3MHxlbnwwfHwwfHx8MA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-computer-desk-with-a-keyboard-and-a-monitor-ZNYKkG6P1uY",
-      "https://example.com/gallery/elec-001-2.jpg", // Placeholder gallery image 2
+      "https://images.unsplash.com/photo-1624701928517-44c8ac49d93c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z3B1fGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1729934746958-857e5b082dcc?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGdwdXxlbnwwfHwwfHx8MA%3D%3D", // Placeholder gallery image 2
     ],
     category: "electronics",
     listingType: "for-sale",
@@ -450,9 +450,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "2 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/the-back-of-a-blue-iphone-11-YsC1myFHZbI",
+      "https://images.unsplash.com/photo-1647866276622-7990c3ee684d?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/the-back-of-a-blue-iphone-11-YsC1myFHZbI",
+      "https://images.unsplash.com/photo-1704380895316-caa2e4d68a7e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aXBob25lJTIwMTV8ZW58MHx8MHx8fDA%3D",
+      "https://plus.unsplash.com/premium_photo-1681233750830-dfbb25c7abc0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8aXBob25lJTIwMTV8ZW58MHx8MHx8fDA%3D",
     ],
     category: "electronics",
     listingType: "want-to-buy",
@@ -474,10 +475,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "5 hours ago",
     },
-    imageUrl: "https://unsplash.com/photos/black-sony-headphones-83aEFVhHbwg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1583305727488-61f82c7eae4b?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/black-sony-headphones-83aEFVhHbwg",
-      "https://example.com/gallery/elec-003-2.jpg",
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c29ueSUyMGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D",
     ],
     category: "electronics",
     listingType: "for-sale",
@@ -499,11 +500,12 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "1 day ago",
     },
-    imageUrl: "https://unsplash.com/photos/a-camera-on-a-stand-kdiTYa_C54U",
+    imageUrl:
+      "https://images.unsplash.com/photo-1662348316911-d6aef85f8560?q=80&w=3030&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-camera-on-a-stand-kdiTYa_C54U",
-      "https://example.com/gallery/elec-004-2.jpg",
-      "https://example.com/gallery/elec-004-3.jpg",
+      "https://plus.unsplash.com/premium_photo-1714618849685-89cad85746b1?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c29ueSUyMGRyb25lfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1655219282209-6e6e64515c0d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c29ueSUyMGRyb25lfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1667948088559-f5036b9f3802?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNvbnklMjBkcm9uZXxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "electronics",
     listingType: "for-sale",
@@ -526,9 +528,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "7 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/white-and-gray-hp-all-in-one-printer-5AoOejjRUrA",
+      "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/white-and-gray-hp-all-in-one-printer-5AoOejjRUrA",
+      "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJpbnRlcnxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "electronics",
     listingType: "for-sale",
@@ -551,10 +553,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "2 days ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/black-canon-dslr-camera-macro-photography-4V-w8txMHHI",
+      "https://images.unsplash.com/photo-1581673958497-493bc93c2a0a?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/black-canon-dslr-camera-macro-photography-4V-w8txMHHI",
-      "https://example.com/gallery/elec-006-2.jpg",
+      "https://images.unsplash.com/photo-1495707902641-75cac588d2e9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2Fub258ZW58MHx8MHx8fDA%3D",
+      "https://images.unsplash.com/photo-1504093376055-b3094b674dcb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8Y2Fub258ZW58MHx8MHx8fDA%3D",
     ],
     category: "electronics",
     listingType: "for-sale",
@@ -577,9 +579,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "10 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/person-holding-silver-and-black-steel-bar-i8RVvtHqBtw",
+      "https://plus.unsplash.com/premium_photo-1663011373221-9bce9f22261e?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/person-holding-silver-and-black-steel-bar-i8RVvtHqBtw",
+      "https://images.unsplash.com/photo-1510100831744-b8d7fea7ca2e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dHVybnRhYmxlfGVufDB8fDB8fHww",
     ],
     category: "electronics",
     listingType: "want-to-buy",
@@ -602,10 +604,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "3 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-black-and-white-photo-of-an-apple-watch-71bB7u-MBWk",
+      "https://images.unsplash.com/photo-1614106765035-bceac4ac1911?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-black-and-white-photo-of-an-apple-watch-71bB7u-MBWk",
-      "https://example.com/gallery/elec-008-2.jpg",
+      "https://images.unsplash.com/photo-1624096104992-9b4fa3a279dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXBwbGUlMjB3YXRjaHxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1609096458733-95b38583ac4e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YXBwbGUlMjB3YXRjaHxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "electronics",
     listingType: "for-sale",
@@ -632,7 +634,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1540574163026-643ea20ade25?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxwxMJA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1540574163026-643ea20ade25?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxwxMJA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/furn-001-2.jpg",
+      "https://images.unsplash.com/photo-1658501238841-da09649a94f3?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fDQlMjBzZWF0ZXIlMjBzb2ZhfGVufDB8fDB8fHww",
     ],
     category: "furniture",
     listingType: "for-sale",
@@ -657,7 +659,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1585148481101-0dea656c03a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://images.unsplash.com/photo-1585148481101-0dea656c03a9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://plus.unsplash.com/premium_photo-1664297827889-5cc99441cada?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8c3R1ZHklMjBkZXNrfGVufDB8fDB8fHww",
     ],
     category: "furniture",
     listingType: "want-to-buy",
@@ -683,7 +685,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1593670755950-603e1d6184b9?q=80&w=1963&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1593670755950-603e1d6184b9?q=80&w=1963&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/furn-003-2.jpg",
+      "https://images.unsplash.com/photo-1543248939-4296e1fea89b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8aWtlYSUyMGJvb2slMjBjYXNlfGVufDB8fDB8fHww",
     ],
     category: "furniture",
     listingType: "for-sale",
@@ -734,8 +736,6 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1582472181599-86a60136bdf4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fE1vZGVybiUyMEdsYXNzJTIwRGluaW5nJTIwVGFibGUlMjAoNiUyMFNlYXRlcyl8ZW58MHwwfDR8fHww",
     gallery: [
       "https://images.unsplash.com/photo-1582472181599-86a60136bdf4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fE1vZGVybiUyMEdsYXNzJTIwRGluaW5nJTIwVGFibGUlMjAoNiUyMFNlYXRlcyl8ZW58MHwwfDR8fHww",
-      "https://example.com/gallery/furn-005-2.jpg",
-      "https://example.com/gallery/furn-005-3.jpg",
     ],
     category: "furniture",
     listingType: "for-sale",
@@ -836,7 +836,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1607948274673-3dc6578ebecc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1607948274673-3dc6578ebecc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/book-001-2.jpg",
+      "https://images.unsplash.com/photo-1590594786467-09c7c73c111f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     ],
     category: "books",
     listingType: "for-sale",
@@ -912,7 +912,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1481047540402-8f3d39289bca?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Q29tcGxldGUlMjBIYXJyeSUyMFBvdHRlciUyMFNlcmllcyUyMEJvb2tzfGVufDB8MHw0fHx8MA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1481047540402-8f3d39289bca?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Q29tcGxldGUlMjBIYXJyeSUyMFBvdHRlciUyMFNlcmllcyUyMEJvb2tzfGVufDB8MHw0fHx8MA%3D%3D",
-      "https://example.com/gallery/book-004-2.jpg",
+      "https://images.unsplash.com/photo-1610466025839-ec6040c347b6?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fENvbXBsZXRlJTIwSGFycnklMjBQb3R0ZXIlMjBTZXJpZXMlMjAoUGFwZXJiYWNrKXxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "books",
     listingType: "for-sale",
@@ -1038,9 +1038,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "30 minutes ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/multicolored-nike-running-shoes-rPOPGZbP5Sc",
+      "https://images.unsplash.com/photo-1562613521-6b5293e5b0ea?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/multicolored-nike-running-shoes-rPOPGZbP5Sc",
+      "https://images.unsplash.com/photo-1562613521-6b5293e5b0ea?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       "https://example.com/gallery/fash-001-2.jpg",
     ],
     category: "fashion",
@@ -1064,9 +1064,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "1 day ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-man-wearing-a-brown-jacket-and-glasses-Tuo0DPsglnU",
+      "https://images.unsplash.com/photo-1641943632479-3798ef1e14c6?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTEwfHxWaW50YWdlJTIwTGVhdGhlciUyMEphY2tldHxlbnwwfHwwfHx8MA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-man-wearing-a-brown-jacket-and-glasses-Tuo0DPsglnU",
+      "https://images.unsplash.com/photo-1641943632479-3798ef1e14c6?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTEwfHxWaW50YWdlJTIwTGVhdGhlciUyMEphY2tldHxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "fashion",
     listingType: "want-to-buy",
@@ -1089,9 +1089,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "4 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-man-in-a-suit-and-tie-holding-a-watch-5rft32q131s",
+      "https://images.unsplash.com/photo-1727716919539-3cd4aaf7af99?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-man-in-a-suit-and-tie-holding-a-watch-5rft32q131s",
+      "https://images.unsplash.com/photo-1727716919539-3cd4aaf7af99?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       "https://example.com/gallery/fash-003-2.jpg",
     ],
     category: "fashion",
@@ -1114,9 +1114,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "50 minutes ago",
     },
-    imageUrl: "https://unsplash.com/photos/black-tote-bag-9b6UhV4nLZs",
+    imageUrl:
+      "https://plus.unsplash.com/premium_photo-1750218296007-f73edb01d1ba?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/black-tote-bag-9b6UhV4nLZs",
+      "https://plus.unsplash.com/premium_photo-1750218296007-f73edb01d1ba?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       "https://example.com/gallery/fash-004-2.jpg",
     ],
     category: "fashion",
@@ -1140,9 +1141,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "3 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-pair-of-sunglasses-sitting-on-top-of-a-black-surface-p3JlrHHuNqo",
+      "https://images.unsplash.com/photo-1530432999454-016a47c78af3?q=80&w=1336&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-pair-of-sunglasses-sitting-on-top-of-a-black-surface-p3JlrHHuNqo",
+      "https://images.unsplash.com/photo-1530432999454-016a47c78af3?q=80&w=1336&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       "https://example.com/gallery/fash-005-2.jpg",
     ],
     category: "fashion",
@@ -1166,9 +1167,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "2 days ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/white-off-shoulder-wedding-dress-kzY3mKp91gI",
+      "https://plus.unsplash.com/premium_photo-1661432699720-b50b2abd5c0a?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/white-off-shoulder-wedding-dress-kzY3mKp91gI",
+      "https://plus.unsplash.com/premium_photo-1661432699720-b50b2abd5c0a?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       "https://example.com/gallery/fash-006-2.jpg",
     ],
     category: "fashion",
@@ -1192,9 +1193,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "1 day ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/woman-wearing-brown-knitted-cardigan-standing-beside-fence-IN6KPUe8j04",
+      "https://plus.unsplash.com/premium_photo-1758611682513-261331205a40?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/woman-wearing-brown-knitted-cardigan-standing-beside-fence-IN6KPUe8j04",
+      "https://plus.unsplash.com/premium_photo-1758611682513-261331205a40?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     ],
     category: "fashion",
     listingType: "want-to-buy",
@@ -1217,9 +1218,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "1 hour ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-man-wearing-a-white-shirt-qhEtBk_Bozc",
+      "https://images.unsplash.com/photo-1624522955553-a5240288ce21?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/a-man-wearing-a-white-shirt-qhEtBk_Bozc",
+      "https://images.unsplash.com/photo-1624522955553-a5240288ce21?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       "https://example.com/gallery/fash-008-2.jpg",
     ],
     category: "fashion",
@@ -1228,8 +1229,6 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     views: 90,
     protected: false,
   },
-
-  // --- GAMING (Category: gaming) ---
   {
     id: "game-001",
     title: "Nintendo Switch OLED (White)",
@@ -1245,7 +1244,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "45 minutes ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-nintendo-wii-game-controller-sitting-on-top-of-a-table-xNUXE7iUBo8",
+      "https://images.unsplash.com/photo-1680007966627-d49ae18dbbae?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://unsplash.com/photos/a-nintendo-wii-game-controller-sitting-on-top-of-a-table-xNUXE7iUBo8",
       "https://example.com/gallery/game-001-2.jpg",
@@ -1271,10 +1270,11 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "2 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-close-up-of-a-video-game-controller-bZ6ZpgG3u4M",
+      "https://images.unsplash.com/photo-1643906651350-20325b18debb?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://unsplash.com/photos/a-close-up-of-a-video-game-controller-bZ6ZpgG3u4M",
-      "https://example.com/gallery/game-002-2.jpg",
+      "https://unsplash.com/photos/two-video-game-controllers-sitting-side-by-side-K_QbvoNqRvo",
+      "https://unsplash.com/photos/a-close-up-of-a-video-game-controller-k4c5V15zf-4",
     ],
     category: "gaming",
     listingType: "for-sale",
@@ -1296,8 +1296,13 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: false,
       timePosted: "6 hours ago",
     },
-    imageUrl: "https://unsplash.com/photos/a-close-up-of-a-knife-WLAW-NGcMiw",
-    gallery: ["https://unsplash.com/photos/a-close-up-of-a-knife-WLAW-NGcMiw"],
+    imageUrl:
+      "https://images.unsplash.com/photo-1654621158365-55fcf7b76fb7?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    gallery: [
+      "https://unsplash.com/photos/a-close-up-of-a-knife-WLAW-NGcMiw",
+      "https://unsplash.com/photos/a-close-up-of-a-video-game-controller-qgyAjUAtDW4",
+      "https://unsplash.com/photos/a-cell-phone-sitting-on-top-of-a-wooden-table-RKch9pfBmnA",
+    ],
     category: "gaming",
     listingType: "want-to-buy",
     tags: ["steam-deck", "pc-gaming", "portable", "wtb"],
@@ -1319,10 +1324,11 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "4 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/black-xbox-one-console-with-controller-DPOdCl4bGJU",
+      "https://images.unsplash.com/photo-1621259182978-fbf93132d53d?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://unsplash.com/photos/black-xbox-one-console-with-controller-DPOdCl4bGJU",
-      "https://example.com/gallery/game-004-2.jpg",
+      "https://unsplash.com/photos/white-xbox-one-game-controller-ABbtsOGAmZ4",
+      "https://unsplash.com/photos/white-xbox-one-game-controller-CYRP7Tv--Ns",
     ],
     category: "gaming",
     listingType: "for-sale",
@@ -1345,9 +1351,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "1 hour ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/black-and-white-sketch-of-man-CrTVcBoFlxc",
+      "https://images.unsplash.com/photo-1585984968562-1443b72fb0dc?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/black-and-white-sketch-of-man-CrTVcBoFlxc",
+      "https://preview.redd.it/found-a-good-discounted-physical-edition-really-excited-to-v0-jqac4wtxpt5e1.jpeg?auto=webp&s=8725055d987b616b0c8a5591ac09d9d0315b7797",
+      "https://i.ebayimg.com/thumbs/images/g/PU4AAeSwxwRo1YJl/s-l1200.jpg",
     ],
     category: "gaming",
     listingType: "for-sale",
@@ -1370,10 +1377,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "1 day ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/black-and-white-digital-device-hSNE-IbwJV4",
+      "https://images.unsplash.com/photo-1630835149127-e07e5f9b0a9f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://unsplash.com/photos/black-and-white-digital-device-hSNE-IbwJV4",
-      "https://example.com/gallery/game-006-2.jpg",
+      "https://images.unsplash.com/photo-1749135583906-3baa6e31434c?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjd8fG5pbnRlbmRvJTIwY29uc29sZXxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "gaming",
     listingType: "for-sale",
@@ -1396,9 +1403,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "9 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/black-and-blue-corded-headphones-Zea2Q0UK3KQ",
+      "https://images.unsplash.com/photo-1674989844487-722ec77b9b81?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
-      "https://unsplash.com/photos/black-and-blue-corded-headphones-Zea2Q0UK3KQ",
+      "https://images.unsplash.com/photo-1591105866700-cb5d708ccd93?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fFJhemVyJTIwQmxhY2tTaGFyayUyMFYyJTIwUHJvJTIwSGVhZHNldHxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "gaming",
     listingType: "want-to-buy",
@@ -1421,10 +1428,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "3 hours ago",
     },
     imageUrl:
-      "https://unsplash.com/photos/a-person-holding-a-phone-and-a-keyboard-BgFjWcCicYA",
+      "https://images.unsplash.com/photo-1623593475667-377c7376f0f4?q=80&w=1365&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://unsplash.com/photos/a-person-holding-a-phone-and-a-keyboard-BgFjWcCicYA",
-      "https://example.com/gallery/game-008-2.jpg",
+      "https://images.unsplash.com/photo-1733751605002-8634ac96006b?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     ],
     category: "gaming",
     listingType: "for-sale",
@@ -1452,7 +1459,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1487803836022-91054ca05fdd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cm9hZCUyMGJpa2V8ZW58MHwwfDR8fHww",
     gallery: [
       "https://images.unsplash.com/photo-1487803836022-91054ca05fdd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cm9hZCUyMGJpa2V8ZW58MHwwfDR8fHww",
-      "https://example.com/gallery/sport-001-2.jpg",
+      "https://images.unsplash.com/photo-1695808403736-ebfb667a05ce?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fHJvYWQlMjBiaWtlfGVufDB8fDB8fHww",
     ],
     category: "sport",
     listingType: "for-sale",
@@ -1478,6 +1485,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8ZHVtYmJlbGxzfGVufDB8MHw0fHx8MA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8ZHVtYmJlbGxzfGVufDB8MHw0fHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1685633225047-92be467dbe57?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZHVtYmVsbCUyMHNldHxlbnwwfHwwfHx8MA%3D%3D",
     ],
     category: "sport",
     listingType: "want-to-buy",
@@ -1503,7 +1511,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1564226803380-91139fdcb4d0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2h1dHRsZWNvY2t8ZW58MHwwfDR8fHww",
     gallery: [
       "https://images.unsplash.com/photo-1564226803380-91139fdcb4d0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2h1dHRsZWNvY2t8ZW58MHwwfDR8fHww",
-      "https://example.com/gallery/sport-003-2.jpg",
+      "https://5.imimg.com/data5/CN/HZ/EA/SELLER-65772240/yonex-badminton-racket.jpg",
     ],
     category: "sport",
     listingType: "for-sale",
@@ -1529,7 +1537,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1580902394724-b08ff9ba7e8a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YWRpZGFzJTIwc2hvZXN8ZW58MHwwfDR8fHww",
     gallery: [
       "https://images.unsplash.com/photo-1580902394724-b08ff9ba7e8a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YWRpZGFzJTIwc2hvZXN8ZW58MHwwfDR8fHww",
-      "https://example.com/gallery/sport-004-2.jpg",
+      "https://al-ikhsan.com/cdn/shop/files/if6345.jpg?v=1724041107",
     ],
     category: "sport",
     listingType: "for-sale",
@@ -1555,7 +1563,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1675106643681-da7ad12e926f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z29sZiUyMGNsdWJzfGVufDB8MHw0fHx8MA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1675106643681-da7ad12e926f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z29sZiUyMGNsdWJzfGVufDB8MHw0fHx8MA%3D%3D",
-      "https://example.com/gallery/sport-005-2.jpg",
+      "https://images.unsplash.com/photo-1698324010210-87ce3105292e?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzV8fGdvbGYlMjBjbHViJTIwc2V0fGVufDB8fDB8fHww",
     ],
     category: "sport",
     listingType: "for-sale",
@@ -1578,9 +1586,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "9 hours ago",
     },
     imageUrl:
-      "https://images.unsplash.com/photo-1549488346-6c70094776e1?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1645059986162-d077871822b6?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fFNjdWJhJTIwRGl2aW5nJTIwQkNEfGVufDB8fDB8fHww",
     gallery: [
-      "https://images.unsplash.com/photo-1549488346-6c70094776e1?auto=format&fit=crop&w=800&q=80",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQS6xeI8awNtHlHSFrNQftdb9VI2EqNhtaUJg&s",
     ],
     category: "sport",
     listingType: "want-to-buy",
@@ -1606,7 +1614,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://plus.unsplash.com/premium_photo-1677530095881-f49a6bcabef0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c2N1YmElMjBkaXZpbmd8ZW58MHwwfDR8fHww",
     gallery: [
       "https://plus.unsplash.com/premium_photo-1677530095881-f49a6bcabef0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c2N1YmElMjBkaXZpbmd8ZW58MHwwfDR8fHww",
-      "https://example.com/gallery/sport-007-2.jpg",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKe9nB-gX_DGuuRBUxX_xcJXGNTdymI2kIkA&s",
     ],
     category: "sport",
     listingType: "for-sale",
@@ -1629,10 +1637,10 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "5 days ago",
     },
     imageUrl:
-      "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmFza2V0YmFsbCUyMHNob2VzfGVufDB8MHw0fHx8MA%3D%3D",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTm5IO04dUeXmJDSI-ZtUGaQGuXJBkFioWwtQ&s",
     gallery: [
       "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmFza2V0YmFsbCUyMHNob2VzfGVufDB8MHw0fHx8MA%3D%3D",
-      "https://example.com/gallery/sport-008-2.jpg",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTm5IO04dUeXmJDSI-ZtUGaQGuXJBkFioWwtQ&s",
     ],
     category: "sport",
     listingType: "for-sale",
@@ -1641,88 +1649,6 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     protected: false,
   },
 ];
-
-// // Sample unified data (3 rows for testing)
-// export const UNIFIED_LISTINGS: UnifiedListingData[] = [
-//   {
-//     id: "elec-001",
-//     title: "Gaming PC Setup",
-//     subtitle: "RTX 4070",
-//     description:
-//       'Complete gaming setup with RTX 4070, 32GB RAM, and 27" 144Hz monitor.',
-//     price: 3500.0,
-//     currency: "RM",
-//     seller: {
-//       name: "GamerGirl2024",
-//       location: "Sungai Besi, Kuala Lumpur",
-//       verified: true,
-//       timePosted: "1 hour ago",
-//     },
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=600&q=80",
-//     gallery: [
-//       "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=600&q=80",
-//       "https://images.unsplash.com/photo-1614624532983-4ce03382d63d?w=600&q=80",
-//       "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
-//     ],
-//     category: "electronics",
-//     listingType: "for-sale",
-//     tags: ["gaming", "rtx-4070", "complete-setup"],
-//     views: 234,
-//     protected: true,
-//   },
-//   {
-//     id: "elec-002",
-//     title: "iPhone 15 Pro Max",
-//     subtitle: "256GB Space Black",
-//     description:
-//       "Looking for a brand new or lightly used iPhone 15 Pro Max, 256GB. Willing to pay fair market price.",
-//     price: 4500.0,
-//     currency: "RM",
-//     seller: {
-//       name: "TechHunter",
-//       location: "Petaling Jaya, Selangor",
-//       verified: false,
-//       timePosted: "2 hours ago",
-//     },
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&q=80",
-//     gallery: [
-//       "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&q=80",
-//     ],
-//     category: "electronics",
-//     listingType: "want-to-buy",
-//     tags: ["iphone", "apple", "wanted"],
-//     views: 89,
-//     protected: false,
-//   },
-//   {
-//     id: "elec-003",
-//     title: "MacBook Pro M3",
-//     subtitle: "14-inch 512GB",
-//     description:
-//       "Selling my MacBook Pro M3 14-inch with 512GB storage. Excellent condition, barely used. Comes with original charger and box.",
-//     price: 6800.0,
-//     currency: "RM",
-//     seller: {
-//       name: "DesignPro",
-//       location: "Mont Kiara, Kuala Lumpur",
-//       verified: true,
-//       timePosted: "4 hours ago",
-//     },
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=600&q=80",
-//     gallery: [
-//       "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=600&q=80",
-//       "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
-//     ],
-//     category: "electronics",
-//     listingType: "for-sale",
-//     tags: ["macbook", "apple", "m3", "laptop"],
-//     views: 156,
-//     protected: true,
-//   },
-// ];
 
 // helper functions
 export function getListingsByCategory(
