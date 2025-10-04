@@ -9,17 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-const COLORS = {
-  background: "#E8EDDF",
-  text: "#333533",
-  textActive: "#242423",
-  hoverBg: "#CFDBD5",
-  activeBg: "#F1D688",
-  accentFrom: "#F3D172",
-  accentTo: "#F5CB5C",
-  accentActive: "#F5CB5C",
-};
+import { COLORS } from "../../theme";
 
 interface FormData {
   userDescription: string;
@@ -67,11 +57,11 @@ export default function CreateBuyListingPage() {
     await new Promise(resolve => setTimeout(resolve, 2500));
     
     const mockData = {
-      title: 'Air Jordan Retro Basketball Shoes - Red Edition (2005)',
-      description: `Looking for authentic Air Jordan basketball shoes from the iconic 2005 collection in vibrant red colorway. These classic sneakers represent the perfect blend of style and performance, featuring the signature Jordan design elements and premium materials.
+      title: 'Air Jordan 1 Retro High OG "Chicago"',
+      description: `Looking for authentic Air Jordan 1 Retro High OG "Chicago" in excellent condition with minimal signs of wear.
 
 Key Features Desired:
-• Authentic 2005 Air Jordan model
+• Authentic  Air Jordan 1 Retro High OG "Chicago"
 • Red color scheme (primary or accent)
 • Original or well-maintained condition
 • Complete with original box and accessories (preferred)
@@ -79,7 +69,7 @@ Key Features Desired:
 • Gender: Unisex models accepted
 
 Condition: Prefer gently used to new condition. Minor wear acceptable if reflected in price. Must have no major defects, sole separation, or structural damage.`,
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop'
+      image: 'https://images.unsplash.com/photo-1695697104675-429f5fcdede6?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     };
 
     setFormData(prev => ({
@@ -224,7 +214,7 @@ Condition: Prefer gently used to new condition. Minor wear acceptable if reflect
                     id="description"
                     value={formData.userDescription}
                     onChange={(e) => setFormData({...formData, userDescription: e.target.value})}
-                    placeholder="Example: I'm looking for a pair of red Air Jordan basketball shoes from 2005. Preferably in good condition with minimal wear..."
+                    placeholder="Example: I'm looking for a pair of Air Jordan 1 Retro High OG Chicago. Preferably in good condition with minimal wear..."
                     className="mt-2 min-h-[200px] text-base resize-none"
                     maxLength={500}
                   />
