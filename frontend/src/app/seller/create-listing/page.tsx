@@ -9,17 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-const COLORS = {
-  background: "#E8EDDF",
-  text: "#333533",
-  textActive: "#242423",
-  hoverBg: "#CFDBD5",
-  activeBg: "#F1D688",
-  accentFrom: "#F3D172",
-  accentTo: "#F5CB5C",
-  accentActive: "#F5CB5C",
-};
+import { COLORS } from "../../theme";
 
 interface FormData {
   uploadedImages: string[];
@@ -78,9 +68,9 @@ export default function CreateSellListingPage() {
 
   const addSampleImages = () => {
     const sampleImages = [
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=800&h=800&fit=crop'
+      'https://images.unsplash.com/photo-1695697104675-429f5fcdede6?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      'https://images.unsplash.com/photo-1695748966450-3abe5c25b481?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      'https://images.unsplash.com/photo-1513188732907-5f732b831ca8?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     ];
     setFormData(prev => ({
       ...prev,
@@ -101,8 +91,8 @@ export default function CreateSellListingPage() {
     await new Promise(resolve => setTimeout(resolve, 3000));
     
     const mockData = {
-      title: 'Nike Air Jordan 1 Retro High OG - University Red/Black',
-      description: `Authentic Nike Air Jordan 1 Retro High OG in the classic University Red and Black colorway. These iconic sneakers are in excellent condition with minimal signs of wear.
+      title: 'Off-White x Air Jordan 1 Retro High OG "Chicago"',
+      description: `Authentic Off-White x Air Jordan 1 Retro High OG "Chicago". These iconic sneakers are in excellent condition with minimal signs of wear.
 
 Product Details:
 • Brand: Nike / Air Jordan
