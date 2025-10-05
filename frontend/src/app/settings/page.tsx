@@ -1,15 +1,11 @@
 "use client";
 
-import { COLORS } from "../theme";
 import { Switch } from "@/components/ui/switch";
 import { Bell, Shield, User, LogOut } from "lucide-react";
 
 export default function SettingsPage() {
   return (
-    <div
-      className="min-h-screen px-4 py-6 pb-24"
-      style={{ backgroundColor: COLORS.background, color: COLORS.text }}
-    >
+    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
       {/* Header */}
       <div className="flex justify-center mb-6">
         <h1 className="text-xl font-bold">Settings</h1>
@@ -31,7 +27,7 @@ export default function SettingsPage() {
               <span>Change Display Name</span>
               <button
                 className="px-3 py-1 rounded-lg text-sm font-medium"
-                style={{ backgroundColor: COLORS.accentFrom }}
+className="bg-secondary-500"
               >
                 Update
               </button>
@@ -40,7 +36,7 @@ export default function SettingsPage() {
               <span>Change Email</span>
               <button
                 className="px-3 py-1 rounded-lg text-sm font-medium"
-                style={{ backgroundColor: COLORS.accentFrom }}
+className="bg-secondary-500"
               >
                 Update
               </button>
@@ -49,7 +45,7 @@ export default function SettingsPage() {
               <span>Change Password</span>
               <button
                 className="px-3 py-1 rounded-lg text-sm font-medium"
-                style={{ backgroundColor: COLORS.accentFrom }}
+className="bg-secondary-500"
               >
                 Update
               </button>
@@ -110,7 +106,7 @@ export default function SettingsPage() {
           </span>
           <button
             className="px-3 py-1 rounded-lg text-sm font-medium"
-            style={{ backgroundColor: COLORS.activeBg }}
+className="bg-secondary-100"
           >
             Sign Out
           </button>

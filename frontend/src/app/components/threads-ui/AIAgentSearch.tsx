@@ -1,5 +1,4 @@
 import { Plus, Paperclip } from "lucide-react";
-import { COLORS } from "../../theme";
 
 type AIAgentSearchProps = {
   onOpenAI: () => void;
@@ -7,10 +6,7 @@ type AIAgentSearchProps = {
 
 function AIAgentSearch({ onOpenAI }: AIAgentSearchProps) {
   return (
-    <div
-      className="w-full h-screen flex items-center justify-center px-4 md:px-8"
-      style={{ background: COLORS.accentTo }}
-    >
+    <div className="w-full h-screen flex items-center justify-center px-4 md:px-8 bg-secondary-600">
       {/* Main Container - Flexible Layout */}
       <div className="w-full max-w-none flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
         {/* Search Section - Responsive */}

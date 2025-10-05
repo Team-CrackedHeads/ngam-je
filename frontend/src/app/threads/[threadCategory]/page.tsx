@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ListingCard from "@/app/components/threads-category-ui/ListingCard";
+import { CategoryBreadcrumb } from "@/app/components/threads-category-ui/CategoryBreadcrumb";
 import {
   UNIFIED_LISTINGS,
   UnifiedListingData,
   getListingsByCategory,
 } from "@/utils/mock-threads-data";
 
-import { COLORS } from "../../theme";
 type ListingType = "wtb" | "wts";
 
 const CategoryPage: React.FC = () => {
@@ -57,6 +57,9 @@ const CategoryPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <CategoryBreadcrumb category={category} activeType={activeType} />
+
         {/* Category Header */}
         <h1 className="text-2xl font-bold mb-4 capitalize">
           {category} Marketplace
@@ -68,8 +71,8 @@ const CategoryPage: React.FC = () => {
             onClick={() => handleTypeChange("wtb")}
             className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
               activeType === "wtb"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-primary-500 text-white"
+                : "bg-neutral-100 text-accent-500 hover:bg-primary-200"
             }`}
           >
             Want to Buy ({getListingsByCategory(category, "want-to-buy").length}
@@ -80,8 +83,8 @@ const CategoryPage: React.FC = () => {
             onClick={() => handleTypeChange("wts")}
             className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
               activeType === "wts"
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-secondary-500 text-white"
+                : "bg-neutral-100 text-accent-500 hover:bg-primary-200"
             }`}
           >
             Want to Sell ({getListingsByCategory(category, "for-sale").length})

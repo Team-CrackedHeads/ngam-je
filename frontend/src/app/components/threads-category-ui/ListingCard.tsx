@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Heart, MessageSquare, CircleHelp } from "lucide-react";
-import { COLORS } from "@/app/theme";
 
 // Updated type to match UnifiedListingData
 export type UnifiedListingData = {
@@ -93,21 +92,14 @@ const ListingCard: React.FC<ListingCardProps> = ({
         />
         {/* Themed badge */}
         <span
-          className="absolute top-2 left-2 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md"
-          style={{
-            backgroundColor:
-              listingType === "for-sale" ? COLORS.activeBg : "#3B82F6",
-          }}
+          className={`absolute top-2 left-2 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md ${listingType === "for-sale" ? 'bg-secondary-500' : 'bg-primary-500'}`}
         >
           {listingType === "for-sale" ? "For Sale" : "Want to Buy"}
         </span>
       </div>
 
       {/* Title with subtitle */}
-      <h3
-        className="mt-3 font-bold text-lg line-clamp-2"
-        style={{ color: COLORS.textActive }}
-      >
+      <h3 className="mt-3 font-bold text-lg line-clamp-2 text-accent-700">
         {title}
         {subtitle && <span className="text-sm font-normal"> - {subtitle}</span>}
       </h3>
@@ -120,11 +112,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         {tags.slice(0, 3).map((tag) => (
           <span
             key={tag}
-            className="text-xs px-3 py-1 rounded-full font-medium transition-colors hover:opacity-90"
-            style={{
-              backgroundColor: COLORS.accentFrom,
-              color: COLORS.text,
-            }}
+            className="text-xs px-3 py-1 rounded-full font-medium transition-colors hover:opacity-90 bg-secondary-100 text-accent-600"
           >
             {tag}
           </span>
@@ -137,16 +125,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
       </div>
 
       {/* Price - Updated format */}
-      <div
-        className="font-bold text-xl mt-3"
-        style={{ color: COLORS.textActive }}
-      >
+      <div className="font-bold text-xl mt-3 text-accent-700">
         {currency} {price.toFixed(2)}
       </div>
 
       {/* Seller info - Updated to use seller object */}
       <div className="flex items-center text-sm text-gray-500 mt-2 gap-2">
-        <span className="font-medium" style={{ color: COLORS.text }}>
+        <span className="font-medium text-accent-500">
           {seller.name}
           {seller.verified && <span className="text-green-500 ml-1">✓</span>}
         </span>
@@ -169,18 +154,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             e.stopPropagation();
             onMessage?.(listing);
           }}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full text-sm font-medium transition-all duration-200 border"
-          style={{
-            borderColor: COLORS.accentFrom,
-            color: COLORS.text,
-            backgroundColor: "transparent",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.accentFrom;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-          }}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-secondary-500 text-accent-500 bg-neutral-white hover:bg-secondary-500 hover:text-white"
         >
           <MessageSquare className="w-4 h-4" />
           <span>Message</span>
@@ -191,17 +165,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             e.stopPropagation();
             onFAQ?.(listing);
           }}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full text-sm font-medium transition-all duration-200"
-          style={{
-            backgroundColor: COLORS.activeBg,
-            color: COLORS.text,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.accentTo;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.activeBg;
-          }}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 bg-secondary-500 text-white hover:bg-secondary-600"
         >
           <CircleHelp className="w-4 h-4" />
           <span>FAQ</span>

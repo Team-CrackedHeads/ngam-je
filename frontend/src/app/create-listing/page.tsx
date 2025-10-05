@@ -235,70 +235,70 @@ All pictures show the actual item you will receive. Item will be shipped with ca
   };
 
   return (
-    <div className="min-h-screen bg-app-bg">
+    <div className="min-h-screen bg-primary-100">
       {/* Minimal Header for Intent Selection */}
       {currentStep === 0 ? (
-        <div className="relative min-h-screen flex flex-col">
-          <div className="absolute inset-0 bg-app-gradient opacity-10"></div>
-          <div className="relative max-w-7xl mx-auto px-4 py-16 flex-1 flex flex-col justify-center">
-            <div className="text-center mb-20">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-8 shadow-lg bg-app-gradient">
-                <Search className="w-10 h-10 text-white" />
+        <div className="relative min-h-screen">
+          <div className="absolute inset-0 bg-primary-gradient opacity-10"></div>
+          <div className="relative max-w-7xl mx-auto px-4 py-12 flex flex-col justify-center min-h-screen">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6 shadow-lg bg-primary-gradient">
+                <Search className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-6xl font-bold mb-6 text-app-text-active">
+              <h1 className="text-4xl font-bold mb-4 text-accent-700">
                 Create Your Listing
               </h1>
-              <p className="text-2xl max-w-3xl mx-auto leading-relaxed text-app-text">
+              <p className="text-lg max-w-2xl mx-auto leading-relaxed text-accent-500">
                 Join thousands of users buying and selling with AI-powered matching
               </p>
             </div>
 
             {/* Modern A/B Door Interface */}
-            <div className="max-w-6xl mx-auto flex-1">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 h-full">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* Buy Option */}
                 <div
                   onClick={() => handleIntentSelection('buy')}
-                  className="group relative cursor-pointer h-full"
+                  className="group relative cursor-pointer"
                 >
-                  <div className="absolute inset-0 bg-app-gradient rounded-3xl opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
-                  <div className="relative bg-app-white rounded-3xl p-10 shadow-2xl border-2 border-app-hover group-hover:shadow-3xl hover:border-app-accent transition-all duration-300 h-full flex flex-col justify-between">
+                  <div className="absolute inset-0 bg-primary-gradient rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
+                  <div className="relative bg-neutral-white rounded-2xl p-6 shadow-xl border-2 border-primary-200 group-hover:shadow-2xl hover:border-secondary-400 transition-all duration-300 flex flex-col justify-between">
                     <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl mb-8 bg-app-active group-hover:scale-110 transition-transform duration-300">
-                        <Search className="w-12 h-12 text-app-accent" />
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-secondary-100 group-hover:scale-110 transition-transform duration-300">
+                        <Search className="w-8 h-8 text-primary-600" />
                       </div>
-                      <h2 className="text-4xl font-bold mb-6 text-app-text-active">
+                      <h2 className="text-2xl font-bold mb-3 text-accent-700">
                         I'm Looking to Buy
                       </h2>
-                      <p className="text-xl leading-relaxed mb-8 text-app-text">
+                      <p className="text-base leading-relaxed mb-4 text-accent-500">
                         Set your budget and let sellers compete to fulfill your needs
                       </p>
 
-                      <div className="space-y-4 text-left mb-10">
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Describe what you're looking for</span>
+                      <div className="space-y-2 text-left mb-6">
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Describe what you're looking for</span>
                         </div>
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Set your budget range</span>
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Set your budget range</span>
                         </div>
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Get matched with sellers</span>
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Get matched with sellers</span>
                         </div>
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Secure escrow protection</span>
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Secure escrow protection</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="text-center">
-                      <div className="inline-flex items-center justify-center px-8 py-4 rounded-2xl text-white font-bold text-lg bg-app-gradient group-hover:scale-105 transition-transform duration-300 shadow-lg">
+                      <div className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-accent-700 font-semibold text-base bg-secondary-500 hover:bg-secondary-600 group-hover:scale-105 transition-all duration-300 shadow-lg">
                         Start Buying
-                        <ChevronRight className="w-6 h-6 ml-3" />
+                        <ChevronRight className="w-5 h-5 ml-2" />
                       </div>
                     </div>
                   </div>
@@ -307,45 +307,45 @@ All pictures show the actual item you will receive. Item will be shipped with ca
                 {/* Sell Option */}
                 <div
                   onClick={() => handleIntentSelection('sell')}
-                  className="group relative cursor-pointer h-full"
+                  className="group relative cursor-pointer"
                 >
-                  <div className="absolute inset-0 bg-app-gradient-reverse rounded-3xl opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
-                  <div className="relative bg-app-white rounded-3xl p-10 shadow-2xl border-2 border-app-hover group-hover:shadow-3xl hover:border-app-accent transition-all duration-300 h-full flex flex-col justify-between">
+                  <div className="absolute inset-0 bg-primary-gradient-reverse rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
+                  <div className="relative bg-neutral-white rounded-2xl p-6 shadow-xl border-2 border-primary-200 group-hover:shadow-2xl hover:border-secondary-400 transition-all duration-300 flex flex-col justify-between">
                     <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl mb-8 bg-app-active group-hover:scale-110 transition-transform duration-300">
-                        <Upload className="w-12 h-12 text-app-accent" />
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-secondary-100 group-hover:scale-110 transition-transform duration-300">
+                        <Upload className="w-8 h-8 text-primary-600" />
                       </div>
-                      <h2 className="text-4xl font-bold mb-6 text-app-text-active">
+                      <h2 className="text-2xl font-bold mb-3 text-accent-700">
                         I Want to Sell
                       </h2>
-                      <p className="text-xl leading-relaxed mb-8 text-app-text">
+                      <p className="text-base leading-relaxed mb-4 text-accent-500">
                         List your items and connect with interested buyers automatically
                       </p>
 
-                      <div className="space-y-4 text-left mb-10">
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Upload photos of your item</span>
+                      <div className="space-y-2 text-left mb-6">
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Upload photos of your item</span>
                         </div>
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">AI optimizes your listing</span>
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">AI optimizes your listing</span>
                         </div>
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Get intelligent price suggestions</span>
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Get intelligent price suggestions</span>
                         </div>
-                        <div className="flex items-center text-app-text">
-                          <div className="w-3 h-3 rounded-full mr-4 bg-app-accent"></div>
-                          <span className="text-lg">Connect with verified buyers</span>
+                        <div className="flex items-center text-accent-500">
+                          <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                          <span className="text-sm">Connect with verified buyers</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="text-center">
-                      <div className="inline-flex items-center justify-center px-8 py-4 rounded-2xl text-white font-bold text-lg bg-app-gradient-reverse group-hover:scale-105 transition-transform duration-300 shadow-lg">
+                      <div className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-accent-700 font-semibold text-base bg-primary-500 hover:bg-primary-600 group-hover:scale-105 transition-all duration-300 shadow-lg">
                         Start Selling
-                        <ChevronRight className="w-6 h-6 ml-3" />
+                        <ChevronRight className="w-5 h-5 ml-2" />
                       </div>
                     </div>
                   </div>
@@ -354,10 +354,10 @@ All pictures show the actual item you will receive. Item will be shipped with ca
               </div>
 
               {/* Bottom Feature Highlight */}
-              <div className="text-center mt-20 pb-16">
-                <div className="inline-flex items-center justify-center px-8 py-4 rounded-full border border-app-accent/20 bg-app-hover/80 shadow-lg backdrop-blur-sm">
-                  <Sparkles className="w-6 h-6 mr-3 text-app-accent" />
-                  <span className="font-semibold text-lg text-app-text-active">
+              <div className="text-center mt-8 pb-8">
+                <div className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-accent-600/20 bg-primary-100/80 shadow-lg backdrop-blur-sm">
+                  <Sparkles className="w-5 h-5 mr-2 text-accent-600" />
+                  <span className="font-medium text-base text-accent-700">
                     AI-powered matching ensures fair deals for everyone
                   </span>
                 </div>
@@ -367,29 +367,29 @@ All pictures show the actual item you will receive. Item will be shipped with ca
         </div>
       ) : (
         // Progressive Header for Multi-Step Flow
-        <div className="bg-app-hover border-b border-app-hover sticky top-0 z-10 shadow-sm">
+        <div className="bg-primary-100 border-b border-primary-200 sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleBack}
-                className="flex items-center text-app-text hover:text-app-text-active hover:bg-app-active"
+                className="flex items-center text-accent-500 hover:text-accent-700 hover:bg-primary-200"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Back
               </Button>
 
               <div className="text-center">
-                <h1 className="text-xl font-semibold text-app-text-active">{getPageTitle()}</h1>
-                <p className="text-sm text-app-text">Step {currentStep} of 5</p>
+                <h1 className="text-xl font-semibold text-accent-700">{getPageTitle()}</h1>
+                <p className="text-sm text-accent-500">Step {currentStep} of 5</p>
               </div>
 
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={resetToIntent}
-                className="text-app-text hover:text-app-text-active hover:bg-app-active"
+                className="text-accent-500 hover:text-accent-700 hover:bg-primary-200"
               >
                 Change Intent
               </Button>
@@ -409,17 +409,17 @@ All pictures show the actual item you will receive. Item will be shipped with ca
                         <div
                           className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${
                             isComplete
-                              ? 'bg-app-success text-white'
+                              ? 'bg-success-500 text-white'
                               : isActive
-                              ? 'bg-app-accent text-white shadow-app-accent/25 scale-115'
-                              : 'bg-app-hover text-app-text'
+                              ? 'bg-accent-600 text-white shadow-accent-600/25 scale-115'
+                              : 'bg-primary-200 text-accent-500'
                           }`}
                         >
                           {isComplete ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
                         </div>
                         <span
                           className={`text-sm mt-3 font-medium transition-colors ${
-                            isActive ? 'text-app-text-active' : 'text-app-text'
+                            isActive ? 'text-accent-700' : 'text-accent-500'
                           }`}
                         >
                           {step.label}
@@ -428,7 +428,7 @@ All pictures show the actual item you will receive. Item will be shipped with ca
                       {index < steps.slice(1).length - 1 && (
                         <div
                           className={`flex-1 h-1 mx-4 rounded transition-colors duration-300 ${
-                            isComplete ? 'bg-app-success' : 'bg-app-hover'
+                            isComplete ? 'bg-success-500' : 'bg-primary-200'
                           }`}
                         />
                       )}
@@ -443,22 +443,22 @@ All pictures show the actual item you will receive. Item will be shipped with ca
 
       {/* Content Area for Multi-Step Flow */}
       {currentStep > 0 && (
-        <div className="min-h-screen flex flex-col bg-app-bg">
-          <div className="max-w-5xl mx-auto px-4 py-12 flex-1 flex items-center justify-center">
-            <div className="bg-app-white rounded-3xl shadow-2xl border-2 border-app-hover p-12 w-full max-w-2xl">
+        <div className="min-h-screen flex flex-col bg-primary-100">
+          <div className="max-w-4xl mx-auto px-4 py-12 flex-1 flex items-center justify-center">
+            <div className="bg-neutral-white rounded-2xl shadow-xl border-2 border-primary-200 p-8 w-full max-w-xl">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-8 bg-app-gradient">
-                  <Sparkles className="w-10 h-10 text-white" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6 bg-primary-gradient">
+                  <Sparkles className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-3xl font-bold mb-6 text-app-text-active">
+                <h3 className="text-2xl font-bold mb-4 text-accent-700">
                   Step {currentStep} - Coming Soon
                 </h3>
-                <p className="text-xl mb-10 leading-relaxed text-app-text">
+                <p className="text-base mb-6 leading-relaxed text-accent-500">
                   This step will be implemented in the next phase of development.
                 </p>
                 <Button
                   onClick={() => setCurrentStep(0)}
-                  className="bg-app-gradient text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-secondary-500 hover:bg-secondary-600 text-accent-700 px-6 py-3 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Back to Intent Selection
                 </Button>

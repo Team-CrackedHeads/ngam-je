@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageCircle, User, Settings, ArrowLeft, ArrowRight, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon } from "lucide-react"
+import { Home, MessageCircle, User, Settings, Menu, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon, TrendingUp, Search } from "lucide-react"
 import { useEffect, useState } from "react"
-import { COLORS } from "../theme"
+import { MOCK_THREADS } from "@/utils/mock-threads-data"
 import {
   Sidebar,
   SidebarContent,
@@ -122,13 +122,10 @@ function AIAssistantCard() {
   }
 
   return (
-    <div className="p-3 mx-2 rounded-lg border" style={{
-      backgroundColor: COLORS.offwhite,
-      borderColor: COLORS.hoverBg
-    }}>
+    <div className="p-3 mx-2 rounded-lg border bg-neutral-50 border-primary-200">
       <div className="flex items-center gap-2 mb-3">
-        <Clock className="w-4 h-4" style={{ color: COLORS.textActive }} />
-        <span className="text-sm font-medium" style={{ color: COLORS.textActive }}>
+        <Clock className="w-4 h-4 text-accent-700" />
+        <span className="text-sm font-medium text-accent-700">
           Chat History
         </span>
       </div>
@@ -142,19 +139,10 @@ function AIAssistantCard() {
           <div
             key={chat.id}
             onClick={() => handleChatClick(chat.id)}
-            className="p-2 rounded cursor-pointer transition-colors text-xs"
-            style={{ color: COLORS.text }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.hoverBg
-              e.currentTarget.style.color = COLORS.textActive
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.color = COLORS.text
-            }}
+            className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
           >
             <div className="truncate font-medium">{chat.title}</div>
-            <div style={{ color: COLORS.text + '80' }} className="text-[10px]">
+            <div className="text-[10px] text-accent-400">
               {chat.timestamp}
             </div>
           </div>
@@ -162,7 +150,7 @@ function AIAssistantCard() {
 
         {loading && (
           <div className="flex justify-center py-2">
-            <div className="text-xs" style={{ color: COLORS.text + '80' }}>
+            <div className="text-xs text-accent-400">
               Loading...
             </div>
           </div>
@@ -170,7 +158,7 @@ function AIAssistantCard() {
 
         {visibleChats >= mockChatHistory.length && mockChatHistory.length > 5 && (
           <div className="flex justify-center py-2">
-            <div className="text-xs" style={{ color: COLORS.text + '80' }}>
+            <div className="text-xs text-accent-400">
               No more chats
             </div>
           </div>
@@ -178,7 +166,7 @@ function AIAssistantCard() {
 
         {visibleChats < mockChatHistory.length && visibleChats >= MAX_LOADED_COUNT && (
           <div className="flex justify-center py-2">
-            <div className="text-xs" style={{ color: COLORS.text + '60' }}>
+            <div className="text-xs text-accent-300">
               {mockChatHistory.length - visibleChats} older chats hidden
             </div>
           </div>
@@ -188,20 +176,7 @@ function AIAssistantCard() {
       {/* New Chat Button */}
       <button
         onClick={handleNewChat}
-        className="w-full p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border"
-        style={{
-          backgroundColor: COLORS.activeBg,
-          color: COLORS.textActive,
-          borderColor: COLORS.accentActive,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = COLORS.accentActive
-          e.currentTarget.style.transform = 'translateY(-1px)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = COLORS.activeBg
-          e.currentTarget.style.transform = 'translateY(0)'
-        }}
+        className="w-full p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-100 text-accent-700 border-accent-600 hover:bg-accent-600 hover:-translate-y-0.5"
       >
         <Plus className="w-3 h-3" />
         <span>New Chat</span>
@@ -210,19 +185,130 @@ function AIAssistantCard() {
   )
 }
 
-function NgamJeAssistantMenuItem() {
+function FollowingMenuItem() {
   const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+
+  // Get most visited threads (sorted by views)
+  const mostVisitedThreads = MOCK_THREADS
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 5) // Top 5 most visited
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         onClick={() => setIsOpen(!isOpen)}
-        className="group/menu-item"
-        style={{
-          color: COLORS.textActive,
-          fontWeight: '600',
-          fontSize: '0.95rem'
-        }}
+        className="group/menu-item text-accent-700 font-semibold"
+      >
+        <TrendingUp className="w-5 h-5" />
+        <span>Following</span>
+        {isOpen ? (
+          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+        ) : (
+          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+        )}
+      </SidebarMenuButton>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
+        <SidebarMenuSub>
+          {mostVisitedThreads.map((thread) => (
+            <SidebarMenuSubItem key={thread.id}>
+              <SidebarMenuSubButton
+                asChild
+                isActive={pathname === `/threads/${thread.category}`}
+                className={pathname === `/threads/${thread.category}` ? 'bg-secondary-500 text-accent-700' : ''}
+              >
+                <Link
+                  href={`/threads/${thread.category}`}
+                  className={`flex items-center gap-3 ${pathname === `/threads/${thread.category}` ? 'text-accent-700 bg-secondary-500' : 'text-accent-500 hover:bg-primary-200 hover:text-accent-700'}`}
+                >
+                  <div className="w-6 h-6 rounded-full bg-primary-200 border border-primary-300 flex-shrink-0 overflow-hidden">
+                    <img
+                      src={thread.imageUrl}
+                      alt={thread.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement.style.background = 'linear-gradient(45deg, var(--color-primary-300), var(--color-secondary-300))';
+                      }}
+                    />
+                  </div>
+                  <span className="truncate text-xs font-medium flex-1 min-w-0">{thread.title}</span>
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      </div>
+    </SidebarMenuItem>
+  )
+}
+
+function NgamJeAssistantMenuItem() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [visibleChats, setVisibleChats] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const KEEP_RECENT_COUNT = 10 // Always keep first 10 items loaded
+  const MAX_LOADED_COUNT = 25 // Start deloading after this many items
+  const DELOAD_TO_COUNT = 15 // Deload back to this count
+
+  const handleNewChat = () => {
+    // Future implementation for creating new chat
+    console.log("Creating new AI chat...")
+  }
+
+  const handleChatClick = (chatId: number) => {
+    // Future implementation for opening existing chat
+    console.log("Opening chat:", chatId)
+  }
+
+  const loadMoreChats = () => {
+    if (loading || visibleChats >= mockChatHistory.length) return
+
+    setLoading(true)
+    // Simulate API call delay
+    setTimeout(() => {
+      const newCount = Math.min(visibleChats + 5, mockChatHistory.length)
+
+      // Hybrid deloading: if we exceed MAX_LOADED_COUNT, deload older items
+      if (newCount > MAX_LOADED_COUNT) {
+        setVisibleChats(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT))
+      } else {
+        setVisibleChats(newCount)
+      }
+
+      setLoading(false)
+    }, 300)
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+
+    // Load more when near bottom
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      loadMoreChats()
+    }
+
+    // Optional: Reset to recent items when scrolled back to top
+    if (scrollTop === 0 && visibleChats > KEEP_RECENT_COUNT) {
+      // Small delay to avoid flickering during fast scrolling
+      const currentTarget = e.currentTarget
+      setTimeout(() => {
+        if (currentTarget && currentTarget.scrollTop === 0) {
+          setVisibleChats(KEEP_RECENT_COUNT)
+        }
+      }, 500)
+    }
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        onClick={() => setIsOpen(!isOpen)}
+        className="group/menu-item text-accent-700 font-semibold"
       >
         <Sparkles className="w-5 h-5" />
         <span>Ngam-je Assistant</span>
@@ -238,8 +324,71 @@ function NgamJeAssistantMenuItem() {
           }`}
       >
         <SidebarMenuSub>
+
+          {/* Chat History Header */}
           <SidebarMenuSubItem>
-            <AIAssistantCard />
+            <div className="flex items-center gap-2 px-2 py-1">
+              <Clock className="w-4 h-4 text-accent-700" />
+              <span className="text-sm font-medium text-accent-700">
+                Chat History
+              </span>
+            </div>
+          </SidebarMenuSubItem>
+
+          {/* Chat History List */}
+          <SidebarMenuSubItem>
+            <div
+              className="max-h-32 overflow-y-auto space-y-1 px-2"
+              onScroll={handleScroll}
+            >
+              {mockChatHistory.slice(0, visibleChats).map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => handleChatClick(chat.id)}
+                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+                >
+                  <div className="truncate font-medium">{chat.title}</div>
+                  <div className="text-[10px] text-accent-400">
+                    {chat.timestamp}
+                  </div>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    Loading...
+                  </div>
+                </div>
+              )}
+
+              {visibleChats >= mockChatHistory.length && mockChatHistory.length > 5 && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    No more chats
+                  </div>
+                </div>
+              )}
+
+              {visibleChats < mockChatHistory.length && visibleChats >= MAX_LOADED_COUNT && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-300">
+                    {mockChatHistory.length - visibleChats} older chats hidden
+                  </div>
+                </div>
+              )}
+            </div>
+          </SidebarMenuSubItem>
+
+          {/* New Chat Button */}
+          <SidebarMenuSubItem>
+            <button
+              onClick={handleNewChat}
+              className="w-full mx-2 p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-500 text-accent-700 border-secondary-600 hover:bg-secondary-600 hover:-translate-y-0.5"
+            >
+              <Plus className="w-3 h-3" />
+              <span>New Chat</span>
+            </button>
           </SidebarMenuSubItem>
         </SidebarMenuSub>
       </div>
@@ -262,28 +411,11 @@ function NavigationMenuItem() {
             <SidebarMenuButton
               asChild
               isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
-              style={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? {
-                backgroundColor: COLORS.activeBg,
-                color: COLORS.textActive
-              } : {}}
+              className={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? 'bg-secondary-500 text-accent-700' : ''}
             >
               <Link
                 href={item.href}
-                style={{
-                  color: pathname === item.href ? COLORS.textActive : COLORS.text
-                }}
-                onMouseEnter={(e) => {
-                  if (pathname !== item.href) {
-                    e.currentTarget.style.backgroundColor = COLORS.hoverBg
-                    e.currentTarget.style.color = COLORS.textActive
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (pathname !== item.href) {
-                    e.currentTarget.style.backgroundColor = 'transparent'
-                    e.currentTarget.style.color = COLORS.text
-                  }
-                }}
+                className={`${pathname === item.href ? 'text-accent-700 bg-secondary-500' : 'text-accent-500 hover:bg-primary-200 hover:text-accent-700'}`}
               >
                 <item.icon />
                 <span>{item.label}</span>
@@ -300,12 +432,7 @@ function NavigationMenuItem() {
     <SidebarMenuItem>
       <SidebarMenuButton
         onClick={() => setIsOpen(!isOpen)}
-        className="group/menu-item"
-        style={{
-          color: COLORS.textActive,
-          fontWeight: '600',
-          fontSize: '0.95rem'
-        }}
+        className="group/menu-item text-accent-700 font-semibold"
       >
         <NavIcon className="w-5 h-5" />
         <span>Navigation</span>
@@ -326,28 +453,11 @@ function NavigationMenuItem() {
               <SidebarMenuSubButton
                 asChild
                 isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
-                style={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? {
-                  backgroundColor: COLORS.activeBg,
-                  color: COLORS.textActive
-                } : {}}
+                className={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? 'bg-secondary-500 text-accent-700' : ''}
               >
                 <Link
                   href={item.href}
-                  style={{
-                    color: pathname === item.href ? COLORS.textActive : COLORS.text
-                  }}
-                  onMouseEnter={(e) => {
-                    if (pathname !== item.href) {
-                      e.currentTarget.style.backgroundColor = COLORS.hoverBg
-                      e.currentTarget.style.color = COLORS.textActive
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== item.href) {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.color = COLORS.text
-                    }
-                  }}
+                  className={`${pathname === item.href ? 'text-accent-700 bg-secondary-500' : 'text-accent-500 hover:bg-primary-200 hover:text-accent-700'}`}
                 >
                   <item.icon />
                   <span>{item.label}</span>
@@ -362,25 +472,14 @@ function NavigationMenuItem() {
 }
 
 function CustomSidebarTrigger({ onManualToggle }: { onManualToggle: () => void }) {
-  const { state } = useSidebar()
-  const isOpen = state === "expanded"
-
   return (
     <button
       onClick={onManualToggle}
-      className="absolute -right-4 top-2 z-10 w-8 h-8 rounded-full flex items-center justify-center border-0 outline-none"
-      style={{
-        backgroundColor: 'var(--sidebar-background, #f8f9fa)',
-        color: COLORS.textActive,
-        borderRight: `2px solid ${COLORS.accentActive}`,
-        borderRadius: '50%'
-      }}
+      className="absolute -right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center border-0 outline-none bg-neutral-50 text-accent-700 border-2 border-accent-700 hover:bg-primary-200 transition-colors"
+      title="Toggle sidebar"
+      style={{ top: '50%', transform: 'translateY(-50%)' }}
     >
-      {isOpen ? (
-        <ArrowLeft className="w-4 h-4" />
-      ) : (
-        <ArrowRight className="w-4 h-4" />
-      )}
+      <Menu className="w-4 h-4" />
     </button>
   )
 }
@@ -391,6 +490,8 @@ export function AppSidebar() {
   const [isHovered, setIsHovered] = useState(false)
   const { state, setOpen } = useSidebar()
   const [isManuallyToggled, setIsManuallyToggled] = useState(state === "expanded")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearching, setIsSearching] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -417,6 +518,26 @@ export function AppSidebar() {
     setOpen(newState)
   }
 
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) return
+
+    setIsSearching(true)
+    // Simulate AI-powered tool search
+    console.log("AI searching for best tool based on:", query)
+
+    // Mock delay for AI processing
+    setTimeout(() => {
+      // Future implementation: AI will analyze the query and suggest the best tool/action
+      console.log("AI found best tool for:", query)
+      setIsSearching(false)
+    }, 1000)
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleSearch(searchQuery)
+  }
+
   if (!mounted) {
     return null
   }
@@ -425,16 +546,50 @@ export function AppSidebar() {
     <Sidebar
       variant="sidebar"
       collapsible="icon"
-      className="!relative"
+      className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300"
     >
       <SidebarHeader className="relative p-2">
         <CustomSidebarTrigger onManualToggle={handleManualToggle} />
+
+        {/* AI Search Bar in header - only show when expanded */}
+        <div className="mt-2">
+          <form onSubmit={handleSearchSubmit} className="group-data-[collapsible=icon]:hidden">
+            <div className="relative max-w-48 mx-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-accent-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search settings..."
+                className="w-full pl-10 pr-3 py-2 text-xs bg-neutral-100 border border-neutral-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent placeholder-neutral-500"
+                disabled={isSearching}
+              />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-secondary-500"></div>
+                </div>
+              )}
+            </div>
+          </form>
+          {/* Invisible spacer when collapsed to maintain header height */}
+          <div className="group-data-[collapsible=icon]:block hidden">
+            <div className="relative max-w-48 mx-auto">
+              <div className="w-full pl-10 pr-3 py-2 text-xs opacity-0 pointer-events-none">
+                placeholder
+              </div>
+            </div>
+          </div>
+        </div>
       </SidebarHeader>
       <SidebarContent
-        className="pt-4 flex-1"
+        className="pt-1.5 flex-1"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
+        <div className="ml-1 mr-5">
+          <SidebarSeparator />
+        </div>
+
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -454,8 +609,29 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <div className="ml-1 mr-5">
+          <SidebarSeparator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <FollowingMenuItem />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden mt-auto">
+        <div className="p-4 text-center w-56 mx-auto overflow-hidden">
+          <p className="text-xs text-accent-500 leading-relaxed">
+            Ngam-je by Team Cracked Heads™ <span className="text-[10px]">soon</span> 2025.
+            <br />
+            All rights reserved
+          </p>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   )
 }
