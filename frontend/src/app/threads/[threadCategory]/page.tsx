@@ -134,7 +134,7 @@ const CategoryPage: React.FC = () => {
 
   // Handle create listing navigation
   const handleCreateListing = () => {
-    router.push(`/create-listing/${category}`);
+    router.push(`/create-listing/`);
   };
   // Filter listings based on all active filters - UPDATED for UnifiedListingData
   const getFilteredListings = useCallback((): UnifiedListingData[] => {
