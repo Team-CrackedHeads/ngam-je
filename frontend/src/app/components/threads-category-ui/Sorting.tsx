@@ -1,4 +1,3 @@
-import { COLORS } from "@/app/theme";
 import React, { useState, useEffect } from "react";
 
 // Updated types to match UnifiedListingData structure
@@ -97,7 +96,7 @@ const Sorting: React.FC<SortingProps> = ({
   // Updated primary buttons to match UnifiedListingData features
   const primaryButtons = [
     {
-      label: "Verified Sellers",
+      label: "Verified",
       filter: "Verified Sellers" as PrimaryFilter,
       icon: "✓",
     },
@@ -151,18 +150,16 @@ const Sorting: React.FC<SortingProps> = ({
   };
 
   return (
-    <div className="w-full bg-white p-4">
+    <div className="w-full">
       {/* --- PRIMARY BUTTONS (Verified Sellers, Nearby, More/Less) --- */}
       <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
         {primaryButtons.map(({ label, filter, icon }) => (
           <button
             key={filter}
             onClick={() => handlePrimaryFilterClick(filter)}
-            className={getPrimaryButtonClasses(filter)}
-            style={{
-              backgroundColor:
-                activePrimaryFilter === filter ? COLORS.activeBg : "#f3f4f6", // gray-100
-            }}
+            className={`${getPrimaryButtonClasses(filter)} ${
+              activePrimaryFilter === filter ? "bg-secondary-500" : "bg-gray-100"
+            }`}
           >
             <span>{icon}</span>
             <span>{label}</span>
@@ -188,10 +185,7 @@ const Sorting: React.FC<SortingProps> = ({
       {isMoreOpen && (
         <div className="mt-4 p-4 border-t border-gray-200 animate-fadeIn">
           {/* Quick Filters */}
-          <h3
-            className="text-md font-semibold mb-2"
-            style={{ color: COLORS.textActive }}
-          >
+          <h3 className="text-md font-semibold mb-2 text-accent-700">
             Quick Filters
           </h3>
           <div className="flex flex-wrap gap-2 mb-4">
@@ -199,12 +193,9 @@ const Sorting: React.FC<SortingProps> = ({
               <div
                 key={filter}
                 onClick={() => handleQuickFilterToggle(filter)}
-                className={getChipClasses(activeQuickFilters.includes(filter))}
-                style={{
-                  backgroundColor: activeQuickFilters.includes(filter)
-                    ? COLORS.textActive
-                    : undefined,
-                }}
+                className={`${getChipClasses(activeQuickFilters.includes(filter))} ${
+                  activeQuickFilters.includes(filter) ? "bg-accent-700" : ""
+                }`}
               >
                 <span>{icon}</span>
                 <span>{label}</span>
@@ -213,10 +204,7 @@ const Sorting: React.FC<SortingProps> = ({
           </div>
 
           {/* Quick Sort */}
-          <h3
-            className="text-md font-semibold mb-2"
-            style={{ color: COLORS.textActive }}
-          >
+          <h3 className="text-md font-semibold mb-2 text-accent-700">
             Quick Sort
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -224,11 +212,9 @@ const Sorting: React.FC<SortingProps> = ({
               <div
                 key={sort}
                 onClick={() => handleQuickSortChange(sort)}
-                className={getChipClasses(activeQuickSort === sort)}
-                style={{
-                  backgroundColor:
-                    activeQuickSort === sort ? COLORS.textActive : undefined,
-                }}
+                className={`${getChipClasses(activeQuickSort === sort)} ${
+                  activeQuickSort === sort ? "bg-accent-700" : ""
+                }`}
               >
                 <span>{icon}</span>
                 <span>{label}</span>

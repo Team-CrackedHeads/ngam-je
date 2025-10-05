@@ -6,8 +6,10 @@ import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
 import AIAgentOverlay from "../components/threads-ui/AIAgentOverlay";
 import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
 import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
+import NgamOverview from "../components/threads-ui/NgamOverview";
 import FilterButton from "../components/threads-ui/FilterButton";
 import PageHeader from "../components/threads-ui/PageHeader";
+import { mockAIResponses, MockAIResponse } from "../../utils/mock-ai-data";
 
 // the different ways users can filter threads
 type FilterType = "All" | "Hot" | "Top" | "New";
@@ -23,6 +25,9 @@ function ThreadsPage() {
   // infinite scroll state
   const [displayedCount, setDisplayedCount] = useState(6); // start with 6 items
   const [isLoading, setIsLoading] = useState(false); // loading state for new items
+  // AI overview state
+  const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(null);
+  const [isAILoading, setIsAILoading] = useState(false);
 
   // handle infinite scroll for community threads section only
   useEffect(() => {
@@ -109,13 +114,29 @@ function ThreadsPage() {
     setIsCreateOpen(true);
   };
 
+  // when AI search starts, show loading in community section
+  const handleAISearchStart = () => {
+    setIsAILoading(true);
+    setCurrentOverview(null); // Clear any previous response
+  };
+
+  // when AI search is completed, show overview in community section
+  const handleAISearchComplete = (response: MockAIResponse) => {
+    setCurrentOverview(response);
+    setIsAILoading(false);
+  };
+
   return (
     <>
       {/* snap and scroll */}
       <div className="h-screen overflow-y-scroll snap-y snap-mandatory  scroll-smooth">
         {/* SECTION 1: AI AGENT - FULL SCREEN */}
         <div className="h-screen snap-start">
-          <AIAgentSearch onOpenAI={() => setIsAIOpen(true)} />
+          <AIAgentSearch
+            onOpenAI={() => setIsAIOpen(true)}
+            onSearchStart={handleAISearchStart}
+            onSearchComplete={handleAISearchComplete}
+          />
         </div>
 
         {/* SECTION 2: COMMUNITY THREADS - FULL SCREEN */}
@@ -129,6 +150,16 @@ function ThreadsPage() {
               activeFilter={activeFilter}
               onFilterChange={handleFilterChange}
             />
+
+            {/* Ngam Overview - shows above thread count when available or loading */}
+            {(currentOverview || isAILoading) && (
+              <NgamOverview
+                content={currentOverview?.content}
+                images={currentOverview?.images}
+                sources={currentOverview?.sources}
+                isLoading={isAILoading}
+              />
+            )}
 
             {/* shows how many threads are displayed */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">

@@ -352,8 +352,8 @@ function SearchFilter({
                         }
                         className={`px-3 py-2 rounded-lg border text-sm transition-colors text-left ${
                           filters.listingType === option.value
-                            ? "bg-orange-300 text-[#333353]"
-                            : "border-gray-200/50 hover:bg-purple-50/70 bg-white/50 backdrop-blur-sm"
+                            ? "bg-secondary-300 text-accent-700"
+                            : "border-neutral-200/50 hover:bg-primary-50/70 bg-neutral-white/50 backdrop-blur-sm"
                         }`}
                       >
                         {option.label}
@@ -493,8 +493,8 @@ function SearchFilter({
                         onClick={() => handleTagToggle(tag)}
                         className={`px-3 py-2 rounded-full text-sm cursor-pointer transition-colors ${
                           filters.selectedTags.includes(tag)
-                            ? "bg-orange-300 text-[#333353]"
-                            : "bg-gray-100/70 hover:bg-purple-100/70 backdrop-blur-sm"
+                            ? "bg-secondary-300 text-accent-700"
+                            : "bg-neutral-100/70 hover:bg-primary-100/70 backdrop-blur-sm"
                         }`}
                       >
                         {tag}
@@ -517,8 +517,8 @@ function SearchFilter({
                         }
                         className={`px-3 py-2 rounded-lg border text-sm transition-colors text-left ${
                           filters.sortBy === sort
-                            ? "bg-orange-300 text-[#333353]"
-                            : "border-gray-200/50 hover:bg-purple-50/70 bg-white/50 backdrop-blur-sm"
+                            ? "bg-secondary-300 text-accent-700"
+                            : "border-neutral-200/50 hover:bg-primary-50/70 bg-neutral-white/50 backdrop-blur-sm"
                         }`}
                       >
                         {sort}
@@ -539,7 +539,7 @@ function SearchFilter({
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 px-4 py-2 rounded-lg bg-orange-300 text-[#333353] hover:bg-orange-600 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg bg-secondary-300 text-accent-700 hover:bg-secondary-600 transition-colors"
               >
                 Apply Filters
               </button>

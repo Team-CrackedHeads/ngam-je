@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Heart, MessageSquare, CircleHelp } from "lucide-react";
-import { COLORS } from "@/app/theme";
 import {
   UNIFIED_LISTINGS,
   UnifiedListingData,
@@ -72,21 +71,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
         />
         {/* Themed badge */}
         <span
-          className="absolute top-2 left-2 text-[#333533] text-xs px-3 py-1 rounded-full font-medium shadow-md"
-          style={{
-            backgroundColor:
-              listingType === "for-sale" ? COLORS.activeBg : "#3B82F6",
-          }}
+          className={`absolute top-2 left-2 text-accent-700 text-xs px-3 py-1 rounded-full font-medium shadow-md ${
+            listingType === "for-sale" ? "bg-secondary-500" : "bg-primary-500"
+          }`}
         >
           {listingType === "for-sale" ? "For Sale" : "Want to Buy"}
         </span>
       </div>
 
       {/* Title */}
-      <h3
-        className="mt-3 font-bold text-lg line-clamp-2"
-        style={{ color: COLORS.textActive }}
-      >
+      <h3 className="mt-3 font-bold text-lg line-clamp-2 text-accent-700">
         {title}
       </h3>
 
@@ -118,10 +112,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
       </div>
 
       {/* Price - Now with currency */}
-      <div
-        className="font-bold text-xl mt-3"
-        style={{ color: COLORS.textActive }}
-      >
+      <div className="font-bold text-xl mt-3 text-accent-700">
         {currency} {price.toFixed(2)}
       </div>
 

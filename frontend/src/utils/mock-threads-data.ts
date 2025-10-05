@@ -31,12 +31,12 @@ export const MOCK_THREADS: ThreadData[] = [
     upvotes: 892,
     currentTokens: 12400,
     goalTokens: 15000,
-    tags: ["electronics", "gadgets", "trending"],
+    tags: ["apple", "iphone", "macbook", "trending"],
     isPinned: true,
     isHot: true,
     timeAgo: "30m ago",
     contributions: 4200,
-    category: "electronics", // new
+    category: "apple-devices", // more specific
   },
   {
     id: 2,
@@ -147,7 +147,7 @@ export const MOCK_THREADS: ThreadData[] = [
     isHot: true, // Now hot
     timeAgo: "30m ago",
     contributions: 4200,
-    category: "electronics", // Changed from 'fashion' to 'electronics' (tech/software)
+    category: "ai-tools", // More specific for AI/software content
   },
   {
     id: 8,
@@ -275,12 +275,12 @@ export const MOCK_THREADS: ThreadData[] = [
     upvotes: 2150,
     currentTokens: 18500,
     goalTokens: 20000,
-    tags: ["electronics", "gaming", "pcbuild", "hardware"],
+    tags: ["pc-building", "gaming", "overclocking", "hardware"],
     isPinned: true,
     isHot: true,
     timeAgo: "15m ago",
     contributions: 5500,
-    category: "electronics",
+    category: "pc-building",
   },
   {
     id: 15,
@@ -350,12 +350,12 @@ export const MOCK_THREADS: ThreadData[] = [
     upvotes: 1100,
     currentTokens: 9200,
     goalTokens: 11000,
-    tags: ["electronics", "smart-home", "iot"],
+    tags: ["smart-home", "automation", "iot", "homekit"],
     isPinned: true,
     isHot: true,
     timeAgo: "55m ago",
     contributions: 4000,
-    category: "electronics",
+    category: "smart-home",
   },
 ];
 // Define the ListingData type structure as provided by you (LUQMAN)
@@ -408,7 +408,7 @@ export type UnifiedListingData = {
 };
 
 export const UNIFIED_LISTINGS: UnifiedListingData[] = [
-  // --- ELECTRONICS (Category: electronics) ---
+  // --- PC BUILDING & GAMING GEAR ---
   {
     id: "elec-001",
     title: "Gaming PC Setup - RTX 4070",
@@ -429,9 +429,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1624701928517-44c8ac49d93c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z3B1fGVufDB8fDB8fHww",
       "https://images.unsplash.com/photo-1729934746958-857e5b082dcc?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGdwdXxlbnwwfHwwfHx8MA%3D%3D", // Placeholder gallery image 2
     ],
-    category: "electronics",
+    category: "pc-building",
     listingType: "for-sale",
-    tags: ["gaming", "rtx-4070", "complete-setup"],
+    tags: ["pc-building", "rtx-4070", "gaming-pc", "custom-build"],
     views: 345,
     protected: true,
   },
@@ -455,7 +455,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1704380895316-caa2e4d68a7e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aXBob25lJTIwMTV8ZW58MHx8MHx8fDA%3D",
       "https://plus.unsplash.com/premium_photo-1681233750830-dfbb25c7abc0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8aXBob25lJTIwMTV8ZW58MHx8MHx8fDA%3D",
     ],
-    category: "electronics",
+    category: "apple-devices",
     listingType: "want-to-buy",
     tags: ["iphone", "apple", "buy-request"],
     views: 89,
@@ -480,7 +480,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     gallery: [
       "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c29ueSUyMGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D",
     ],
-    category: "electronics",
+    category: "audio-gear",
     listingType: "for-sale",
     tags: ["sony", "headphones", "audio"],
     views: 175,
@@ -507,9 +507,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1655219282209-6e6e64515c0d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c29ueSUyMGRyb25lfGVufDB8fDB8fHww",
       "https://images.unsplash.com/photo-1667948088559-f5036b9f3802?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNvbnklMjBkcm9uZXxlbnwwfHwwfHx8MA%3D%3D",
     ],
-    category: "electronics",
+    category: "ai-tools",
     listingType: "for-sale",
-    tags: ["dji", "drone", "mini-3-pro"],
+    tags: ["dji", "drone", "mini-3-pro", "photography"],
     views: 410,
     protected: true,
   },
@@ -532,9 +532,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     gallery: [
       "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJpbnRlcnxlbnwwfHwwfHx8MA%3D%3D",
     ],
-    category: "electronics",
+    category: "ai-tools",
     listingType: "for-sale",
-    tags: ["printer", "hp", "office"],
+    tags: ["printer", "hp", "office", "equipment"],
     views: 112,
     protected: false,
   },
@@ -558,9 +558,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1495707902641-75cac588d2e9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2Fub258ZW58MHx8MHx8fDA%3D",
       "https://images.unsplash.com/photo-1504093376055-b3094b674dcb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8Y2Fub258ZW58MHx8MHx8fDA%3D",
     ],
-    category: "electronics",
+    category: "ai-tools",
     listingType: "for-sale",
-    tags: ["camera", "canon", "mirrorless", "vlog"],
+    tags: ["camera", "canon", "mirrorless", "vlog", "photography"],
     views: 290,
     protected: true,
   },
@@ -583,7 +583,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     gallery: [
       "https://images.unsplash.com/photo-1510100831744-b8d7fea7ca2e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dHVybnRhYmxlfGVufDB8fDB8fHww",
     ],
-    category: "electronics",
+    category: "audio-gear",
     listingType: "want-to-buy",
     tags: ["turntable", "vinyl", "vintage", "audio"],
     views: 65,
@@ -609,10 +609,114 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1624096104992-9b4fa3a279dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXBwbGUlMjB3YXRjaHxlbnwwfHwwfHx8MA%3D%3D",
       "https://images.unsplash.com/photo-1609096458733-95b38583ac4e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YXBwbGUlMjB3YXRjaHxlbnwwfHwwfHx8MA%3D%3D",
     ],
-    category: "electronics",
+    category: "apple-devices",
     listingType: "for-sale",
-    tags: ["apple-watch", "wearable", "se"],
+    tags: ["apple-watch", "wearable", "se", "apple"],
     views: 198,
+    protected: true,
+  },
+  {
+    id: "elec-009",
+    title: "WTB: High-End Gaming PC Components",
+    subtitle: "RTX 4080 or 4090, 32GB DDR5 RAM",
+    description:
+      "Looking for high-end gaming PC components: RTX 4080/4090, 32GB DDR5 RAM, latest gen CPU. Budget: RM 8,000.",
+    price: 8000.0,
+    currency: "RM",
+    seller: {
+      name: "PCEnthusiast",
+      location: "Petaling Jaya",
+      verified: true,
+      timePosted: "4 hours ago",
+    },
+    imageUrl:
+      "https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2FtaW5nJTIwcGN8ZW58MHx8MHx8fDA%3D",
+    gallery: [
+      "https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2FtaW5nJTIwcGN8ZW58MHx8MHx8fDA%3D",
+      "https://images.unsplash.com/photo-1624705011240-c92ad5f33b31?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGdwdSUyMGNhcmR8ZW58MHx8MHx8fDA%3D",
+    ],
+    category: "pc-building",
+    listingType: "want-to-buy",
+    tags: ["pc-building", "rtx-4080", "rtx-4090", "gaming-pc", "wtb"],
+    views: 156,
+    protected: false,
+  },
+  {
+    id: "smart-001",
+    title: "Google Nest Hub Max",
+    subtitle: "Smart Display with Voice Control",
+    description:
+      "Google Nest Hub Max with 10-inch display, camera, and Google Assistant. Perfect for smart home control.",
+    price: 580.0,
+    currency: "RM",
+    seller: {
+      name: "SmartHomeMY",
+      location: "Shah Alam",
+      verified: true,
+      timePosted: "2 hours ago",
+    },
+    imageUrl:
+      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBkaXNwbGF5JTIwZ29vZ2xlfGVufDB8fDB8fHww",
+    gallery: [
+      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBkaXNwbGF5JTIwZ29vZ2xlfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1573164713988-8665fc963095?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c21hcnQlMjBob21lJTIwZGV2aWNlfGVufDB8fDB8fHww",
+    ],
+    category: "smart-home",
+    listingType: "for-sale",
+    tags: ["google-nest", "smart-display", "home-automation", "voice-control"],
+    views: 124,
+    protected: false,
+  },
+  {
+    id: "smart-002",
+    title: "WTB: Philips Hue Smart Light Starter Kit",
+    subtitle: "Color Bulbs + Bridge Included",
+    description:
+      "Looking for Philips Hue starter kit with bridge and color bulbs. Prefer complete package. Budget: RM 450.",
+    price: 450.0,
+    currency: "RM",
+    seller: {
+      name: "HomeAutomator",
+      location: "Kuala Lumpur",
+      verified: false,
+      timePosted: "6 hours ago",
+    },
+    imageUrl:
+      "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBsaWdodHN8ZW58MHx8MHx8fDA%3D",
+    gallery: [
+      "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBsaWdodHN8ZW58MHx8MHx8fDA%3D",
+      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z29vZ2xlJTIwbmVzdHxlbnwwfHwwfHx8MA%3D%3D",
+    ],
+    category: "smart-home",
+    listingType: "want-to-buy",
+    tags: ["philips-hue", "smart-lights", "home-automation", "wtb"],
+    views: 89,
+    protected: false,
+  },
+  {
+    id: "smart-003",
+    title: "Amazon Echo Dot (5th Gen) Bundle",
+    subtitle: "3 Units + Smart Plug Included",
+    description:
+      "Bundle of 3 Echo Dot devices with smart plugs. Perfect for multi-room voice control setup.",
+    price: 320.0,
+    currency: "RM",
+    seller: {
+      name: "TechBundler",
+      location: "Subang Jaya",
+      verified: true,
+      timePosted: "1 day ago",
+    },
+    imageUrl:
+      "https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YW1hem9uJTIwZWNob3xlbnwwfHwwfHx8MA%3D%3D",
+    gallery: [
+      "https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YW1hem9uJTIwZWNob3xlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c21hcnQlMjBob21lJTIwZGV2aWNlfGVufDB8fDB8fHww",
+    ],
+    category: "smart-home",
+    listingType: "for-sale",
+    tags: ["amazon-echo", "voice-assistant", "smart-plug", "bundle"],
+    views: 167,
     protected: true,
   },
 

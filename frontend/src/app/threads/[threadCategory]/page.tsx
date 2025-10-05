@@ -17,7 +17,7 @@ import Sorting, {
   QuickSort,
 } from "@/app/components/threads-category-ui/Sorting";
 
-type ListingType = "wtb" | "wts";
+type ListingType = "wtb" | "wts" | "general";
 
 // Define the structure for the filters coming from the Sorting component
 interface SortingFilters {
@@ -33,7 +33,7 @@ const CategoryPage: React.FC = () => {
   const category = params.threadCategory as string;
 
   const [activeType, setActiveType] = useState<ListingType>(
-    (searchParams.get("type") as ListingType) || "wtb"
+    (searchParams.get("type") as ListingType) || "general"
   );
 
   // Updated state for SearchFilter to include new fields
@@ -55,12 +55,27 @@ const CategoryPage: React.FC = () => {
     quickSort: null,
   });
 
+  // State for floating button
+  const [showFloatingButton, setShowFloatingButton] = useState(false);
+
   /**
    * Stable callback to prevent infinite loops in Sorting component
    */
   const handleSortingFiltersChange = useCallback((filters: SortingFilters) => {
     setSortingFilters(filters);
     console.log("Sorting filters applied:", filters);
+  }, []);
+
+  // Handle scroll for floating button
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const showButtonThreshold = 300; // Show floating button after scrolling 300px
+      setShowFloatingButton(scrollPosition > showButtonThreshold);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   // Handle filter application from SearchFilter
   const handleApplyFilters = (filters: FilterOptions) => {
@@ -116,22 +131,28 @@ const CategoryPage: React.FC = () => {
     console.log("FAQ clicked for:", listing);
     // You can add FAQ functionality here
   };
+
+  // Handle create listing navigation
+  const handleCreateListing = () => {
+    router.push(`/create-listing/${category}`);
+  };
   // Filter listings based on all active filters - UPDATED for UnifiedListingData
   const getFilteredListings = useCallback((): UnifiedListingData[] => {
     let categoryListings = UNIFIED_LISTINGS.filter(
       (listing) => listing.category === category
     );
 
-    // Filter by listing type (WTB/WTS)
+    // Filter by listing type (WTB/WTS/General)
     if (activeType === "wtb") {
       categoryListings = categoryListings.filter(
         (listing) => listing.listingType === "want-to-buy"
       );
-    } else {
+    } else if (activeType === "wts") {
       categoryListings = categoryListings.filter(
         (listing) => listing.listingType === "for-sale"
       );
     }
+    // For "general", don't filter by listing type - show both
 
     // --- APPLY FILTERS FROM SEARCH FILTER COMPONENT ---
     // Apply search filter
@@ -274,78 +295,122 @@ const CategoryPage: React.FC = () => {
 
   const filteredListings = getFilteredListings();
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-primary-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <CategoryBreadcrumb category={category} activeType={activeType} />
-
-        {/* Category Header */}
-        <h1 className="text-2xl font-bold mb-4 capitalize">
-          {category} Marketplace
-        </h1>
-
-        {/* Search Filter Component */}
-        <SearchFilter
-          onApplyFilters={handleApplyFilters}
-          onClearFilters={handleClearFilters}
-          onSearchChange={handleSearchChange}
-          initialFilters={appliedFilters}
-          maxPrice={10000}
-          currency="RM"
-          searchPlaceholder={`Search ${category} items...`}
-          availableCategories={[
-            "electronics",
-            "furniture",
-            "books",
-            "clothing",
-            "sports",
-          ]}
-        />
-
-        {/* WTB/WTS Toggle Buttons */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => handleTypeChange("wtb")}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
-              activeType === "wtb"
-                ? "bg-[#f5cb5c] text-gray-700"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            Want to Buy (
-            {
-              UNIFIED_LISTINGS.filter(
-                (l) =>
-                  l.category === category && l.listingType === "want-to-buy"
-              ).length
-            }
-            )
-          </button>
-          <button
-            onClick={() => handleTypeChange("wts")}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
-              activeType === "wts"
-                ? "bg-gray-700 text-[#f5cb5c]"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            Want to Sell (
-            {
-              UNIFIED_LISTINGS.filter(
-                (l) => l.category === category && l.listingType === "for-sale"
-              ).length
-            }
-            )
-          </button>
-        </div>
-
-        {/* Sorting Component */}
+        {/* Breadcrumb - No Card */}
         <div className="mb-6">
-          <Sorting
-            onFiltersChange={handleSortingFiltersChange}
-            initialFilters={sortingFilters}
-          />
+          <CategoryBreadcrumb category={category} activeType={activeType} />
         </div>
+
+        {/* Search and Filter Card */}
+        <div className="bg-neutral-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-6">
+          {/* Category Header */}
+          <h1 className="text-2xl font-bold mb-6 capitalize text-accent-700">
+            {category} Marketplace
+          </h1>
+
+          {/* Search Filter Component */}
+          <div className="mb-6">
+            <SearchFilter
+              onApplyFilters={handleApplyFilters}
+              onClearFilters={handleClearFilters}
+              onSearchChange={handleSearchChange}
+              initialFilters={appliedFilters}
+              maxPrice={10000}
+              currency="RM"
+              searchPlaceholder={`Search ${category} items...`}
+              availableCategories={[
+                "apple-devices",
+                "gaming-gear",
+                "audio-gear",
+                "smart-home",
+                "pc-building",
+                "ai-tools",
+                "furniture",
+                "books",
+                "clothing",
+                "sports",
+                "fashion"
+              ]}
+            />
+          </div>
+
+          {/* Sorting Component */}
+          <div>
+            <Sorting
+              onFiltersChange={handleSortingFiltersChange}
+              initialFilters={sortingFilters}
+            />
+          </div>
+        </div>
+
+        {/* Navigation Type Card */}
+        <div className="bg-neutral-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-6">
+          {/* WTB/WTS/General Toggle Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleTypeChange("wtb")}
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
+                activeType === "wtb"
+                  ? "bg-secondary-500 text-accent-700"
+                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+              }`}
+            >
+              Want to Buy (
+              {
+                UNIFIED_LISTINGS.filter(
+                  (l) =>
+                    l.category === category && l.listingType === "want-to-buy"
+                ).length
+              }
+              )
+            </button>
+            <button
+              onClick={() => handleTypeChange("general")}
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
+                activeType === "general"
+                  ? "bg-primary-500 text-accent-700"
+                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+              }`}
+            >
+              General (
+              {
+                UNIFIED_LISTINGS.filter(
+                  (l) => l.category === category
+                ).length
+              }
+              )
+            </button>
+            <button
+              onClick={() => handleTypeChange("wts")}
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
+                activeType === "wts"
+                  ? "bg-accent-700 text-secondary-500"
+                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+              }`}
+            >
+              Want to Sell (
+              {
+                UNIFIED_LISTINGS.filter(
+                  (l) => l.category === category && l.listingType === "for-sale"
+                ).length
+              }
+              )
+            </button>
+          </div>
+        </div>
+
+        {/* Create Listing Button */}
+        <div className="mb-6">
+          <button
+            onClick={handleCreateListing}
+            className="w-full bg-accent-700 hover:bg-accent-800 text-secondary-500 font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">+</span>
+            Create Listing
+          </button>
+        </div>
+
         {/* Active Filters Display */}
         {(appliedFilters.search ||
           appliedFilters.selectedTags.length > 0 ||
@@ -354,38 +419,38 @@ const CategoryPage: React.FC = () => {
           sortingFilters.primaryFilter ||
           sortingFilters.quickFilters.length > 0 ||
           sortingFilters.quickSort) && (
-          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <div className="mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-accent-700">
                 Active filters:
               </span>
 
               {/* Filters from SearchFilter */}
               {appliedFilters.search && (
-                <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">
+                <span className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs">
                   Search: "{appliedFilters.search}"
                 </span>
               )}
               {appliedFilters.location && (
-                <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">
+                <span className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs">
                   Location: {appliedFilters.location}
                 </span>
               )}
               {appliedFilters.category && (
-                <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">
+                <span className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs">
                   Category: {appliedFilters.category}
                 </span>
               )}
               {appliedFilters.listingType &&
                 appliedFilters.listingType !== "all" && (
-                  <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">
+                  <span className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs">
                     Type: {appliedFilters.listingType}
                   </span>
                 )}
               {appliedFilters.selectedTags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs"
+                  className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs"
                 >
                   {tag}
                 </span>
@@ -437,25 +502,48 @@ const CategoryPage: React.FC = () => {
         {/* Results count */}
         <div className="mt-8 text-center text-gray-600">
           Showing {filteredListings.length}{" "}
-          {activeType === "wtb" ? "want to buy" : "for sale"} listings in{" "}
+          {activeType === "wtb"
+            ? "want to buy"
+            : activeType === "wts"
+            ? "for sale"
+            : "general"} listings in{" "}
           {category}
           {filteredListings.length !==
           UNIFIED_LISTINGS.filter(
-            (l) =>
-              l.category === category &&
-              l.listingType ===
-                (activeType === "wtb" ? "want-to-buy" : "for-sale")
+            (l) => {
+              if (activeType === "general") {
+                return l.category === category;
+              }
+              return l.category === category &&
+                l.listingType ===
+                  (activeType === "wtb" ? "want-to-buy" : "for-sale");
+            }
           ).length
             ? ` (filtered from ${
                 UNIFIED_LISTINGS.filter(
-                  (l) =>
-                    l.category === category &&
-                    l.listingType ===
-                      (activeType === "wtb" ? "want-to-buy" : "for-sale")
+                  (l) => {
+                    if (activeType === "general") {
+                      return l.category === category;
+                    }
+                    return l.category === category &&
+                      l.listingType ===
+                        (activeType === "wtb" ? "want-to-buy" : "for-sale");
+                  }
                 ).length
               } total)`
             : ""}
         </div>
+
+        {/* Floating Create Listing Button */}
+        {showFloatingButton && (
+          <button
+            onClick={handleCreateListing}
+            className="fixed bottom-6 right-6 bg-accent-700 hover:bg-accent-800 text-secondary-500 w-14 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 z-50 flex items-center justify-center"
+            aria-label="Create Listing"
+          >
+            <span className="text-2xl font-bold">+</span>
+          </button>
+        )}
       </div>
     </div>
   );

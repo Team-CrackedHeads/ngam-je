@@ -45,7 +45,7 @@ export default function ProductListingScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full pb-32 bg-neutral-50">
+    <div className="min-h-screen w-full pb-32 bg-primary-50">
       <div className="container mx-auto px-4 py-6">
         <BreadcrumbNav
           category={category}
