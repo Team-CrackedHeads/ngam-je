@@ -43,6 +43,25 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Your App Colors */
+  --color-app-bg: #E8EDDF;
+  --color-app-text: #333533;
+  --color-app-text-active: #242423;
+  --color-app-hover: #CFDBD5;
+  --color-app-active: #F1D688;
+  --color-app-accent-from: #F3D172;
+  --color-app-accent-to: #F5CB5C;
+  --color-app-accent: #F5CB5C;
+  --color-app-white: #FFFFFF;
+  --color-app-offwhite: #F9FAFB;
+  --color-app-success: #22C55E;
+  --color-app-success-bg: #DCFCE7;
+  --color-app-error: #EF4444;
+  --color-app-error-bg: #FEF2F2;
+  --color-app-warning: #F59E0B;
+  --color-app-warning-bg: #FEF3C7;
+
 }
 
 :root {
@@ -120,5 +139,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes for your app gradients */
+@layer utilities {
+  .bg-app-gradient {
+    background: linear-gradient(135deg, var(--color-app-accent-from), var(--color-app-accent-to));
+  }
+  .bg-app-gradient-reverse {
+    background: linear-gradient(135deg, var(--color-app-accent-to), var(--color-app-accent-from));
   }
 }
