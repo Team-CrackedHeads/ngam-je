@@ -1,8 +1,10 @@
-name: Mirror to GitLab
+name: Mirror non-main branches to GitLab
+
 on:
   schedule:
-    - cron: '5 23 * * *'  # Daily at 7:05 AM KUL-TIME: UTC +8
-  workflow_dispatch:   # manual trigger from the Actions tab
+    # 07:10 Asia/Kuala_Lumpur = 23:10 UTC (previous day)
+    - cron: '10 23 * * *'
+  workflow_dispatch:
 
 jobs:
   mirror:
@@ -16,7 +18,7 @@ jobs:
       - name: Configure GitLab remote URL
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          GITLAB_URL:   ${{ secrets.GITLAB_URL }}
+          GITLAB_URL: ${{ secrets.GITLAB_URL }}
         run: |
           set -euo pipefail
           AUTH_URL="$(echo "$GITLAB_URL" | sed -E "s#https://#https://oauth2:${GITLAB_TOKEN}@#")"
@@ -25,20 +27,30 @@ jobs:
           else
             git remote add gitlab "$AUTH_URL"
           fi
+          git fetch origin --prune
 
-      - name: Push non-main branches (force only if needed)
+      - name: Determine default branch (origin/HEAD)
+        id: defbranch
         run: |
           set -euo pipefail
-          echo "Pushing non-main branches..."
-          for b in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
-            if [ "$b" != "main" ] && [ "$b" != "master" ]; then
-              echo "→ refs/heads/$b"
-              if ! git push gitlab "refs/heads/$b:refs/heads/$b"; then
-                echo "   non-fast-forward, retrying with --force..."
-                git push -f gitlab "refs/heads/$b:refs/heads/$b"
-              fi
-            else
-              echo "Skipping main/master branch: $b"
-            fi
-          done
+          DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@')
+          echo "default_branch=$DEFAULT_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Default branch detected: $DEFAULT_BRANCH"
 
+      - name: Push non-main branches
+        run: |
+          set -euo pipefail
+          DEFAULT="${{ steps.defbranch.outputs.default_branch }}"
+
+          # list local branches
+          mapfile -t BRANCHES < <(git for-each-ref --format='%(refname:short)' refs/heads/)
+
+          for branch in "${BRANCHES[@]}"; do
+            if [ "$branch" = "$DEFAULT" ]; then
+              echo "Skipping default branch: $branch"
+              continue
+            fi
+            echo "Pushing branch: $branch"
+            # regular push (no force). If you need to overwrite, swap to --force-with-lease.
+            git push gitlab "$branch:$branch" || echo "Warning: failed to push $branch"
+          done
