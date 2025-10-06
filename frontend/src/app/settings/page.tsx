@@ -26,8 +26,7 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center">
               <span>Change Display Name</span>
               <button
-                className="px-3 py-1 rounded-lg text-sm font-medium"
-className="bg-secondary-500"
+                className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-500"
               >
                 Update
               </button>
@@ -35,8 +34,7 @@ className="bg-secondary-500"
             <div className="flex justify-between items-center">
               <span>Change Email</span>
               <button
-                className="px-3 py-1 rounded-lg text-sm font-medium"
-className="bg-secondary-500"
+                className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-500"
               >
                 Update
               </button>
@@ -44,8 +42,7 @@ className="bg-secondary-500"
             <div className="flex justify-between items-center">
               <span>Change Password</span>
               <button
-                className="px-3 py-1 rounded-lg text-sm font-medium"
-className="bg-secondary-500"
+                className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-500"
               >
                 Update
               </button>
@@ -105,8 +102,7 @@ className="bg-secondary-500"
             <span>Log Out</span>
           </span>
           <button
-            className="px-3 py-1 rounded-lg text-sm font-medium"
-className="bg-secondary-100"
+            className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-100"
           >
             Sign Out
           </button>

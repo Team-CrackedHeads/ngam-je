@@ -9,7 +9,7 @@ const Footer = () => {
   const pathname = usePathname();
 
   const links = [
-    { href: "/", label: "Threads", icon: House },
+    { href: "/threads", label: "Threads", icon: House },
     { href: "/messages", label: "Messages", icon: MessageSquare },
     { href: "/profile", label: "Profile", icon: User },
     { href: "/settings", label: "Settings", icon: Settings },

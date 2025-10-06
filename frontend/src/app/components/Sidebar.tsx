@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/sidebar"
 
 const navItems = [
-  { href: "/", label: "Threads", icon: Home },
+  { href: "/threads", label: "Threads", icon: Home },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
