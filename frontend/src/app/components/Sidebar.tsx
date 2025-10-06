@@ -475,7 +475,7 @@ function CustomSidebarTrigger({ onManualToggle }: { onManualToggle: () => void }
   return (
     <button
       onClick={onManualToggle}
-      className="absolute -right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center border-0 outline-none bg-neutral-50 text-accent-700 border-2 border-accent-700 hover:bg-primary-200 transition-colors"
+      className="absolute -right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center outline-none bg-neutral-50 text-accent-700 border-2 border-accent-700 hover:bg-primary-200 transition-colors"
       title="Toggle sidebar"
       style={{ top: '50%', transform: 'translateY(-50%)' }}
     >
