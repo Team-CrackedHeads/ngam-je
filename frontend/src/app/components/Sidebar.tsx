@@ -628,8 +628,8 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="group-data-[collapsible=icon]:hidden mt-auto">
         <div className="p-4 text-center w-56 mx-auto overflow-hidden">
-          <p className="text-xs text-accent-500 leading-relaxed">
-            Ngam-je by Team Cracked Heads™ <span className="text-[10px]">©</span> 2025
+          <p className="text-[10px] text-accent-500 leading-relaxed">
+            Ngam-je by Team Cracked Heads™ © 2025
             <br />
             All rights reserved
           </p>
