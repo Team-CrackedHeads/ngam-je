@@ -56,9 +56,9 @@ export default function ProfilePage({ user }: ProfilePageProps) {
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-center mb-4">
+        {/* <div className="flex justify-center mb-4">
           <h1 className="text-xl font-bold">Profile</h1>
-        </div>
+        </div> */}
 
         {/* Tabs */}
         <div className="flex justify-center mb-6 border-b pb-2 space-x-6">
@@ -68,7 +68,7 @@ export default function ProfilePage({ user }: ProfilePageProps) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className="text-base font-medium pb-2"
+                // className="text-base font-medium pb-2"
                 className={`${isActive ? 'text-accent-700 border-b-2 border-accent-700' : 'text-accent-500'}`}
               >
                 {tab.label}
