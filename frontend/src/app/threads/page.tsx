@@ -1,9 +1,16 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Plus, Filter as FilterIcon, X, ChevronDown, ChevronUp, MessageSquarePlus } from "lucide-react";
+import {
+  Plus,
+  Filter as FilterIcon,
+  X,
+  ChevronDown,
+  ChevronUp,
+  MessageSquarePlus,
+} from "lucide-react";
 import ThreadCard from "../components/threads-ui/ThreadCard";
 import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
-import AIAgentOverlay from "../components/threads-ui/AIAgentOverlay";
+
 import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
 import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
 import NgamOverview from "../components/threads-ui/NgamOverview";
@@ -21,7 +28,9 @@ function ThreadsPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // AI overview / query
-  const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(null);
+  const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(
+    null
+  );
   const [isAILoading, setIsAILoading] = useState(false);
   const [lastQuery, setLastQuery] = useState<string>("");
 
@@ -30,12 +39,12 @@ function ThreadsPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const inlineCreateBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  const searchSectionRef = useRef<HTMLElement | null>(null);     // AI Agent section
-  const threadsSectionRef = useRef<HTMLElement | null>(null);    // Community section
-  const metaRowRef = useRef<HTMLDivElement | null>(null);        // Listings meta row
-  const overviewWrapRef = useRef<HTMLDivElement | null>(null);   // Visual overview card
+  const searchSectionRef = useRef<HTMLElement | null>(null); // AI Agent section
+  const threadsSectionRef = useRef<HTMLElement | null>(null); // Community section
+  const metaRowRef = useRef<HTMLDivElement | null>(null); // Listings meta row
+  const overviewWrapRef = useRef<HTMLDivElement | null>(null); // Visual overview card
   const overviewAnchorRef = useRef<HTMLDivElement | null>(null); // Invisible overview anchor
-  const headerRef = useRef<HTMLDivElement | null>(null);         // PageHeader line
+  const headerRef = useRef<HTMLDivElement | null>(null); // PageHeader line
 
   // FAB visibility (Create Thread)
   const [showFab, setShowFab] = useState(false);
@@ -51,17 +60,33 @@ function ThreadsPage() {
   // --- helpers: derive keywords from the AI query ---
   const queryKeywords = useMemo(() => {
     const base = (lastQuery || "").toLowerCase();
-    const words = base.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+    const words = base
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
     const set = new Set<string>(words);
 
     if (/[^\w](sneaker|sneakers|shoe|shoes)\b/.test(" " + base)) {
-      ["sneaker","sneakers","shoe","shoes","yeezy","jordan","nike","adidas","new balance","nb","asics","salomon"].forEach(k => set.add(k));
+      [
+        "sneaker",
+        "sneakers",
+        "shoe",
+        "shoes",
+        "yeezy",
+        "jordan",
+        "nike",
+        "adidas",
+        "new balance",
+        "nb",
+        "asics",
+        "salomon",
+      ].forEach((k) => set.add(k));
     }
     if (/\biphone|ios|apple\b/.test(base)) {
-      ["iphone","apple","ios"].forEach(k => set.add(k));
+      ["iphone", "apple", "ios"].forEach((k) => set.add(k));
     }
     if (/\bmacbook|mac\s?book\b/.test(base)) {
-      ["macbook","mac book","apple"].forEach(k => set.add(k));
+      ["macbook", "mac book", "apple"].forEach((k) => set.add(k));
     }
 
     return Array.from(set);
@@ -72,13 +97,18 @@ function ThreadsPage() {
     let filtered = [...MOCK_THREADS];
     switch (activeFilter) {
       case "Hot":
-        return filtered.filter(t => t.isHot).sort((a, b) => b.upvotes - a.upvotes);
+        return filtered
+          .filter((t) => t.isHot)
+          .sort((a, b) => b.upvotes - a.upvotes);
       case "Top":
         return filtered.sort((a, b) => b.upvotes - a.upvotes);
       case "New": {
         const toMin = (t: string) =>
-          t.includes("d") ? parseInt(t) * 1440 :
-          t.includes("h") ? parseInt(t) * 60 : parseInt(t);
+          t.includes("d")
+            ? parseInt(t) * 1440
+            : t.includes("h")
+            ? parseInt(t) * 60
+            : parseInt(t);
         return filtered.sort((a, b) => toMin(a.timeAgo) - toMin(b.timeAgo));
       }
       default:
@@ -90,9 +120,9 @@ function ThreadsPage() {
   const getFilteredThreads = useCallback((): ThreadData[] => {
     const base = getBaseFilteredThreads();
     if (!queryKeywords.length) return base;
-    const matched = base.filter(t => {
+    const matched = base.filter((t) => {
       const hay = `${t.title ?? ""} ${t.category ?? ""}`.toLowerCase();
-      return queryKeywords.some(kw => hay.includes(kw));
+      return queryKeywords.some((kw) => hay.includes(kw));
     });
     return matched.length ? matched : base;
   }, [getBaseFilteredThreads, queryKeywords]);
@@ -107,18 +137,24 @@ function ThreadsPage() {
     if (isLoading || displayedCount >= allFilteredThreads.length) return;
     setIsLoading(true);
     setTimeout(() => {
-      setDisplayedCount(p => Math.min(p + 6, allFilteredThreads.length));
+      setDisplayedCount((p) => Math.min(p + 6, allFilteredThreads.length));
       setIsLoading(false);
     }, 500);
   }, [isLoading, displayedCount, allFilteredThreads.length]);
 
   // infinite scroll sentinel
   useEffect(() => {
-    const root = snapContainerRef.current, sent = sentinelRef.current;
+    const root = snapContainerRef.current,
+      sent = sentinelRef.current;
     if (!root || !sent) return;
-    const io = new IntersectionObserver(e => e[0].isIntersecting && loadMoreItems(), {
-      root, rootMargin: "200px 0px 200px 0px", threshold: 0
-    });
+    const io = new IntersectionObserver(
+      (e) => e[0].isIntersecting && loadMoreItems(),
+      {
+        root,
+        rootMargin: "200px 0px 200px 0px",
+        threshold: 0,
+      }
+    );
     io.observe(sent);
     return () => io.disconnect();
   }, [loadMoreItems]);
@@ -130,13 +166,19 @@ function ThreadsPage() {
     if (!root) return;
 
     if (searchSectionRef.current) {
-      const ioSearch = new IntersectionObserver(e => setInSearchView(e[0].isIntersecting), { root, threshold: 0.1 });
+      const ioSearch = new IntersectionObserver(
+        (e) => setInSearchView(e[0].isIntersecting),
+        { root, threshold: 0.1 }
+      );
       ioSearch.observe(searchSectionRef.current);
       ios.push(ioSearch);
     }
 
     if (overviewAnchorRef.current) {
-      const ioOverview = new IntersectionObserver(e => setInOverviewView(e[0].isIntersecting), { root, threshold: 0.01 });
+      const ioOverview = new IntersectionObserver(
+        (e) => setInOverviewView(e[0].isIntersecting),
+        { root, threshold: 0.01 }
+      );
       ioOverview.observe(overviewAnchorRef.current);
       ios.push(ioOverview);
     } else {
@@ -144,39 +186,52 @@ function ThreadsPage() {
     }
 
     if (metaRowRef.current) {
-      const ioMeta = new IntersectionObserver(e => setIsMetaInView(e[0].isIntersecting), { root, threshold: 0.01 });
+      const ioMeta = new IntersectionObserver(
+        (e) => setIsMetaInView(e[0].isIntersecting),
+        { root, threshold: 0.01 }
+      );
       ioMeta.observe(metaRowRef.current);
       ios.push(ioMeta);
     }
 
-    return () => ios.forEach(o => o.disconnect());
+    return () => ios.forEach((o) => o.disconnect());
   }, [currentOverview, isAILoading]);
 
   // Track entire threads section (for FAB logic)
   useEffect(() => {
-    const root = snapContainerRef.current, sec = threadsSectionRef.current;
+    const root = snapContainerRef.current,
+      sec = threadsSectionRef.current;
     if (!root || !sec) return;
-    const io = new IntersectionObserver(e => setInThreadsSection(e[0].isIntersecting), { root, threshold: 0.01 });
+    const io = new IntersectionObserver(
+      (e) => setInThreadsSection(e[0].isIntersecting),
+      { root, threshold: 0.01 }
+    );
     io.observe(sec);
     return () => io.disconnect();
   }, []);
 
   // inline create visibility watcher
   useEffect(() => {
-    const root = snapContainerRef.current, target = inlineCreateBtnRef.current;
+    const root = snapContainerRef.current,
+      target = inlineCreateBtnRef.current;
     if (!root || !target) return;
-    const io = new IntersectionObserver(e => setInlineBtnVisible(e[0].isIntersecting), { root, threshold: 0.01 });
+    const io = new IntersectionObserver(
+      (e) => setInlineBtnVisible(e[0].isIntersecting),
+      { root, threshold: 0.01 }
+    );
     io.observe(target);
     return () => io.disconnect();
   }, [threadsToShow.length]);
 
   // FAB show/hide from scroll
   useEffect(() => {
-    const root = snapContainerRef.current, sec = threadsSectionRef.current;
+    const root = snapContainerRef.current,
+      sec = threadsSectionRef.current;
     if (!root || !sec) return;
     const onScroll = () => {
       if (!inThreadsSection) return setShowFab(false);
-      const secTop = sec.offsetTop, dist = Math.max(0, root.scrollTop - secTop);
+      const secTop = sec.offsetTop,
+        dist = Math.max(0, root.scrollTop - secTop);
       setShowFab(!inlineBtnVisible && dist > FAB_SCROLL_THRESHOLD);
     };
     onScroll();
@@ -189,7 +244,8 @@ function ThreadsPage() {
     setIsAILoading(true);
     setCurrentOverview(null);
     setLastQuery("");
-    const container = snapContainerRef.current, target = threadsSectionRef.current;
+    const container = snapContainerRef.current,
+      target = threadsSectionRef.current;
     if (container && target) {
       const prev = container.style.scrollBehavior;
       container.style.scrollBehavior = "auto";
@@ -244,7 +300,10 @@ function ThreadsPage() {
   }, [inSearchView, inOverviewView, isMetaInView, hasOverview]);
 
   const handleBottomJump = () => {
-    ctaState.targetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    ctaState.targetRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const shouldShowCTA = !ctaState.targetVisible; // Hide when the target is already on screen
@@ -257,7 +316,11 @@ function ThreadsPage() {
         className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
       >
         {/* SECTION 1: AI AGENT (Hero) */}
-        <section id="search" ref={searchSectionRef} className="h-full snap-start">
+        <section
+          id="search"
+          ref={searchSectionRef}
+          className="h-full snap-start"
+        >
           <AIAgentSearch
             onOpenAI={() => setIsAIOpen(true)}
             onSearchStart={handleAISearchStart}
@@ -278,7 +341,13 @@ function ThreadsPage() {
             </div>
 
             {/* Invisible snap anchor for true Overview section (no visual space added) */}
-            {hasOverview && <div id="overview" ref={overviewAnchorRef} className="snap-start h-0" />}
+            {hasOverview && (
+              <div
+                id="overview"
+                ref={overviewAnchorRef}
+                className="snap-start h-0"
+              />
+            )}
 
             {/* AI Overview (shown when present) */}
             {hasOverview && (
@@ -305,7 +374,8 @@ function ThreadsPage() {
             >
               <div className="flex items-center gap-3">
                 <p className="text-sm sm:text-base text-gray-600">
-                  Showing {threadsToShow.length} of {allFilteredThreads.length} threads
+                  Showing {threadsToShow.length} of {allFilteredThreads.length}{" "}
+                  threads
                   {activeFilter !== "All" && ` • Filter: ${activeFilter}`}
                 </p>
 
@@ -314,7 +384,9 @@ function ThreadsPage() {
                     <FilterIcon className="w-3 h-3" />
                     Query filter
                     {lastQuery && (
-                      <span className="max-w-[160px] truncate">: {lastQuery}</span>
+                      <span className="max-w-[160px] truncate">
+                        : {lastQuery}
+                      </span>
                     )}
                     <button
                       aria-label="Clear query filter"
@@ -348,7 +420,9 @@ function ThreadsPage() {
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-                <span className="ml-2 text-gray-600">Loading more threads...</span>
+                <span className="ml-2 text-gray-600">
+                  Loading more threads...
+                </span>
               </div>
             )}
 
@@ -401,8 +475,11 @@ function ThreadsPage() {
       )}
 
       {/* Overlays */}
-      <AIAgentOverlay isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} />
-      <CreateThreadsSection isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+
+      <CreateThreadsSection
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+      />
     </>
   );
 }
