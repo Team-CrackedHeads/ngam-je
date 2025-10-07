@@ -112,13 +112,13 @@ const CategoryPage: React.FC = () => {
   // Update URL when type changes
   const handleTypeChange = (type: ListingType) => {
     setActiveType(type);
-    router.push(`/threads/${category}?type=${type}`);
+    // router.replace(`/threads/${category}?type=${type}`);
   };
 
   // Updated click handlers for navigation to detail page
   const handleCardClick = (listing: UnifiedListingData) => {
     // Navigate to the detail page with the listing ID and category
-    router.push(`/threads/${category}/${listing.id}`);
+    router.replace(`/threads/${category}/${listing.id}`);
     console.log("Navigating to listing:", listing.id);
   };
 
@@ -369,7 +369,7 @@ const CategoryPage: React.FC = () => {
               onClick={() => handleTypeChange("general")}
               className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
                 activeType === "general"
-                  ? "bg-primary-500 text-accent-700"
+                  ? "bg-secondary-500 text-accent-700"
                   : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
               }`}
             >
@@ -385,7 +385,7 @@ const CategoryPage: React.FC = () => {
               onClick={() => handleTypeChange("wts")}
               className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
                 activeType === "wts"
-                  ? "bg-accent-700 text-secondary-500"
+                  ? "bg-secondary-500 text-accent-700"
                   : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
               }`}
             >
