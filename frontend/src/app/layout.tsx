@@ -29,11 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}
         style={{"--sidebar-width": "18rem"} as React.CSSProperties}
       >
         <Header username="User" notifications={3} />
-        <div className="flex-1 flex">
+        <div className="flex-1 flex min-h-0">
           <SidebarProvider>
             <AppSidebar />
             <main className="flex-1 overflow-auto">
