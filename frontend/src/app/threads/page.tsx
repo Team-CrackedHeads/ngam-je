@@ -380,7 +380,7 @@ function ThreadsPage() {
         <button
           onClick={() => setIsCreateOpen(true)}
           aria-label="Create Thread"
-          className="fixed bottom-6 right-6 z-50 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 shadow-xl bg-secondary-500 text-accent-700 border border-secondary-600 hover:scale-105 active:scale-95"
+          className="fixed bottom-20 md:bottom-6 right-2 md:right-6 z-50 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 shadow-xl bg-secondary-500 text-accent-700 border border-secondary-600 hover:scale-105 active:scale-95"
         >
           <Plus className="w-5 h-5" />
           <span className="hidden sm:inline font-semibold">Create Thread</span>
@@ -391,7 +391,7 @@ function ThreadsPage() {
       {shouldShowCTA && (
         <button
           onClick={handleBottomJump}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-secondary-500 text-accent-700 border border-secondary-600 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-secondary-500 text-accent-700 border border-secondary-600 shadow-lg hover:scale-105 active:scale-95 transition-transform"
         >
           {ctaState.icon === "down" && <ChevronDown className="w-4 h-4" />}
           {ctaState.icon === "up" && <ChevronUp className="w-4 h-4" />}

@@ -232,7 +232,10 @@ function FollowingMenuItem() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement.style.background = 'linear-gradient(45deg, var(--color-primary-300), var(--color-secondary-300))';
+                        e.currentTarget.parentElement?.style.setProperty(
+                          'background',
+                          'linear-gradient(45deg, var(--color-primary-300), var(--color-secondary-300))'
+                        );
                       }}
                     />
                   </div>
