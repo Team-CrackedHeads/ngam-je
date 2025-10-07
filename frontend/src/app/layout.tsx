@@ -27,16 +27,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full overflow-hidden">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}
-        style={{"--sidebar-width": "18rem"} as React.CSSProperties}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-hidden`}
+        style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
       >
         <Header username="User" notifications={3} />
         <div className="flex-1 flex min-h-0">
           <SidebarProvider>
             <AppSidebar />
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 min-h-0 overflow-auto">
               {children}
             </main>
           </SidebarProvider>
@@ -44,5 +44,6 @@ export default function RootLayout({
         <Footer />
       </body>
     </html>
+
   );
 }

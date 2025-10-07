@@ -26,7 +26,7 @@ const Header = ({ username, notifications = 0 }: HeaderProps) => {
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-lg sm:text-xl text-accent-700">
-              Ngam.je
+              Ngam-je
             </span>
             <span className="text-xs sm:text-sm text-accent-500">
               {username ? `Welcome, ${username}!` : "Welcome!"}

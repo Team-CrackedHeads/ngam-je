@@ -254,10 +254,10 @@ function ThreadsPage() {
       {/* SNAP/SCROLL CONTAINER */}
       <div
         ref={snapContainerRef}
-        className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth"
+        className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
       >
         {/* SECTION 1: AI AGENT (Hero) */}
-        <section id="search" ref={searchSectionRef} className="h-screen snap-start">
+        <section id="search" ref={searchSectionRef} className="h-full snap-start">
           <AIAgentSearch
             onOpenAI={() => setIsAIOpen(true)}
             onSearchStart={handleAISearchStart}
@@ -269,7 +269,7 @@ function ThreadsPage() {
         <section
           id="ngam-overview"
           ref={threadsSectionRef}
-          className="min-h-screen snap-start bg-gray-50"
+          className="snap-start bg-gray-50"
         >
           <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
             {/* Page header — scroll target */}

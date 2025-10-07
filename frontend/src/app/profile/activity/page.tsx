@@ -65,7 +65,7 @@ export default function ActivityPage({ activities }: ActivityPageProps) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
+    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         {/* <div className="flex justify-center mb-4">

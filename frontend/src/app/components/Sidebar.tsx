@@ -549,7 +549,7 @@ export function AppSidebar() {
     <Sidebar
       variant="sidebar"
       collapsible="icon"
-      className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300"
+      className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
     >
       <SidebarHeader className="relative p-2">
         <CustomSidebarTrigger onManualToggle={handleManualToggle} />
@@ -629,7 +629,7 @@ export function AppSidebar() {
       <SidebarFooter className="group-data-[collapsible=icon]:hidden mt-auto">
         <div className="p-4 text-center w-56 mx-auto overflow-hidden">
           <p className="text-xs text-accent-500 leading-relaxed">
-            Ngam-je by Team Cracked Heads™ <span className="text-[10px]">soon</span> 2025.
+            Ngam-je by Team Cracked Heads™ <span className="text-[10px]">©</span> 2025
             <br />
             All rights reserved
           </p>
