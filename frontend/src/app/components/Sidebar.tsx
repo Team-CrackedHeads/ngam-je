@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { Home, MessageCircle, User, Settings, Menu, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon, TrendingUp, Search, ShoppingBag, ShoppingCart, Package } from "lucide-react"
 import { useEffect, useState } from "react"
 import { MOCK_THREADS } from "@/utils/mock-threads-data"
+import { mockBuyListings, mockSellListings } from "@/utils/mock-listings-data"
 import {
   Sidebar,
   SidebarContent,
@@ -407,34 +408,6 @@ function NgamJeAssistantMenuItem() {
   )
 }
 
-// Mock buy listings data
-const mockBuyListings = [
-  { id: 1, title: "iPhone 14 Pro - 256GB", price: "$800", location: "KL", timestamp: "2 hours ago" },
-  { id: 2, title: "MacBook Air M2 - Like New", price: "$1200", location: "PJ", timestamp: "4 hours ago" },
-  { id: 3, title: "Sony WH-1000XM4 Headphones", price: "$250", location: "Selangor", timestamp: "6 hours ago" },
-  { id: 4, title: "Gaming PC - RTX 4070", price: "$1800", location: "Subang", timestamp: "8 hours ago" },
-  { id: 5, title: "Canon EOS R5 Camera", price: "$2500", location: "KL", timestamp: "1 day ago" },
-  { id: 6, title: "iPad Pro 12.9 - 2022", price: "$900", location: "Cyberjaya", timestamp: "1 day ago" },
-  { id: 7, title: "Dyson V15 Vacuum", price: "$400", location: "Shah Alam", timestamp: "2 days ago" },
-  { id: 8, title: "Nintendo Switch OLED", price: "$350", location: "Ampang", timestamp: "2 days ago" },
-  { id: 9, title: "Samsung 4K Monitor 32\"", price: "$450", location: "KL", timestamp: "3 days ago" },
-  { id: 10, title: "Mechanical Keyboard - Cherry MX", price: "$120", location: "PJ", timestamp: "3 days ago" }
-]
-
-// Mock sell listings data
-const mockSellListings = [
-  { id: 1, title: "Looking for: MacBook Pro M3", budget: "$2000", location: "KL", timestamp: "1 hour ago" },
-  { id: 2, title: "Want: Electric Scooter", budget: "$800", location: "PJ", timestamp: "3 hours ago" },
-  { id: 3, title: "Need: DSLR Camera Body", budget: "$1500", location: "Selangor", timestamp: "5 hours ago" },
-  { id: 4, title: "Seeking: Office Chair - Herman Miller", budget: "$600", location: "Subang", timestamp: "7 hours ago" },
-  { id: 5, title: "Want: iPhone 15 Pro Max", budget: "$1300", location: "KL", timestamp: "12 hours ago" },
-  { id: 6, title: "Looking for: Gaming Monitor 4K", budget: "$700", location: "Cyberjaya", timestamp: "1 day ago" },
-  { id: 7, title: "Need: Air Purifier", budget: "$300", location: "Shah Alam", timestamp: "1 day ago" },
-  { id: 8, title: "Want: Smartwatch - Apple/Samsung", budget: "$400", location: "Ampang", timestamp: "2 days ago" },
-  { id: 9, title: "Seeking: Coffee Machine", budget: "$500", location: "KL", timestamp: "2 days ago" },
-  { id: 10, title: "Looking for: Bicycle - Road Bike", budget: "$1000", location: "PJ", timestamp: "3 days ago" }
-]
-
 function BuyListingsMenuItem() {
   const [isOpen, setIsOpen] = useState(false)
   const [visibleListings, setVisibleListings] = useState(5)
@@ -448,7 +421,8 @@ function BuyListingsMenuItem() {
   }
 
   const handleListingClick = (listingId: number) => {
-    console.log("Opening buy listing:", listingId)
+    // Navigate to listings page with specific listing highlighted
+    window.location.href = `/listings?type=buy&highlight=${listingId}`
   }
 
   const loadMoreListings = () => {
@@ -537,7 +511,7 @@ function BuyListingsMenuItem() {
                 >
                   <div className="truncate font-medium">{listing.title}</div>
                   <div className="flex justify-between text-[10px] text-accent-400">
-                    <span>{listing.price}</span>
+                    <span>{listing.price || listing.budget}</span>
                     <span>{listing.timestamp}</span>
                   </div>
                 </div>
@@ -569,16 +543,6 @@ function BuyListingsMenuItem() {
             </div>
           </SidebarMenuSubItem>
 
-          {/* New Listing Button */}
-          <SidebarMenuSubItem>
-            <button
-              onClick={handleNewListing}
-              className="w-full mx-2 p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-500 text-accent-700 border-secondary-600 hover:bg-secondary-600 hover:-translate-y-0.5"
-            >
-              <Plus className="w-3 h-3" />
-              <span>New Buy Listing</span>
-            </button>
-          </SidebarMenuSubItem>
         </SidebarMenuSub>
       </div>
     </SidebarMenuItem>
@@ -598,7 +562,8 @@ function SellListingsMenuItem() {
   }
 
   const handleListingClick = (listingId: number) => {
-    console.log("Opening sell listing:", listingId)
+    // Navigate to listings page with specific listing highlighted
+    window.location.href = `/listings?type=sell&highlight=${listingId}`
   }
 
   const loadMoreListings = () => {
@@ -687,7 +652,7 @@ function SellListingsMenuItem() {
                 >
                   <div className="truncate font-medium">{listing.title}</div>
                   <div className="flex justify-between text-[10px] text-accent-400">
-                    <span>{listing.budget}</span>
+                    <span>{listing.price || listing.budget}</span>
                     <span>{listing.timestamp}</span>
                   </div>
                 </div>
@@ -719,16 +684,6 @@ function SellListingsMenuItem() {
             </div>
           </SidebarMenuSubItem>
 
-          {/* New Listing Button */}
-          <SidebarMenuSubItem>
-            <button
-              onClick={handleNewListing}
-              className="w-full mx-2 p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-500 text-accent-700 border-secondary-600 hover:bg-secondary-600 hover:-translate-y-0.5"
-            >
-              <Plus className="w-3 h-3" />
-              <span>New Sell Listing</span>
-            </button>
-          </SidebarMenuSubItem>
         </SidebarMenuSub>
       </div>
     </SidebarMenuItem>
