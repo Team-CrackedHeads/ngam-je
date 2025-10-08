@@ -330,12 +330,20 @@ function NgamJeAssistantMenuItem() {
 
           {/* Chat History Header */}
           <SidebarMenuSubItem>
-            <div className="flex items-center gap-2 px-2 py-1">
-              <Clock className="w-4 h-4 text-accent-700" />
-              <span className="text-sm font-medium text-accent-700">
-                Chat History
-              </span>
-            </div>
+            <SidebarMenuSubButton
+              asChild
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+            >
+              <Link
+                href="/chat/history"
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Chat History
+                </span>
+              </Link>
+            </SidebarMenuSubButton>
           </SidebarMenuSubItem>
 
           {/* Chat History List */}
@@ -399,14 +407,83 @@ function NgamJeAssistantMenuItem() {
   )
 }
 
-function ListingsMenuItem() {
-  const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
+// Mock buy listings data
+const mockBuyListings = [
+  { id: 1, title: "iPhone 14 Pro - 256GB", price: "$800", location: "KL", timestamp: "2 hours ago" },
+  { id: 2, title: "MacBook Air M2 - Like New", price: "$1200", location: "PJ", timestamp: "4 hours ago" },
+  { id: 3, title: "Sony WH-1000XM4 Headphones", price: "$250", location: "Selangor", timestamp: "6 hours ago" },
+  { id: 4, title: "Gaming PC - RTX 4070", price: "$1800", location: "Subang", timestamp: "8 hours ago" },
+  { id: 5, title: "Canon EOS R5 Camera", price: "$2500", location: "KL", timestamp: "1 day ago" },
+  { id: 6, title: "iPad Pro 12.9 - 2022", price: "$900", location: "Cyberjaya", timestamp: "1 day ago" },
+  { id: 7, title: "Dyson V15 Vacuum", price: "$400", location: "Shah Alam", timestamp: "2 days ago" },
+  { id: 8, title: "Nintendo Switch OLED", price: "$350", location: "Ampang", timestamp: "2 days ago" },
+  { id: 9, title: "Samsung 4K Monitor 32\"", price: "$450", location: "KL", timestamp: "3 days ago" },
+  { id: 10, title: "Mechanical Keyboard - Cherry MX", price: "$120", location: "PJ", timestamp: "3 days ago" }
+]
 
-  const listingItems = [
-    { href: "/listings/buy", label: "Buy Listings", icon: ShoppingCart },
-    { href: "/listings/sell", label: "Sell Listings", icon: Package }
-  ]
+// Mock sell listings data
+const mockSellListings = [
+  { id: 1, title: "Looking for: MacBook Pro M3", budget: "$2000", location: "KL", timestamp: "1 hour ago" },
+  { id: 2, title: "Want: Electric Scooter", budget: "$800", location: "PJ", timestamp: "3 hours ago" },
+  { id: 3, title: "Need: DSLR Camera Body", budget: "$1500", location: "Selangor", timestamp: "5 hours ago" },
+  { id: 4, title: "Seeking: Office Chair - Herman Miller", budget: "$600", location: "Subang", timestamp: "7 hours ago" },
+  { id: 5, title: "Want: iPhone 15 Pro Max", budget: "$1300", location: "KL", timestamp: "12 hours ago" },
+  { id: 6, title: "Looking for: Gaming Monitor 4K", budget: "$700", location: "Cyberjaya", timestamp: "1 day ago" },
+  { id: 7, title: "Need: Air Purifier", budget: "$300", location: "Shah Alam", timestamp: "1 day ago" },
+  { id: 8, title: "Want: Smartwatch - Apple/Samsung", budget: "$400", location: "Ampang", timestamp: "2 days ago" },
+  { id: 9, title: "Seeking: Coffee Machine", budget: "$500", location: "KL", timestamp: "2 days ago" },
+  { id: 10, title: "Looking for: Bicycle - Road Bike", budget: "$1000", location: "PJ", timestamp: "3 days ago" }
+]
+
+function BuyListingsMenuItem() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [visibleListings, setVisibleListings] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const KEEP_RECENT_COUNT = 10
+  const MAX_LOADED_COUNT = 25
+  const DELOAD_TO_COUNT = 15
+
+  const handleNewListing = () => {
+    console.log("Creating new buy listing...")
+  }
+
+  const handleListingClick = (listingId: number) => {
+    console.log("Opening buy listing:", listingId)
+  }
+
+  const loadMoreListings = () => {
+    if (loading || visibleListings >= mockBuyListings.length) return
+
+    setLoading(true)
+    setTimeout(() => {
+      const newCount = Math.min(visibleListings + 5, mockBuyListings.length)
+
+      if (newCount > MAX_LOADED_COUNT) {
+        setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT))
+      } else {
+        setVisibleListings(newCount)
+      }
+
+      setLoading(false)
+    }, 300)
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      loadMoreListings()
+    }
+
+    if (scrollTop === 0 && visibleListings > KEEP_RECENT_COUNT) {
+      const currentTarget = e.currentTarget
+      setTimeout(() => {
+        if (currentTarget && currentTarget.scrollTop === 0) {
+          setVisibleListings(KEEP_RECENT_COUNT)
+        }
+      }, 500)
+    }
+  }
 
   return (
     <SidebarMenuItem>
@@ -414,8 +491,8 @@ function ListingsMenuItem() {
         onClick={() => setIsOpen(!isOpen)}
         className="group/menu-item text-accent-700 font-semibold"
       >
-        <ShoppingBag className="w-5 h-5" />
-        <span>Listings</span>
+        <ShoppingCart className="w-5 h-5" />
+        <span>Buy Listings</span>
         {isOpen ? (
           <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
         ) : (
@@ -428,23 +505,230 @@ function ListingsMenuItem() {
           }`}
       >
         <SidebarMenuSub>
-          {listingItems.map((item) => (
-            <SidebarMenuSubItem key={item.href}>
-              <SidebarMenuSubButton
-                asChild
-                isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
-                className={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? 'bg-secondary-500 text-accent-700' : ''}
+          {/* Recent Listings Header */}
+          <SidebarMenuSubItem>
+            <SidebarMenuSubButton
+              asChild
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+            >
+              <Link
+                href="/listings?type=buy"
+                className="flex items-center gap-2"
               >
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 ${pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? 'text-accent-700 bg-secondary-500' : 'text-accent-500 hover:bg-primary-200 hover:text-accent-700'}`}
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Recent Listings
+                </span>
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+
+          {/* Listings List */}
+          <SidebarMenuSubItem>
+            <div
+              className="max-h-32 overflow-y-auto space-y-1 px-2"
+              onScroll={handleScroll}
+            >
+              {mockBuyListings.slice(0, visibleListings).map((listing) => (
+                <div
+                  key={listing.id}
+                  onClick={() => handleListingClick(listing.id)}
+                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          ))}
+                  <div className="truncate font-medium">{listing.title}</div>
+                  <div className="flex justify-between text-[10px] text-accent-400">
+                    <span>{listing.price}</span>
+                    <span>{listing.timestamp}</span>
+                  </div>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    Loading...
+                  </div>
+                </div>
+              )}
+
+              {visibleListings >= mockBuyListings.length && mockBuyListings.length > 5 && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    No more listings
+                  </div>
+                </div>
+              )}
+
+              {visibleListings < mockBuyListings.length && visibleListings >= MAX_LOADED_COUNT && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-300">
+                    {mockBuyListings.length - visibleListings} older listings hidden
+                  </div>
+                </div>
+              )}
+            </div>
+          </SidebarMenuSubItem>
+
+          {/* New Listing Button */}
+          <SidebarMenuSubItem>
+            <button
+              onClick={handleNewListing}
+              className="w-full mx-2 p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-500 text-accent-700 border-secondary-600 hover:bg-secondary-600 hover:-translate-y-0.5"
+            >
+              <Plus className="w-3 h-3" />
+              <span>New Buy Listing</span>
+            </button>
+          </SidebarMenuSubItem>
+        </SidebarMenuSub>
+      </div>
+    </SidebarMenuItem>
+  )
+}
+
+function SellListingsMenuItem() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [visibleListings, setVisibleListings] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const KEEP_RECENT_COUNT = 10
+  const MAX_LOADED_COUNT = 25
+  const DELOAD_TO_COUNT = 15
+
+  const handleNewListing = () => {
+    console.log("Creating new sell listing...")
+  }
+
+  const handleListingClick = (listingId: number) => {
+    console.log("Opening sell listing:", listingId)
+  }
+
+  const loadMoreListings = () => {
+    if (loading || visibleListings >= mockSellListings.length) return
+
+    setLoading(true)
+    setTimeout(() => {
+      const newCount = Math.min(visibleListings + 5, mockSellListings.length)
+
+      if (newCount > MAX_LOADED_COUNT) {
+        setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT))
+      } else {
+        setVisibleListings(newCount)
+      }
+
+      setLoading(false)
+    }, 300)
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      loadMoreListings()
+    }
+
+    if (scrollTop === 0 && visibleListings > KEEP_RECENT_COUNT) {
+      const currentTarget = e.currentTarget
+      setTimeout(() => {
+        if (currentTarget && currentTarget.scrollTop === 0) {
+          setVisibleListings(KEEP_RECENT_COUNT)
+        }
+      }, 500)
+    }
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        onClick={() => setIsOpen(!isOpen)}
+        className="group/menu-item text-accent-700 font-semibold"
+      >
+        <Package className="w-5 h-5" />
+        <span>Sell Listings</span>
+        {isOpen ? (
+          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+        ) : (
+          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+        )}
+      </SidebarMenuButton>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
+        <SidebarMenuSub>
+          {/* Recent Listings Header */}
+          <SidebarMenuSubItem>
+            <SidebarMenuSubButton
+              asChild
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+            >
+              <Link
+                href="/listings?type=sell"
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Recent Listings
+                </span>
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+
+          {/* Listings List */}
+          <SidebarMenuSubItem>
+            <div
+              className="max-h-32 overflow-y-auto space-y-1 px-2"
+              onScroll={handleScroll}
+            >
+              {mockSellListings.slice(0, visibleListings).map((listing) => (
+                <div
+                  key={listing.id}
+                  onClick={() => handleListingClick(listing.id)}
+                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+                >
+                  <div className="truncate font-medium">{listing.title}</div>
+                  <div className="flex justify-between text-[10px] text-accent-400">
+                    <span>{listing.budget}</span>
+                    <span>{listing.timestamp}</span>
+                  </div>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    Loading...
+                  </div>
+                </div>
+              )}
+
+              {visibleListings >= mockSellListings.length && mockSellListings.length > 5 && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    No more listings
+                  </div>
+                </div>
+              )}
+
+              {visibleListings < mockSellListings.length && visibleListings >= MAX_LOADED_COUNT && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-300">
+                    {mockSellListings.length - visibleListings} older listings hidden
+                  </div>
+                </div>
+              )}
+            </div>
+          </SidebarMenuSubItem>
+
+          {/* New Listing Button */}
+          <SidebarMenuSubItem>
+            <button
+              onClick={handleNewListing}
+              className="w-full mx-2 p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-500 text-accent-700 border-secondary-600 hover:bg-secondary-600 hover:-translate-y-0.5"
+            >
+              <Plus className="w-3 h-3" />
+              <span>New Sell Listing</span>
+            </button>
+          </SidebarMenuSubItem>
         </SidebarMenuSub>
       </div>
     </SidebarMenuItem>
@@ -684,7 +968,19 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <ListingsMenuItem />
+              <BuyListingsMenuItem />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <div className="ml-1 mr-5">
+          <SidebarSeparator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SellListingsMenuItem />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
