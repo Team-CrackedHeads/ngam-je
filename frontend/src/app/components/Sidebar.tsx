@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageCircle, User, Settings, Menu, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon, TrendingUp, Search } from "lucide-react"
+import { Home, MessageCircle, User, Settings, Menu, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon, TrendingUp, Search, ShoppingBag, ShoppingCart, Package } from "lucide-react"
 import { useEffect, useState } from "react"
 import { MOCK_THREADS } from "@/utils/mock-threads-data"
 import {
@@ -399,6 +399,58 @@ function NgamJeAssistantMenuItem() {
   )
 }
 
+function ListingsMenuItem() {
+  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+
+  const listingItems = [
+    { href: "/listings/buy", label: "Buy Listings", icon: ShoppingCart },
+    { href: "/listings/sell", label: "Sell Listings", icon: Package }
+  ]
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        onClick={() => setIsOpen(!isOpen)}
+        className="group/menu-item text-accent-700 font-semibold"
+      >
+        <ShoppingBag className="w-5 h-5" />
+        <span>Listings</span>
+        {isOpen ? (
+          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+        ) : (
+          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+        )}
+      </SidebarMenuButton>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
+        <SidebarMenuSub>
+          {listingItems.map((item) => (
+            <SidebarMenuSubItem key={item.href}>
+              <SidebarMenuSubButton
+                asChild
+                isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
+                className={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? 'bg-secondary-500 text-accent-700' : ''}
+              >
+                <Link
+                  href={item.href}
+                  className={`flex items-center gap-3 ${pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) ? 'text-accent-700 bg-secondary-500' : 'text-accent-500 hover:bg-primary-200 hover:text-accent-700'}`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      </div>
+    </SidebarMenuItem>
+  )
+}
+
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true)
   const pathname = usePathname()
@@ -621,6 +673,18 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <FollowingMenuItem />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <div className="ml-1 mr-5">
+          <SidebarSeparator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <ListingsMenuItem />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
