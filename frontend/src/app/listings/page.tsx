@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // Types
@@ -18,6 +18,9 @@ interface Listing {
   views: number;
   likes: number;
   category: string;
+  expiresAt: string; // ISO date string
+  subscriptionTier: "basic" | "pro" | "enterprise";
+  isOwner?: boolean; // Whether current user owns this listing
 }
 
 // Mock data for buy listings (items for sale)
@@ -32,7 +35,10 @@ const mockBuyListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 45,
     likes: 12,
-    category: "Electronics"
+    category: "Electronics",
+    expiresAt: "2025-11-15T10:00:00Z", // 5 days from now
+    subscriptionTier: "basic",
+    isOwner: true
   },
   {
     id: 2,
@@ -44,7 +50,10 @@ const mockBuyListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 67,
     likes: 23,
-    category: "Electronics"
+    category: "Electronics",
+    expiresAt: "2025-12-08T15:30:00Z", // 29 days from now
+    subscriptionTier: "pro",
+    isOwner: false
   },
   {
     id: 3,
@@ -56,7 +65,10 @@ const mockBuyListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 34,
     likes: 8,
-    category: "Audio"
+    category: "Audio",
+    expiresAt: "2025-10-10T20:00:00Z", // Expired (1 day ago)
+    subscriptionTier: "basic",
+    isOwner: true
   },
   {
     id: 4,
@@ -68,7 +80,10 @@ const mockBuyListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 89,
     likes: 31,
-    category: "Computing"
+    category: "Computing",
+    expiresAt: "2026-01-05T12:00:00Z", // 87 days from now
+    subscriptionTier: "enterprise",
+    isOwner: false
   }
 ];
 
@@ -84,7 +99,10 @@ const mockSellListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 23,
     likes: 5,
-    category: "Electronics"
+    category: "Electronics",
+    expiresAt: "2025-10-12T08:00:00Z", // 2 days from now (urgent)
+    subscriptionTier: "basic",
+    isOwner: true
   },
   {
     id: 2,
@@ -96,7 +114,10 @@ const mockSellListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 19,
     likes: 3,
-    category: "Transportation"
+    category: "Transportation",
+    expiresAt: "2025-11-25T14:20:00Z", // 46 days from now
+    subscriptionTier: "pro",
+    isOwner: false
   },
   {
     id: 3,
@@ -108,7 +129,10 @@ const mockSellListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 41,
     likes: 9,
-    category: "Photography"
+    category: "Photography",
+    expiresAt: "2025-10-13T16:30:00Z", // 3 days from now
+    subscriptionTier: "basic",
+    isOwner: true
   },
   {
     id: 4,
@@ -120,9 +144,71 @@ const mockSellListings: Listing[] = [
     imageUrl: "/api/placeholder/300/200",
     views: 15,
     likes: 2,
-    category: "Furniture"
+    category: "Furniture",
+    expiresAt: "2026-01-18T11:45:00Z", // 100 days from now
+    subscriptionTier: "enterprise",
+    isOwner: false
   }
 ];
+
+// Helper functions for timer calculations
+function getTimeRemaining(expiresAt: string) {
+  const now = new Date();
+  const expiry = new Date(expiresAt);
+  const diff = expiry.getTime() - now.getTime();
+
+  if (diff <= 0) {
+    return { expired: true, text: "Expired", urgent: false, days: 0, hours: 0 };
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const urgent = days <= 3; // Mark as urgent if 3 days or less
+
+  if (days > 0) {
+    return {
+      expired: false,
+      text: `${days}d ${hours}h`,
+      urgent,
+      days,
+      hours
+    };
+  } else {
+    return {
+      expired: false,
+      text: `${hours}h`,
+      urgent: true,
+      days: 0,
+      hours
+    };
+  }
+}
+
+function getExtensionPrice(subscriptionTier: string): string {
+  switch (subscriptionTier) {
+    case "basic":
+      return "RM 4.25"; // $1 = ~RM 4.25
+    case "pro":
+      return "RM 2.15"; // $0.50 = ~RM 2.15
+    case "enterprise":
+      return "RM 1.70"; // Bulk discount
+    default:
+      return "RM 4.25";
+  }
+}
+
+function getSubscriptionInfo(tier: string) {
+  switch (tier) {
+    case "basic":
+      return { name: "Basic Premium", shelfLife: "30 days" };
+    case "pro":
+      return { name: "Pro Premium", shelfLife: "60 days" };
+    case "enterprise":
+      return { name: "Enterprise", shelfLife: "90 days" };
+    default:
+      return { name: "Basic Premium", shelfLife: "30 days" };
+  }
+}
 
 // Tabs configuration
 const tabs = [
@@ -131,13 +217,57 @@ const tabs = [
 ];
 
 function ProductCard({ listing, type, viewMode }: { listing: Listing; type: "buy" | "sell"; viewMode: "grid" | "list" }) {
+  const timeRemaining = getTimeRemaining(listing.expiresAt);
+  const extensionPrice = getExtensionPrice(listing.subscriptionTier);
+  const subscriptionInfo = getSubscriptionInfo(listing.subscriptionTier);
+
+  const handleExtendListing = () => {
+    console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
+    // Future implementation: API call to extend listing
+  };
   if (viewMode === "list") {
     return (
       <div className="rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-shadow cursor-pointer">
         <div className="flex gap-4">
-          {/* Image */}
-          <div className="w-32 h-24 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-gray-400 text-xs">Image</span>
+          {/* Image and Timer Section */}
+          <div className="w-36 flex-shrink-0">
+            {/* Timer badge at top */}
+            <div className="mb-2">
+              <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                timeRemaining.expired
+                  ? 'bg-red-100 text-red-700'
+                  : timeRemaining.urgent
+                    ? 'bg-orange-100 text-orange-700'
+                    : 'bg-green-100 text-green-700'
+              }`}>
+                {timeRemaining.expired ? (
+                  <AlertTriangle size={10} />
+                ) : (
+                  <Timer size={10} />
+                )}
+                <span className="font-medium">{timeRemaining.text}</span>
+              </div>
+            </div>
+
+            {/* Image */}
+            <div className="w-36 h-28 bg-gray-200 rounded-xl flex items-center justify-center relative">
+              <span className="text-gray-400 text-xs">Image</span>
+
+              {/* Extension overlay for urgent/expired listings - row view only */}
+              {listing.isOwner && (timeRemaining.urgent || timeRemaining.expired) && (
+                <div className="absolute inset-0 bg-black bg-opacity-70 rounded-xl flex flex-col items-center justify-center text-white">
+                  <div className="flex items-center gap-1 mb-2">
+                    <AlertTriangle size={16} />
+                  </div>
+                  <button
+                    onClick={handleExtendListing}
+                    className="px-3 py-1 bg-secondary-500 text-accent-700 rounded text-xs font-medium hover:bg-secondary-600 transition-colors"
+                  >
+                    {extensionPrice}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Content */}
@@ -153,7 +283,7 @@ function ProductCard({ listing, type, viewMode }: { listing: Listing; type: "buy
             </div>
 
             {/* Category badge */}
-            <div className="mb-2">
+            <div className="flex items-center gap-2 mb-2">
               <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
                 {listing.category}
               </span>
@@ -179,15 +309,18 @@ function ProductCard({ listing, type, viewMode }: { listing: Listing; type: "buy
               </div>
 
               {/* Views and Likes */}
-              <div className="flex items-center gap-4 text-xs text-accent-400">
-                <div className="flex items-center gap-1">
-                  <Eye size={12} />
-                  <span>{listing.views} views</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs text-accent-400">
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} />
+                    <span>{listing.views} views</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Heart size={12} />
+                    <span>{listing.likes} likes</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Heart size={12} />
-                  <span>{listing.likes} likes</span>
-                </div>
+
               </div>
             </div>
           </div>
@@ -199,8 +332,42 @@ function ProductCard({ listing, type, viewMode }: { listing: Listing; type: "buy
   return (
     <div className="rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-shadow cursor-pointer">
       {/* Image placeholder */}
-      <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center">
+      <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative">
         <span className="text-gray-400 text-sm">Image placeholder</span>
+
+        {/* Timer overlay in image */}
+        <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+          timeRemaining.expired
+            ? 'bg-red-100 text-red-700'
+            : timeRemaining.urgent
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-green-100 text-green-700'
+        }`}>
+          {timeRemaining.expired ? (
+            <AlertTriangle size={10} />
+          ) : (
+            <Timer size={10} />
+          )}
+          <span className="font-medium">{timeRemaining.text}</span>
+        </div>
+
+        {/* Extension overlay for urgent/expired listings - replaces timer */}
+        {listing.isOwner && (timeRemaining.urgent || timeRemaining.expired) && (
+          <div className="absolute inset-0 bg-black bg-opacity-70 rounded-xl flex flex-col items-center justify-center text-white text-xs">
+            <AlertTriangle size={16} className="mb-1" />
+            <div className="text-center">
+              <div className="font-medium mb-1">
+                {timeRemaining.expired ? "Expired" : "Expires Soon"}
+              </div>
+              <button
+                onClick={handleExtendListing}
+                className="px-2 py-1 bg-secondary-500 text-accent-700 rounded text-xs font-medium hover:bg-secondary-600 transition-colors"
+              >
+                Extend {extensionPrice}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Header */}
@@ -211,7 +378,7 @@ function ProductCard({ listing, type, viewMode }: { listing: Listing; type: "buy
       </div>
 
       {/* Category badge */}
-      <div className="mb-2">
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
         <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
           {listing.category}
         </span>
@@ -254,6 +421,7 @@ function ProductCard({ listing, type, viewMode }: { listing: Listing; type: "buy
             <span>{listing.likes} likes</span>
           </div>
         </div>
+
       </div>
     </div>
   );
