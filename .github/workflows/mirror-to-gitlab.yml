@@ -13,7 +13,7 @@ jobs:
       - name: Checkout full history
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Full history for all branches
 
       - name: Configure GitLab remote URL
         env:
@@ -37,20 +37,38 @@ jobs:
           echo "default_branch=$DEFAULT_BRANCH" >> "$GITHUB_OUTPUT"
           echo "Default branch detected: $DEFAULT_BRANCH"
 
-      - name: Push non-main branches
+      - name: Create local branches from remote (excluding default)
         run: |
           set -euo pipefail
           DEFAULT="${{ steps.defbranch.outputs.default_branch }}"
+          for remote_ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/); do
+            branch="${remote_ref#origin/}"
+            if [ "$branch" = "$DEFAULT" ]; then
+              echo "Skipping default branch: $branch"
+              continue
+            fi
+            if git show-ref --quiet "refs/heads/$branch"; then
+              echo "Local branch already exists: $branch"
+            else
+              echo "Creating local branch: $branch"
+              git branch "$branch" "origin/$branch"
+            fi
+          done
 
-          # list local branches
+      - name: Push all non-main branches to GitLab
+        run: |
+          set -euo pipefail
+          DEFAULT="${{ steps.defbranch.outputs.default_branch }}"
           mapfile -t BRANCHES < <(git for-each-ref --format='%(refname:short)' refs/heads/)
-
           for branch in "${BRANCHES[@]}"; do
             if [ "$branch" = "$DEFAULT" ]; then
               echo "Skipping default branch: $branch"
               continue
             fi
-            echo "Pushing branch: $branch"
-            # regular push (no force). If you need to overwrite, swap to --force-with-lease.
-            git push gitlab "$branch:$branch" || echo "Warning: failed to push $branch"
+            echo "🔄 Pushing branch: $branch"
+            git push gitlab "$branch:$branch" || echo "⚠️ Warning: failed to push $branch"
           done
+
+      - name: (Optional) Prune deleted branches from GitLab
+        run: |
+          git remote prune gitlab || echo "ℹ️ Skipped pruning"
