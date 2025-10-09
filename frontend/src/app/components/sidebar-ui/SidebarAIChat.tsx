@@ -324,8 +324,14 @@ export default function SidebarAIChat({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-0 md:p-4">
-      <div className="w-full h-full md:w-full md:max-w-2xl md:h-[90vh] md:rounded-2xl bg-gradient-to-br from-primary-50 via-primary-100 to-secondary-50 shadow-2xl flex flex-col overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-0 md:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full h-full md:w-full md:max-w-2xl md:h-[90vh] md:rounded-2xl bg-gradient-to-br from-primary-50 via-primary-100 to-secondary-50 shadow-2xl flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex flex-col px-4 md:px-6 py-3 bg-white/80 backdrop-blur-sm border-b border-primary-200">
           <div className="flex items-center justify-between mb-3">
