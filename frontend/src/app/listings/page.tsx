@@ -1,9 +1,10 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, AlertTriangle } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, AlertTriangle, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { mockBuyListings, mockSellListings, type Listing } from "@/utils/mock-listings-data";
+import { getMatchCount } from "@/utils/mock-match-data";
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -59,18 +60,31 @@ const tabs = [
 ];
 
 function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "buy" | "sell"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+  const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
+  const matchCount = getMatchCount(listing.id, type);
 
-  const handleExtendListing = () => {
+  const handleExtendListing = (e: React.MouseEvent) => {
+    e.stopPropagation();
     console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
     // Future implementation: API call to extend listing
+  };
+
+  const handleViewMatches = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  const handleCardClick = () => {
+    // Navigate to matches page for this listing
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
   };
   if (viewMode === "list") {
     return (
       <div>
-        {/* Timer badge above card */}
-        <div className="mb-2">
+        {/* Timer badge and Match badge above card */}
+        <div className="mb-2 flex items-center gap-2">
           <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
             timeRemaining.expired
               ? 'bg-red-100 text-red-700'
@@ -85,9 +99,20 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
             )}
             <span className="font-medium">{timeRemaining.text}</span>
           </div>
+
+          {/* Match badge */}
+          {matchCount > 0 && (
+            <button
+              onClick={handleViewMatches}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200 transition-all font-medium border border-purple-200"
+            >
+              <Sparkles size={12} />
+              <span>{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+            </button>
+          )}
         </div>
 
-        <div className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-48 ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+        <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-48 ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
           <div className="flex gap-4 h-full">
           {/* Image Section */}
           <div className="flex-shrink-0">
@@ -96,7 +121,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
               <span className="text-gray-400 text-xs">Image</span>
 
               {/* Extension overlay for urgent/expired listings - row view only */}
-              {listing.isOwner && (timeRemaining.urgent || timeRemaining.expired) && (
+              {(timeRemaining.urgent || timeRemaining.expired) && (
                 <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
                   <div className="flex items-center gap-1 mb-2">
                     <AlertTriangle size={16} className="text-black" />
@@ -176,8 +201,8 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
 
   return (
     <div>
-      {/* Timer badge above card */}
-      <div className="mb-2">
+      {/* Timer badge and Match badge above card */}
+      <div className="mb-2 flex items-center gap-2 flex-wrap">
         <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
           timeRemaining.expired
             ? 'bg-red-100 text-red-700'
@@ -192,16 +217,27 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
           )}
           <span className="font-medium">{timeRemaining.text}</span>
         </div>
+
+        {/* Match badge */}
+        {matchCount > 0 && (
+          <button
+            onClick={handleViewMatches}
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200 transition-all font-medium border border-purple-200"
+          >
+            <Sparkles size={12} />
+            <span>{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+          </button>
+        )}
       </div>
 
-      <div className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+      <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
 
       {/* Image placeholder */}
       <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative">
         <span className="text-gray-400 text-sm">Image placeholder</span>
 
         {/* Extension overlay for urgent/expired listings */}
-        {listing.isOwner && (timeRemaining.urgent || timeRemaining.expired) && (
+        {(timeRemaining.urgent || timeRemaining.expired) && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
             <AlertTriangle size={16} className="mb-1 text-black" />
             <div className="text-center">
@@ -301,7 +337,9 @@ export default function ListingsPage() {
     }
   }, [searchParams]);
 
-  const currentListings = activeTab === "buy" ? mockBuyListings : mockSellListings;
+  // Filter to show only the user's own listings
+  const allListings = activeTab === "buy" ? mockBuyListings : mockSellListings;
+  const currentListings = allListings.filter(listing => listing.isOwner === true);
   const ActiveIcon = activeTab === "buy" ? ShoppingCart : Package;
 
   return (

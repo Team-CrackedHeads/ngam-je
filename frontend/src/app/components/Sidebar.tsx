@@ -575,8 +575,8 @@ function BuyListingsMenuItem() {
   };
 
   const handleListingClick = (listingId: number) => {
-    // Navigate to listings page with specific listing highlighted
-    window.location.href = `/listings?type=buy&highlight=${listingId}`;
+    // Navigate to matches page for this listing
+    window.location.href = `/listings/${listingId}/matches?type=buy`;
   };
 
   const loadMoreListings = () => {
@@ -715,8 +715,8 @@ function SellListingsMenuItem() {
   };
 
   const handleListingClick = (listingId: number) => {
-    // Navigate to listings page with specific listing highlighted
-    window.location.href = `/listings?type=sell&highlight=${listingId}`;
+    // Navigate to matches page for this listing
+    window.location.href = `/listings/${listingId}/matches?type=sell`;
   };
 
   const loadMoreListings = () => {
