@@ -43,8 +43,9 @@ jobs:
           DEFAULT="${{ steps.defbranch.outputs.default_branch }}"
           for remote_ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/); do
             branch="${remote_ref#origin/}"
-            if [ "$branch" = "$DEFAULT" ]; then
-              echo "Skipping default branch: $branch"
+            # Skip invalid branch names and default branch
+            if [ "$branch" = "$DEFAULT" ] || [ "$branch" = "origin" ] || [ "$branch" = "HEAD" ]; then
+              echo "Skipping branch: $branch"
               continue
             fi
             if git show-ref --quiet "refs/heads/$branch"; then
