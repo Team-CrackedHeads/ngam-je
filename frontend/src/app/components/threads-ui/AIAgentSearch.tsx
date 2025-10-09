@@ -63,7 +63,7 @@ export default function AIAgentSearch({
   };
 
   return (
-    <div className="w-full min-h-[80vh] flex flex-col items-center justify-start bg-primary-subtle pt-16 md:pt-20 pb-10 overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center justify-start bg-primary-subtle pt-16 md:pt-20 pb-10 overflow-hidden">
       <div
         className={`relative z-10 flex flex-col items-center justify-start text-center px-4 md:px-8 w-full max-w-4xl space-y-6 transform transition-all duration-1000 ease-out ${
           fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
