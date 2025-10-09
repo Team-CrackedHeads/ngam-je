@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Puzzle,
 } from "lucide-react";
+import AISummary from "../../../../components/threads-ui/AISummary";
 
 interface Answer {
   id: string;
@@ -530,23 +531,7 @@ const FAQPage: React.FC = () => {
             {aiSummary}
           </p>
         </div> */}
-        <div className="hidden lg:block bg-card backdrop-blur-md rounded-2xl shadow-lg border-2 border-border overflow-hidden mb-6">
-          {/* Header (clean, no separator) */}
-          <div className="w-full bg-secondary-subtle px-4 md:px-6 lg:px-8 py-3 md:py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-secondary-500">
-                <Puzzle className="w-4 h-4 md:w-5 md:h-5 text-accent-700" />
-              </div>
-              <h3 className="text-lg md:text-xl font-bold text-foreground">
-                AI Summary
-              </h3>
-            </div>
-            <br />
-            <p className="text-[color:var(--color-muted-foreground)] leading-relaxed">
-              {aiSummary}
-            </p>
-          </div>
-        </div>
+        <AISummary content={aiSummary} />
       </div>
     </div>
   );
