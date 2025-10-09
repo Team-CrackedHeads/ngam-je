@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageCircle, User, Settings, Menu, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon, TrendingUp, Search } from "lucide-react"
+import { Home, MessageCircle, User, Settings, Menu, Plus, ChevronDown, ChevronRight, Clock, Sparkles, Navigation as NavIcon, TrendingUp, Search, ShoppingBag, ShoppingCart, Package } from "lucide-react"
 import { useEffect, useState } from "react"
 import { MOCK_THREADS } from "@/utils/mock-threads-data"
+import { mockBuyListings, mockSellListings } from "@/utils/mock-listings-data"
 import {
   Sidebar,
   SidebarContent,
@@ -330,12 +331,20 @@ function NgamJeAssistantMenuItem() {
 
           {/* Chat History Header */}
           <SidebarMenuSubItem>
-            <div className="flex items-center gap-2 px-2 py-1">
-              <Clock className="w-4 h-4 text-accent-700" />
-              <span className="text-sm font-medium text-accent-700">
-                Chat History
-              </span>
-            </div>
+            <SidebarMenuSubButton
+              asChild
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+            >
+              <Link
+                href="/chat/history"
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Chat History
+                </span>
+              </Link>
+            </SidebarMenuSubButton>
           </SidebarMenuSubItem>
 
           {/* Chat History List */}
@@ -393,6 +402,288 @@ function NgamJeAssistantMenuItem() {
               <span>New Chat</span>
             </button>
           </SidebarMenuSubItem>
+        </SidebarMenuSub>
+      </div>
+    </SidebarMenuItem>
+  )
+}
+
+function BuyListingsMenuItem() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [visibleListings, setVisibleListings] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const KEEP_RECENT_COUNT = 10
+  const MAX_LOADED_COUNT = 25
+  const DELOAD_TO_COUNT = 15
+
+  const handleNewListing = () => {
+    console.log("Creating new buy listing...")
+  }
+
+  const handleListingClick = (listingId: number) => {
+    // Navigate to listings page with specific listing highlighted
+    window.location.href = `/listings?type=buy&highlight=${listingId}`
+  }
+
+  const loadMoreListings = () => {
+    if (loading || visibleListings >= mockBuyListings.length) return
+
+    setLoading(true)
+    setTimeout(() => {
+      const newCount = Math.min(visibleListings + 5, mockBuyListings.length)
+
+      if (newCount > MAX_LOADED_COUNT) {
+        setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT))
+      } else {
+        setVisibleListings(newCount)
+      }
+
+      setLoading(false)
+    }, 300)
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      loadMoreListings()
+    }
+
+    if (scrollTop === 0 && visibleListings > KEEP_RECENT_COUNT) {
+      const currentTarget = e.currentTarget
+      setTimeout(() => {
+        if (currentTarget && currentTarget.scrollTop === 0) {
+          setVisibleListings(KEEP_RECENT_COUNT)
+        }
+      }, 500)
+    }
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        onClick={() => setIsOpen(!isOpen)}
+        className="group/menu-item text-accent-700 font-semibold"
+      >
+        <ShoppingCart className="w-5 h-5" />
+        <span>Buy Listings</span>
+        {isOpen ? (
+          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+        ) : (
+          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+        )}
+      </SidebarMenuButton>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
+        <SidebarMenuSub>
+          {/* Recent Listings Header */}
+          <SidebarMenuSubItem>
+            <SidebarMenuSubButton
+              asChild
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+            >
+              <Link
+                href="/listings?type=buy"
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Recent Listings
+                </span>
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+
+          {/* Listings List */}
+          <SidebarMenuSubItem>
+            <div
+              className="max-h-32 overflow-y-auto space-y-1 px-2"
+              onScroll={handleScroll}
+            >
+              {mockBuyListings.slice(0, visibleListings).map((listing) => (
+                <div
+                  key={listing.id}
+                  onClick={() => handleListingClick(listing.id)}
+                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+                >
+                  <div className="truncate font-medium">{listing.title}</div>
+                  <div className="flex justify-between text-[10px] text-accent-400">
+                    <span>{listing.price || listing.budget}</span>
+                    <span>{listing.timestamp}</span>
+                  </div>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    Loading...
+                  </div>
+                </div>
+              )}
+
+              {visibleListings >= mockBuyListings.length && mockBuyListings.length > 5 && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    No more listings
+                  </div>
+                </div>
+              )}
+
+              {visibleListings < mockBuyListings.length && visibleListings >= MAX_LOADED_COUNT && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-300">
+                    {mockBuyListings.length - visibleListings} older listings hidden
+                  </div>
+                </div>
+              )}
+            </div>
+          </SidebarMenuSubItem>
+
+        </SidebarMenuSub>
+      </div>
+    </SidebarMenuItem>
+  )
+}
+
+function SellListingsMenuItem() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [visibleListings, setVisibleListings] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const KEEP_RECENT_COUNT = 10
+  const MAX_LOADED_COUNT = 25
+  const DELOAD_TO_COUNT = 15
+
+  const handleNewListing = () => {
+    console.log("Creating new sell listing...")
+  }
+
+  const handleListingClick = (listingId: number) => {
+    // Navigate to listings page with specific listing highlighted
+    window.location.href = `/listings?type=sell&highlight=${listingId}`
+  }
+
+  const loadMoreListings = () => {
+    if (loading || visibleListings >= mockSellListings.length) return
+
+    setLoading(true)
+    setTimeout(() => {
+      const newCount = Math.min(visibleListings + 5, mockSellListings.length)
+
+      if (newCount > MAX_LOADED_COUNT) {
+        setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT))
+      } else {
+        setVisibleListings(newCount)
+      }
+
+      setLoading(false)
+    }, 300)
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      loadMoreListings()
+    }
+
+    if (scrollTop === 0 && visibleListings > KEEP_RECENT_COUNT) {
+      const currentTarget = e.currentTarget
+      setTimeout(() => {
+        if (currentTarget && currentTarget.scrollTop === 0) {
+          setVisibleListings(KEEP_RECENT_COUNT)
+        }
+      }, 500)
+    }
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        onClick={() => setIsOpen(!isOpen)}
+        className="group/menu-item text-accent-700 font-semibold"
+      >
+        <Package className="w-5 h-5" />
+        <span>Sell Listings</span>
+        {isOpen ? (
+          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+        ) : (
+          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+        )}
+      </SidebarMenuButton>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+      >
+        <SidebarMenuSub>
+          {/* Recent Listings Header */}
+          <SidebarMenuSubItem>
+            <SidebarMenuSubButton
+              asChild
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+            >
+              <Link
+                href="/listings?type=sell"
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Recent Listings
+                </span>
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+
+          {/* Listings List */}
+          <SidebarMenuSubItem>
+            <div
+              className="max-h-32 overflow-y-auto space-y-1 px-2"
+              onScroll={handleScroll}
+            >
+              {mockSellListings.slice(0, visibleListings).map((listing) => (
+                <div
+                  key={listing.id}
+                  onClick={() => handleListingClick(listing.id)}
+                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+                >
+                  <div className="truncate font-medium">{listing.title}</div>
+                  <div className="flex justify-between text-[10px] text-accent-400">
+                    <span>{listing.price || listing.budget}</span>
+                    <span>{listing.timestamp}</span>
+                  </div>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    Loading...
+                  </div>
+                </div>
+              )}
+
+              {visibleListings >= mockSellListings.length && mockSellListings.length > 5 && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-400">
+                    No more listings
+                  </div>
+                </div>
+              )}
+
+              {visibleListings < mockSellListings.length && visibleListings >= MAX_LOADED_COUNT && (
+                <div className="flex justify-center py-2">
+                  <div className="text-xs text-accent-300">
+                    {mockSellListings.length - visibleListings} older listings hidden
+                  </div>
+                </div>
+              )}
+            </div>
+          </SidebarMenuSubItem>
+
         </SidebarMenuSub>
       </div>
     </SidebarMenuItem>
@@ -621,6 +912,30 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <FollowingMenuItem />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <div className="ml-1 mr-5">
+          <SidebarSeparator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <BuyListingsMenuItem />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <div className="ml-1 mr-5">
+          <SidebarSeparator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SellListingsMenuItem />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
