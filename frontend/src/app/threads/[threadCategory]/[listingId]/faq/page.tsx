@@ -2,17 +2,18 @@
 
 import "@/app/globals.css";
 import React, { useState } from "react";
-import NgamOverview from "../../../../components/threads-ui/NgamOverview";
+import ReactMarkdown from "react-markdown";
 import {
   ChevronLeft,
   Send,
-  CheckCircle,
+  CircleCheck,
   Circle,
   ChevronDown,
   ChevronRight,
   ThumbsUp,
   ThumbsDown,
   MessageSquare,
+  Puzzle,
 } from "lucide-react";
 
 interface Answer {
@@ -117,6 +118,15 @@ const FAQPage: React.FC = () => {
         },
       ],
       isAnsweredByPoster: true,
+    },
+    {
+      id: "q3",
+      question: "Warranty of shoes?",
+      description:
+        "Details regarding the warranty of the shoes.",
+      answers: [
+      ],
+      isAnsweredByPoster: false,
     },
   ]);
 
@@ -410,7 +420,7 @@ const FAQPage: React.FC = () => {
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Panel */}
         <div className="md:col-span-2 space-y-6">
           {/* Ask AI Input */}
@@ -434,16 +444,21 @@ const FAQPage: React.FC = () => {
 
           {/* AI Summary (Mobile) */}
           <div className="lg:hidden border border-[color:var(--color-border)] p-4 bg-card backdrop-blur-md rounded-2xl shadow-sm">
-            <h2 className="text-lg font-semibold text-[color:var(--color-primary-800)] mb-2">
-              AI Summary
-            </h2>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-secondary-500">
+                <Puzzle className="w-4 h-4 md:w-5 md:h-5 text-accent-700" />
+              </div>
+              <h3 className="text-lg md:text-xl font-bold text-foreground">
+                AI Summary
+              </h3>
+            </div>
             <p className="text-[color:var(--color-muted-foreground)] text-sm leading-relaxed">
               {aiSummary}
             </p>
           </div>
 
           {/* Questions List */}
-          <div className="space-y-4">
+          <div className="space-y-4 mb-20 lg:mb-6">
             {questions.map((q) => (
               <div
                 key={q.id}
@@ -455,7 +470,7 @@ const FAQPage: React.FC = () => {
                 >
                   <div className="flex-shrink-0 mt-1">
                     {q.isAnsweredByPoster ? (
-                      <CheckCircle
+                      <CircleCheck
                         className="h-5 w-5 text-[color:var(--color-secondary-600)]"
                         fill="currentColor"
                       />
@@ -507,13 +522,30 @@ const FAQPage: React.FC = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="hidden lg:block md:col-span-1 bg-card border border-[color:var(--color-border)] backdrop-blur-md rounded-2xl p-6 shadow-sm h-fit sticky top-6">
+        {/* <div className="hidden lg:block md:col-span-1 bg-card border border-[color:var(--color-border)] backdrop-blur-md rounded-2xl p-6 shadow-sm h-fit sticky top-6">
           <h2 className="text-xl font-semibold text-[color:var(--color-primary-800)] mb-4">
             AI Summary
           </h2>
           <p className="text-[color:var(--color-muted-foreground)] leading-relaxed">
             {aiSummary}
           </p>
+        </div> */}
+        <div className="hidden lg:block bg-card backdrop-blur-md rounded-2xl shadow-lg border-2 border-border overflow-hidden mb-6">
+          {/* Header (clean, no separator) */}
+          <div className="w-full bg-secondary-subtle px-4 md:px-6 lg:px-8 py-3 md:py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-secondary-500">
+                <Puzzle className="w-4 h-4 md:w-5 md:h-5 text-accent-700" />
+              </div>
+              <h3 className="text-lg md:text-xl font-bold text-foreground">
+                AI Summary
+              </h3>
+            </div>
+            <br />
+            <p className="text-[color:var(--color-muted-foreground)] leading-relaxed">
+              {aiSummary}
+            </p>
+          </div>
         </div>
       </div>
     </div>
