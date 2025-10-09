@@ -1,6 +1,6 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
-// shadcn dropdown menu
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,17 +44,26 @@ export default function FilterDropdown({
               key={filter}
               onClick={() => onFilterChange(filter)}
               className={`cursor-pointer transition-colors ${
-                filter === activeFilter
-                  ? "font-semibold text-black"
-                  : "hover:bg-accent"
+                filter === activeFilter ? "font-semibold text-black" : ""
               }`}
-              style={
-                 filter === activeFilter
-                  ? {
-                      backgroundColor: "var(--color-secondary-500)", // global css color
-                    }
-                  : {}
-              }
+              style={{
+                backgroundColor:
+                  filter === activeFilter
+                    ? "var(--color-secondary-500)"
+                    : "transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (filter !== activeFilter) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    "var(--color-secondary-500)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== activeFilter) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    "transparent";
+                }
+              }}
             >
               {filter}
             </DropdownMenuItem>
