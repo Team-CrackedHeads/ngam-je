@@ -10,8 +10,6 @@ import {
   Eye,
   ArrowUp,
   Clock,
-  Zap,
-  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +66,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src =
-                'https://placehold.co/800x400/cccccc/333333?text=No+Image';
+                "https://placehold.co/800x400/cccccc/333333?text=No+Image";
             }}
           />
 
@@ -120,35 +118,31 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
 
       {/* --- Main Body --- */}
       <CardContent className="flex flex-col flex-grow p-4 sm:p-5">
+        {/* Title */}
         <h2 className="text-base sm:text-lg md:text-xl font-semibold text-accent-700 line-clamp-2 mb-1">
           {thread.title}
         </h2>
 
+        {/* Description */}
         <p className="text-sm sm:text-base text-gray-500 line-clamp-2 flex-grow mb-3">
           {thread.description}
         </p>
 
-        {/* --- Button Row --- */}
-        <div className="flex gap-3 mt-auto">
-          <Button
-            variant="outline"
-            className="flex-1 text-xs sm:text-sm md:text-base"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Zap className="w-4 h-4 mr-1" />
-            Contribute
-          </Button>
-          <Button
-            className="flex-1 text-xs sm:text-sm md:text-base bg-secondary-500 text-accent-700 hover:bg-secondary-600 border border-secondary-600"
-            onClick={handleViewThread}
-          >
-            View Thread
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
+        {/* --- Tags (scrollable and above progress) --- */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 mb-3">
+          {thread.tags.map((tag, i) => (
+            <Badge
+              key={i}
+              variant="secondary"
+              className="text-xs sm:text-sm text-accent-500 bg-secondary-500 hover:bg-secondary-100 whitespace-nowrap flex-shrink-0"
+            >
+              {tag}
+            </Badge>
+          ))}
         </div>
 
         {/* --- Progress Bar --- */}
-        <div className="mt-4">
+        <div className="mt-1">
           <div className="flex justify-between text-xs sm:text-sm mb-1 font-medium">
             <span className="text-accent-500">Boost Progress</span>
             <span className="text-accent-500 font-semibold">
@@ -156,19 +150,6 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
             </span>
           </div>
           <Progress value={progressPercent} className="h-2" />
-        </div>
-
-        {/* --- Tags --- */}
-        <div className="flex flex-wrap gap-1 mt-3">
-          {thread.tags.slice(0, 3).map((tag, i) => (
-            <Badge
-              key={i}
-              variant="secondary"
-              className="text-xs sm:text-sm text-accent-500 bg-secondary-500 hover:bg-secondary-100"
-            >
-              {tag}
-            </Badge>
-          ))}
         </div>
       </CardContent>
     </Card>
