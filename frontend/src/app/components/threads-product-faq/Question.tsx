@@ -56,8 +56,8 @@ const Question: React.FC<QuestionProps> = ({
   const [showAllAnswers, setShowAllAnswers] = useState(false);
 
   const totalAnswers = answers.length;
-  const answersToShow = showAllAnswers 
-    ? answers 
+  const answersToShow = showAllAnswers
+    ? answers
     : answers.slice(0, visibleAnswersCount);
 
   const remainingAnswers = totalAnswers - answersToShow.length;
@@ -67,7 +67,7 @@ const Question: React.FC<QuestionProps> = ({
     e.stopPropagation();
     const newCount = Math.min(visibleAnswersCount + 5, totalAnswers);
     setVisibleAnswersCount(newCount);
-    
+
     if (newCount >= totalAnswers) {
       setShowAllAnswers(true);
     }
@@ -81,6 +81,7 @@ const Question: React.FC<QuestionProps> = ({
 
   return (
     <div className="bg-[color:var(--color-card)] border border-[color:var(--color-border)] rounded-lg shadow-sm">
+      {/* Header */}
       <div
         className="flex items-start gap-3 p-4 cursor-pointer hover:bg-secondary-subtle transition-colors"
         onClick={onToggle}
@@ -100,71 +101,15 @@ const Question: React.FC<QuestionProps> = ({
         </div>
       </div>
 
+      {/* Expanded Body */}
       {isExpanded && (
         <div className="border-t border-[color:var(--color-border)] p-4 space-y-4">
-          {/* Render Answers */}
-          {answersToShow.length > 0 && (
-            <div className="space-y-2">
-              {answersToShow.map((answer) => (
-                <Answer
-                  key={answer.id}
-                  questionId={id}
-                  answer={answer}
-                  depth={0}
-                  userVote={userVotes[answer.id] || null}
-                  isCollapsed={collapsedAnswers.has(answer.id)}
-                  isReplyVisible={replyVisible.has(answer.id)}
-                  replyInput={replyInputs[answer.id] || ""}
-                  onLikeDislike={onLikeDislike}
-                  onToggleCollapse={onToggleCollapse}
-                  onToggleReply={onToggleReply}
-                  onReplyChange={onReplyChange}
-                  onSubmitReply={onSubmitReply}
-                  userVotes={userVotes}
-                  collapsedAnswers={collapsedAnswers}
-                  replyVisible={replyVisible}
-                  replyInputs={replyInputs}
-                  maxDepth={maxDepth}
-                  initialVisibleReplies={initialVisibleReplies}
-                />
-              ))}
-
-              {/* Load More Answers Button */}
-              {hasMoreAnswers && (
-                <div className="pt-2 pb-2">
-                  <button
-                    onClick={loadMoreAnswers}
-                    className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-primary-700)] hover:text-[color:var(--color-primary-800)] hover:underline"
-                  >
-                    <CornerDownRight className="h-4 w-4" />
-                    Load {remainingAnswers} more {remainingAnswers === 1 ? "answer" : "answers"}
-                  </button>
-                  
-                  {remainingAnswers > 5 && (
-                    <button
-                      onClick={showAllAnswersHandler}
-                      className="ml-6 text-xs text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)] hover:underline"
-                    >
-                      Show all {totalAnswers} answers
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {answersToShow.length === 0 && (
-            <p className="text-sm text-[color:var(--color-muted-foreground)] italic">
-              No answers yet. Be the first to answer!
-            </p>
-          )}
-
           {/* New Answer Input */}
-          <div className="relative flex items-center mt-4">
+          <div className="relative flex items-center">
             <input
               type="text"
               placeholder="Write your answer..."
-              className="flex-grow p-3 pr-12 rounded-lg border border-[color:var(--color-border)]"
+              className="flex-grow p-3 pr-12 rounded-full border border-[color:var(--color-border)]"
               value={newAnswerInput}
               onChange={(e) => onNewAnswerChange(e.target.value)}
               onKeyPress={(e) => {
@@ -185,6 +130,64 @@ const Question: React.FC<QuestionProps> = ({
             >
               <Send className="h-5 w-5" />
             </button>
+          </div>
+
+          {/* Scrollable Answers Container */}
+          <div className="max-h-[500px] overflow-y-auto pr-1 space-y-2">
+            {answersToShow.length > 0 ? (
+              <>
+                {answersToShow.map((answer) => (
+                  <Answer
+                    key={answer.id}
+                    questionId={id}
+                    answer={answer}
+                    depth={0}
+                    userVote={userVotes[answer.id] || null}
+                    isCollapsed={collapsedAnswers.has(answer.id)}
+                    isReplyVisible={replyVisible.has(answer.id)}
+                    replyInput={replyInputs[answer.id] || ""}
+                    onLikeDislike={onLikeDislike}
+                    onToggleCollapse={onToggleCollapse}
+                    onToggleReply={onToggleReply}
+                    onReplyChange={onReplyChange}
+                    onSubmitReply={onSubmitReply}
+                    userVotes={userVotes}
+                    collapsedAnswers={collapsedAnswers}
+                    replyVisible={replyVisible}
+                    replyInputs={replyInputs}
+                    maxDepth={maxDepth}
+                    initialVisibleReplies={initialVisibleReplies}
+                  />
+                ))}
+
+                {/* Load More Answers */}
+                {hasMoreAnswers && (
+                  <div className="pt-2 pb-2">
+                    <button
+                      onClick={loadMoreAnswers}
+                      className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-primary-700)] hover:text-[color:var(--color-primary-800)] hover:underline"
+                    >
+                      <CornerDownRight className="h-4 w-4" />
+                      Load {remainingAnswers} more{" "}
+                      {remainingAnswers === 1 ? "answer" : "answers"}
+                    </button>
+
+                    {remainingAnswers > 5 && (
+                      <button
+                        onClick={showAllAnswersHandler}
+                        className="ml-6 text-xs text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)] hover:underline"
+                      >
+                        Show all {totalAnswers} answers
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-[color:var(--color-muted-foreground)] italic">
+                No answers yet. Be the first to answer!
+              </p>
+            )}
           </div>
         </div>
       )}

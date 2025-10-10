@@ -2,7 +2,7 @@
 
 import "@/app/globals.css";
 import React, { useState } from "react";
-import { ChevronLeft, Send } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import AISummary from "../../../../components/threads-product-faq/AISummary";
 import Question from "../../../../components/threads-product-faq/Question";
 import { Question as QuestionType, Answer, VoteType } from "../../../../components/threads-product-faq/types";
@@ -192,25 +192,6 @@ const FAQPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Panel */}
         <div className="md:col-span-2 space-y-6">
-          {/* Ask AI Input */}
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              placeholder="Ask AI about this product..."
-              className="flex-grow p-3 pr-12 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-card)]"
-              value={aiQuestion}
-              onChange={(e) => setAiQuestion(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && sendAiQuestion()}
-            />
-            <button
-              onClick={sendAiQuestion}
-              disabled={!aiQuestion.trim()}
-              className="absolute right-2 p-2 rounded-md bg-[color:var(--color-primary-800)] text-white hover:opacity-90 disabled:opacity-50"
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </div>
-
           {/* AI Summary (Mobile) */}
           <div className="lg:hidden">
             <AISummary content={aiSummary} />
