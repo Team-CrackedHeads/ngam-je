@@ -2,128 +2,27 @@
 
 import "@/app/globals.css";
 import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import {
-  ChevronLeft,
-  Send,
-  // CircleCheck,
-  // Circle,
-  ChevronDown,
-  ChevronRight,
-  ThumbsUp,
-  ThumbsDown,
-  MessageSquare,
-} from "lucide-react";
-import AISummary from "../../../../components/threads-ui/AISummary";
-
-interface Answer {
-  id: string;
-  user: string;
-  text: string;
-  isAccepted?: boolean;
-  likes?: number;
-  dislikes?: number;
-  replies?: Answer[];
-}
-
-interface Question {
-  id: string;
-  question: string;
-  description: string;
-  answers: Answer[];
-  isAnsweredByPoster: boolean;
-}
-
-type VoteType = "like" | "dislike" | null;
+import { ChevronLeft, Send } from "lucide-react";
+import AISummary from "../../../../components/threads-product-faq/AISummary";
+import Question from "../../../../components/threads-product-faq/Question";
+import { Question as QuestionType, Answer, VoteType } from "../../../../components/threads-product-faq/types";
+import { mockQuestions, mockAiSummary } from "../../../../../utils/mock-threads-faq-data";
 
 const FAQPage: React.FC = () => {
   const handleBackClick = () => window.history.back();
 
   const [aiQuestion, setAiQuestion] = useState<string>("");
-  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(
-    null
-  );
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [newAnswerInputs, setNewAnswerInputs] = useState<{ [key: string]: string }>({});
   const [replyInputs, setReplyInputs] = useState<{ [key: string]: string }>({});
   const [replyVisible, setReplyVisible] = useState<Set<string>>(new Set());
   const [collapsedAnswers, setCollapsedAnswers] = useState<Set<string>>(new Set());
-
   const [activeTab, setActiveTab] = useState<"unanswered" | "answered">("unanswered");
-
   const [userVotes, setUserVotes] = useState<{ [answerId: string]: VoteType }>({});
 
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      id: "q1",
-      question: "Size of shoes?",
-      description: "Information about shoe sizing and how to choose the right fit.",
-      answers: [
-        {
-          id: "a1_1",
-          user: "Poster",
-          text: "The size of the shoes is standard US sizing. Please refer to our size chart for detailed measurements.",
-          isAccepted: true,
-          likes: 10,
-          dislikes: 1,
-          replies: [
-            {
-              id: "r1_1",
-              user: "User2",
-              text: "Thanks for clarifying!",
-              likes: 2,
-              dislikes: 0,
-              replies: [],
-            },
-          ],
-        },
-        {
-          id: "a1_2",
-          user: "User1",
-          text: "I found them to run a bit small, so I recommend sizing up.",
-          likes: 3,
-          dislikes: 0,
-          replies: [],
-        },
-      ],
-      isAnsweredByPoster: true,
-    },
-    {
-      id: "q2",
-      question: "Durability of shoes?",
-      description: "Details regarding the expected lifespan and build quality of the shoes.",
-      answers: [
-        {
-          id: "a2_1",
-          user: "Poster",
-          text: "It's quite durable and will last for months. It's made out of high-quality vegan leather and reinforced stitching.",
-          isAccepted: true,
-          likes: 8,
-          dislikes: 0,
-          replies: [],
-        },
-        {
-          id: "a2_2",
-          user: "User2",
-          text: "Mine lasted over a year with daily wear, very impressed!",
-          likes: 5,
-          dislikes: 0,
-          replies: [],
-        },
-      ],
-      isAnsweredByPoster: true,
-    },
-    {
-      id: "q3",
-      question: "Warranty of shoes?",
-      description: "Details regarding the warranty of the shoes.",
-      answers: [],
-      isAnsweredByPoster: false,
-    },
-  ]);
+  const [questions, setQuestions] = useState<QuestionType[]>(mockQuestions);
 
-  const aiSummary = `
-    This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
-  `;
+  const aiSummary = mockAiSummary;
 
   const toggleQuestion = (questionId: string) => {
     setExpandedQuestionId((prev) => (prev === questionId ? null : questionId));
@@ -263,124 +162,6 @@ const FAQPage: React.FC = () => {
     });
   };
 
-  const renderAnswers = (questionId: string, answers: Answer[], depth = 0) => (
-    <div className={`mt-2 space-y-2`}>
-      {answers.map((answer) => {
-        const collapsed = collapsedAnswers.has(answer.id);
-        const vote = userVotes[answer.id] || null;
-        const replyShown = replyVisible.has(answer.id);
-
-        return (
-          <div key={answer.id} className="relative">
-            {/* Thread line */}
-            {depth > 0 && (
-              <div
-                className="absolute left-0 top-0 bottom-0 border-l-2 border-[color:var(--color-border)]"
-                style={{ marginLeft: `${(depth - 1) * 16 + 8}px` }}
-              />
-            )}
-
-            <div
-              className={`bg-[color:var(--color-secondary-50)] p-3 rounded-md ml-${depth * 4} relative`}
-              style={{ marginLeft: `${depth * 16}px` }}
-            >
-              <div className="flex justify-between items-center">
-                <div
-                  className="flex items-center gap-1 cursor-pointer"
-                  onClick={() => toggleCollapseAnswer(answer.id)}
-                >
-                  {collapsed ? (
-                    <ChevronRight className="h-4 w-4 text-[color:var(--color-muted-foreground)]" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-[color:var(--color-muted-foreground)]" />
-                  )}
-                  <p className="text-sm font-medium text-[color:var(--color-secondary-800)]">
-                    {answer.user}{" "}
-                    {answer.isAccepted && (
-                      <span className="text-xs text-[color:var(--color-secondary-600)]">
-                        (Accepted)
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition ${
-                      vote === "like"
-                        ? "bg-[color:var(--color-primary-600)] text-white"
-                        : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)]"
-                    }`}
-                    onClick={() =>
-                      handleLikeDislike(questionId, answer.id, "like")
-                    }
-                  >
-                    <ThumbsUp className="h-4 w-4" /> {answer.likes ?? 0}
-                  </button>
-                  <button
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition ${
-                      vote === "dislike"
-                        ? "bg-[color:var(--color-primary-600)] text-white"
-                        : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)]"
-                    }`}
-                    onClick={() =>
-                      handleLikeDislike(questionId, answer.id, "dislike")
-                    }
-                  >
-                    <ThumbsDown className="h-4 w-4" /> {answer.dislikes ?? 0}
-                  </button>
-                </div>
-              </div>
-
-              {!collapsed && (
-                <>
-                  <p className="text-sm text-[color:var(--color-muted-foreground)] mt-1">
-                    {answer.text}
-                  </p>
-
-                  <button
-                    onClick={() => toggleReplyField(answer.id)}
-                    className="mt-2 text-sm text-[color:var(--color-primary-700)] hover:underline flex items-center gap-1"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Reply
-                  </button>
-
-                  {replyShown && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <input
-                        type="text"
-                        placeholder="Reply..."
-                        className="flex-grow p-2 rounded-lg border border-[color:var(--color-border)] text-sm"
-                        value={replyInputs[answer.id] || ""}
-                        onChange={(e) =>
-                          handleReplyChange(answer.id, e.target.value)
-                        }
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && submitReply(questionId, answer.id)
-                        }
-                      />
-                      <button
-                        onClick={() => submitReply(questionId, answer.id)}
-                        className="p-2 rounded-md bg-[color:var(--color-primary-700)] text-white hover:opacity-90"
-                      >
-                        <Send className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-
-                  {answer.replies &&
-                    answer.replies.length > 0 &&
-                    renderAnswers(questionId, answer.replies, depth + 1)}
-                </>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-
   const sendAiQuestion = () => {
     if (aiQuestion.trim()) {
       console.log("Asking AI:", aiQuestion);
@@ -468,63 +249,30 @@ const FAQPage: React.FC = () => {
             )}
 
             {filteredQuestions.map((q) => (
-              <div
+              <Question
                 key={q.id}
-                className="bg-[color:var(--color-card)] border border-[color:var(--color-border)] rounded-lg shadow-sm"
-              >
-                <div
-                  className="flex items-start gap-3 p-4 cursor-pointer hover:bg-secondary-subtle transition-colors"
-                  onClick={() => toggleQuestion(q.id)}
-                >
-                  {/* <div className="flex-shrink-0 mt-1">
-                    {q.isAnsweredByPoster ? (
-                      <CircleCheck
-                        className="h-5 w-5 text-[color:var(--color-secondary-600)]"
-                        fill="currentColor"
-                      />
-                    ) : (
-                      <Circle className="h-5 w-5 text-[color:var(--color-muted-foreground)]" />
-                    )}
-                  </div> */}
-                  <div className="flex-grow">
-                    <h3 className="font-medium text-[color:var(--color-primary-800)]">
-                      {q.question}
-                    </h3>
-                    <p className="text-sm text-[color:var(--color-muted-foreground)] mt-1">
-                      {q.description}
-                    </p>
-                  </div>
-                </div>
-
-                {expandedQuestionId === q.id && (
-                  <div className="border-t border-[color:var(--color-border)] p-4 space-y-4">
-                    {renderAnswers(q.id, q.answers)}
-
-                    {/* New Answer Input */}
-                    <div className="relative flex items-center mt-4">
-                      <input
-                        type="text"
-                        placeholder="Write your answer..."
-                        className="flex-grow p-3 pr-12 rounded-lg border border-[color:var(--color-border)]"
-                        value={newAnswerInputs[q.id] || ""}
-                        onChange={(e) =>
-                          handleNewAnswerChange(q.id, e.target.value)
-                        }
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && submitNewAnswer(q.id)
-                        }
-                      />
-                      <button
-                        onClick={() => submitNewAnswer(q.id)}
-                        disabled={!newAnswerInputs[q.id]?.trim()}
-                        className="absolute right-2 p-2 rounded-md bg-accent-gradient text-white hover:opacity-90 disabled:opacity-50"
-                      >
-                        <Send className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                id={q.id}
+                question={q.question}
+                description={q.description}
+                answers={q.answers}
+                isExpanded={expandedQuestionId === q.id}
+                newAnswerInput={newAnswerInputs[q.id] || ""}
+                onToggle={() => toggleQuestion(q.id)}
+                onNewAnswerChange={(value) => handleNewAnswerChange(q.id, value)}
+                onSubmitAnswer={() => submitNewAnswer(q.id)}
+                onLikeDislike={(answerId, type) => handleLikeDislike(q.id, answerId, type)}
+                userVotes={userVotes}
+                collapsedAnswers={collapsedAnswers}
+                onToggleCollapse={toggleCollapseAnswer}
+                replyVisible={replyVisible}
+                onToggleReply={toggleReplyField}
+                replyInputs={replyInputs}
+                onReplyChange={handleReplyChange}
+                onSubmitReply={(parentAnswerId) => submitReply(q.id, parentAnswerId)}
+                initialVisibleAnswers={3}
+                initialVisibleReplies={3}
+                maxDepth={3}
+              />
             ))}
           </div>
         </div>
