@@ -55,8 +55,8 @@ function getExtensionPrice(subscriptionTier: string): string {
 
 // Tabs configuration
 const tabs = [
-  { label: "Buy Listings", value: "buy", icon: ShoppingCart },
-  { label: "Sell Listings", value: "sell", icon: Package },
+  { label: "Sale Listings", value: "buy", icon: ShoppingCart },
+  { label: "Want Listings", value: "sell", icon: Package },
 ];
 
 function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "buy" | "sell"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {

@@ -620,7 +620,7 @@ function BuyListingsMenuItem() {
         className="group/menu-item text-accent-700 font-semibold"
       >
         <ShoppingCart className="w-5 h-5" />
-        <span>Buy Listings</span>
+        <span>Sale Listings</span>
         {isOpen ? (
           <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
         ) : (
@@ -760,7 +760,7 @@ function SellListingsMenuItem() {
         className="group/menu-item text-accent-700 font-semibold"
       >
         <Package className="w-5 h-5" />
-        <span>Sell Listings</span>
+        <span>Want Listings</span>
         {isOpen ? (
           <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
         ) : (

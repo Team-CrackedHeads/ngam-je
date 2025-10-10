@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, SearchX, Home, MapPin, Clock, Eye, Heart } from "lucide-react";
+import { Sparkles, Package, SearchX, Home, MapPin, Clock, Eye, Heart, ShoppingCart } from "lucide-react";
 import { mockBuyListings, mockSellListings, type Listing } from "@/utils/mock-listings-data";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import {
@@ -79,9 +79,16 @@ export default function ListingMatchesPage() {
         </div>
 
         {/* Your Listing Header */}
-        <h2 className="text-xl font-bold text-accent-700 mb-4">
-          Your {listingType === "buy" ? "Sale" : "Wanted"} Listing
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          {listingType === "buy" ? (
+            <ShoppingCart className="w-6 h-6 text-secondary-600" />
+          ) : (
+            <Package className="w-6 h-6 text-secondary-600" />
+          )}
+          <h2 className="text-2xl font-bold text-accent-700">
+            Your {listingType === "buy" ? "Sale" : "Wanted"} Listing
+          </h2>
+        </div>
 
         {/* Your Listing Card */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-neutral-200">
