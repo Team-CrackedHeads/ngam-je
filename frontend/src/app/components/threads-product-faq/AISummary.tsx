@@ -112,7 +112,7 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
               ].join(" ")}
             >
               {content ? (
-                <div className="max-w-none text-foreground text-base leading-relaxed font-sans whitespace-pre-wrap break-words">
+                <div className="prose prose-invert:dark max-w-none text-foreground">
                   <ReactMarkdown
                     components={{
                       h1: ({ children }) => (
@@ -148,9 +148,15 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
                       li: ({ children }) => (
                         <li className="text-sm md:text-base leading-relaxed">{children}</li>
                       ),
-                      code: ({ children }) => <span className="font-sans bg-transparent">{children}</span>,
+                      code: ({ children }) => (
+                        <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground">
+                          {children}
+                        </code>
+                      ),
                       pre: ({ children }) => (
-                        <div className="font-sans whitespace-pre-wrap break-words">{children}</div>
+                        <pre className="bg-muted p-4 rounded-lg overflow-x-auto mb-4 text-foreground">
+                          {children}
+                        </pre>
                       ),
                       blockquote: ({ children }) => (
                         <blockquote className="border-l-4 border-secondary-500 pl-4 italic text-foreground/80 mb-4">
