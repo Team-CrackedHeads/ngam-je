@@ -5,6 +5,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/Sidebar";
+import { MockAuthProvider } from "@/lib/auth";
+import { AuthRoleToggle } from "@/components/dev/AuthRoleToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,16 +34,21 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-hidden`}
         style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
       >
-        <Header username="User" notifications={3} />
-        <div className="flex-1 flex min-h-0">
-          <SidebarProvider>
-            <AppSidebar />
-            <main className="flex-1 min-h-0 overflow-auto">
-              {children}
-            </main>
-          </SidebarProvider>
-        </div>
-        <Footer />
+        <MockAuthProvider>
+          <Header username="User" notifications={3} />
+          <div className="flex-1 flex min-h-0">
+            <SidebarProvider>
+              <AppSidebar />
+              <main className="flex-1 min-h-0 overflow-auto">
+                {children}
+              </main>
+            </SidebarProvider>
+          </div>
+          <Footer />
+
+          {/* Dev-only: Role toggle in bottom-right corner */}
+          <AuthRoleToggle />
+        </MockAuthProvider>
       </body>
     </html>
 
