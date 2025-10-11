@@ -126,7 +126,7 @@ const Question: React.FC<QuestionProps> = ({
                 onSubmitAnswer();
               }}
               disabled={!newAnswerInput?.trim()}
-              className="absolute right-2 p-2 rounded-md bg-accent-gradient text-white hover:opacity-90 disabled:opacity-50"
+              className="absolute right-2 p-2 rounded-full bg-accent-gradient text-white hover:opacity-90 disabled:opacity-50"
             >
               <Send className="h-5 w-5" />
             </button>

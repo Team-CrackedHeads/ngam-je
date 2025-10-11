@@ -205,4 +205,8 @@ export const mockQuestions: Question[] = [
 
 export const mockAiSummary = `
   This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
+  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
+  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
+  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
+  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
 `;
