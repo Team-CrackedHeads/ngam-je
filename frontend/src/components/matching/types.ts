@@ -3,6 +3,7 @@ export interface MatchedListing {
   title: string;
   description: string;
   price: number;
+  originalAsk?: number;
   images: string[];
   tags: string[];
   location: string;
