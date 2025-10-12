@@ -174,7 +174,7 @@ const FAQPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[color:var(--color-primary-50)] text-[color:var(--color-primary-900)] p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-[color:var(--color-primary-100)] text-[color:var(--color-primary-900)] p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button

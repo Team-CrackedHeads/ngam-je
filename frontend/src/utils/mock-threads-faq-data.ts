@@ -204,9 +204,48 @@ export const mockQuestions: Question[] = [
 ];
 
 export const mockAiSummary = `
-  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
-  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
-  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
-  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
-  This product's FAQ covers common inquiries about sizing, durability, warranty, waterproofing, materials, returns, and fit for wide feet.
+# Listing Analysis Summary
+
+## Key Information Provided
+
+Based on the current FAQ discussions, the listing has addressed the following critical details:
+
+#### Sizing Information
+Standard US sizing with reference to a size chart
+
+#### Durability
+High-quality vegan leather construction with reinforced stitching, expected lifespan of 12+ months with daily use
+
+#### Build Quality
+Multiple users confirm long-term satisfaction with durability
+
+---
+
+## Outstanding Questions
+
+### Critical ⚠️
+
+#### Warranty Terms
+No response provided yet - this is a potential deal blocker for risk-averse buyers
+
+---
+
+## Community Insights
+
+Users report shoes run slightly small - recommend sizing up
+
+Verified user testimony: "Over a year with daily wear" indicates strong product reliability
+
+---
+
+## Negotiation Readiness Score: **75%**
+
+#### To improve readiness:
+1. Address warranty policy question
+2. Add waterproofing/weather resistance details
+3. Clarify return policy for incorrect sizing
+
+---
+
+*This analysis helps both buyers and sellers ensure all critical information is addressed before proceeding to negotiation.*
 `;
