@@ -1,7 +1,8 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { BreadcrumbNav } from "@/app/components/threads-product-ui/BreadcrumbNav";
+import { ProductHeader } from "@/app/components/threads-product-ui/ProductHeader";
 import { ProductDetails } from "@/app/components/threads-product-ui/ProductDetails";
+import { COLORS } from "@/app/theme";
 // Import unified data instead
 import { getListingById } from "@/utils/mock-threads-data";
 
@@ -35,7 +36,7 @@ export default function ProductListingScreen() {
           </p>
           <button
             onClick={handleBack}
-            className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Back to {category}
           </button>
@@ -45,16 +46,13 @@ export default function ProductListingScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full pb-32 bg-primary-50">
-      <div className="container mx-auto px-4 py-6">
-        <BreadcrumbNav
-          category={category}
-          listingTitle={listing.title}
-          listingType={listing.listingType}
-        />
-        {/* Pass the dynamic listing data */}
-        <ProductDetails listing={listing} />
-      </div>
+    <div
+      className="min-h-screen w-full pb-32"
+      style={{ backgroundColor: COLORS.offwhite }}
+    >
+      <ProductHeader onBack={handleBack} />
+      {/* Pass the dynamic listing data */}
+      <ProductDetails listing={listing} />
     </div>
   );
 }

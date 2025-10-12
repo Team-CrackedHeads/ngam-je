@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ArrowLeft } from "lucide-react";
+import { COLORS } from "../../theme";
 
 // what props this component needs
 type AIAgentOverlayProps = {
