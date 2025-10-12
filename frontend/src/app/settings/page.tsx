@@ -1,15 +1,19 @@
 "use client";
 
+import { COLORS } from "../theme";
 import { Switch } from "@/components/ui/switch";
 import { Bell, Shield, User, LogOut } from "lucide-react";
 
 export default function SettingsPage() {
   return (
-    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
+    <div
+      className="min-h-screen px-4 py-6 pb-24"
+      style={{ backgroundColor: COLORS.background, color: COLORS.text }}
+    >
       {/* Header */}
-      {/* <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-6">
         <h1 className="text-xl font-bold">Settings</h1>
-      </div> */}
+      </div>
 
       {/* Responsive Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -26,7 +30,8 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center">
               <span>Change Display Name</span>
               <button
-                className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-500"
+                className="px-3 py-1 rounded-lg text-sm font-medium"
+                style={{ backgroundColor: COLORS.accentFrom }}
               >
                 Update
               </button>
@@ -34,7 +39,8 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center">
               <span>Change Email</span>
               <button
-                className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-500"
+                className="px-3 py-1 rounded-lg text-sm font-medium"
+                style={{ backgroundColor: COLORS.accentFrom }}
               >
                 Update
               </button>
@@ -42,7 +48,8 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center">
               <span>Change Password</span>
               <button
-                className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-500"
+                className="px-3 py-1 rounded-lg text-sm font-medium"
+                style={{ backgroundColor: COLORS.accentFrom }}
               >
                 Update
               </button>
@@ -102,7 +109,8 @@ export default function SettingsPage() {
             <span>Log Out</span>
           </span>
           <button
-            className="px-3 py-1 rounded-lg text-sm font-medium bg-secondary-100"
+            className="px-3 py-1 rounded-lg text-sm font-medium"
+            style={{ backgroundColor: COLORS.activeBg }}
           >
             Sign Out
           </button>

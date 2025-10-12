@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { COLORS } from "../theme";
 import { Star, CheckCircle, Camera } from "lucide-react";
 
 export type User = {
@@ -53,12 +54,15 @@ export default function ProfilePage({ user }: ProfilePageProps) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
+    <div
+      className="min-h-screen px-4 py-6 pb-24"
+      style={{ backgroundColor: COLORS.background, color: COLORS.text }}
+    >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        {/* <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-4">
           <h1 className="text-xl font-bold">Profile</h1>
-        </div> */}
+        </div>
 
         {/* Tabs */}
         <div className="flex justify-center mb-6 border-b pb-2 space-x-6">
@@ -68,8 +72,13 @@ export default function ProfilePage({ user }: ProfilePageProps) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                // className="text-base font-medium pb-2"
-                className={`${isActive ? 'text-accent-700 border-b-2 border-accent-700' : 'text-accent-500'}`}
+                className="text-base font-medium pb-2"
+                style={{
+                  color: isActive ? COLORS.textActive : COLORS.text,
+                  borderBottom: isActive
+                    ? `2px solid ${COLORS.accentActive}`
+                    : "none",
+                }}
               >
                 {tab.label}
               </Link>
@@ -85,10 +94,13 @@ export default function ProfilePage({ user }: ProfilePageProps) {
             style={{ backgroundColor: "#fff" }}
           >
             {/* Avatar */}
-            <div className="relative w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white bg-secondary-500">
+            <div
+              className="relative w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white"
+              style={{ backgroundColor: COLORS.accentFrom }}
+            >
               {data.name.charAt(0).toUpperCase()}
               <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow">
-                <Camera size={16} className="text-accent-500" />
+                <Camera size={16} style={{ color: COLORS.text }} />
               </div>
             </div>
 
@@ -135,11 +147,17 @@ export default function ProfilePage({ user }: ProfilePageProps) {
           >
             <h3 className="font-semibold mb-3">Active Listings</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl p-4 text-center bg-secondary-500">
+              <div
+                className="rounded-xl p-4 text-center"
+                style={{ backgroundColor: COLORS.accentFrom }}
+              >
                 <p className="text-2xl font-bold">{data.forSale}</p>
                 <p className="text-sm">For Sale</p>
               </div>
-              <div className="rounded-xl p-4 text-center bg-secondary-100">
+              <div
+                className="rounded-xl p-4 text-center"
+                style={{ backgroundColor: COLORS.activeBg }}
+              >
                 <p className="text-2xl font-bold">{data.wantToBuy}</p>
                 <p className="text-sm">Want to Buy</p>
               </div>
@@ -156,10 +174,11 @@ export default function ProfilePage({ user }: ProfilePageProps) {
               {data.achievements.map((ach, idx) => (
                 <div
                   key={idx}
-                  className="rounded-xl p-4 flex items-center justify-between bg-primary-200"
+                  className="rounded-xl p-4 flex items-center justify-between"
+                  style={{ backgroundColor: COLORS.hoverBg }}
                 >
                   <div className="flex items-center gap-3">
-                    <CheckCircle size={20} className="text-secondary-600" />
+                    <CheckCircle size={20} style={{ color: COLORS.accentTo }} />
                     <p className="text-sm">{ach.label}</p>
                   </div>
                 </div>

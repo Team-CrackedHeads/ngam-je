@@ -9,6 +9,7 @@ import {
   Clock,
 } from "lucide-react";
 import { UnifiedListingData } from "@/utils/mock-threads-data"; // Updated import
+import { COLORS } from "@/app/theme";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import { ActionButtons } from "./ActionButtons";
 
@@ -25,7 +26,10 @@ export const wideButtonClasses = `
   active:scale-95 active:shadow-lg active:ring-2
 `;
 
-export const glowStyle = "text-accent-500 focus:ring-accent-500";
+export const glowStyle: React.CSSProperties = {
+  color: COLORS.text,
+  ["--tw-ring-color" as any]: COLORS.text, // override ring color
+};
 // ------------------------------------------------
 
 // Updated prop type
@@ -70,7 +74,10 @@ export const ProductDetails = ({
   const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl; // Use listing.imageUrl instead of hardcoded fallback
 
   return (
-    <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white">
+    <div
+      className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto"
+      style={{ backgroundColor: COLORS.justWhite }}
+    >
       {/* Product Image - Clicking this opens the modal */}
       <div className="relative w-full">
         <img
@@ -82,15 +89,21 @@ export const ProductDetails = ({
         />
         {/* Updated badge logic */}
         <span
-          className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold text-accent-700 ${
-            listing.listingType === "for-sale"
-              ? "bg-secondary-500"
-              : "bg-primary-500"
-          }`}
+          className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold"
+          style={{
+            backgroundColor:
+              listing.listingType === "for-sale"
+                ? COLORS.accentActive
+                : "#3B82F6",
+            color: COLORS.text,
+          }}
         >
           {listing.listingType === "for-sale" ? "For Sale" : "Want to Buy"}
         </span>
-        <div className="absolute top-4 right-4 px-3 py-1 rounded-full flex items-center gap-1 text-xs bg-primary-200 text-accent-500">
+        <div
+          className="absolute top-4 right-4 px-3 py-1 rounded-full flex items-center gap-1 text-xs"
+          style={{ backgroundColor: COLORS.hoverBg, color: COLORS.text }}
+        >
           <Eye className="w-4 h-4" />
           <span className="font-medium">{listing.views} views</span>
         </div>
@@ -100,16 +113,19 @@ export const ProductDetails = ({
       <div className="p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-accent-500">
+            <h1
+              className="text-2xl md:text-3xl font-bold"
+              style={{ color: COLORS.text }}
+            >
               {listing.title}
             </h1>
             {/* Only show subtitle if it exists */}
             {listing.subtitle && (
-              <p className="text-lg text-accent-700">
+              <p className="text-lg" style={{ color: COLORS.textActive }}>
                 - {listing.subtitle}
               </p>
             )}
-            <p className="text-sm mt-1 text-accent-500">
+            <p className="text-sm mt-1" style={{ color: COLORS.text }}>
               {listing.category} {/* Dynamic category */}
             </p>
           </div>
@@ -117,7 +133,10 @@ export const ProductDetails = ({
             {[Shield, MessageCircle, HelpCircle].map((Icon, i) => (
               <div
                 key={i}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-gradient-to-br from-secondary-500 to-secondary-600"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                style={{
+                  background: `linear-gradient(to bottom right, ${COLORS.accentFrom}, ${COLORS.accentTo})`,
+                }}
               >
                 <Icon className="w-5 h-5" />
               </div>
@@ -127,13 +146,16 @@ export const ProductDetails = ({
 
         {/* Price of the product */}
         <div className="mb-6">
-          <p className="text-3xl font-bold text-accent-700">
+          <p
+            className="text-3xl font-bold"
+            style={{ color: COLORS.textActive }}
+          >
             {listing.currency} {listing.price.toFixed(2)}
           </p>
           {listing.protected && (
             <div className="flex items-center gap-2 mt-2">
-              <Shield className="w-4 h-4 text-accent-500" />
-              <span className="text-sm text-accent-500">
+              <Shield className="w-4 h-4" style={{ color: COLORS.text }} />
+              <span className="text-sm" style={{ color: COLORS.text }}>
                 Protected by Escrow
               </span>
             </div>
@@ -142,24 +164,28 @@ export const ProductDetails = ({
 
         {/* Description */}
         <div className="mb-6">
-          <h2 className="text-lg font-bold text-accent-500">
+          <h2 className="text-lg font-bold" style={{ color: COLORS.text }}>
             Description
           </h2>
-          <p className="mt-2 text-accent-700">
+          <p className="mt-2" style={{ color: COLORS.textActive }}>
             {listing.description}
           </p>
         </div>
 
         {/* Tags */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-accent-500">
+          <h3 className="text-sm font-semibold" style={{ color: COLORS.text }}>
             Tags
           </h3>
           <div className="flex flex-wrap gap-2 mt-2">
             {listing.tags.map((tag, index) => (
               <span
                 key={index}
-                className="px-3 py-1 rounded-full text-xs font-medium bg-secondary-500 text-accent-500"
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: COLORS.accentFrom,
+                  color: COLORS.text,
+                }}
               >
                 #{tag}
               </span>
@@ -170,7 +196,7 @@ export const ProductDetails = ({
         {/* Gallery - Only show if has images */}
         {hasGalleryImages && (
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-accent-500">
+            <h3 className="text-lg font-bold" style={{ color: COLORS.text }}>
               Gallery
             </h3>
             <div className="flex flex-wrap gap-3 mt-2">
@@ -192,12 +218,16 @@ export const ProductDetails = ({
         )}
 
         {/* Seller Info */}
-        <div className="pt-4 border-t border-primary-200">
+        <div className="pt-4 border-t" style={{ borderColor: COLORS.hoverBg }}>
           <div className="flex items-center justify-between">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-200">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: COLORS.hoverBg }}
+              >
                 <svg
-                  className="w-6 h-6 text-accent-500"
+                  className="w-6 h-6"
+                  style={{ color: COLORS.text }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -211,21 +241,33 @@ export const ProductDetails = ({
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-accent-500">
+                <p className="font-semibold" style={{ color: COLORS.text }}>
                   {listing.seller.name}
                 </p>
-                <div className="flex items-center gap-1 text-sm text-accent-700">
+                <div
+                  className="flex items-center gap-1 text-sm"
+                  style={{ color: COLORS.textActive }}
+                >
                   <MapPin className="w-3 h-3" />
                   <span>{listing.seller.location}</span>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-accent-700">
+                <div
+                  className="flex items-center gap-1 text-sm"
+                  style={{ color: COLORS.textActive }}
+                >
                   <Clock className="w-3 h-3" />
                   <span>{listing.seller.timePosted}</span>
                 </div>
               </div>
             </div>
             {listing.seller.verified && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-secondary-500 text-accent-500">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: COLORS.accentFrom,
+                  color: COLORS.text,
+                }}
+              >
                 Verified
               </span>
             )}
