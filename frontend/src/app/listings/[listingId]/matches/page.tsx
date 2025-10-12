@@ -354,6 +354,16 @@ export default function ListingMatchesPage() {
             onClick={() => setSelectedListing(yourListing)}
             className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
           >
+            {/* Header with icon and label */}
+            <div className="flex items-center gap-2 mb-3">
+              {listingType === "sale" ? (
+                <ShoppingCart className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+              ) : (
+                <Package className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+              )}
+              <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : "Wanted"} Listing</span>
+            </div>
+
             <div className="flex items-center gap-3">
               {/* Small Image */}
               <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
@@ -362,25 +372,12 @@ export default function ListingMatchesPage() {
 
               {/* Listing Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  {listingType === "sale" ? (
-                    <ShoppingCart className="w-4 h-4 text-secondary-600 flex-shrink-0" />
-                  ) : (
-                    <Package className="w-4 h-4 text-secondary-600 flex-shrink-0" />
-                  )}
-                  <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : "Wanted"} Listing</span>
-                </div>
                 <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
                   {yourListing.title}
                 </h3>
                 <span className="text-lg font-bold text-secondary-600">
                   {listingType === "sale" ? yourListing.price : yourListing.budget}
                 </span>
-              </div>
-
-              {/* Chevron/Arrow */}
-              <div className="flex-shrink-0">
-                <Info className="w-5 h-5 text-accent-400" />
               </div>
             </div>
           </div>

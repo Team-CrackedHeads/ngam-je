@@ -5,6 +5,7 @@ import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, Al
 import { useState, useEffect } from "react";
 import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -59,8 +60,127 @@ const tabs = [
   { label: "Want Listings", value: "wanted", icon: Package },
 ];
 
+// Mobile-specific compact card component
+function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; isHighlighted?: boolean }) {
+  const router = useRouter();
+  const timeRemaining = getTimeRemaining(listing.expiresAt);
+  const extensionPrice = getExtensionPrice(listing.subscriptionTier);
+  const matchCount = getMatchCount(listing.id, type);
+
+  const handleExtendListing = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
+  };
+
+  const handleViewMatches = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  const handleCardClick = () => {
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  return (
+    <div>
+      {/* Timer badge and Match badge above card */}
+      <div className="mb-2 flex items-center gap-2 flex-wrap">
+        <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+          timeRemaining.expired
+            ? 'bg-red-100 text-red-700'
+            : timeRemaining.urgent
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-green-100 text-green-700'
+        }`}>
+          {timeRemaining.expired ? (
+            <AlertTriangle size={10} />
+          ) : (
+            <Timer size={10} />
+          )}
+          <span className="font-medium">{timeRemaining.text}</span>
+        </div>
+
+        {/* Match badge */}
+        {matchCount > 0 && (
+          <button
+            onClick={handleViewMatches}
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
+          >
+            <Sparkles size={12} />
+            <span>{matchCount}</span>
+          </button>
+        )}
+      </div>
+
+      <div onClick={handleCardClick} className={`rounded-xl shadow p-3 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+        {/* Image placeholder */}
+        <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2 flex items-center justify-center relative">
+          <span className="text-gray-400 text-xs">Image</span>
+
+          {/* Extension overlay for urgent/expired listings */}
+          {(timeRemaining.urgent || timeRemaining.expired) && (
+            <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-lg flex flex-col items-center justify-center">
+              <AlertTriangle className="mb-1 text-black w-3 h-3" />
+              <button
+                onClick={handleExtendListing}
+                className="px-2 py-0.5 bg-secondary-500 text-accent-700 rounded text-[10px] font-medium hover:bg-secondary-600 transition-colors shadow-md"
+              >
+                {extensionPrice}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Title */}
+          <h3 className="font-semibold text-accent-700 line-clamp-2 text-xs leading-tight mb-1">
+            {listing.title}
+          </h3>
+
+          {/* Price/Budget */}
+          <div className="mb-2">
+            <span className="font-bold text-base text-secondary-700">
+              {type === "sale" ? listing.price : listing.budget}
+            </span>
+          </div>
+
+          {/* Category badge */}
+          <div className="mb-2">
+            <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary-200 text-accent-600">
+              {listing.category}
+            </span>
+          </div>
+
+          {/* Footer - compact */}
+          <div className="space-y-1 mt-auto">
+            {/* Location */}
+            <div className="flex items-center gap-1 text-[10px] text-accent-400">
+              <MapPin className="w-[11px] h-[11px]" />
+              <span className="truncate">{listing.location}</span>
+            </div>
+
+            {/* Views and Likes */}
+            <div className="flex items-center gap-3 text-[11px] text-accent-400">
+              <div className="flex items-center gap-1">
+                <Eye size={12} />
+                <span>{listing.views}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Heart size={12} />
+                <span>{listing.likes}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
   const matchCount = getMatchCount(listing.id, type);
@@ -80,6 +200,12 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
     // Navigate to matches page for this listing
     router.push(`/listings/${listing.id}/matches?type=${type}`);
   };
+
+  // Use mobile component for grid view on mobile
+  if (isMobile && viewMode === "grid") {
+    return <MobileProductCard listing={listing} type={type} isHighlighted={isHighlighted} />;
+  }
+
   if (viewMode === "list") {
     return (
       <div>
@@ -104,10 +230,11 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
           {matchCount > 0 && (
             <button
               onClick={handleViewMatches}
-              className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200 transition-all font-medium border border-purple-200"
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
             >
               <Sparkles size={12} />
-              <span>{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+              <span className="max-md:hidden">{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+              <span className="md:hidden">{matchCount}</span>
             </button>
           )}
         </div>
@@ -222,10 +349,11 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
         {matchCount > 0 && (
           <button
             onClick={handleViewMatches}
-            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200 transition-all font-medium border border-purple-200"
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
           >
             <Sparkles size={12} />
-            <span>{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+            <span className="max-md:hidden">{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+            <span className="md:hidden">{matchCount}</span>
           </button>
         )}
       </div>
@@ -404,7 +532,7 @@ export default function ListingsPage() {
         </div>
 
         {/* Listings Grid */}
-        <div className={viewMode === "grid" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+        <div className={viewMode === "grid" ? "grid gap-4 grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
           {currentListings.map((listing) => (
             <ProductCard
               key={listing.id}
