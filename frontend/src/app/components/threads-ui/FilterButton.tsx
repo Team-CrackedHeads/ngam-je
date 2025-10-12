@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { COLORS } from "../../theme";
 
 // the different ways users can sort/filter threads
 type FilterType = "All" | "Hot" | "Top" | "New";
@@ -24,18 +23,9 @@ function FilterButton({ activeFilter, onFilterChange }: FilterButtonProps) {
           onClick={() => onFilterChange(filter)} // tell parent component when clicked
           className={`rounded-full text-xs sm:text-sm font-medium sm:font-semibold transition-colors duration-200 ${
             filter === activeFilter
-              ? "shadow-inner" // active button has inner shadow
+              ? "shadow-inner bg-secondary-500 text-accent-500" // active button with custom colors
               : "text-gray-600 hover:bg-gray-50" // inactive buttons are gray
           }`}
-          style={
-            filter === activeFilter
-              ? {
-                  // active button uses your custom colors
-                  backgroundColor: COLORS.accentFrom,
-                  color: COLORS.text,
-                }
-              : {} // inactive buttons use default styling
-          }
         >
           {filter}
         </Button>

@@ -1,8 +1,9 @@
 // src/app/components/threads-product-ui/ActionButtons.tsx
 import { MessageCircle, HelpCircle, ShoppingCart } from "lucide-react";
-import { COLORS } from "@/app/theme";
 // Import shared styles from the ProductDetails file
-import { wideButtonClasses, glowStyle } from "./ProductDetails";
+import { wideButtonClasses } from "./ProductDetails";
+
+const glowStyle = "text-accent-500 focus:ring-accent-500";
 
 interface ActionButtonsProps {
   onChat?: () => void;
@@ -17,30 +18,21 @@ export const ActionButtons = ({
 }: ActionButtonsProps) => (
   <div className="flex flex-col sm:flex-row gap-3 mt-6">
     <button
-      className={wideButtonClasses + " outline-solid outline-1"}
-      style={{ ...glowStyle, borderColor: COLORS.hoverBg }}
+      className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
       onClick={onChat}
     >
-      <MessageCircle className="w-5 h-5" style={{ color: COLORS.text }} />
+      <MessageCircle className="w-5 h-5 text-accent-500" />
       <span>Chat</span>
     </button>
     <button
-      className={wideButtonClasses + " outline-solid outline-1"}
-      style={{ ...glowStyle, borderColor: COLORS.hoverBg }}
+      className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
       onClick={onFAQ}
     >
-      <HelpCircle className="w-5 h-5" style={{ color: COLORS.text }} />
+      <HelpCircle className="w-5 h-5 text-accent-500" />
       <span>FAQ</span>
     </button>
     <button
-      className={
-        wideButtonClasses + " font-semibold shadow-md outline-solid outline-1"
-      }
-      style={{
-        background: `linear-gradient(to right, ${COLORS.accentFrom}, ${COLORS.accentTo})`,
-        color: COLORS.textActive,
-        ["--tw-ring-color" as any]: COLORS.text,
-      }}
+      className={`${wideButtonClasses} font-semibold shadow-md outline-solid outline-1 bg-gradient-to-r from-secondary-500 to-secondary-600 text-accent-700 focus:ring-accent-500`}
       onClick={onBuyNow}
     >
       <ShoppingCart className="w-5 h-5" />

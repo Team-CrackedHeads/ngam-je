@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ThreadData } from "../../../utils/mock-threads-data";
-import { COLORS } from "@/app/theme";
 
 // tells typescript what data this component expects
 type ThreadCardProps = {
@@ -90,11 +89,7 @@ function ThreadCard({ thread }: ThreadCardProps) {
             {thread.isPinned && (
               <Badge
                 variant="default"
-                className="hover:opacity-90"
-                style={{
-                  backgroundColor: COLORS.activeBg,
-                  color: COLORS.text,
-                }}
+                className="hover:opacity-90 bg-secondary-500 text-accent-700 border border-secondary-600"
               >
                 <Pin className="w-3 h-3 mr-1" />
                 Pinned
@@ -126,10 +121,7 @@ function ThreadCard({ thread }: ThreadCardProps) {
       {/* main content area - takes up remaining space */}
       <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
         {/* thread title - bigger text on desktop */}
-        <h2
-          className="text-lg sm:text-xl lg:text-xl font-bold mb-2 line-clamp-2 h-14 flex-shrink-0"
-          style={{ color: COLORS.textActive }}
-        >
+        <h2 className="text-lg sm:text-xl lg:text-xl font-bold mb-2 line-clamp-2 h-14 flex-shrink-0 text-accent-700">
           {thread.title}
         </h2>
 
@@ -145,7 +137,7 @@ function ThreadCard({ thread }: ThreadCardProps) {
             <span className="flex items-center">
               <Users
                 className="w-4 h-4 sm:w-5 sm:h-5 mr-1"
-                style={{ color: COLORS.activeBg }}
+                className="text-secondary-100"
               />
               {formatNumber(thread.contributions)}
             </span>
@@ -176,10 +168,10 @@ function ThreadCard({ thread }: ThreadCardProps) {
         <div className="mb-3 flex-shrink-0">
           {/* progress label and current numbers */}
           <div className="flex justify-between items-center mb-2 text-sm sm:text-base lg:text-lg font-medium">
-            <span style={{ color: COLORS.text }}>Boost Progress</span>
+            <span className="text-accent-500">Boost Progress</span>
             <span
               className="font-semibold text-xs sm:text-sm lg:text-base"
-              style={{ color: COLORS.text }}
+              className="text-accent-500"
             >
               {formatNumber(thread.currentTokens)} /{" "}
               {formatNumber(thread.goalTokens)} tokens
@@ -196,22 +188,7 @@ function ThreadCard({ thread }: ThreadCardProps) {
               key={index}
               variant="secondary"
               className="hover:opacity-90 text-xs sm:text-sm lg:text-base"
-              style={{
-                color: COLORS.text,
-                backgroundColor: COLORS.accentFrom,
-              }}
-              onMouseEnter={(e) => {
-                // change color when hovering
-                (e.currentTarget as HTMLElement).style.backgroundColor =
-                  COLORS.activeBg;
-                (e.currentTarget as HTMLElement).style.color = COLORS.text;
-              }}
-              onMouseLeave={(e) => {
-                // change back when not hovering
-                (e.currentTarget as HTMLElement).style.backgroundColor =
-                  COLORS.accentFrom;
-                (e.currentTarget as HTMLElement).style.color = COLORS.text;
-              }}
+              className="text-accent-500 bg-secondary-500 hover:bg-secondary-100"
             >
               {tag}
             </Badge>
@@ -234,23 +211,7 @@ function ThreadCard({ thread }: ThreadCardProps) {
           </Button>
           {/* view thread button */}
           <Button
-            className="flex-1 hover:opacity-90 text-sm sm:text-base lg:text-lg"
-            style={{
-              backgroundColor: COLORS.activeBg,
-              color: COLORS.text,
-            }}
-            onMouseEnter={(e) => {
-              // darker color when hovering
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                COLORS.accentTo;
-              (e.currentTarget as HTMLElement).style.color = COLORS.text;
-            }}
-            onMouseLeave={(e) => {
-              // back to normal when not hovering
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                COLORS.activeBg;
-              (e.currentTarget as HTMLElement).style.color = COLORS.text;
-            }}
+            className="flex-1 hover:opacity-90 text-sm sm:text-base lg:text-lg bg-secondary-500 text-accent-700 hover:bg-secondary-600 border border-secondary-600"
             onClick={(e) => {
               e.stopPropagation(); // don't trigger card click
               handleViewThread();

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { COLORS } from "../../theme";
 import { CheckCircle, ShoppingCart, Tag, OctagonAlert } from "lucide-react";
 
 export type Activity = {
@@ -49,13 +48,13 @@ const placeholderActivities: Activity[] = [
 function getIcon(type: Activity["type"]) {
   switch (type) {
     case "sale":
-      return <Tag size={18} style={{ color: COLORS.accentTo }} />;
+      return <Tag size={18} className="text-secondary-600" />;
     case "purchase":
-      return <ShoppingCart size={18} style={{ color: COLORS.textActive }} />;
+      return <ShoppingCart size={18} className="text-accent-700" />;
     case "achievement":
-      return <CheckCircle size={18} style={{ color: COLORS.accentFrom }} />;
+      return <CheckCircle size={18} className="text-secondary-500" />;
     case "alert":
-      return <OctagonAlert size={18} style={{ color: "#ff4422" }} />;
+      return <OctagonAlert size={18} className="text-error-500" />;
     default:
       return null;
   }
@@ -66,15 +65,12 @@ export default function ActivityPage({ activities }: ActivityPageProps) {
   const pathname = usePathname();
 
   return (
-    <div
-      className="min-h-screen px-4 py-6 pb-24"
-      style={{ backgroundColor: COLORS.background, color: COLORS.text }}
-    >
+    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-center mb-4">
+        {/* <div className="flex justify-center mb-4">
           <h1 className="text-xl font-bold">Profile</h1>
-        </div>
+        </div> */}
 
         {/* Tabs */}
         <div className="flex justify-center mb-6 border-b pb-2 space-x-6">
@@ -84,13 +80,8 @@ export default function ActivityPage({ activities }: ActivityPageProps) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className="text-base font-medium pb-2"
-                style={{
-                  color: isActive ? COLORS.textActive : COLORS.text,
-                  borderBottom: isActive
-                    ? `2px solid ${COLORS.accentActive}`
-                    : "none",
-                }}
+                // className="text-base font-medium pb-2"
+                className={`${isActive ? 'text-accent-700 border-b-2 border-accent-700' : 'text-accent-500'}`}
               >
                 {tab.label}
               </Link>
