@@ -12,6 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
 
 export default function ListingMatchesPage() {
   const params = useParams();
@@ -91,11 +92,11 @@ export default function ListingMatchesPage() {
         </div>
 
         {/* Your Listing Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-neutral-200">
-          <div className="flex gap-6">
+        <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 mb-6 border border-neutral-200">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
             {/* Image Placeholder */}
-            <div className="flex-shrink-0">
-              <div className="w-48 h-48 bg-primary-100 rounded-xl flex items-center justify-center">
+            <div className="flex-shrink-0 w-full md:w-auto">
+              <div className="w-full aspect-square md:w-40 md:h-40 bg-primary-100 rounded-xl flex items-center justify-center">
                 <span className="text-accent-400 text-sm">Image</span>
               </div>
             </div>
@@ -103,11 +104,11 @@ export default function ListingMatchesPage() {
             {/* Listing Details */}
             <div className="flex-1 flex flex-col">
               {/* Title and Price */}
-              <div className="flex items-start justify-between mb-3">
-                <h1 className="text-2xl font-bold text-accent-700 flex-1 pr-4">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-3 gap-2">
+                <h1 className="text-xl md:text-2xl font-bold text-accent-700 flex-1 md:pr-4">
                   {yourListing.title}
                 </h1>
-                <span className="text-2xl font-bold text-secondary-600 whitespace-nowrap">
+                <span className="text-xl md:text-2xl font-bold text-secondary-600 whitespace-nowrap">
                   {listingType === "buy" ? yourListing.price : yourListing.budget}
                 </span>
               </div>
@@ -155,27 +156,23 @@ export default function ListingMatchesPage() {
         </div>
 
         {/* Matches Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-secondary-600" />
-            <h2 className="text-2xl font-bold text-accent-700">
-              Potential Matches
-            </h2>
-          </div>
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles className="w-6 h-6 text-secondary-600" />
+          <h2 className="text-2xl font-bold text-accent-700">
+            Your Matches
+          </h2>
         </div>
 
-        {/* Empty State */}
-        <Empty className="bg-white border-2">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <SearchX className="text-muted-foreground" />
-            </EmptyMedia>
-            <EmptyTitle>No matches found</EmptyTitle>
-            <EmptyDescription>
-              We haven't found any matches for your listing yet. Check back later as new listings are posted!
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        {/* AI Matching Component */}
+        <AIMatchingContainer
+          userMode={listingType === "buy" ? "seller" : "buyer"}
+          userListings={[yourListing]}
+          availableListings={[]}
+          onMatch={() => {}}
+          onMessage={() => {}}
+          onViewDetails={() => {}}
+          onClose={() => {}}
+        />
       </div>
     </div>
   );
