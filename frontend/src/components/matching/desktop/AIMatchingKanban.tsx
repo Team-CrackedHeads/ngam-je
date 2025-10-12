@@ -58,6 +58,23 @@ export function AIMatchingKanban({
   // Comparison Modal
   const [showCompareModal, setShowCompareModal] = useState(false);
 
+  // Card organization by column
+  const [cardsByColumn, setCardsByColumn] = useState<Record<ColumnType, number[]>>({
+    passed: [],
+    queue: [0, 1, 2], // Start with first 3 listings in queue
+    liked: [],
+  });
+
+  // Drag state
+  const [draggedCard, setDraggedCard] = useState<{ listingIndex: number; sourceColumn: ColumnType } | null>(null);
+
+  // Reset confirmation
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Select mode for popup
+  const [popupSelectMode, setPopupSelectMode] = useState(false);
+  const [selectedPopupCards, setSelectedPopupCards] = useState<string[]>([]);
+
   // Mock user's original listing
   const getUserListing = (): MatchedListing => ({
     id: "user-listing",
@@ -151,6 +168,66 @@ export function AIMatchingKanban({
 
   return (
     <>
+      {/* Reset Confirmation Dialog */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowResetConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden">
+                {/* Content */}
+                <div className="p-6">
+                  <h2 className="text-lg font-bold text-accent-700 mb-3">Reset All Cards?</h2>
+                  <p className="text-sm text-accent-600 mb-2">
+                    This will move all cards back to "For You". Cards in "Liked" and "Passed" will be reset.
+                  </p>
+                  <p className="text-xs text-accent-400">
+                    This action cannot be undone.
+                  </p>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="px-6 py-4 bg-primary-50 flex gap-3">
+                  <button
+                    onClick={() => setShowResetConfirm(false)}
+                    className="flex-1 px-4 py-2 rounded-lg border border-neutral-300 bg-white text-accent-700 font-medium hover:bg-primary-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCardsByColumn({
+                        passed: [],
+                        queue: [0, 1, 2],
+                        liked: [],
+                      });
+                      setSelectedForCompare([]);
+                      setCompareMode(false);
+                      setShowResetConfirm(false);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Comparison Modal */}
       <ListingComparisonModal
         isOpen={showCompareModal}
@@ -206,15 +283,118 @@ export function AIMatchingKanban({
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setExpandedPopupColumn(null)}
-                    className="rounded-full hover:bg-primary-100 transition-colors"
-                  >
-                    <X className="h-5 w-5 text-accent-600" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {/* Select Button */}
+                    <button
+                      onClick={() => {
+                        setPopupSelectMode(!popupSelectMode);
+                        setSelectedPopupCards([]);
+                      }}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        popupSelectMode
+                          ? 'bg-secondary-500 text-accent-700'
+                          : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
+                      }`}
+                    >
+                      {popupSelectMode ? 'Done' : 'Select'}
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setExpandedPopupColumn(null);
+                        setPopupSelectMode(false);
+                        setSelectedPopupCards([]);
+                      }}
+                      className="rounded-full hover:bg-primary-100 transition-colors"
+                    >
+                      <X className="h-5 w-5 text-accent-600" />
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Action Bar - Shows when cards are selected */}
+                {popupSelectMode && selectedPopupCards.length > 0 && (
+                  <div className="px-6 py-3 bg-secondary-100 border-b border-neutral-200 flex items-center justify-between">
+                    <span className="text-sm font-medium text-accent-700">
+                      {selectedPopupCards.length} selected
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {/* Compare Button */}
+                      <button
+                        onClick={() => {
+                          console.log('Compare selected cards:', selectedPopupCards);
+                          setShowCompareModal(true);
+                        }}
+                        disabled={selectedPopupCards.length < 2 || selectedPopupCards.length > 4}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          selectedPopupCards.length >= 2 && selectedPopupCards.length <= 4
+                            ? 'bg-secondary-500 text-accent-700 hover:bg-secondary-600'
+                            : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                        }`}
+                      >
+                        Compare
+                      </button>
+
+                      {/* Pass Button */}
+                      {expandedPopupColumn === 'queue' && (
+                        <button
+                          onClick={() => {
+                            // Move selected cards to passed
+                            const selectedIndices = selectedPopupCards.map(id => parseInt(id.split('-')[2]));
+                            setCardsByColumn(prev => ({
+                              ...prev,
+                              queue: prev.queue.filter((_, idx) => !selectedIndices.includes(idx)),
+                              passed: [...selectedIndices.map(idx => prev.queue[idx]), ...prev.passed].filter(Boolean),
+                            }));
+                            setSelectedPopupCards([]);
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 transition-colors"
+                        >
+                          Pass
+                        </button>
+                      )}
+
+                      {/* Like Button */}
+                      {expandedPopupColumn === 'queue' && (
+                        <button
+                          onClick={() => {
+                            // Move selected cards to liked
+                            const selectedIndices = selectedPopupCards.map(id => parseInt(id.split('-')[2]));
+                            setCardsByColumn(prev => ({
+                              ...prev,
+                              queue: prev.queue.filter((_, idx) => !selectedIndices.includes(idx)),
+                              liked: [...selectedIndices.map(idx => prev.queue[idx]), ...prev.liked].filter(Boolean),
+                            }));
+                            setSelectedPopupCards([]);
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors"
+                        >
+                          Like
+                        </button>
+                      )}
+
+                      {/* Undo Button (for Liked/Passed columns) */}
+                      {(expandedPopupColumn === 'liked' || expandedPopupColumn === 'passed') && (
+                        <button
+                          onClick={() => {
+                            // Move selected cards back to queue
+                            const selectedIndices = selectedPopupCards.map(id => parseInt(id.split('-')[2]));
+                            setCardsByColumn(prev => ({
+                              ...prev,
+                              [expandedPopupColumn]: prev[expandedPopupColumn].filter((_, idx) => !selectedIndices.includes(idx)),
+                              queue: [...selectedIndices.map(idx => prev[expandedPopupColumn][idx]), ...prev.queue].filter(Boolean),
+                            }));
+                            setSelectedPopupCards([]);
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary-200 text-accent-700 hover:bg-primary-300 border border-primary-300 transition-colors"
+                        >
+                          Move to Queue
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Grid of Cards - Scrollable */}
                 <div className="flex-1 overflow-y-auto touch-scroll p-6">
@@ -229,22 +409,37 @@ export function AIMatchingKanban({
                       };
                       const colors = getMatchColor(matchScore);
                       const cardId = `${expandedPopupColumn}-card-${index}`;
-                      const isSelected = selectedForCompare.includes(cardId);
+                      const isSelected = compareMode
+                        ? selectedForCompare.includes(cardId)
+                        : popupSelectMode && selectedPopupCards.includes(cardId);
 
                       return (
                         <div
                           key={index}
                           onClick={() => {
-                            if (compareMode) {
+                            if (popupSelectMode) {
+                              // Select mode - toggle selection
+                              if (isSelected) {
+                                setSelectedPopupCards(prev => prev.filter(id => id !== cardId));
+                              } else {
+                                setSelectedPopupCards(prev => [...prev, cardId]);
+                              }
+                            } else if (compareMode) {
                               if (isSelected) {
                                 setSelectedForCompare(prev => prev.filter(id => id !== cardId));
                               } else if (selectedForCompare.length < 4) {
                                 setSelectedForCompare(prev => [...prev, cardId]);
                               }
+                            } else {
+                              // When not in select/compare mode, open the listing details
+                              const listingIndex = index % availableListings.length;
+                              if (availableListings.length > 0) {
+                                onViewDetails(availableListings[listingIndex]);
+                              }
                             }
                           }}
                           className={`bg-white rounded-xl shadow-lg border overflow-hidden transition-all cursor-pointer hover:shadow-xl ${
-                            isSelected ? 'border-4 border-blue-500' : 'border-neutral-300'
+                            isSelected ? 'border-4 border-secondary-500' : 'border-neutral-300'
                           }`}
                         >
                           {/* Card Image */}
@@ -255,14 +450,14 @@ export function AIMatchingKanban({
                               <Sparkles size={12} />
                               <span className="text-xs font-bold">{matchScore}%</span>
                             </div>
-                            {/* Selection Checkbox for Compare Mode */}
-                            {compareMode && (
+                            {/* Selection Checkbox for Select/Compare Mode */}
+                            {(popupSelectMode || compareMode) && (
                               <div className="absolute top-2 left-2">
-                                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                                  isSelected ? 'bg-blue-500 border-blue-500' : 'bg-white border-neutral-400'
+                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                  isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white/80 border-neutral-400'
                                 }`}>
                                   {isSelected && (
-                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-4 h-4 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                     </svg>
                                   )}
@@ -329,11 +524,6 @@ export function AIMatchingKanban({
             <span className="text-sm font-medium text-accent-600">
               3 new matches
             </span>
-            {compareMode && selectedForCompare.length > 0 && (
-              <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">
-                {selectedForCompare.length} selected for compare
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -355,11 +545,20 @@ export function AIMatchingKanban({
                 setSelectedForCompare([]);
               }}
               className={`p-2 rounded-lg transition-colors ${
-                compareMode ? "bg-blue-500 text-white" : "hover:bg-primary-100"
+                compareMode ? "bg-secondary-500 text-accent-700" : "hover:bg-primary-100"
               }`}
               title="Compare Mode"
             >
-              <GitCompare size={18} className={compareMode ? "text-white" : "text-accent-600"} />
+              <GitCompare size={18} className={compareMode ? "text-accent-700" : "text-accent-600"} />
+            </button>
+
+            {/* Reset Button */}
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
+              title="Reset all cards"
+            >
+              <Undo2 size={18} className="text-accent-600" />
             </button>
           </div>
         </div>
@@ -391,18 +590,18 @@ export function AIMatchingKanban({
 
         {/* Compare Mode Banner */}
         {compareMode && (
-          <div className="p-3 bg-blue-100 border-b border-blue-200">
+          <div className="p-3 bg-secondary-100 border-b border-secondary-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <GitCompare size={16} className="text-blue-700" />
-                <span className="text-sm font-medium text-blue-900">
+                <GitCompare size={16} className="text-secondary-700" />
+                <span className="text-sm font-medium text-accent-700">
                   Compare Mode Active - Click cards to select (max 4)
                 </span>
               </div>
               {selectedForCompare.length >= 2 && (
                 <button
                   onClick={() => setShowCompareModal(true)}
-                  className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-sm font-medium transition-colors"
                 >
                   Compare {selectedForCompare.length} Items
                 </button>
@@ -419,7 +618,29 @@ export function AIMatchingKanban({
             return (
               <div
                 key={column.id}
-                className="flex flex-col rounded-xl border-2 border-neutral-200 overflow-hidden"
+                className={`flex flex-col rounded-xl border-2 overflow-hidden transition-colors ${
+                  draggedCard && draggedCard.sourceColumn !== column.id
+                    ? 'border-secondary-500 bg-secondary-50'
+                    : 'border-neutral-200'
+                }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedCard && draggedCard.sourceColumn !== column.id) {
+                    setCardsByColumn(prev => ({
+                      ...prev,
+                      [draggedCard.sourceColumn]: prev[draggedCard.sourceColumn].filter(i => i !== draggedCard.listingIndex),
+                      [column.id]: [draggedCard.listingIndex, ...prev[column.id]],
+                    }));
+                  }
+                  setDraggedCard(null);
+                }}
+                onDragLeave={() => {
+                  // Optional: could add visual feedback here
+                }}
               >
                 {/* Column Header */}
                 <div
@@ -435,7 +656,7 @@ export function AIMatchingKanban({
                     <div className="flex items-center gap-2">
                       <Layers size={16} className="text-accent-500" />
                       <span className="text-sm font-medium text-accent-500">
-                        3
+                        {cardsByColumn[column.id].length}
                       </span>
                       <button
                         onClick={() => setExpandedPopupColumn(column.id)}
@@ -452,7 +673,8 @@ export function AIMatchingKanban({
                 <div className={`flex-1 p-4 ${column.bgColor}`}>
                   <div className="relative w-full h-[420px]">
                     {/* Empty state */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {cardsByColumn[column.id].length === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="flex flex-col items-center text-center text-accent-400">
                         <div className={`mb-3 ${column.color}`}>
                           <Layers size={48} />
@@ -464,9 +686,11 @@ export function AIMatchingKanban({
                         </p>
                       </div>
                     </div>
+                    )}
 
                     {/* Stacked cards - max 3 visible */}
-                    {[1, 2, 3].map((index) => {
+                    {cardsByColumn[column.id].slice(0, 3).map((listingIndex, stackIndex) => {
+                      const index = stackIndex + 1;
                       // Mock match scores for demo
                       const matchScores = [85, 60, 30];
                       const matchScore = matchScores[index - 1];
@@ -484,7 +708,56 @@ export function AIMatchingKanban({
 
                       return (
                         <div
-                          key={index}
+                          key={`${column.id}-${listingIndex}`}
+                          draggable={!compareMode}
+                          onDragStart={(e) => {
+                            if (!compareMode) {
+                              setDraggedCard({ listingIndex, sourceColumn: column.id });
+                              e.dataTransfer.effectAllowed = 'move';
+
+                              // Create a custom drag image centered at cursor
+                              if (e.currentTarget instanceof HTMLElement) {
+                                // Get the inner card element (the actual white card)
+                                const cardElement = e.currentTarget.querySelector('.bg-white') as HTMLElement;
+                                if (cardElement) {
+                                  const rect = cardElement.getBoundingClientRect();
+
+                                  // Clone the inner card for drag image
+                                  const dragImage = cardElement.cloneNode(true) as HTMLElement;
+                                  dragImage.style.position = 'fixed';
+                                  dragImage.style.left = '-10000px';
+                                  dragImage.style.top = '0px';
+                                  dragImage.style.width = rect.width + 'px';
+                                  dragImage.style.height = rect.height + 'px';
+                                  dragImage.style.transform = 'none';
+                                  dragImage.style.pointerEvents = 'none';
+                                  dragImage.style.zIndex = '9999';
+                                  document.body.appendChild(dragImage);
+
+                                  // Center the drag image on the cursor
+                                  const centerX = rect.width / 2;
+                                  const centerY = rect.height / 2;
+
+                                  e.dataTransfer.setDragImage(dragImage, centerX, centerY);
+
+                                  // Clean up after drag starts
+                                  setTimeout(() => {
+                                    if (document.body.contains(dragImage)) {
+                                      document.body.removeChild(dragImage);
+                                    }
+                                  }, 0);
+                                }
+
+                                e.currentTarget.style.opacity = '0.5';
+                              }
+                            }
+                          }}
+                          onDragEnd={(e) => {
+                            if (e.currentTarget instanceof HTMLElement) {
+                              e.currentTarget.style.opacity = '1';
+                            }
+                            setDraggedCard(null);
+                          }}
                           onClick={(e) => {
                             if (compareMode) {
                               e.stopPropagation();
@@ -493,16 +766,25 @@ export function AIMatchingKanban({
                               } else if (selectedForCompare.length < 4) {
                                 setSelectedForCompare(prev => [...prev, cardId]);
                               }
+                            } else {
+                              // When not in compare mode, open the listing details
+                              e.stopPropagation();
+                              const listingIndex = index % availableListings.length;
+                              if (availableListings.length > 0) {
+                                onViewDetails(availableListings[listingIndex]);
+                              }
                             }
                           }}
-                          className={`absolute top-0 left-0 right-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl`}
+                          className={`absolute top-0 left-0 right-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${
+                            compareMode ? 'cursor-pointer' : 'cursor-move'
+                          }`}
                           style={{
                             transform: `translateY(${(index - 1) * 12}px) scale(${1 - (index - 1) * 0.04}) rotateZ(${(index - 1) * 1}deg)`,
                             zIndex: 10 - index,
                           }}
                         >
                           <div className={`bg-white rounded-xl shadow-xl border overflow-hidden ${
-                            isSelected ? 'border-4 border-blue-500' : 'border border-neutral-300'
+                            isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
                           }`}>
                             {/* Card Image */}
                             <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
@@ -518,10 +800,10 @@ export function AIMatchingKanban({
                               {compareMode && index === 1 && (
                                 <div className="absolute top-2 left-2">
                                   <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                                    isSelected ? 'bg-blue-500 border-blue-500' : 'bg-white border-neutral-400'
+                                    isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
                                   }`}>
                                     {isSelected && (
-                                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <svg className="w-4 h-4 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                       </svg>
                                     )}
@@ -551,12 +833,20 @@ export function AIMatchingKanban({
                     })}
 
                     {/* Floating Action Buttons */}
-                    {column.id === "queue" && (
+                    {column.id === "queue" && cardsByColumn.queue.length > 0 && (
                       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 z-20">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('Pass');
+                            // Move top card to passed
+                            const topCard = cardsByColumn.queue[0];
+                            if (topCard !== undefined) {
+                              setCardsByColumn(prev => ({
+                                ...prev,
+                                queue: prev.queue.slice(1),
+                                passed: [topCard, ...prev.passed],
+                              }));
+                            }
                           }}
                           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-red-300 hover:bg-red-50 transition-colors shadow-lg"
                         >
@@ -566,7 +856,15 @@ export function AIMatchingKanban({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('Like');
+                            // Move top card to liked
+                            const topCard = cardsByColumn.queue[0];
+                            if (topCard !== undefined) {
+                              setCardsByColumn(prev => ({
+                                ...prev,
+                                queue: prev.queue.slice(1),
+                                liked: [topCard, ...prev.liked],
+                              }));
+                            }
                           }}
                           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-green-300 hover:bg-green-50 transition-colors shadow-lg"
                         >
@@ -577,12 +875,20 @@ export function AIMatchingKanban({
                     )}
 
                     {/* Undo Button - for Liked and Passed columns */}
-                    {(column.id === "liked" || column.id === "passed") && (
+                    {(column.id === "liked" || column.id === "passed") && cardsByColumn[column.id].length > 0 && (
                       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center z-20">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('Undo');
+                            // Move top card back to queue
+                            const topCard = cardsByColumn[column.id][0];
+                            if (topCard !== undefined) {
+                              setCardsByColumn(prev => ({
+                                ...prev,
+                                [column.id]: prev[column.id].slice(1),
+                                queue: [topCard, ...prev.queue],
+                              }));
+                            }
                           }}
                           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-lg"
                         >

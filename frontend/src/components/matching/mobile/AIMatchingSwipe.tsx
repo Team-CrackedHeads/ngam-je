@@ -275,6 +275,12 @@ export function AIMatchingSwipe({
                           } else if (selectedForCompare.length < 4) {
                             setSelectedForCompare(prev => [...prev, cardId]);
                           }
+                        } else {
+                          // When not in compare mode, open the listing details
+                          const listingIndex = index % availableListings.length;
+                          if (availableListings.length > 0) {
+                            onViewDetails(availableListings[listingIndex]);
+                          }
                         }
                       }}
                       className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden ${
