@@ -114,7 +114,7 @@ function SearchFilter({
 
       const trackRect = trackRef.current.getBoundingClientRect();
 
-      let newPosition = e.clientX - trackRect.left;
+      const newPosition = e.clientX - trackRect.left;
       let newPercent = (newPosition / trackRect.width) * 100;
       newPercent = Math.max(0, Math.min(100, newPercent));
 
@@ -132,7 +132,7 @@ function SearchFilter({
         }
       });
     },
-    [isDragging, maxPrice, priceStep]
+    [isDragging, maxPrice, priceStep, percentToValue]
   );
 
   const handleMouseUp = useCallback(() => {
@@ -346,7 +346,7 @@ function SearchFilter({
                         onClick={() =>
                           setFilters((prev) => ({
                             ...prev,
-                            listingType: option.value as any,
+                            listingType: option.value as "all" | "sale" | "wanted",
                           }))
                         }
                         className={`px-3 py-2 rounded-lg border text-sm transition-colors text-left ${

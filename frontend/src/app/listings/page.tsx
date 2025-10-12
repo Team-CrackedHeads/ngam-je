@@ -55,11 +55,11 @@ function getExtensionPrice(subscriptionTier: string): string {
 
 // Tabs configuration
 const tabs = [
-  { label: "Sale Listings", value: "buy", icon: ShoppingCart },
-  { label: "Want Listings", value: "sell", icon: Package },
+  { label: "Sale Listings", value: "sale", icon: ShoppingCart },
+  { label: "Want Listings", value: "wanted", icon: Package },
 ];
 
-function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "buy" | "sell"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
@@ -147,7 +147,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
                   {listing.title}
                 </h3>
                 <span className="font-bold text-sm text-secondary-700 ml-2 whitespace-nowrap">
-                  {type === "buy" ? listing.price : listing.budget}
+                  {type === "sale" ? listing.price : listing.budget}
                 </span>
               </div>
 
@@ -274,7 +274,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
         {/* Price/Budget */}
         <div className="mb-2">
           <span className="font-bold text-lg text-secondary-700">
-            {type === "buy" ? listing.price : listing.budget}
+            {type === "sale" ? listing.price : listing.budget}
           </span>
         </div>
 
@@ -317,15 +317,16 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
 
 export default function ListingsPage() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"sale" | "wanted">("sale");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
 
   useEffect(() => {
-    const type = searchParams.get("type") as "buy" | "sell";
+    const type = searchParams.get("type") as "sale" | "wanted";
     const highlight = searchParams.get("highlight");
 
-    if (type && (type === "buy" || type === "sell")) {
+    if (type && (type === "sale" || type === "wanted")) {
       setActiveTab(type);
     }
 
@@ -338,9 +339,9 @@ export default function ListingsPage() {
   }, [searchParams]);
 
   // Filter to show only the user's own listings
-  const allListings = activeTab === "buy" ? mockSaleListings : mockWantedListings;
+  const allListings = activeTab === "sale" ? mockSaleListings : mockWantedListings;
   const currentListings = allListings.filter(listing => listing.isOwner === true);
-  const ActiveIcon = activeTab === "buy" ? ShoppingCart : Package;
+  const ActiveIcon = activeTab === "sale" ? ShoppingCart : Package;
 
   return (
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
@@ -354,7 +355,7 @@ export default function ListingsPage() {
             return (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value as "buy" | "sell")}
+                onClick={() => router.push(`/listings?type=${tab.value}`, { scroll: false })}
                 className={`flex items-center gap-2 pb-2 transition-colors ${
                   isActive
                     ? 'text-accent-700 border-b-2 border-accent-700'
@@ -372,7 +373,7 @@ export default function ListingsPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <span className="text-sm text-accent-600">
-              {currentListings.length} {activeTab === "buy" ? "items for sale" : "wanted items"}
+              {currentListings.length} {activeTab === "sale" ? "items for sale" : "wanted items"}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -398,7 +399,7 @@ export default function ListingsPage() {
             </div>
           </div>
           <button className="px-4 py-2 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-            + New {activeTab === "buy" ? "Request" : "Sale"}
+            + New {activeTab === "sale" ? "Sale" : "Request"}
           </button>
         </div>
 
@@ -420,13 +421,13 @@ export default function ListingsPage() {
           <div className="text-center py-12">
             <ActiveIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-accent-600 mb-2">
-              No {activeTab === "buy" ? "items for sale" : "wanted items"} yet
+              No {activeTab === "sale" ? "items for sale" : "wanted items"} yet
             </h3>
             <p className="text-accent-400 mb-4">
-              Be the first to post a {activeTab === "buy" ? "sale listing" : "wanted request"}!
+              Be the first to post a {activeTab === "sale" ? "sale listing" : "wanted request"}!
             </p>
             <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-              Create {activeTab === "buy" ? "Wanted Request" : "Sale Listing"}
+              Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
             </button>
           </div>
         )}

@@ -638,16 +638,11 @@ function BuyListingsMenuItem() {
           {/* Recent Listings Header */}
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
-              asChild
-              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+              onClick={() => router.push('/listings?type=sale', { scroll: false })}
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
             >
-              <Link
-                href="/listings?type=sale"
-                className="flex items-center gap-2"
-              >
-                <Clock className="w-4 h-4" />
-                <span className="text-sm font-medium">Recent Listings</span>
-              </Link>
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">Recent Listings</span>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
 
@@ -779,16 +774,11 @@ function SellListingsMenuItem() {
           {/* Recent Listings Header */}
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
-              asChild
-              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+              onClick={() => router.push('/listings?type=wanted', { scroll: false })}
+              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
             >
-              <Link
-                href="/listings?type=wanted"
-                className="flex items-center gap-2"
-              >
-                <Clock className="w-4 h-4" />
-                <span className="text-sm font-medium">Recent Listings</span>
-              </Link>
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">Recent Listings</span>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
 
