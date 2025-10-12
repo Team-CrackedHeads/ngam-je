@@ -1,9 +1,8 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, SearchX, Home, MapPin, Clock, Eye, Heart, ShoppingCart } from "lucide-react";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart } from "lucide-react";
 import { mockBuyListings, mockSellListings, type Listing } from "@/utils/mock-listings-data";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import {
   Breadcrumb,
   BreadcrumbItem,
