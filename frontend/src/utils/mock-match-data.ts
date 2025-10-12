@@ -1,5 +1,5 @@
 // Mock data for listing matches
-import { Listing, mockBuyListings, mockSellListings } from "./mock-listings-data";
+import { Listing, mockSaleListings, mockWantedListings } from "./mock-listings-data";
 
 export type MatchQuality = "excellent" | "good" | "possible";
 
@@ -37,27 +37,27 @@ function getMatchQuality(score: number): MatchQuality {
 // Generate mock matches for a specific listing
 export function generateMatchesForListing(
   listingId: number,
-  listingType: "buy" | "sell"
+  listingType: "sale" | "wanted"
 ): ListingMatch[] {
-  const yourListing = listingType === "buy"
-    ? mockBuyListings.find(l => l.id === listingId)
-    : mockSellListings.find(l => l.id === listingId);
+  const yourListing = listingType === "sale"
+    ? mockSaleListings.find(l => l.id === listingId)
+    : mockWantedListings.find(l => l.id === listingId);
 
   if (!yourListing) return [];
 
   // Get opposite type listings (if you're selling, show buyers and vice versa)
-  const potentialMatches = listingType === "buy" ? mockSellListings : mockBuyListings;
+  const potentialMatches = listingType === "sale" ? mockWantedListings : mockSaleListings;
 
   // Generate matches based on the listing
   const matches: ListingMatch[] = [];
 
   // For demo purposes, create some matches
-  if (listingId === 1 && listingType === "buy") {
+  if (listingId === 1 && listingType === "sale") {
     // iPhone 14 Pro listing matches
     matches.push({
       id: "match-1",
       yourListingId: 1,
-      matchedListing: mockSellListings[4], // iPhone 15 Pro Max wanted
+      matchedListing: mockWantedListings[4], // iPhone 15 Pro Max wanted
       matchScore: 95,
       matchQuality: "excellent",
       matchReasons: [
@@ -79,7 +79,7 @@ export function generateMatchesForListing(
     matches.push({
       id: "match-2",
       yourListingId: 1,
-      matchedListing: mockSellListings[0], // MacBook Pro wanted
+      matchedListing: mockWantedListings[0], // MacBook Pro wanted
       matchScore: 72,
       matchQuality: "good",
       matchReasons: [
@@ -101,7 +101,7 @@ export function generateMatchesForListing(
     matches.push({
       id: "match-3",
       yourListingId: 1,
-      matchedListing: mockSellListings[7], // Smartwatch wanted
+      matchedListing: mockWantedListings[7], // Smartwatch wanted
       matchScore: 68,
       matchQuality: "possible",
       matchReasons: [
@@ -119,12 +119,12 @@ export function generateMatchesForListing(
         categoryMatch: true,
       }
     });
-  } else if (listingId === 2 && listingType === "buy") {
+  } else if (listingId === 2 && listingType === "sale") {
     // MacBook Air listing matches
     matches.push({
       id: "match-4",
       yourListingId: 2,
-      matchedListing: mockSellListings[0], // MacBook Pro wanted
+      matchedListing: mockWantedListings[0], // MacBook Pro wanted
       matchScore: 92,
       matchQuality: "excellent",
       matchReasons: [
@@ -146,7 +146,7 @@ export function generateMatchesForListing(
     matches.push({
       id: "match-5",
       yourListingId: 2,
-      matchedListing: mockSellListings[5], // Gaming Monitor wanted
+      matchedListing: mockWantedListings[5], // Gaming Monitor wanted
       matchScore: 65,
       matchQuality: "possible",
       matchReasons: [
@@ -163,12 +163,12 @@ export function generateMatchesForListing(
         categoryMatch: true,
       }
     });
-  } else if (listingId === 1 && listingType === "sell") {
+  } else if (listingId === 1 && listingType === "wanted") {
     // Want MacBook Pro - show for sale listings
     matches.push({
       id: "match-6",
       yourListingId: 1,
-      matchedListing: mockBuyListings[1], // MacBook Air for sale
+      matchedListing: mockSaleListings[1], // MacBook Air for sale
       matchScore: 88,
       matchQuality: "good",
       matchReasons: [
@@ -197,9 +197,9 @@ export function getAllUserMatches(userListingIds: number[]): Map<number, Listing
   const allMatches = new Map<number, ListingMatch[]>();
 
   userListingIds.forEach(id => {
-    // Determine if this is a buy or sell listing
-    const isBuyListing = mockBuyListings.some(l => l.id === id);
-    const matches = generateMatchesForListing(id, isBuyListing ? "buy" : "sell");
+    // Determine if this is a sale or wanted listing
+    const isSaleListing = mockSaleListings.some(l => l.id === id);
+    const matches = generateMatchesForListing(id, isSaleListing ? "sale" : "wanted");
     if (matches.length > 0) {
       allMatches.set(id, matches);
     }

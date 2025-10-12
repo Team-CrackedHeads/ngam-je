@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, AlertTriangle, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
-import { mockBuyListings, mockSellListings, type Listing } from "@/utils/mock-listings-data";
+import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
 
 // Helper functions for timer calculations
@@ -338,7 +338,7 @@ export default function ListingsPage() {
   }, [searchParams]);
 
   // Filter to show only the user's own listings
-  const allListings = activeTab === "buy" ? mockBuyListings : mockSellListings;
+  const allListings = activeTab === "buy" ? mockSaleListings : mockWantedListings;
   const currentListings = allListings.filter(listing => listing.isOwner === true);
   const ActiveIcon = activeTab === "buy" ? ShoppingCart : Package;
 

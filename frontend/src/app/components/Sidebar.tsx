@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   MessageCircle,
@@ -23,7 +23,7 @@ import {
 import { useEffect, useState } from "react";
 import { MOCK_THREADS } from "@/utils/mock-threads-data";
 import SidebarAIChat from "@/app/components/sidebar-ui/SidebarAIChat";
-import { mockBuyListings, mockSellListings } from "@/utils/mock-listings-data";
+import { mockSaleListings, mockWantedListings } from "@/utils/mock-listings-data";
 import {
   Sidebar,
   SidebarContent,
@@ -563,6 +563,7 @@ function NgamJeAssistantMenuItem({
 }
 
 function BuyListingsMenuItem() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [visibleListings, setVisibleListings] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -576,15 +577,15 @@ function BuyListingsMenuItem() {
 
   const handleListingClick = (listingId: number) => {
     // Navigate to matches page for this listing
-    window.location.href = `/listings/${listingId}/matches?type=buy`;
+    router.push(`/listings/${listingId}/matches?type=sale`);
   };
 
   const loadMoreListings = () => {
-    if (loading || visibleListings >= mockBuyListings.length) return;
+    if (loading || visibleListings >= mockSaleListings.length) return;
 
     setLoading(true);
     setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, mockBuyListings.length);
+      const newCount = Math.min(visibleListings + 5, mockSaleListings.length);
 
       if (newCount > MAX_LOADED_COUNT) {
         setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
@@ -641,7 +642,7 @@ function BuyListingsMenuItem() {
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
             >
               <Link
-                href="/listings?type=buy"
+                href="/listings?type=sale"
                 className="flex items-center gap-2"
               >
                 <Clock className="w-4 h-4" />
@@ -656,7 +657,7 @@ function BuyListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockBuyListings.slice(0, visibleListings).map((listing) => (
+              {mockSaleListings.slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}
@@ -676,8 +677,8 @@ function BuyListingsMenuItem() {
                 </div>
               )}
 
-              {visibleListings >= mockBuyListings.length &&
-                mockBuyListings.length > 5 && (
+              {visibleListings >= mockSaleListings.length &&
+                mockSaleListings.length > 5 && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-400">
                       No more listings
@@ -685,11 +686,11 @@ function BuyListingsMenuItem() {
                   </div>
                 )}
 
-              {visibleListings < mockBuyListings.length &&
+              {visibleListings < mockSaleListings.length &&
                 visibleListings >= MAX_LOADED_COUNT && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-300">
-                      {mockBuyListings.length - visibleListings} older listings
+                      {mockSaleListings.length - visibleListings} older listings
                       hidden
                     </div>
                   </div>
@@ -703,6 +704,7 @@ function BuyListingsMenuItem() {
 }
 
 function SellListingsMenuItem() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [visibleListings, setVisibleListings] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -716,15 +718,15 @@ function SellListingsMenuItem() {
 
   const handleListingClick = (listingId: number) => {
     // Navigate to matches page for this listing
-    window.location.href = `/listings/${listingId}/matches?type=sell`;
+    router.push(`/listings/${listingId}/matches?type=wanted`);
   };
 
   const loadMoreListings = () => {
-    if (loading || visibleListings >= mockSellListings.length) return;
+    if (loading || visibleListings >= mockWantedListings.length) return;
 
     setLoading(true);
     setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, mockSellListings.length);
+      const newCount = Math.min(visibleListings + 5, mockWantedListings.length);
 
       if (newCount > MAX_LOADED_COUNT) {
         setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
@@ -781,7 +783,7 @@ function SellListingsMenuItem() {
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
             >
               <Link
-                href="/listings?type=sell"
+                href="/listings?type=wanted"
                 className="flex items-center gap-2"
               >
                 <Clock className="w-4 h-4" />
@@ -796,7 +798,7 @@ function SellListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockSellListings.slice(0, visibleListings).map((listing) => (
+              {mockWantedListings.slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}
@@ -816,8 +818,8 @@ function SellListingsMenuItem() {
                 </div>
               )}
 
-              {visibleListings >= mockSellListings.length &&
-                mockSellListings.length > 5 && (
+              {visibleListings >= mockWantedListings.length &&
+                mockWantedListings.length > 5 && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-400">
                       No more listings
@@ -825,11 +827,11 @@ function SellListingsMenuItem() {
                   </div>
                 )}
 
-              {visibleListings < mockSellListings.length &&
+              {visibleListings < mockWantedListings.length &&
                 visibleListings >= MAX_LOADED_COUNT && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-300">
-                      {mockSellListings.length - visibleListings} older listings
+                      {mockWantedListings.length - visibleListings} older listings
                       hidden
                     </div>
                   </div>

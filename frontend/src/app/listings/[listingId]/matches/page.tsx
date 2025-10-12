@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Info, X } from "lucide-react";
-import { mockBuyListings, mockSellListings, type Listing } from "@/utils/mock-listings-data";
+import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { motion, AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -26,12 +26,12 @@ export default function ListingMatchesPage() {
   const [showListingModal, setShowListingModal] = useState(false);
 
   const listingId = parseInt(params.listingId as string);
-  const listingType = (searchParams.get("type") || "buy") as "buy" | "sell";
+  const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted";
 
   // Get the current listing
-  const yourListing: Listing | undefined = listingType === "buy"
-    ? mockBuyListings.find(l => l.id === listingId)
-    : mockSellListings.find(l => l.id === listingId);
+  const yourListing: Listing | undefined = listingType === "sale"
+    ? mockSaleListings.find(l => l.id === listingId)
+    : mockWantedListings.find(l => l.id === listingId);
 
   if (!yourListing) {
     return (
@@ -69,7 +69,7 @@ export default function ListingMatchesPage() {
               {yourListing.title}
             </h1>
             <span className="text-xl md:text-2xl font-bold text-secondary-600 whitespace-nowrap">
-              {listingType === "buy" ? yourListing.price : yourListing.budget}
+              {listingType === "sale" ? yourListing.price : yourListing.budget}
             </span>
           </div>
 
@@ -140,13 +140,13 @@ export default function ListingMatchesPage() {
                   {/* Header */}
                   <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 shrink-0">
                     <div className="flex items-center gap-3">
-                      {listingType === "buy" ? (
+                      {listingType === "sale" ? (
                         <ShoppingCart className="w-5 h-5 text-secondary-600" />
                       ) : (
                         <Package className="w-5 h-5 text-secondary-600" />
                       )}
                       <h2 className="text-xl font-bold text-accent-700">
-                        Your {listingType === "buy" ? "Sale" : "Wanted"} Listing
+                        Your {listingType === "sale" ? "Sale" : "Wanted"} Listing
                       </h2>
                     </div>
                     <Button
@@ -192,7 +192,7 @@ export default function ListingMatchesPage() {
                   onClick={() => router.push(`/listings?type=${listingType}`)}
                   className="cursor-pointer hover:text-accent-700"
                 >
-                  {listingType === "buy" ? "My Sale Listings" : "My Want Listings"}
+                  {listingType === "sale" ? "My Sale Listings" : "My Want Listings"}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -210,13 +210,13 @@ export default function ListingMatchesPage() {
           <>
             {/* Your Listing Header */}
             <div className="flex items-center gap-3 mb-4">
-              {listingType === "buy" ? (
+              {listingType === "sale" ? (
                 <ShoppingCart className="w-6 h-6 text-secondary-600" />
               ) : (
                 <Package className="w-6 h-6 text-secondary-600" />
               )}
               <h2 className="text-2xl font-bold text-accent-700">
-                Your {listingType === "buy" ? "Sale" : "Wanted"} Listing
+                Your {listingType === "sale" ? "Sale" : "Wanted"} Listing
               </h2>
             </div>
 
@@ -241,18 +241,18 @@ export default function ListingMatchesPage() {
               {/* Listing Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  {listingType === "buy" ? (
+                  {listingType === "sale" ? (
                     <ShoppingCart className="w-4 h-4 text-secondary-600 flex-shrink-0" />
                   ) : (
                     <Package className="w-4 h-4 text-secondary-600 flex-shrink-0" />
                   )}
-                  <span className="text-xs font-medium text-accent-500">Your {listingType === "buy" ? "Sale" : "Wanted"} Listing</span>
+                  <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : "Wanted"} Listing</span>
                 </div>
                 <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
                   {yourListing.title}
                 </h3>
                 <span className="text-lg font-bold text-secondary-600">
-                  {listingType === "buy" ? yourListing.price : yourListing.budget}
+                  {listingType === "sale" ? yourListing.price : yourListing.budget}
                 </span>
               </div>
 
@@ -274,7 +274,7 @@ export default function ListingMatchesPage() {
 
         {/* AI Matching Component */}
         <AIMatchingContainer
-          userMode={listingType === "buy" ? "seller" : "buyer"}
+          userMode={listingType === "sale" ? "seller" : "buyer"}
           userListings={[yourListing]}
           availableListings={[]}
           onMatch={() => {}}
