@@ -253,45 +253,47 @@ export function AIMatchingKanban({
             >
               <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 shrink-0">
-                  <div className="flex items-center gap-3">
-                    {columns.find(c => c.id === expandedPopupColumn)?.icon && (
-                      <div className={columns.find(c => c.id === expandedPopupColumn)?.color}>
-                        {columns.find(c => c.id === expandedPopupColumn)?.icon}
-                      </div>
-                    )}
-                    <div>
-                      <h2 className="text-2xl font-bold text-accent-700 mb-1">
+                <div className="flex items-start justify-between px-6 shrink-0">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      {columns.find(c => c.id === expandedPopupColumn)?.icon && (
+                        <div className={columns.find(c => c.id === expandedPopupColumn)?.color}>
+                          {columns.find(c => c.id === expandedPopupColumn)?.icon}
+                        </div>
+                      )}
+                      <h2 className="text-2xl font-bold text-accent-700">
                         {columns.find(c => c.id === expandedPopupColumn)?.title}
                       </h2>
-                      <p className="text-sm text-accent-500">
-                        {cardsByColumn[expandedPopupColumn]?.length || 0} listings in this column
-                      </p>
-                      {selectMode && selectedForCompare.length > 0 && (
-                        <p className="text-xs text-secondary-600 font-medium">
-                          {selectedForCompare.length}/4 selected
-                        </p>
-                      )}
                     </div>
+                    <p className="text-sm text-accent-500">
+                      {cardsByColumn[expandedPopupColumn]?.length || 0} listings in this column
+                    </p>
+                    {selectMode && selectedForCompare.length > 0 && (
+                      <p className="text-xs text-secondary-600 font-medium">
+                        {selectedForCompare.length}/4 selected
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Select Button */}
-                    <button
-                      onClick={() => {
-                        const newSelectMode = !selectMode;
-                        setSelectMode(newSelectMode);
-                        if (!newSelectMode) {
-                          setSelectedForCompare([]);
-                        }
-                      }}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        selectMode
-                          ? 'bg-secondary-500 text-accent-700'
-                          : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
-                      }`}
-                    >
-                      {selectMode ? 'Done' : 'Select'}
-                    </button>
+                    {/* Select Button - Only show if column has items */}
+                    {cardsByColumn[expandedPopupColumn]?.length > 0 && (
+                      <button
+                        onClick={() => {
+                          const newSelectMode = !selectMode;
+                          setSelectMode(newSelectMode);
+                          if (!newSelectMode) {
+                            setSelectedForCompare([]);
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          selectMode
+                            ? 'bg-secondary-500 text-accent-700'
+                            : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
+                        }`}
+                      >
+                        {selectMode ? 'Done' : 'Select'}
+                      </button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -307,8 +309,8 @@ export function AIMatchingKanban({
                   </div>
                 </div>
 
-                {/* Action Bar - Shows when cards are selected in Select Mode */}
-                {selectMode && selectedForCompare.length > 0 && (
+                {/* Action Bar - Shows when cards are selected in Select Mode and column has items */}
+                {selectMode && selectedForCompare.length > 0 && cardsByColumn[expandedPopupColumn]?.length > 0 && (
                   <div className="px-6 py-3 bg-secondary-100 border-b border-neutral-200 flex items-center justify-between">
                     <span className="text-sm font-medium text-accent-700">
                       {selectedForCompare.length} selected
@@ -389,8 +391,28 @@ export function AIMatchingKanban({
 
                 {/* Grid of Cards - Scrollable */}
                 <div className="flex-1 overflow-y-auto touch-scroll p-6">
-                  <div className="grid grid-cols-3 gap-4">
-                    {cardsByColumn[expandedPopupColumn]?.map((listingId) => {
+                  {/* Empty state */}
+                  {cardsByColumn[expandedPopupColumn]?.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="flex flex-col items-center text-center text-accent-400">
+                        <div className={`mb-3 ${columns.find(c => c.id === expandedPopupColumn)?.color || 'text-neutral-400'}`}>
+                          <Layers size={64} />
+                        </div>
+                        <p className="text-lg font-medium">
+                          {expandedPopupColumn === "queue" && "No more matches"}
+                          {expandedPopupColumn === "liked" && "No liked matches yet"}
+                          {expandedPopupColumn === "passed" && "No passed matches yet"}
+                        </p>
+                        <p className="text-sm mt-2">
+                          {expandedPopupColumn === "queue" && "All listings have been reviewed"}
+                          {expandedPopupColumn === "liked" && "Start liking listings to see them here"}
+                          {expandedPopupColumn === "passed" && "Passed listings will appear here"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4">
+                      {cardsByColumn[expandedPopupColumn]?.map((listingId) => {
                       const listing = getListingById(listingId);
                       if (!listing) return null;
 
@@ -563,7 +585,8 @@ export function AIMatchingKanban({
                         </div>
                       );
                     })}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             </motion.div>
