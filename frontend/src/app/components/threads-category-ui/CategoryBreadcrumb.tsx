@@ -3,18 +3,22 @@ import { useRouter } from "next/navigation";
 
 interface CategoryBreadcrumbProps {
   category: string;
-  activeType: "wtb" | "wts";
+  activeType: "wtb" | "wts"| "general";
 }
 
 export const CategoryBreadcrumb = ({ category, activeType }: CategoryBreadcrumbProps) => {
   const router = useRouter();
 
-  const typeName = activeType === "wtb" ? "Want to Buy" : "Want to Sell";
+  // FIX: Include logic for 'general' type name
+  const typeName = 
+    activeType === "wtb" ? "Want to Buy" : 
+    activeType === "wts" ? "Want to Sell" :
+    "General Listings"; // Case for "general"
 
   const breadcrumbs = [
     {
       label: "Threads",
-      onClick: () => router.push("/threads")
+      onClick: () => router.replace("/threads")
     },
     {
       label: category.charAt(0).toUpperCase() + category.slice(1),

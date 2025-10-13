@@ -38,7 +38,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   return (
     <div
-      className="bg-white rounded-xl shadow-sm p-4 relative cursor-pointer hover:shadow-xl transition-shadow duration-300"
+      className="bg-white rounded-xl shadow-sm p-4 relative cursor-pointer hover:shadow-xl transition-shadow duration-300 flex flex-col"
       onClick={() => onClick?.(listing)}
     >
       {/* Heart/Like Button */}
@@ -47,7 +47,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
           e.stopPropagation();
           setLiked(!liked);
         }}
-        className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md z-10 hover:shadow-lg transition-shadow"
+        className="absolute top-8 right-6 bg-white p-2 rounded-full shadow-md z-10 hover:shadow-lg transition-shadow"
       >
         <Heart
           className={`w-5 h-5 transition-colors ${
@@ -69,7 +69,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
               "https://placehold.co/800x400/cccccc/333333?text=Image+Missing";
           }}
         />
-        {/* Themed badge */}
+        {/* For Sale - badge */}
         <span
           className={`absolute top-2 left-2 text-accent-700 text-xs px-3 py-1 rounded-full font-medium shadow-md ${
             listingType === "for-sale" ? "bg-secondary-500" : "bg-primary-500"
@@ -79,36 +79,41 @@ const ListingCard: React.FC<ListingCardProps> = ({
         </span>
       </div>
 
-      {/* Title */}
-      <h3 className="mt-3 font-bold text-lg line-clamp-2 text-accent-700">
-        {title}
-      </h3>
+      <div>
+        {/* Title */}
+        <h3 className="mt-3 font-bold text-lg line-clamp-2 text-accent-700">
+          {title}
+        </h3>
 
-      {/* Subtitle (if exists) */}
-      {listing.subtitle && (
-        <p className="text-sm font-medium text-gray-700 mt-1">
-          {listing.subtitle}
-        </p>
-      )}
-
-      {/* Description */}
-      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{description}</p>
-
-      {/* Tags */}
-      <div className="flex gap-2 mt-3 flex-wrap">
-        {tags.slice(0, 3).map((tag) => (
-          <span
-            key={tag}
-            className="text-xs px-3 py-1 rounded-full font-medium transition-colors hover:opacity-90 bg-secondary-100 text-accent-600"
-          >
-            {tag}
-          </span>
-        ))}
-        {tags.length > 3 && (
-          <span className="text-xs text-gray-500 py-1">
-            +{tags.length - 3} more
-          </span>
+        {/* Subtitle (if exists) */}
+        {listing.subtitle && (
+          <p className="text-sm font-medium text-gray-700 mt-1">
+            {listing.subtitle}
+          </p>
         )}
+
+        {/* Description */}
+        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{description}</p>
+
+        {/* Tags */}
+        <div className="flex gap-2 mt-3 flex-wrap">
+          {tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="text-xs px-3 py-1 rounded-full font-medium transition-colors hover:opacity-90 bg-secondary-100 text-accent-600"
+              style = {{ 
+                backgroundColor: "var(--color-secondary-500)"
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+          {tags.length > 3 && (
+            <span className="text-xs text-gray-500 py-1">
+              +{tags.length - 3} more
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Price - Now with currency */}
@@ -130,28 +135,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
       <div className="text-xs text-gray-400 mt-1">{listing.views} views</div>
 
       {/* Action buttons */}
-      <div className="flex gap-3 mt-4">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onMessage?.(listing);
-          }}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-secondary-500 text-accent-500 bg-neutral-white hover:bg-secondary-500 hover:text-white"
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>Message</span>
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onFAQ?.(listing);
-          }}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 bg-secondary-500 text-white hover:bg-secondary-600"
-        >
-          <CircleHelp className="w-4 h-4" />
-          <span>FAQ</span>
-        </button>
+      <div className="flex gap-3 mt-4 mt-auto">
       </div>
     </div>
   );

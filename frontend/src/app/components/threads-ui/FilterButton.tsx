@@ -1,37 +1,75 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 // the different ways users can sort/filter threads
-type FilterType = "All" | "Hot" | "Top" | "New";
+type FilterType = "Best" | "Hot" | "New" | "Top" | "Rising";
 
-// what data this component needs to work
-type FilterButtonProps = {
-  activeFilter: FilterType; // which filter is currently selected
-  onFilterChange: (filter: FilterType) => void; // function to call when user clicks a filter
+type FilterDropdownProps = {
+  activeFilter: FilterType;
+  onFilterChange: (filter: FilterType) => void;
 };
 
-// component that shows filter buttons (all, hot, top, new)
-function FilterButton({ activeFilter, onFilterChange }: FilterButtonProps) {
+export default function FilterDropdown({
+  activeFilter,
+  onFilterChange,
+}: FilterDropdownProps) {
   return (
-    // container for all the filter buttons
-    <div className="p-3 sm:p-4 flex flex-wrap gap-2 bg-white rounded-xl shadow-sm mb-6 mt-6">
-      {/* create a button for each filter option */}
-      {(["All", "Hot", "Top", "New"] as FilterType[]).map((filter) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <Button
-          key={filter}
-          variant={filter === activeFilter ? "default" : "ghost"} // active button looks different
-          size="sm"
-          onClick={() => onFilterChange(filter)} // tell parent component when clicked
-          className={`rounded-full text-xs sm:text-sm font-medium sm:font-semibold transition-colors duration-200 ${
-            filter === activeFilter
-              ? "shadow-inner bg-secondary-500 text-accent-500" // active button with custom colors
-              : "text-gray-600 hover:bg-gray-50" // inactive buttons are gray
-          }`}
+          variant="outline"
+          className="flex items-center gap-1 text-sm font-medium"
         >
-          {filter}
+          {activeFilter}
+          <ChevronDown size={16} className="opacity-70" />
         </Button>
-      ))}
-    </div>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent className="w-40 bg-background/95 backdrop-blur-md border border-border shadow-lg">
+        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {(["Best", "Hot", "New", "Top", "Rising"] as FilterType[]).map(
+          (filter) => (
+            <DropdownMenuItem
+              key={filter}
+              onClick={() => onFilterChange(filter)}
+              className={`cursor-pointer transition-colors ${
+                filter === activeFilter ? "font-semibold text-black" : ""
+              }`}
+              style={{
+                backgroundColor:
+                  filter === activeFilter
+                    ? "var(--color-secondary-500)"
+                    : "transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (filter !== activeFilter) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    "var(--color-secondary-500)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== activeFilter) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    "transparent";
+                }
+              }}
+            >
+              {filter}
+            </DropdownMenuItem>
+          )
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
-
-export default FilterButton;

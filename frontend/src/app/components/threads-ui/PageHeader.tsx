@@ -1,3 +1,4 @@
+// Community Threads Page Header component
 function PageHeader() {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-2">
@@ -7,7 +8,7 @@ function PageHeader() {
           Community Threads
         </h1>
         {/* subtitle explaining tokens */}
-        <p className="text-sm sm:text-base text-gray-600 mt-1">
+        <p className="text-base sm:text-base text-gray-600 mt-1">
           Contribute tokens to boost threads and unlock premium features
         </p>
       </div>
