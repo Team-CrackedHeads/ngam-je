@@ -55,8 +55,8 @@ export function AIMatchingKanban({
   const [showFilters, setShowFilters] = useState(false);
   const [expandedPopupColumn, setExpandedPopupColumn] = useState<ColumnType | null>(null);
 
-  // Use global compare state
-  const { compareMode, toggleCompareMode, selectedForCompare, setSelectedForCompare } = useCompare();
+  // Use global selection state for comparison
+  const { selectedForCompare, setSelectedForCompare } = useCompare();
 
   // Comparison Modal
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -74,9 +74,8 @@ export function AIMatchingKanban({
   // Reset confirmation
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Select mode for popup
-  const [popupSelectMode, setPopupSelectMode] = useState(false);
-  const [selectedPopupCards, setSelectedPopupCards] = useState<string[]>([]);
+  // Select mode - unified for both main view and popup
+  const [selectMode, setSelectMode] = useState(false);
 
   // Get user's listing
   const getUserListing = (): MatchedListing => userAIListing;
@@ -116,8 +115,13 @@ export function AIMatchingKanban({
           console.log('Keyboard: View details');
           break;
         case 'c':
-          // Toggle compare mode
-          toggleCompareMode();
+          // Toggle select mode
+          setSelectMode(prev => {
+            if (prev) {
+              setSelectedForCompare([]);
+            }
+            return !prev;
+          });
           break;
         case 's':
           // Toggle search
@@ -129,8 +133,9 @@ export function AIMatchingKanban({
             setShowCompareModal(false);
           } else if (expandedPopupColumn) {
             setExpandedPopupColumn(null);
-          } else if (compareMode) {
-            toggleCompareMode();
+          } else if (selectMode) {
+            setSelectMode(false);
+            setSelectedForCompare([]);
           }
           break;
       }
@@ -138,7 +143,7 @@ export function AIMatchingKanban({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showCompareModal, expandedPopupColumn, compareMode]);
+  }, [showCompareModal, expandedPopupColumn, selectMode]);
 
   return (
     <>
@@ -206,7 +211,11 @@ export function AIMatchingKanban({
         isOpen={showCompareModal}
         listings={getListingsForComparison()}
         userListing={getUserListing()}
-        onClose={() => setShowCompareModal(false)}
+        onClose={() => {
+          setShowCompareModal(false);
+          setSelectedForCompare([]);
+          setSelectMode(false);
+        }}
         onSelectListing={(listing) => {
           console.log('View details:', listing);
           onViewDetails(listing);
@@ -229,7 +238,11 @@ export function AIMatchingKanban({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setExpandedPopupColumn(null)}
+            onClick={() => {
+              setExpandedPopupColumn(null);
+              setSelectMode(false);
+              setSelectedForCompare([]);
+            }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -254,45 +267,38 @@ export function AIMatchingKanban({
                       <p className="text-sm text-accent-500">
                         {cardsByColumn[expandedPopupColumn]?.length || 0} listings in this column
                       </p>
-                      {compareMode && selectedForCompare.length > 0 && (
+                      {selectMode && selectedForCompare.length > 0 && (
                         <p className="text-xs text-secondary-600 font-medium">
-                          {selectedForCompare.length}/4 selected for comparison
+                          {selectedForCompare.length}/4 selected
                         </p>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Compare Mode Button */}
-                    <button
-                      onClick={toggleCompareMode}
-                      className={`p-2 rounded-lg transition-colors ${
-                        compareMode ? "bg-secondary-500 text-accent-700" : "hover:bg-primary-100"
-                      }`}
-                      title="Toggle Compare Mode"
-                    >
-                      <GitCompare size={18} className={compareMode ? "text-accent-700" : "text-accent-600"} />
-                    </button>
                     {/* Select Button */}
                     <button
                       onClick={() => {
-                        setPopupSelectMode(!popupSelectMode);
-                        setSelectedPopupCards([]);
+                        const newSelectMode = !selectMode;
+                        setSelectMode(newSelectMode);
+                        if (!newSelectMode) {
+                          setSelectedForCompare([]);
+                        }
                       }}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        popupSelectMode
+                        selectMode
                           ? 'bg-secondary-500 text-accent-700'
                           : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
                       }`}
                     >
-                      {popupSelectMode ? 'Done' : 'Select'}
+                      {selectMode ? 'Done' : 'Select'}
                     </button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
                         setExpandedPopupColumn(null);
-                        setPopupSelectMode(false);
-                        setSelectedPopupCards([]);
+                        setSelectMode(false);
+                        setSelectedForCompare([]);
                       }}
                       className="rounded-full hover:bg-primary-100 transition-colors"
                     >
@@ -301,54 +307,22 @@ export function AIMatchingKanban({
                   </div>
                 </div>
 
-                {/* Action Bar - Shows when cards are selected in Compare Mode */}
-                {compareMode && selectedForCompare.length > 0 && (
+                {/* Action Bar - Shows when cards are selected in Select Mode */}
+                {selectMode && selectedForCompare.length > 0 && (
                   <div className="px-6 py-3 bg-secondary-100 border-b border-neutral-200 flex items-center justify-between">
                     <span className="text-sm font-medium text-accent-700">
-                      {selectedForCompare.length} selected for comparison
+                      {selectedForCompare.length} selected
                     </span>
                     <div className="flex items-center gap-2">
                       {/* Compare Button */}
                       <button
                         onClick={() => {
+                          setExpandedPopupColumn(null);
                           setShowCompareModal(true);
                         }}
                         disabled={selectedForCompare.length < 1 || selectedForCompare.length > 4}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           selectedForCompare.length >= 1 && selectedForCompare.length <= 4
-                            ? 'bg-secondary-500 text-accent-700 hover:bg-secondary-600'
-                            : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                        }`}
-                      >
-                        Compare {selectedForCompare.length} {selectedForCompare.length === 1 ? 'Item' : 'Items'}
-                      </button>
-                      {/* Clear Selection */}
-                      <button
-                        onClick={() => setSelectedForCompare([])}
-                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-neutral-100 text-accent-700 hover:bg-neutral-200 border border-neutral-300 transition-colors"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Bar - Shows when cards are selected in Select Mode */}
-                {popupSelectMode && selectedPopupCards.length > 0 && (
-                  <div className="px-6 py-3 bg-secondary-100 border-b border-neutral-200 flex items-center justify-between">
-                    <span className="text-sm font-medium text-accent-700">
-                      {selectedPopupCards.length} selected
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {/* Compare Button */}
-                      <button
-                        onClick={() => {
-                          console.log('Compare selected cards:', selectedPopupCards);
-                          setShowCompareModal(true);
-                        }}
-                        disabled={selectedPopupCards.length < 1 || selectedPopupCards.length > 4}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          selectedPopupCards.length >= 1 && selectedPopupCards.length <= 4
                             ? 'bg-secondary-500 text-accent-700 hover:bg-secondary-600'
                             : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                         }`}
@@ -363,10 +337,10 @@ export function AIMatchingKanban({
                             // Move selected cards to passed
                             setCardsByColumn(prev => ({
                               ...prev,
-                              queue: prev.queue.filter(id => !selectedPopupCards.includes(id)),
-                              passed: [...selectedPopupCards, ...prev.passed],
+                              queue: prev.queue.filter(id => !selectedForCompare.includes(id)),
+                              passed: [...selectedForCompare, ...prev.passed],
                             }));
-                            setSelectedPopupCards([]);
+                            setSelectedForCompare([]);
                           }}
                           className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 transition-colors"
                         >
@@ -381,10 +355,10 @@ export function AIMatchingKanban({
                             // Move selected cards to liked
                             setCardsByColumn(prev => ({
                               ...prev,
-                              queue: prev.queue.filter(id => !selectedPopupCards.includes(id)),
-                              liked: [...selectedPopupCards, ...prev.liked],
+                              queue: prev.queue.filter(id => !selectedForCompare.includes(id)),
+                              liked: [...selectedForCompare, ...prev.liked],
                             }));
-                            setSelectedPopupCards([]);
+                            setSelectedForCompare([]);
                           }}
                           className="px-3 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors"
                         >
@@ -399,10 +373,10 @@ export function AIMatchingKanban({
                             // Move selected cards back to queue
                             setCardsByColumn(prev => ({
                               ...prev,
-                              [expandedPopupColumn]: prev[expandedPopupColumn].filter(id => !selectedPopupCards.includes(id)),
-                              queue: [...selectedPopupCards, ...prev.queue],
+                              [expandedPopupColumn]: prev[expandedPopupColumn].filter(id => !selectedForCompare.includes(id)),
+                              queue: [...selectedForCompare, ...prev.queue],
                             }));
-                            setSelectedPopupCards([]);
+                            setSelectedForCompare([]);
                           }}
                           className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary-200 text-accent-700 hover:bg-primary-300 border border-primary-300 transition-colors"
                         >
@@ -426,29 +400,22 @@ export function AIMatchingKanban({
                         return { bg: 'from-red-100 to-red-200', text: 'text-red-700', border: 'border-red-300' };
                       };
                       const colors = getMatchColor(listing.matchScore);
-                      const isSelected = compareMode
-                        ? selectedForCompare.includes(listingId)
-                        : popupSelectMode && selectedPopupCards.includes(listingId);
+                      const isSelected = selectMode && selectedForCompare.includes(listingId);
 
                       return (
                         <div
                           key={listingId}
                           onClick={() => {
-                            if (popupSelectMode) {
+                            if (selectMode) {
                               // Select mode - toggle selection
-                              if (isSelected) {
-                                setSelectedPopupCards(prev => prev.filter(id => id !== listingId));
-                              } else {
-                                setSelectedPopupCards(prev => [...prev, listingId]);
-                              }
-                            } else if (compareMode) {
                               if (isSelected) {
                                 setSelectedForCompare(prev => prev.filter(id => id !== listingId));
                               } else if (selectedForCompare.length < 4) {
                                 setSelectedForCompare(prev => [...prev, listingId]);
                               }
                             } else {
-                              // When not in select/compare mode, open the listing details
+                              // When not in select mode, open the listing details
+                              setExpandedPopupColumn(null);
                               onViewDetails(listing);
                             }
                           }}
@@ -464,8 +431,8 @@ export function AIMatchingKanban({
                               <Sparkles size={12} />
                               <span className="text-xs font-bold">{listing.matchScore}%</span>
                             </div>
-                            {/* Selection Checkbox for Select/Compare Mode */}
-                            {(popupSelectMode || compareMode) && (
+                            {/* Selection Checkbox for Select Mode */}
+                            {selectMode && (
                               <div className="absolute top-2 left-2">
                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                                   isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white/80 border-neutral-400'
@@ -496,7 +463,7 @@ export function AIMatchingKanban({
                             </p>
 
                             {/* Action Buttons */}
-                            {!compareMode && !popupSelectMode && expandedPopupColumn === "queue" && (
+                            {!selectMode && expandedPopupColumn === "queue" && (
                               <div className="flex gap-2">
                                 <button
                                   onClick={(e) => {
@@ -528,7 +495,7 @@ export function AIMatchingKanban({
                                 </button>
                               </div>
                             )}
-                            {!compareMode && !popupSelectMode && expandedPopupColumn === "liked" && (
+                            {!selectMode && expandedPopupColumn === "liked" && (
                               <div className="flex gap-2 mt-4">
                                 <button
                                   onClick={(e) => {
@@ -560,7 +527,7 @@ export function AIMatchingKanban({
                                 </button>
                               </div>
                             )}
-                            {!compareMode && !popupSelectMode && expandedPopupColumn === "passed" && (
+                            {!selectMode && expandedPopupColumn === "passed" && (
                               <div className="flex gap-2 mt-4">
                                 <button
                                   onClick={(e) => {
@@ -628,15 +595,23 @@ export function AIMatchingKanban({
               <Search size={18} className={showFilters ? "text-white" : "text-accent-600"} />
             </button>
 
-            {/* Compare Mode Toggle */}
+            {/* Select Mode Toggle */}
             <button
-              onClick={toggleCompareMode}
-              className={`p-2 rounded-lg transition-colors ${
-                compareMode ? "bg-secondary-500 text-accent-700" : "hover:bg-primary-100"
+              onClick={() => {
+                const newSelectMode = !selectMode;
+                setSelectMode(newSelectMode);
+                if (!newSelectMode) {
+                  setSelectedForCompare([]);
+                }
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectMode
+                  ? 'bg-secondary-500 text-accent-700'
+                  : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
               }`}
-              title="Compare Mode"
+              title="Select Mode"
             >
-              <GitCompare size={18} className={compareMode ? "text-accent-700" : "text-accent-600"} />
+              {selectMode ? 'Done' : 'Select'}
             </button>
 
             {/* Reset Button */}
@@ -675,24 +650,34 @@ export function AIMatchingKanban({
           </div>
         )}
 
-        {/* Compare Mode Banner */}
-        {compareMode && (
+        {/* Select Mode Banner with Compare Button */}
+        {selectMode && selectedForCompare.length > 0 && (
           <div className="p-3 bg-secondary-100 border-b border-secondary-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <GitCompare size={16} className="text-secondary-700" />
                 <span className="text-sm font-medium text-accent-700">
-                  Compare Mode Active - Click cards to select (max 4)
+                  {selectedForCompare.length} selected
                 </span>
               </div>
-              {selectedForCompare.length >= 2 && (
+              <div className="flex items-center gap-2">
+                {selectedForCompare.length >= 1 && selectedForCompare.length <= 4 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCompareModal(true);
+                    }}
+                    className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-sm font-medium transition-colors relative z-10 cursor-pointer"
+                  >
+                    Compare {selectedForCompare.length} {selectedForCompare.length === 1 ? 'Item' : 'Items'}
+                  </button>
+                )}
                 <button
-                  onClick={() => setShowCompareModal(true)}
-                  className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-sm font-medium transition-colors"
+                  onClick={() => setSelectedForCompare([])}
+                  className="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 text-accent-700 rounded-lg text-sm font-medium transition-colors"
                 >
-                  Compare {selectedForCompare.length} Items
+                  Clear
                 </button>
-              )}
+              </div>
             </div>
           </div>
         )}
@@ -719,8 +704,8 @@ export function AIMatchingKanban({
                   if (draggedCard && draggedCard.sourceColumn !== column.id) {
                     setCardsByColumn(prev => ({
                       ...prev,
-                      [draggedCard.sourceColumn]: prev[draggedCard.sourceColumn].filter(i => i !== draggedCard.listingIndex),
-                      [column.id]: [draggedCard.listingIndex, ...prev[column.id]],
+                      [draggedCard.sourceColumn]: prev[draggedCard.sourceColumn].filter(id => id !== draggedCard.listingId),
+                      [column.id]: [draggedCard.listingId, ...prev[column.id]],
                     }));
                   }
                   setDraggedCard(null);
@@ -776,11 +761,17 @@ export function AIMatchingKanban({
                     )}
 
                     {/* Stacked cards - max 3 visible */}
-                    {cardsByColumn[column.id].slice(0, 3).map((listingIndex, stackIndex) => {
+                    {cardsByColumn[column.id].slice(0, 3).map((listingId, stackIndex) => {
                       const index = stackIndex + 1;
-                      // Mock match scores for demo
-                      const matchScores = [85, 60, 30];
-                      const matchScore = matchScores[index - 1];
+                      // Only get actual listing data for the top card
+                      const listing = index === 1 ? getListingById(listingId) : null;
+                      const topListing = getListingById(cardsByColumn[column.id][0]);
+
+                      // For visual stacking effect, use top card's data for all
+                      const displayListing = topListing || listing;
+                      if (!displayListing) return null;
+
+                      const matchScore = displayListing.matchScore;
 
                       // Traffic light system
                       const getMatchColor = (score: number) => {
@@ -790,16 +781,18 @@ export function AIMatchingKanban({
                       };
 
                       const colors = getMatchColor(matchScore);
-                      const cardId = `${column.id}-card-${index}`;
-                      const isSelected = selectedForCompare.includes(cardId);
+                      // Only the top card can be selected
+                      const topCardId = cardsByColumn[column.id][0];
+                      const isSelected = selectedForCompare.includes(topCardId);
+                      const isTopCard = index === 1;
 
                       return (
                         <div
-                          key={`${column.id}-${listingIndex}`}
-                          draggable={!compareMode}
+                          key={`${column.id}-${listingId}-${stackIndex}`}
+                          draggable={!selectMode && isTopCard}
                           onDragStart={(e) => {
-                            if (!compareMode) {
-                              setDraggedCard({ listingIndex, sourceColumn: column.id });
+                            if (!selectMode && isTopCard) {
+                              setDraggedCard({ listingId: topCardId, sourceColumn: column.id });
                               e.dataTransfer.effectAllowed = 'move';
 
                               // Create a custom drag image centered at cursor
@@ -846,24 +839,26 @@ export function AIMatchingKanban({
                             setDraggedCard(null);
                           }}
                           onClick={(e) => {
-                            if (compareMode) {
+                            // Only the top card is clickable
+                            if (!isTopCard) return;
+
+                            if (selectMode) {
                               e.stopPropagation();
                               if (isSelected) {
-                                setSelectedForCompare(prev => prev.filter(id => id !== cardId));
+                                setSelectedForCompare(prev => prev.filter(id => id !== topCardId));
                               } else if (selectedForCompare.length < 4) {
-                                setSelectedForCompare(prev => [...prev, cardId]);
+                                setSelectedForCompare(prev => [...prev, topCardId]);
                               }
                             } else {
-                              // When not in compare mode, open the listing details
+                              // When not in select mode, open the listing details
                               e.stopPropagation();
-                              const listingIndex = index % availableListings.length;
-                              if (availableListings.length > 0) {
-                                onViewDetails(availableListings[listingIndex]);
-                              }
+                              onViewDetails(displayListing);
                             }
                           }}
-                          className={`absolute top-0 left-0 right-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${
-                            compareMode ? 'cursor-pointer' : 'cursor-move'
+                          className={`absolute top-0 left-0 right-0 transition-all duration-300 ${
+                            isTopCard
+                              ? `hover:scale-[1.02] hover:shadow-2xl ${selectMode ? 'cursor-pointer' : 'cursor-move'}`
+                              : 'pointer-events-none'
                           }`}
                           style={{
                             transform: `translateY(${(index - 1) * 12}px) scale(${1 - (index - 1) * 0.04}) rotateZ(${(index - 1) * 1}deg)`,
@@ -883,8 +878,8 @@ export function AIMatchingKanban({
                                   <span className="text-xs font-bold">{matchScore}%</span>
                                 </div>
                               )}
-                              {/* Selection Checkbox for Compare Mode - only show on top card */}
-                              {compareMode && index === 1 && (
+                              {/* Selection Checkbox for Select Mode - only show on top card */}
+                              {selectMode && index === 1 && (
                                 <div className="absolute top-2 left-2">
                                   <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
                                     isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
@@ -902,16 +897,16 @@ export function AIMatchingKanban({
                             {/* Card Content */}
                             <div className="p-4">
                               <h3 className="font-bold text-base text-accent-700 mb-2 line-clamp-2">
-                                MacBook Pro M3 16-inch - Excellent Condition
+                                {displayListing.title}
                               </h3>
                               <div className="text-xl font-bold text-secondary-600 mb-3">
-                                RM 8,500
+                                RM {displayListing.price?.toLocaleString()}
                               </div>
                               <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-3">
-                                Electronics
+                                {displayListing.category}
                               </span>
                               <p className="text-xs text-accent-500 line-clamp-2">
-                                Need for video editing work. Willing to pay good price for excellent condition.
+                                {displayListing.description}
                               </p>
                             </div>
                           </div>
