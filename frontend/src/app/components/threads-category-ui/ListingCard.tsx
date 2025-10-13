@@ -136,27 +136,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
       {/* Action buttons */}
       <div className="flex gap-3 mt-4 mt-auto">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onMessage?.(listing);
-          }}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border border-secondary-500 text-accent-500 bg-neutral-white hover:bg-secondary-500 hover:text-white"
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>Message</span>
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onFAQ?.(listing);
-          }}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 bg-secondary-500 text-black hover:bg-secondary-600"
-        >
-          <CircleHelp className="w-4 h-4" />
-          <span>FAQ</span>
-        </button>
       </div>
     </div>
   );
