@@ -17,8 +17,8 @@ export default function BreadcrumbNav() {
 
   return (
     <Breadcrumb>
-      <BreadcrumbList className="flex items-center space-x-1">
-        {/* --- Always show Home --- */}
+      <BreadcrumbList className="flex items-center space-x-1 pb-4">
+        {/*  Always show Home --- */}
         <BreadcrumbItem>
           <BreadcrumbLink href="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
             <Home className="w-4 h-4" />
@@ -28,7 +28,7 @@ export default function BreadcrumbNav() {
 
         {segments.length > 0 && <BreadcrumbSeparator />}
 
-        {/* --- Generate rest of breadcrumb dynamically --- */}
+        {/* Generate rest of breadcrumb dynamically */}
         {segments.map((segment, index) => {
           const href = "/" + segments.slice(0, index + 1).join("/");
           const isLast = index === segments.length - 1;
