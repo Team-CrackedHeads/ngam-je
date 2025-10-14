@@ -559,84 +559,110 @@ export function AIMatchingSwipe({
               </div>
 
               {/* Select Mode Action Bar */}
-              {selectMode && selectedForCompare.length >= 1 && (
-                <div className="px-4 py-3 bg-secondary-100 border-b border-secondary-200 shrink-0">
-                  <div className="flex flex-col gap-2">
-                    {/* Selection count */}
-                    <div className="text-sm font-medium text-accent-700 text-center">
-                      {selectedForCompare.length} selected {selectedForCompare.length > 4 && <span className="text-red-600">(max 4)</span>}
-                    </div>
+              {selectMode && selectedForCompare.length >= 1 && (() => {
+                // Determine which columns the selected cards are from
+                const hasQueue = selectedForCompare.some(id => cardsByColumn.queue.includes(id));
+                const hasLiked = selectedForCompare.some(id => cardsByColumn.liked.includes(id));
+                const hasPassed = selectedForCompare.some(id => cardsByColumn.passed.includes(id));
 
-                    {/* Batch movement buttons - all equal width */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {activeTab !== "queue" && (
+                // Show all movement buttons if selections span multiple tabs, otherwise exclude current tab
+                const showQueueButton = hasLiked || hasPassed;
+                const showLikedButton = hasQueue || hasPassed;
+                const showPassedButton = hasQueue || hasLiked;
+
+                const buttonCount = [showQueueButton, showLikedButton, showPassedButton, true].filter(Boolean).length;
+
+                return (
+                  <div className="px-4 py-3 bg-secondary-100 border-b border-secondary-200 shrink-0">
+                    <div className="flex flex-col gap-2">
+                      {/* Selection count */}
+                      <div className="text-sm font-medium text-accent-700 text-center">
+                        {selectedForCompare.length} selected {selectedForCompare.length > 4 && <span className="text-red-600">(max 4)</span>}
+                      </div>
+
+                      {/* Batch movement buttons - dynamic grid based on button count */}
+                      <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${buttonCount}, 1fr)` }}>
+                        {showQueueButton && (
+                          <button
+                            onClick={() => {
+                              setCardsByColumn(prev => {
+                                // Only move cards that aren't already in queue
+                                const cardsToMove = selectedForCompare.filter(id => !prev.queue.includes(id));
+                                return {
+                                  queue: [...prev.queue, ...cardsToMove],
+                                  liked: prev.liked.filter(id => !selectedForCompare.includes(id)),
+                                  passed: prev.passed.filter(id => !selectedForCompare.includes(id)),
+                                };
+                              });
+                              setSelectedForCompare([]);
+                            }}
+                            className="text-xs px-3 py-2 bg-white hover:bg-neutral-50 text-accent-700 rounded-lg transition-colors font-medium border border-neutral-300"
+                          >
+                            To Queue
+                          </button>
+                        )}
+                        {showLikedButton && (
+                          <button
+                            onClick={() => {
+                              setCardsByColumn(prev => {
+                                // Only move cards that aren't already in liked
+                                const cardsToMove = selectedForCompare.filter(id => !prev.liked.includes(id));
+                                return {
+                                  queue: prev.queue.filter(id => !selectedForCompare.includes(id)),
+                                  liked: [...prev.liked, ...cardsToMove],
+                                  passed: prev.passed.filter(id => !selectedForCompare.includes(id)),
+                                };
+                              });
+                              setSelectedForCompare([]);
+                            }}
+                            className="text-xs px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors font-medium"
+                          >
+                            To Liked
+                          </button>
+                        )}
+                        {showPassedButton && (
+                          <button
+                            onClick={() => {
+                              setCardsByColumn(prev => {
+                                // Only move cards that aren't already in passed
+                                const cardsToMove = selectedForCompare.filter(id => !prev.passed.includes(id));
+                                return {
+                                  queue: prev.queue.filter(id => !selectedForCompare.includes(id)),
+                                  liked: prev.liked.filter(id => !selectedForCompare.includes(id)),
+                                  passed: [...prev.passed, ...cardsToMove],
+                                };
+                              });
+                              setSelectedForCompare([]);
+                            }}
+                            className="text-xs px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+                          >
+                            To Passed
+                          </button>
+                        )}
                         <button
                           onClick={() => {
-                            setCardsByColumn(prev => ({
-                              ...prev,
-                              queue: [...prev.queue, ...selectedForCompare],
-                              [activeTab]: prev[activeTab].filter(id => !selectedForCompare.includes(id)),
-                            }));
-                            setSelectedForCompare([]);
+                            if (selectedForCompare.length <= 4) {
+                              setShowGalleryView(false);
+                              setShowCompareModal(true);
+                            }
                           }}
-                          className="text-xs px-3 py-2 bg-white hover:bg-neutral-50 text-accent-700 rounded-lg transition-colors font-medium border border-neutral-300"
+                          disabled={selectedForCompare.length > 4}
+                          className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
+                            selectedForCompare.length > 4
+                              ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                              : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
+                          }`}
                         >
-                          To Queue
+                          Compare
                         </button>
-                      )}
-                      {activeTab !== "liked" && (
-                        <button
-                          onClick={() => {
-                            setCardsByColumn(prev => ({
-                              ...prev,
-                              liked: [...prev.liked, ...selectedForCompare],
-                              [activeTab]: prev[activeTab].filter(id => !selectedForCompare.includes(id)),
-                            }));
-                            setSelectedForCompare([]);
-                          }}
-                          className="text-xs px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors font-medium"
-                        >
-                          To Liked
-                        </button>
-                      )}
-                      {activeTab !== "passed" && (
-                        <button
-                          onClick={() => {
-                            setCardsByColumn(prev => ({
-                              ...prev,
-                              passed: [...prev.passed, ...selectedForCompare],
-                              [activeTab]: prev[activeTab].filter(id => !selectedForCompare.includes(id)),
-                            }));
-                            setSelectedForCompare([]);
-                          }}
-                          className="text-xs px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
-                        >
-                          To Passed
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          if (selectedForCompare.length <= 4) {
-                            setShowGalleryView(false);
-                            setShowCompareModal(true);
-                          }
-                        }}
-                        disabled={selectedForCompare.length > 4}
-                        className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
-                          selectedForCompare.length > 4
-                            ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-                            : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
-                        }`}
-                      >
-                        Compare
-                      </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Gallery Grid */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 pb-24">
                 {cardsByColumn[activeTab].length === 0 ? (
                   /* Empty state */
                   <div className="flex flex-col items-center justify-center h-full text-center px-8">
@@ -708,7 +734,7 @@ export function AIMatchingSwipe({
                           </div>
                           {/* Move Actions - Only show when not in select mode */}
                           {!selectMode && (
-                            <div className="p-2 border-t border-neutral-200 flex gap-2">
+                            <div className="mt-2 flex justify-center gap-2">
                               {activeTab !== "queue" && (
                                 <button
                                   onClick={(e) => {
@@ -719,10 +745,10 @@ export function AIMatchingSwipe({
                                       [activeTab]: prev[activeTab].filter(id => id !== listing.id),
                                     }));
                                   }}
-                                  className="flex-1 text-xs px-2 py-1 bg-neutral-100 hover:bg-neutral-200 text-accent-700 rounded transition-colors"
+                                  className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors"
                                   title="Move to Queue"
                                 >
-                                  To Queue
+                                  <Sparkles size={14} className="text-accent-600" />
                                 </button>
                               )}
                               {activeTab !== "liked" && (
@@ -735,10 +761,10 @@ export function AIMatchingSwipe({
                                       [activeTab]: prev[activeTab].filter(id => id !== listing.id),
                                     }));
                                   }}
-                                  className="flex-1 text-xs px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors"
+                                  className="w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 flex items-center justify-center transition-colors"
                                   title="Move to Liked"
                                 >
-                                  Like
+                                  <Heart size={14} className="text-green-700" />
                                 </button>
                               )}
                               {activeTab !== "passed" && (
@@ -751,10 +777,10 @@ export function AIMatchingSwipe({
                                       [activeTab]: prev[activeTab].filter(id => id !== listing.id),
                                     }));
                                   }}
-                                  className="flex-1 text-xs px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                                  className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
                                   title="Move to Passed"
                                 >
-                                  Pass
+                                  <X size={14} className="text-red-700" />
                                 </button>
                               )}
                             </div>
@@ -988,7 +1014,7 @@ export function AIMatchingSwipe({
                   // Swipeable cards for "For You" tab
                   cards.map((listing, index) => (
                     <SwipeableCard
-                      key={listing.id}
+                      key={`${activeTab}-${listing.id}-${index}`}
                       listing={listing}
                       index={index}
                       totalCards={cards.length}
@@ -1001,7 +1027,7 @@ export function AIMatchingSwipe({
                 // Undoable cards for liked/passed tabs
                 cards.map((listing, index) => (
                   <UndoableCard
-                    key={listing.id}
+                    key={`${activeTab}-${listing.id}-${index}`}
                     listing={listing}
                     index={index}
                     totalCards={cards.length}
