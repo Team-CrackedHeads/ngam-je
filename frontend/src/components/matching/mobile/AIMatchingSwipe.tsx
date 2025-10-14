@@ -577,7 +577,7 @@ export function AIMatchingSwipe({
                     <div className="flex flex-col gap-2">
                       {/* Selection count */}
                       <div className="text-sm font-medium text-accent-700 text-center">
-                        {selectedForCompare.length} selected {selectedForCompare.length > 4 && <span className="text-red-600">(max 4)</span>}
+                        {selectedForCompare.length} selected {selectedForCompare.length > 5 && <span className="text-red-600">(max 5)</span>}
                       </div>
 
                       {/* Batch movement buttons - dynamic grid based on button count */}
@@ -641,14 +641,14 @@ export function AIMatchingSwipe({
                         )}
                         <button
                           onClick={() => {
-                            if (selectedForCompare.length <= 4) {
+                            if (selectedForCompare.length <= 5) {
                               setShowGalleryView(false);
                               setShowCompareModal(true);
                             }
                           }}
-                          disabled={selectedForCompare.length > 4}
+                          disabled={selectedForCompare.length > 5}
                           className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
-                            selectedForCompare.length > 4
+                            selectedForCompare.length > 5
                               ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                               : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
                           }`}
@@ -939,19 +939,19 @@ export function AIMatchingSwipe({
                   <GitCompare size={16} className="text-secondary-700" />
                   <span className="text-xs font-medium text-accent-700">
                     {selectedForCompare.length} selected
-                    {selectedForCompare.length > 4 && <span className="text-red-600 ml-1">(max 4 to compare)</span>}
+                    {selectedForCompare.length > 5 && <span className="text-red-600 ml-1">(max 5 to compare)</span>}
                   </span>
                 </div>
                 {selectedForCompare.length >= 1 && (
                   <button
                     onClick={() => {
-                      if (selectedForCompare.length <= 4) {
+                      if (selectedForCompare.length <= 5) {
                         setShowCompareModal(true);
                       }
                     }}
-                    disabled={selectedForCompare.length > 4}
+                    disabled={selectedForCompare.length > 5}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      selectedForCompare.length > 4
+                      selectedForCompare.length > 5
                         ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                         : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
                     }`}
