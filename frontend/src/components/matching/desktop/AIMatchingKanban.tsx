@@ -432,7 +432,7 @@ export function AIMatchingKanban({
                               // Select mode - toggle selection
                               if (isSelected) {
                                 setSelectedForCompare(prev => prev.filter(id => id !== listingId));
-                              } else if (selectedForCompare.length < 4) {
+                              } else {
                                 setSelectedForCompare(prev => [...prev, listingId]);
                               }
                             } else {
@@ -680,16 +680,24 @@ export function AIMatchingKanban({
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-accent-700">
                   {selectedForCompare.length} selected
+                  {selectedForCompare.length > 4 && <span className="text-red-600 ml-1">(max 4)</span>}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {selectedForCompare.length >= 1 && selectedForCompare.length <= 4 && (
+                {selectedForCompare.length >= 1 && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowCompareModal(true);
+                      if (selectedForCompare.length <= 4) {
+                        setShowCompareModal(true);
+                      }
                     }}
-                    className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-sm font-medium transition-colors relative z-10 cursor-pointer"
+                    disabled={selectedForCompare.length > 4}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors relative z-10 ${
+                      selectedForCompare.length > 4
+                        ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                        : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700 cursor-pointer'
+                    }`}
                   >
                     Compare {selectedForCompare.length} {selectedForCompare.length === 1 ? 'Item' : 'Items'}
                   </button>
@@ -869,7 +877,7 @@ export function AIMatchingKanban({
                               e.stopPropagation();
                               if (isSelected) {
                                 setSelectedForCompare(prev => prev.filter(id => id !== topCardId));
-                              } else if (selectedForCompare.length < 4) {
+                              } else {
                                 setSelectedForCompare(prev => [...prev, topCardId]);
                               }
                             } else {
