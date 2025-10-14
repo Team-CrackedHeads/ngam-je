@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
-import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo, ChevronUp, ChevronDown, Check } from "lucide-react";
 import { AIMatchingProps, MatchedListing, ColumnType } from "../types";
 import { ListingComparisonModal } from "../ListingComparisonModal";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-ai-matching-data";
@@ -1047,14 +1047,14 @@ export function AIMatchingSwipe({
           <div className="p-4 pb-4 bg-white border-t border-neutral-200 shrink-0 relative z-[100]">
             {activeTab === "queue" ? (
               selectMode ? (
-                /* Select Mode: Left Arrow | Checkmark | Right Arrow */
+                /* Select Mode: Down Arrow | Checkmark | Up Arrow */
                 <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
                   {/* Previous Card */}
                   <button
                     onClick={() => handleCycle('right')}
                     className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
                   >
-                    <ChevronLeft size={28} className="text-accent-600" />
+                    <ChevronDown size={28} className="text-accent-600" />
                   </button>
 
                   {/* Select Current Card */}
@@ -1074,7 +1074,7 @@ export function AIMatchingSwipe({
                     onClick={() => handleCycle('left')}
                     className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
                   >
-                    <ChevronRight size={28} className="text-accent-600" />
+                    <ChevronUp size={28} className="text-accent-600" />
                   </button>
                 </div>
               ) : (
@@ -1108,14 +1108,14 @@ export function AIMatchingSwipe({
             ) : (
               /* Liked/Passed tabs */
               selectMode ? (
-                /* Select Mode: Left Arrow | Checkmark | Right Arrow */
+                /* Select Mode: Down Arrow | Checkmark | Up Arrow */
                 <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
                   {/* Previous Card */}
                   <button
                     onClick={() => handleCycle('right')}
                     className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
                   >
-                    <ChevronLeft size={28} className="text-accent-600" />
+                    <ChevronDown size={28} className="text-accent-600" />
                   </button>
 
                   {/* Select Current Card */}
@@ -1135,7 +1135,7 @@ export function AIMatchingSwipe({
                     onClick={() => handleCycle('left')}
                     className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
                   >
-                    <ChevronRight size={28} className="text-accent-600" />
+                    <ChevronUp size={28} className="text-accent-600" />
                   </button>
                 </div>
               ) : (
