@@ -5,7 +5,7 @@ import { Bell, Shield, User, LogOut } from "lucide-react";
 
 export default function SettingsPage() {
   return (
-    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
+    <div className="h-[var(--sidebar-height)] px-4 py-6 pb-24 bg-primary-100 text-accent-500">
       {/* Header */}
       {/* <div className="flex justify-center mb-6">
         <h1 className="text-xl font-bold">Settings</h1>
