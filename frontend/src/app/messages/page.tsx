@@ -24,6 +24,7 @@ export default function MessagesPage() {
   const [inputText, setInputText] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null); // 👈 new ref for conversation list
 
   // Filtering logic (search + tabs)
   const normalizedSearch = search.trim().toLowerCase();
@@ -59,6 +60,14 @@ export default function MessagesPage() {
     (c) => c.id === selectedMessageId || ""
   );
 
+  // ✅ Reset conversation list scroll when closing a conversation (mobile)
+  useEffect(() => {
+    if (selectedMessageId === null && listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }, [selectedMessageId]);
+
+  // ✅ Add product message if needed when selecting a conversation
   useEffect(() => {
     if (!selectedMessageId) return;
 
@@ -117,6 +126,7 @@ export default function MessagesPage() {
     }
   }, [selectedMessageId]);
 
+  // ✅ Auto-scroll to bottom when opening conversation or sending messages
   useEffect(() => {
     if (!conversation) return;
     const t = setTimeout(
@@ -168,7 +178,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="h-screen lg:h-[var(--sidebar-height)] flex flex-col lg:flex-row bg-background text-foreground overflow-hidden">
+    <div className="h-[var(--sidebar-height)] flex flex-col lg:flex-row bg-background text-foreground overflow-x-hidden">
       {/* LEFT PANEL */}
       <div
         className={`w-full lg:w-1/3 xl:w-1/4 border-r border-border bg-card ${
@@ -176,7 +186,7 @@ export default function MessagesPage() {
         } flex-col`}
       >
         {/* Search & Tabs */}
-        <div className="p-4 border-b border-border bg-card sticky top-0">
+        <div className="p-4 border-b border-border bg-card sticky top-0 z-1">
           <div className="relative mb-3">
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
             <input
@@ -211,7 +221,10 @@ export default function MessagesPage() {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-border pb-28">
+        <div
+          ref={listRef}
+          className="flex-1 overflow-y-auto divide-y divide-border pb-28 scroll-mt-16"
+        >
           {filteredMessages.length === 0 ? (
             <div className="p-6 text-sm text-muted-foreground">
               No conversations found
@@ -294,7 +307,7 @@ export default function MessagesPage() {
         }`}
       >
         {/* Mobile Header */}
-        <div className="lg:hidden p-4 border-b border-border bg-card sticky top-0 flex items-start gap-3">
+        <div className="lg:hidden p-4 border-b border-border bg-card sticky top-0 flex items-start gap-3 z-1">
           <button
             onClick={() => setSelectedMessageId(null)}
             className="p-2 rounded-full hover:bg-muted transition-colors"
