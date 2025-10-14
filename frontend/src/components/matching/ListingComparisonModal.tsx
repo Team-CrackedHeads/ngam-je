@@ -102,7 +102,7 @@ export function ListingComparisonModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center ${isMobile ? 'p-2' : 'p-4'}`}
         onClick={onClose}
       >
         <motion.div
@@ -111,8 +111,9 @@ export function ListingComparisonModal({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
           onClick={(e) => e.stopPropagation()}
+          className={isMobile ? 'w-full max-h-[95vh]' : ''}
         >
-          <Card className={`w-full ${isMobile ? 'max-w-full h-full' : 'max-w-6xl max-h-[90vh]'} bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl`}>
+          <Card className={`w-full ${isMobile ? 'max-h-[95vh]' : 'max-w-6xl max-h-[90vh]'} bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl`}>
             {/* Header */}
             <div className={`flex items-center justify-between ${isMobile ? 'px-4 py-3' : 'px-6 pb-4'} shrink-0 border-b border-neutral-200`}>
               <div>
