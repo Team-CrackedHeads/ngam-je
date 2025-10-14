@@ -347,9 +347,9 @@ export function AIMatchingKanban({
                           setExpandedPopupColumn(null);
                           setShowCompareModal(true);
                         }}
-                        disabled={selectedForCompare.length < 1 || selectedForCompare.length > 4}
+                        disabled={selectedForCompare.length < 1 || selectedForCompare.length > 5}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          selectedForCompare.length >= 1 && selectedForCompare.length <= 4
+                          selectedForCompare.length >= 1 && selectedForCompare.length <= 5
                             ? 'bg-secondary-500 text-accent-700 hover:bg-secondary-600'
                             : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                         }`}
@@ -705,7 +705,7 @@ export function AIMatchingKanban({
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-accent-700">
                   {selectedForCompare.length} selected
-                  {selectedForCompare.length > 4 && <span className="text-red-600 ml-1">(max 4)</span>}
+                  {selectedForCompare.length > 5 && <span className="text-red-600 ml-1">(max 5)</span>}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -713,13 +713,13 @@ export function AIMatchingKanban({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (selectedForCompare.length <= 4) {
+                      if (selectedForCompare.length <= 5) {
                         setShowCompareModal(true);
                       }
                     }}
-                    disabled={selectedForCompare.length > 4}
+                    disabled={selectedForCompare.length > 5}
                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors relative z-10 ${
-                      selectedForCompare.length > 4
+                      selectedForCompare.length > 5
                         ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                         : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700 cursor-pointer'
                     }`}
