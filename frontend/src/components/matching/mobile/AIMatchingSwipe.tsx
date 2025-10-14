@@ -666,7 +666,7 @@ export function AIMatchingSwipe({
         }}
       />
 
-      <div className={`${selectMode ? "mb-32" : "mb-24"} overflow-hidden`}>
+      <div className={`${selectMode ? "mb-20" : "mb-12"} overflow-hidden`}>
       <div className="flex flex-col bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden h-full relative">
         {/* Toolbar */}
         <div className="flex flex-col border-b border-neutral-200 shrink-0">
@@ -895,7 +895,7 @@ export function AIMatchingSwipe({
 
         {/* Action Buttons - only shown when there are cards and not in select mode, gallery, or comparison modal */}
         {cards.length > 0 && !selectMode && !showGalleryView && !showCompareModal && (
-          <div className="p-4 pb-8 bg-white border-t border-neutral-200 shrink-0 relative z-[100]">
+          <div className="p-4 pb-4 bg-white border-t border-neutral-200 shrink-0 relative z-[100]">
             {activeTab === "queue" ? (
               <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
                 {/* Pass */}
