@@ -139,11 +139,19 @@ export function AIMatchingSwipe({
 
         <div
           onClick={() => {
-            if (!isTopCard || selectMode) return;
-            onViewDetails(listing);
+            if (!isTopCard) return;
+            if (selectMode) {
+              if (isSelected) {
+                setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+              } else {
+                setSelectedForCompare(prev => [...prev, listing.id]);
+              }
+            } else {
+              onViewDetails(listing);
+            }
           }}
           className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden flex flex-col ${
-            isTopCard && !selectMode ? 'cursor-pointer' : ''
+            isTopCard ? 'cursor-pointer' : ''
           } ${isSelected ? 'border-4 border-secondary-500' : 'border-neutral-300'}`}
         >
           {/* Card Image */}
@@ -275,8 +283,8 @@ export function AIMatchingSwipe({
             }
           }}
           className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden ${
-            isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
-          }`}
+            isTopCard ? 'cursor-pointer' : ''
+          } ${isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'}`}
         >
           {/* Card Image */}
           <div className="relative h-1/2 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
@@ -743,11 +751,6 @@ export function AIMatchingSwipe({
               <span className="text-sm font-medium text-accent-600">
                 {cards.length} {activeTab === "queue" ? "remaining" : "items"}
               </span>
-              {selectMode && selectedForCompare.length > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 font-medium">
-                  {selectedForCompare.length} selected
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-2">
