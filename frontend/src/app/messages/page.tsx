@@ -12,9 +12,9 @@ import {
 } from "@/utils/mock-messages";
 
 export default function MessagesPage() {
-  const [activeTab, setActiveTab] = useState<"all" | "marketplace" | "ai">(
-    "all"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "all" | "general" | "market" | "ai"
+  >("all");
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
     null
   );
@@ -28,22 +28,37 @@ export default function MessagesPage() {
   // Filtering logic (search + tabs)
   const normalizedSearch = search.trim().toLowerCase();
   const filteredMessages = messagesData.filter((m) => {
-    if (activeTab === "marketplace" && !m.product) return false;
-    if (
-      activeTab === "ai" &&
-      !((m.name || "").toLowerCase().includes("ai") || m.status === "always")
-    )
+    let messageConversationType: "general" | "product" | "ai";
+    if (m.product) {
+      messageConversationType = "product";
+    } else if ((m.type || "").toLowerCase().includes("ai")) {
+      messageConversationType = "ai";
+    } else {
+      messageConversationType = "general";
+    }
+
+    if (activeTab === "general" && messageConversationType !== "general") {
       return false;
-    if (!normalizedSearch) return true;
-    const hay = `${m.name} ${m.message}`.toLowerCase();
-    return hay.includes(normalizedSearch);
+    }
+    if (activeTab === "market" && messageConversationType !== "product") {
+      return false;
+    }
+    if (activeTab === "ai" && messageConversationType !== "ai") {
+      return false;
+    }
+
+    if (normalizedSearch) {
+      const hay = `${m.name} ${m.message}`.toLowerCase();
+      return hay.includes(normalizedSearch);
+    }
+
+    return true;
   });
 
   const conversation = conversations.find(
     (c) => c.id === selectedMessageId || ""
   );
 
-  // 👇 New: Handle product message when selecting conversation
   useEffect(() => {
     if (!selectedMessageId) return;
 
@@ -53,40 +68,42 @@ export default function MessagesPage() {
     if (selectedMsgData?.product) {
       setConversations((prev) => {
         const found = prev.find((p) => p.id === selectedMessageId);
-        if (found) {
-          // Check if product message already exists
-          const alreadyHasProduct = found.messages.some(
-            (m) => m.type === "product"
-          );
-          if (alreadyHasProduct) return prev;
 
-          // 🔸 Insert product message at the START of the array instead of the end
+        const productMsgId = `prod-${selectedMessageId}`;
+
+        if (found) {
+          const hasProductMessage = found.messages.some(
+            (msg) => msg.id === productMsgId
+          );
+          if (hasProductMessage) {
+            return prev;
+          }
+
           return prev.map((p) =>
             p.id === selectedMessageId
               ? {
                   ...p,
                   messages: [
                     {
-                      id: `prod-${Date.now()}`,
+                      id: productMsgId,
                       sender: selectedMsgData.name,
                       type: "product",
                       product: selectedMsgData.product,
                       timestamp: new Date().toLocaleTimeString(),
                     } as any,
-                    ...p.messages, // ⬅️ product message comes first now
+                    ...p.messages,
                   ],
                 }
               : p
           );
         } else {
-          // Conversation doesn't exist yet — create with product message first
           return [
             ...prev,
             {
               id: selectedMessageId,
               messages: [
                 {
-                  id: `prod-${Date.now()}`,
+                  id: productMsgId,
                   sender: selectedMsgData.name,
                   type: "product",
                   product: selectedMsgData.product,
@@ -151,15 +168,15 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-background text-foreground overflow-hidden">
+    <div className="h-screen lg:h-[var(--sidebar-height)] flex flex-col lg:flex-row bg-background text-foreground overflow-hidden">
       {/* LEFT PANEL */}
       <div
-        className={`w-full md:w-1/3 lg:w-1/4 border-r border-border bg-card ${
-          selectedMessageId ? "hidden md:flex" : "flex md:flex"
+        className={`w-full lg:w-1/3 xl:w-1/4 border-r border-border bg-card ${
+          selectedMessageId ? "hidden lg:flex" : "flex lg:flex"
         } flex-col`}
       >
         {/* Search & Tabs */}
-        <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
+        <div className="p-4 border-b border-border bg-card sticky top-0">
           <div className="relative mb-3">
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
             <input
@@ -174,7 +191,8 @@ export default function MessagesPage() {
           <div className="flex gap-2 text-sm font-medium">
             {[
               { key: "all", label: `All (${messagesData.length})` },
-              { key: "marketplace", label: "Marketplace" },
+              { key: "general", label: "General" },
+              { key: "market", label: "Market" },
               { key: "ai", label: "AI" },
             ].map((tab) => (
               <button
@@ -182,7 +200,7 @@ export default function MessagesPage() {
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`px-3 py-1.5 rounded-full transition-colors ${
                   activeTab === tab.key
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-secondary-600 text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -217,9 +235,9 @@ export default function MessagesPage() {
                   <span
                     className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card ${
                       msg.status === "online"
-                        ? "bg-green-500"
+                        ? "bg-success-500"
                         : msg.status === "always"
-                        ? "bg-secondary-500"
+                        ? "bg-secondary-600"
                         : "bg-neutral-400"
                     }`}
                   />
@@ -259,7 +277,7 @@ export default function MessagesPage() {
                 </div>
 
                 {msg.unread > 0 && (
-                  <div className="ml-2 flex items-center justify-center h-6 w-6 rounded-full bg-secondary-500 text-white text-xs font-bold">
+                  <div className="ml-2 flex items-center justify-center h-6 w-6 rounded-full bg-secondary-500 text-neutral-white text-xs font-bold">
                     {msg.unread}
                   </div>
                 )}
@@ -272,11 +290,11 @@ export default function MessagesPage() {
       {/* RIGHT PANEL */}
       <div
         className={`flex-1 flex-col bg-card ${
-          selectedMessageId ? "flex" : "hidden md:flex"
+          selectedMessageId ? "flex" : "hidden lg:flex"
         }`}
       >
         {/* Mobile Header */}
-        <div className="md:hidden p-4 border-b border-border bg-card sticky top-0 z-10 flex items-start gap-3">
+        <div className="lg:hidden p-4 border-b border-border bg-card sticky top-0 flex items-start gap-3">
           <button
             onClick={() => setSelectedMessageId(null)}
             className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -296,8 +314,7 @@ export default function MessagesPage() {
         {conversation ? (
           <div className="flex-1 p-4 overflow-y-auto space-y-3 pb-28">
             {conversation.messages.map((m) =>
-              m.type === "product" ? (
-                // 🛍 Product bubble
+              m.product ? (
                 <div key={m.id} className="flex justify-start">
                   <div className="bg-muted rounded-2xl p-3 max-w-[75%]">
                     <div className="relative h-32 w-full rounded-lg overflow-hidden mb-2">
@@ -346,7 +363,7 @@ export default function MessagesPage() {
 
         {/* Input area */}
         {selectedMessageId && (
-          <div className="p-4 border-t border-border bg-muted flex items-center gap-2 md:gap-3 sticky bottom-0">
+          <div className="p-4 border-t border-border bg-muted flex items-center gap-2 lg:gap-3 sticky bottom-15 lg:bottom-0">
             <input
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
