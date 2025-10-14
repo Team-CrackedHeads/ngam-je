@@ -112,7 +112,7 @@ export function ListingComparisonModal({
         >
           <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-neutral-200">
+            <div className="flex items-center justify-between px-6 pb-4 shrink-0 border-b border-neutral-200">
               <div>
                 <h2 className="text-2xl font-bold text-accent-700 mb-1">Compare Listings</h2>
                 <p className="text-sm text-accent-500">
@@ -335,16 +335,15 @@ export function ListingComparisonModal({
                       >
                         Send Message
                       </Button>
-                      <Button
+                      <button
                         onClick={() => {
                           onSelectListing(listing);
                           onClose();
                         }}
-                        variant="ghost"
-                        className="w-full hover:bg-primary-100 text-accent-600 font-medium"
+                        className="w-full text-accent-600 hover:text-accent-700 font-medium underline text-sm text-center"
                       >
                         View Details
-                      </Button>
+                      </button>
                     </div>
                   ))}
                 </div>

@@ -618,6 +618,15 @@ export function AIMatchingKanban({
               <Search size={18} className={showFilters ? "text-white" : "text-accent-600"} />
             </button>
 
+            {/* Reset Button */}
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
+              title="Reset all cards"
+            >
+              <Undo2 size={18} className="text-accent-600" />
+            </button>
+
             {/* Select Mode Toggle */}
             <button
               onClick={() => {
@@ -635,15 +644,6 @@ export function AIMatchingKanban({
               title="Select Mode"
             >
               {selectMode ? 'Done' : 'Select'}
-            </button>
-
-            {/* Reset Button */}
-            <button
-              onClick={() => setShowResetConfirm(true)}
-              className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
-              title="Reset all cards"
-            >
-              <Undo2 size={18} className="text-accent-600" />
             </button>
           </div>
         </div>
