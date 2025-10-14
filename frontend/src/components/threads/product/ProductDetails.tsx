@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter, useParams } from "next/navigation";
 import {
   MessageCircle,
   HelpCircle,
@@ -9,7 +10,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
-import { UnifiedListingData } from "@/utils/mock-threads-data"; // Updated import
+import { UnifiedListingData } from "@/utils/mock-threads-data";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import { ActionButtons } from "./ActionButtons";
 
@@ -35,6 +36,11 @@ export const ProductDetails = ({
 }: {
   listing: UnifiedListingData;
 }) => {
+  // ADDED: Router and params for navigation
+  const router = useRouter();
+  const params = useParams();
+  const category = params.threadCategory as string;
+
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -67,8 +73,23 @@ export const ProductDetails = ({
     );
   };
 
+  // ADDED: Action button handlers
+  const handleChatClick = () => {
+    console.log("Chat clicked");
+    // TODO: Implement chat functionality
+  };
+
+  const handleFAQClick = () => {
+    router.push(`/threads/${category}/${listing.id}/faq`);
+  };
+
+  const handleBuyNowClick = () => {
+    console.log("Buy Now clicked");
+    // TODO: Implement buy now functionality
+  };
+
   // Set main image source - use gallery first, then imageUrl fallback
-  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl; // Use listing.imageUrl instead of hardcoded fallback
+  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl;
 
   return (
     <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white">
@@ -108,13 +129,9 @@ export const ProductDetails = ({
             </h1>
             {/* Only show subtitle if it exists */}
             {listing.subtitle && (
-              <p className="text-lg text-accent-700">
-                - {listing.subtitle}
-              </p>
+              <p className="text-lg text-accent-700">- {listing.subtitle}</p>
             )}
-            <p className="text-sm mt-1 text-accent-500">
-              {listing.category} {/* Dynamic category */}
-            </p>
+            <p className="text-sm mt-1 text-accent-500">{listing.category}</p>
           </div>
           <div className="flex gap-2">
             {[Shield, MessageCircle, HelpCircle].map((Icon, i) => (
@@ -145,19 +162,13 @@ export const ProductDetails = ({
 
         {/* Description */}
         <div className="mb-6">
-          <h2 className="text-lg font-bold text-accent-500">
-            Description
-          </h2>
-          <p className="mt-2 text-accent-700">
-            {listing.description}
-          </p>
+          <h2 className="text-lg font-bold text-accent-500">Description</h2>
+          <p className="mt-2 text-accent-700">{listing.description}</p>
         </div>
 
         {/* Tags */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-accent-500">
-            Tags
-          </h3>
+          <h3 className="text-sm font-semibold text-accent-500">Tags</h3>
           <div className="flex flex-wrap gap-2 mt-2">
             {listing.tags.map((tag, index) => (
               <span
@@ -173,9 +184,7 @@ export const ProductDetails = ({
         {/* Gallery - Only show if has images */}
         {hasGalleryImages && (
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-accent-500">
-              Gallery
-            </h3>
+            <h3 className="text-lg font-bold text-accent-500">Gallery</h3>
             <div className="flex flex-wrap gap-3 mt-2">
               {galleryImages.map((image, index) => (
                 <div
@@ -237,8 +246,12 @@ export const ProductDetails = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <ActionButtons />
+        {/* Action Buttons - UPDATED WITH HANDLERS */}
+        <ActionButtons
+          onChat={handleChatClick}
+          onFAQ={handleFAQClick}
+          onBuyNow={handleBuyNowClick}
+        />
       </div>
 
       {/* render image gallery modal*/}
