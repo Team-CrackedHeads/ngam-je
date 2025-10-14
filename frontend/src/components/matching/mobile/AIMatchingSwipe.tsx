@@ -561,26 +561,76 @@ export function AIMatchingSwipe({
               {/* Select Mode Action Bar */}
               {selectMode && selectedForCompare.length >= 1 && (
                 <div className="px-4 py-3 bg-secondary-100 border-b border-secondary-200 shrink-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-accent-700">
+                  <div className="flex flex-col gap-2">
+                    {/* Selection count */}
+                    <div className="text-sm font-medium text-accent-700 text-center">
                       {selectedForCompare.length} selected {selectedForCompare.length > 4 && <span className="text-red-600">(max 4)</span>}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (selectedForCompare.length <= 4) {
-                          setShowGalleryView(false);
-                          setShowCompareModal(true);
-                        }
-                      }}
-                      disabled={selectedForCompare.length > 4}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        selectedForCompare.length > 4
-                          ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-                          : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
-                      }`}
-                    >
-                      Compare {selectedForCompare.length}
-                    </button>
+                    </div>
+
+                    {/* Batch movement buttons - all equal width */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {activeTab !== "queue" && (
+                        <button
+                          onClick={() => {
+                            setCardsByColumn(prev => ({
+                              ...prev,
+                              queue: [...prev.queue, ...selectedForCompare],
+                              [activeTab]: prev[activeTab].filter(id => !selectedForCompare.includes(id)),
+                            }));
+                            setSelectedForCompare([]);
+                          }}
+                          className="text-xs px-3 py-2 bg-white hover:bg-neutral-50 text-accent-700 rounded-lg transition-colors font-medium border border-neutral-300"
+                        >
+                          To Queue
+                        </button>
+                      )}
+                      {activeTab !== "liked" && (
+                        <button
+                          onClick={() => {
+                            setCardsByColumn(prev => ({
+                              ...prev,
+                              liked: [...prev.liked, ...selectedForCompare],
+                              [activeTab]: prev[activeTab].filter(id => !selectedForCompare.includes(id)),
+                            }));
+                            setSelectedForCompare([]);
+                          }}
+                          className="text-xs px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors font-medium"
+                        >
+                          To Liked
+                        </button>
+                      )}
+                      {activeTab !== "passed" && (
+                        <button
+                          onClick={() => {
+                            setCardsByColumn(prev => ({
+                              ...prev,
+                              passed: [...prev.passed, ...selectedForCompare],
+                              [activeTab]: prev[activeTab].filter(id => !selectedForCompare.includes(id)),
+                            }));
+                            setSelectedForCompare([]);
+                          }}
+                          className="text-xs px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+                        >
+                          To Passed
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (selectedForCompare.length <= 4) {
+                            setShowGalleryView(false);
+                            setShowCompareModal(true);
+                          }
+                        }}
+                        disabled={selectedForCompare.length > 4}
+                        className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
+                          selectedForCompare.length > 4
+                            ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                            : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
+                        }`}
+                      >
+                        Compare
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
