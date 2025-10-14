@@ -17,8 +17,8 @@ export interface Listing {
   isOwner?: boolean; // Whether current user owns this listing
 }
 
-// Mock data for buy listings (items for sale)
-export const mockBuyListings: Listing[] = [
+// Mock data for sale listings (items user is selling - have prices)
+export const mockSaleListings: Listing[] = [
   {
     id: 1,
     title: "iPhone 14 Pro - 256GB Space Black",
@@ -171,8 +171,8 @@ export const mockBuyListings: Listing[] = [
   }
 ];
 
-// Mock data for sell listings (wanted items)
-export const mockSellListings: Listing[] = [
+// Mock data for wanted listings (items user wants to buy - have budgets)
+export const mockWantedListings: Listing[] = [
   {
     id: 1,
     title: "Looking for: MacBook Pro M3 16-inch",

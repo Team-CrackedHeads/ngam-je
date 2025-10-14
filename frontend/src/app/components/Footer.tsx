@@ -16,7 +16,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] block md:hidden bg-primary-100">
+    <footer className="fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] block md:hidden bg-primary-100 z-[200]">
       <div className="flex justify-around items-stretch relative h-16">
         {links.map((link, index) => {
           const Icon = link.icon;
