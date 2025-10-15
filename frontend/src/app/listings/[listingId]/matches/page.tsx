@@ -348,39 +348,44 @@ export default function ListingMatchesPage() {
           </>
         )}
 
-        {/* Mobile: Compact Your Listing Banner */}
+        {/* Mobile: Your Listing Header and Card */}
         {isMobile && (
-          <div
-            onClick={() => setSelectedListing(yourListing)}
-            className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
-          >
-            {/* Header with icon and label */}
-            <div className="flex items-center gap-2 mb-3">
+          <>
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
               {listingType === "sale" ? (
-                <ShoppingCart className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+                <ShoppingCart className="w-6 h-6 text-secondary-600" />
               ) : (
-                <Package className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+                <Package className="w-6 h-6 text-secondary-600" />
               )}
-              <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : "Wanted"} Listing</span>
+              <h2 className="text-2xl font-bold text-accent-700">
+                Your {listingType === "sale" ? "Sale" : "Wanted"} Listing
+              </h2>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Small Image */}
-              <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
-                <span className="text-accent-400 text-xs">Image</span>
-              </div>
+            {/* Card */}
+            <div
+              onClick={() => setSelectedListing(yourListing)}
+              className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center gap-3">
+                {/* Small Image */}
+                <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <span className="text-accent-400 text-xs">Image</span>
+                </div>
 
-              {/* Listing Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
-                  {yourListing.title}
-                </h3>
-                <span className="text-lg font-bold text-secondary-600">
-                  {listingType === "sale" ? yourListing.price : yourListing.budget}
-                </span>
+                {/* Listing Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
+                    {yourListing.title}
+                  </h3>
+                  <span className="text-lg font-bold text-secondary-600">
+                    {listingType === "sale" ? yourListing.price : yourListing.budget}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Matches Header */}
