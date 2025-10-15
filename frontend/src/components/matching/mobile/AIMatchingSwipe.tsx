@@ -6,6 +6,7 @@ import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, Ro
 import { AIMatchingProps, MatchedListing, ColumnType } from "../types";
 import { ListingComparisonModal } from "../ListingComparisonModal";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-ai-matching-data";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -30,7 +31,7 @@ export function AIMatchingSwipe({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [showReaction, setShowReaction] = useState<'like' | 'pass' | null>(null);
+  const [showReaction, setShowReaction] = useState<'like' | 'pass' | 'undo' | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showGalleryView, setShowGalleryView] = useState(false);
 
@@ -40,6 +41,9 @@ export function AIMatchingSwipe({
     queue: mockAIMatchings.map(listing => listing.id), // All listings start in queue
     liked: [],
   });
+
+  // Carousel API for vertical scrolling
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   // Get listing by ID from mockAIMatchings
   const getListingById = (id: string): MatchedListing | undefined => {
@@ -213,6 +217,129 @@ export function AIMatchingSwipe({
   };
 
   // Swipeable Card Component for Liked/Passed (with undo)
+  // Swipeable Carousel Card Component
+  const SwipeableCarouselCard = ({
+    listing,
+    isSelected,
+    isSelectMode,
+    isQueue,
+    onSwipe,
+    onToggleSelect,
+    onViewDetails,
+  }: {
+    listing: MatchedListing;
+    isSelected: boolean;
+    isSelectMode: boolean;
+    isQueue: boolean;
+    onSwipe: (direction: 'left' | 'right') => void;
+    onToggleSelect: () => void;
+    onViewDetails: () => void;
+  }) => {
+    const x = useMotionValue(0);
+    const rotate = useTransform(x, [-200, 0, 200], [-25, 0, 25]);
+    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
+
+    const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const threshold = 100;
+      const velocity = info.velocity.x;
+
+      if (Math.abs(velocity) >= 500 || Math.abs(info.offset.x) >= threshold) {
+        const direction = info.offset.x > 0 ? 'right' : 'left';
+        if (!isSelectMode) {
+          // Queue tab: swipe to pass/like
+          // Liked/Passed tabs: any swipe triggers undo/move back to queue
+          onSwipe(direction);
+        }
+      }
+    };
+
+    const matchScore = listing.matchScore || 85;
+    const getMatchColor = (score: number) => {
+      if (score >= 75) return { bg: 'from-green-100 to-green-200', text: 'text-green-700', border: 'border-green-300' };
+      if (score >= 50) return { bg: 'from-secondary-100 to-secondary-200', text: 'text-secondary-700', border: 'border-secondary-300' };
+      return { bg: 'from-red-100 to-red-200', text: 'text-red-700', border: 'border-red-300' };
+    };
+    const colors = getMatchColor(matchScore);
+
+    return (
+      <motion.div
+        style={{
+          x: !isSelectMode ? x : 0,
+          rotate: !isSelectMode ? rotate : 0,
+          opacity: !isSelectMode ? opacity : 1,
+        }}
+        drag={!isSelectMode ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={1}
+        onDragEnd={handleDragEnd}
+        onClick={() => {
+          if (isSelectMode) {
+            onToggleSelect();
+          } else {
+            onViewDetails();
+          }
+        }}
+        className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden flex flex-col cursor-pointer ${
+          isSelected ? 'border-4 border-secondary-500' : 'border-neutral-300'
+        }`}
+      >
+        {/* Card Image */}
+        <div className="relative flex-[3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+          <span className="text-accent-400">Image</span>
+
+          {/* Selection Checkbox for Select Mode */}
+          {isSelectMode && (
+            <div className="absolute top-4 left-4">
+              <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
+                isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+              }`}>
+                {isSelected && (
+                  <svg className="w-5 h-5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Match Score Badge */}
+          {isQueue && !isSelectMode && (
+            <div className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}>
+              <Sparkles size={14} />
+              <span className="text-sm font-bold">{matchScore}%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Card Content */}
+        <div className="p-4 flex-[2] flex flex-col overflow-hidden">
+          <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
+            {listing.title}
+          </h3>
+          <div className="text-2xl font-bold text-secondary-600 mb-2">
+            RM {listing.price?.toLocaleString() || '0'}
+          </div>
+          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
+            {listing.category}
+          </span>
+          <div className="flex items-center gap-3 text-xs text-accent-500 mb-2">
+            <div className="flex items-center gap-1">
+              <MapPin size={12} />
+              <span>{listing.location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock size={12} />
+              <span>{listing.timeAgo}</span>
+            </div>
+          </div>
+          <p className="text-sm text-accent-500 line-clamp-2">
+            {listing.description}
+          </p>
+        </div>
+      </motion.div>
+    );
+  };
+
   const UndoableCard = ({
     listing,
     index,
@@ -339,31 +466,52 @@ export function AIMatchingSwipe({
 
   // Handle swipe action - move card between columns
   const handleSwipe = (direction: 'left' | 'right') => {
-    const currentCard = cards[0];
+    if (!carouselApi) return;
+
+    const currentIndex = carouselApi.selectedScrollSnap();
+    const currentCard = cards[currentIndex];
     if (!currentCard) return;
 
-    const targetColumn: ColumnType = direction === 'right' ? 'liked' : 'passed';
+    if (activeTab === "queue") {
+      // Queue: swipe left = pass, swipe right = like
+      const targetColumn: ColumnType = direction === 'right' ? 'liked' : 'passed';
 
-    // Show reaction animation
-    setShowReaction(direction === 'right' ? 'like' : 'pass');
+      // Show reaction animation
+      setShowReaction(direction === 'right' ? 'like' : 'pass');
 
-    // Hide reaction after animation
-    setTimeout(() => {
-      setShowReaction(null);
-    }, 800);
+      // Hide reaction after animation
+      setTimeout(() => {
+        setShowReaction(null);
+      }, 800);
 
-    // Move card from queue to target column
-    setCardsByColumn(prev => ({
-      ...prev,
-      queue: prev.queue.filter(id => id !== currentCard.id),
-      [targetColumn]: [...prev[targetColumn], currentCard.id],
-    }));
+      // Move card from queue to target column
+      setCardsByColumn(prev => ({
+        ...prev,
+        queue: prev.queue.filter(id => id !== currentCard.id),
+        [targetColumn]: [...prev[targetColumn], currentCard.id],
+      }));
 
-    // Call the onMatch callback
-    if (direction === 'right') {
-      onMatch(currentCard, 'like');
+      // Call the onMatch callback
+      if (direction === 'right') {
+        onMatch(currentCard, 'like');
+      } else {
+        onMatch(currentCard, 'pass');
+      }
     } else {
-      onMatch(currentCard, 'pass');
+      // Liked/Passed: any swipe moves back to queue (undo)
+      // Show undo animation
+      setShowReaction('undo');
+
+      // Hide reaction after animation
+      setTimeout(() => {
+        setShowReaction(null);
+      }, 800);
+
+      setCardsByColumn(prev => ({
+        ...prev,
+        [activeTab]: prev[activeTab].filter(id => id !== currentCard.id),
+        queue: [...prev.queue, currentCard.id],
+      }));
     }
   };
 
@@ -394,34 +542,25 @@ export function AIMatchingSwipe({
     }));
   };
 
-  // Handle cycle - move card in select mode (loop through cards)
+  // Handle cycle - navigate carousel
   const handleCycle = (direction: 'left' | 'right') => {
-    setCardsByColumn(prev => {
-      const currentColumn = prev[activeTab];
-      if (currentColumn.length === 0) return prev;
+    if (!carouselApi) return;
 
-      if (direction === 'left') {
-        // Move top card to back
-        const [first, ...rest] = currentColumn;
-        return {
-          ...prev,
-          [activeTab]: [...rest, first],
-        };
-      } else {
-        // Move bottom card to top
-        const last = currentColumn[currentColumn.length - 1];
-        const rest = currentColumn.slice(0, -1);
-        return {
-          ...prev,
-          [activeTab]: [last, ...rest],
-        };
-      }
-    });
+    if (direction === 'left') {
+      // Next card (swipe left or up)
+      carouselApi.scrollNext();
+    } else {
+      // Previous card (swipe right or down)
+      carouselApi.scrollPrev();
+    }
   };
 
   // Handle select current card
   const handleSelectCurrent = () => {
-    const currentCard = cards[0];
+    if (!carouselApi) return;
+
+    const currentIndex = carouselApi.selectedScrollSnap();
+    const currentCard = cards[currentIndex];
     if (!currentCard) return;
 
     if (selectedForCompare.includes(currentCard.id)) {
@@ -430,6 +569,16 @@ export function AIMatchingSwipe({
       setSelectedForCompare(prev => [...prev, currentCard.id]);
     }
   };
+
+  // Debug: Log carousel API status
+  React.useEffect(() => {
+    if (carouselApi) {
+      console.log('Carousel API initialized:', carouselApi);
+      console.log('Can scroll next:', carouselApi.canScrollNext());
+      console.log('Can scroll prev:', carouselApi.canScrollPrev());
+      console.log('Current snap:', carouselApi.selectedScrollSnap());
+    }
+  }, [carouselApi]);
 
   return (
     <>
@@ -978,9 +1127,13 @@ export function AIMatchingSwipe({
                 <div className="bg-secondary-500 rounded-full p-8 shadow-2xl">
                   <Heart size={80} className="text-accent-700 fill-accent-700" />
                 </div>
-              ) : (
+              ) : showReaction === 'pass' ? (
                 <div className="bg-red-100 border-4 border-red-300 rounded-full p-8 shadow-2xl">
                   <X size={80} className="text-red-700" strokeWidth={3} />
+                </div>
+              ) : (
+                <div className="bg-primary-100 border-4 border-accent-300 rounded-full p-8 shadow-2xl">
+                  <RotateCcw size={80} className="text-accent-600" strokeWidth={3} />
                 </div>
               )}
             </motion.div>
@@ -1007,37 +1160,42 @@ export function AIMatchingSwipe({
               </p>
             </div>
           ) : (
-            /* Card Stack - Using SwipeableCard */
-            <div className="relative w-full" style={{ height: '100%', minHeight: '500px' }}>
-              <AnimatePresence mode="popLayout">
-                {activeTab === "queue" ? (
-                  // Swipeable cards for "For You" tab
-                  cards.map((listing, index) => (
-                    <SwipeableCard
-                      key={`${activeTab}-${listing.id}-${index}`}
-                      listing={listing}
-                      index={index}
-                      totalCards={cards.length}
-                      isSelected={selectedForCompare.includes(listing.id)}
-                      onSwipe={handleSwipe}
-                      onCycle={handleCycle}
-                    />
-                  ))
-                ) : (
-                // Undoable cards for liked/passed tabs
-                cards.map((listing, index) => (
-                  <UndoableCard
-                    key={`${activeTab}-${listing.id}-${index}`}
-                    listing={listing}
-                    index={index}
-                    totalCards={cards.length}
-                    isSelected={selectedForCompare.includes(listing.id)}
-                    onUndo={handleUndo}
-                    onCycle={handleCycle}
-                  />
-                ))
-                )}
-              </AnimatePresence>
+            /* Vertical Carousel */
+            <div className="relative w-full overflow-hidden" style={{ height: '500px' }}>
+              <Carousel
+                orientation="vertical"
+                opts={{
+                  align: "start",
+                  loop: false,
+                  dragFree: false,
+                  containScroll: false,
+                  axis: "y",
+                }}
+                setApi={setCarouselApi}
+                className="w-full h-full"
+              >
+                <CarouselContent className="-mt-8" style={{ height: '500px' }}>
+                  {cards.map((listing, index) => (
+                    <CarouselItem key={`${activeTab}-${listing.id}`} className="pt-8" style={{ height: '500px' }}>
+                      <SwipeableCarouselCard
+                        listing={listing}
+                        isSelected={selectedForCompare.includes(listing.id)}
+                        isSelectMode={selectMode}
+                        isQueue={activeTab === "queue"}
+                        onSwipe={handleSwipe}
+                        onToggleSelect={() => {
+                          if (selectedForCompare.includes(listing.id)) {
+                            setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+                          } else {
+                            setSelectedForCompare(prev => [...prev, listing.id]);
+                          }
+                        }}
+                        onViewDetails={() => onViewDetails(listing)}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
             </div>
           )}
         </div>
@@ -1061,12 +1219,20 @@ export function AIMatchingSwipe({
                   <button
                     onClick={handleSelectCurrent}
                     className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-colors shadow-md active:scale-95 ${
-                      cards[0] && selectedForCompare.includes(cards[0].id)
-                        ? 'bg-secondary-500 border-secondary-500'
-                        : 'bg-white border-secondary-300 hover:bg-secondary-50'
+                      (() => {
+                        const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                        const currentCard = cards[currentIndex];
+                        return currentCard && selectedForCompare.includes(currentCard.id)
+                          ? 'bg-secondary-500 border-secondary-500'
+                          : 'bg-white border-secondary-300 hover:bg-secondary-50';
+                      })()
                     }`}
                   >
-                    <Check size={28} className={cards[0] && selectedForCompare.includes(cards[0].id) ? 'text-accent-700' : 'text-secondary-600'} />
+                    <Check size={28} className={(() => {
+                      const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                      const currentCard = cards[currentIndex];
+                      return currentCard && selectedForCompare.includes(currentCard.id) ? 'text-accent-700' : 'text-secondary-600';
+                    })()} />
                   </button>
 
                   {/* Next Card */}
@@ -1122,12 +1288,20 @@ export function AIMatchingSwipe({
                   <button
                     onClick={handleSelectCurrent}
                     className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-colors shadow-md active:scale-95 ${
-                      cards[0] && selectedForCompare.includes(cards[0].id)
-                        ? 'bg-secondary-500 border-secondary-500'
-                        : 'bg-white border-secondary-300 hover:bg-secondary-50'
+                      (() => {
+                        const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                        const currentCard = cards[currentIndex];
+                        return currentCard && selectedForCompare.includes(currentCard.id)
+                          ? 'bg-secondary-500 border-secondary-500'
+                          : 'bg-white border-secondary-300 hover:bg-secondary-50';
+                      })()
                     }`}
                   >
-                    <Check size={28} className={cards[0] && selectedForCompare.includes(cards[0].id) ? 'text-accent-700' : 'text-secondary-600'} />
+                    <Check size={28} className={(() => {
+                      const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                      const currentCard = cards[currentIndex];
+                      return currentCard && selectedForCompare.includes(currentCard.id) ? 'text-accent-700' : 'text-secondary-600';
+                    })()} />
                   </button>
 
                   {/* Next Card */}
