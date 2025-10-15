@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CheckCircle, ShoppingCart, Tag, OctagonAlert } from "lucide-react";
+import { placeholderActivities } from "@/utils/mock-activity-data"
 
 export type Activity = {
   type: string;
@@ -18,30 +19,6 @@ interface ActivityPageProps {
 const tabs = [
   { label: "Overview", href: "/profile" },
   { label: "Activity", href: "/profile/activity" },
-];
-
-// Placeholder activity data
-const placeholderActivities: Activity[] = [
-  {
-    type: "sale",
-    message: "Sold an item: Vintage Camera",
-    date: "2 hours ago",
-  },
-  {
-    type: "purchase",
-    message: "Bought an item: Wireless Headphones",
-    date: "1 day ago",
-  },
-  {
-    type: "achievement",
-    message: "Unlocked achievement: Trusted Seller",
-    date: "3 days ago",
-  },
-  {
-    type: "alert",
-    message: "Sale processing failed: ID 22481955371",
-    date: "1 week ago",
-  },
 ];
 
 // Utility to choose icon by type
