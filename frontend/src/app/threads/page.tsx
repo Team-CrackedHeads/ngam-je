@@ -16,7 +16,7 @@ import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
 import NgamOverview from "../components/threads-ui/NgamOverview";
 import FilterButton from "../components/threads-ui/FilterButton";
 import PageHeader from "../components/threads-ui/PageHeader";
-import BreadcrumbNav from "./BreadcrumbNav"; // ✅ Added import
+import BreadcrumbNav from "./BreadcrumbNav"; 
 import { MockAIResponse } from "../../utils/mock-ai-data";
 
 type FilterType = "All" | "Hot" | "Top" | "New";
@@ -171,7 +171,7 @@ function ThreadsPage() {
         <section id="ngam-overview" ref={threadsSectionRef} className="snap-start bg-gray-50">
           <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
 
-            {/* ✅ Breadcrumb Navigation */}
+            {/* Breadcrumb Navigation */}
             <BreadcrumbNav />
 
             {/* Page Header */}
