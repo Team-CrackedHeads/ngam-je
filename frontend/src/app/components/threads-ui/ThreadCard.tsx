@@ -1,3 +1,4 @@
+// thread cards showing tiers and tags
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -23,7 +24,7 @@ import {
 import { ThreadData } from "../../../utils/mock-threads-data";
 import { motion } from "framer-motion";
 
-/* ---------------- Helper Functions ---------------- */
+/* Helper Function*/
 function formatNumber(num: number): string {
   return new Intl.NumberFormat().format(num);
 }
@@ -37,12 +38,12 @@ function getTierLevel(current: number, goal: number): number {
   return 0;
 }
 
-/* ---------------- Props ---------------- */
+/* Props */
 type ThreadCardProps = {
   thread: ThreadData;
 };
 
-/* ---------------- Component ---------------- */
+/* Component */
 export default function ThreadCard({ thread }: ThreadCardProps) {
   const router = useRouter();
   const tierLevel = getTierLevel(thread.currentTokens, thread.goalTokens);
@@ -53,7 +54,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
       className="flex flex-col h-full border border-gray-100 overflow-hidden transition-shadow hover:shadow-lg cursor-pointer"
       onClick={() => router.push(`/threads/${thread.category}`)}
     >
-      {/* ---------- Header Image + Badges + Popover ---------- */}
+      {/* Header Image + Badges + Popover */}
       <CardHeader className="p-0 relative flex-shrink-0">
         <div className="relative w-full h-40 sm:h-44 md:h-48 lg:h-52">
           <img
@@ -131,12 +132,20 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
         </div>
       </CardHeader>
 
-      {/* ---------- Card Body ---------- */}
+      {/*  Card Body */}
       <CardContent className="flex flex-col flex-grow p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Badge className="bg-secondary-500 text-accent-700 font-semibold text-xs sm:text-sm px-2 py-1 rounded-md">
+            Tier {tierLevel}
+          </Badge>
+        </div>
+
+        {/* Card title */}
         <h2 className="text-base sm:text-lg md:text-xl font-semibold text-accent-700 line-clamp-2 mb-1">
           {thread.title}
         </h2>
 
+        {/* Card Desc */}
         <p className="text-sm sm:text-base text-gray-500 line-clamp-2 flex-grow mb-3">
           {thread.description}
         </p>
@@ -154,12 +163,11 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
           ))}
         </div>
 
-        {/* ---------- Tier Progress Section ---------- */}
+        <hr className="border-t-2 border-gray-100 my-4"></hr>
+
+        {/* Tier Progress Section */}
         <div className="mt-3 flex flex-col">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs sm:text-sm font-medium text-accent-500">
-              Current Tier: <span className="font-semibold">{tierLevel}</span>
-            </span>
             <Button
               variant="ghost"
               size="sm"
@@ -175,7 +183,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
                 </>
               ) : (
                 <>
-                  See Details <ChevronDown className="w-3 h-3 ml-1" />
+                  See Tier Details <ChevronDown className="w-3 h-3 ml-1" />
                 </>
               )}
             </Button>
@@ -264,7 +272,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
   );
 }
 
-/* ---------------- Stat Component ---------------- */
+/* Stat Component */
 function Stat({
   icon,
   label,
