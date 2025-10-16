@@ -134,7 +134,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
 
       {/*  Card Body */}
       <CardContent className="flex flex-col flex-grow p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 mt-2">
           <Badge className="bg-secondary-500 text-accent-700 font-semibold text-xs sm:text-sm px-2 py-1 rounded-md">
             Tier {tierLevel}
           </Badge>
