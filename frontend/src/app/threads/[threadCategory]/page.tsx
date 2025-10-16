@@ -1,21 +1,12 @@
+// specific thread category product listings page
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ListingCard from "@/app/components/threads-category-ui/ListingCard";
 import { CategoryBreadcrumb } from "@/app/components/threads-category-ui/CategoryBreadcrumb";
-import {
-  UNIFIED_LISTINGS,
-  UnifiedListingData,
-} from "@/utils/mock-threads-data";
-import SearchFilter, {
-  type FilterOptions,
-} from "@/app/components/threads-category-ui/SearchFilter";
-import Sorting, {
-  PrimaryFilter,
-  QuickFilter,
-  QuickSort,
-} from "@/app/components/threads-category-ui/Sorting";
+import {UNIFIED_LISTINGS, UnifiedListingData} from "@/utils/mock-threads-data";
+import SearchFilter, {type FilterOptions} from "@/app/components/threads-category-ui/SearchFilter";
+import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/app/components/threads-category-ui/Sorting";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -153,7 +144,6 @@ const CategoryPage: React.FC = () => {
       );
     }
     // For "general", don't filter by listing type - show both
-
     // --- APPLY FILTERS FROM SEARCH FILTER COMPONENT ---
     // Apply search filter
     if (appliedFilters.search) {
@@ -209,8 +199,7 @@ const CategoryPage: React.FC = () => {
       );
     }
     // --- APPLY FILTERS FROM SORTING COMPONENT ---
-
-    // 1. Apply Primary Filter
+    // Apply Primary Filter
     if (sortingFilters.primaryFilter === "Verified Sellers") {
       categoryListings = categoryListings.filter(
         (listing) => listing.seller.verified
@@ -222,7 +211,7 @@ const CategoryPage: React.FC = () => {
       );
     }
 
-    // 2. Apply Quick Filters - UPDATED for new data structure
+    // Apply Quick Filters - UPDATED for new data structure
     if (sortingFilters.quickFilters.includes("Protected Listings")) {
       categoryListings = categoryListings.filter(
         (listing) => listing.protected
@@ -246,7 +235,7 @@ const CategoryPage: React.FC = () => {
       );
     }
 
-    // 3. Apply Sorting - UPDATED for UnifiedListingData
+    // Apply Sorting - UPDATED for UnifiedListingData
     const activeSort = sortingFilters.quickSort || appliedFilters.sortBy;
 
     switch (activeSort) {
@@ -356,14 +345,15 @@ const CategoryPage: React.FC = () => {
                   : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
               }`}
             >
-              Want to Buy (
-              {
-                UNIFIED_LISTINGS.filter(
-                  (l) =>
-                    l.category === category && l.listingType === "want-to-buy"
-                ).length
-              }
-              )
+              Want to Buy {" "}  {/* Hide the (2) by wrapping in span set the className to hidden */}
+              <span className="hidden">
+                ({
+                  UNIFIED_LISTINGS.filter(
+                    (l) =>
+                      l.category === category && l.listingType === "want-to-buy"
+                  ).length
+                })
+              </span>
             </button>
             <button
               onClick={() => handleTypeChange("general")}
@@ -373,13 +363,14 @@ const CategoryPage: React.FC = () => {
                   : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
               }`}
             >
-              General (
-              {
-                UNIFIED_LISTINGS.filter(
-                  (l) => l.category === category
-                ).length
-              }
-              )
+              General {" "}
+              <span className = "hidden">
+                ({
+                  UNIFIED_LISTINGS.filter(
+                    (l) => l.category === category
+                  ).length
+                })
+              </span>
             </button>
             <button
               onClick={() => handleTypeChange("wts")}
@@ -389,13 +380,14 @@ const CategoryPage: React.FC = () => {
                   : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
               }`}
             >
-              Want to Sell (
-              {
+              Want to Sell {" "}
+              <span className="hidden">
+              ({
                 UNIFIED_LISTINGS.filter(
                   (l) => l.category === category && l.listingType === "for-sale"
                 ).length
-              }
-              )
+              })
+              </span>
             </button>
           </div>
         </div>
