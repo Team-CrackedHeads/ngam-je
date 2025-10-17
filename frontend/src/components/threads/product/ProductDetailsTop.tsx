@@ -59,16 +59,18 @@ const ProductDetailsTop: React.FC<ProductCardDetailsProps> = ({
           </div>
         </div>
 
-        {/* Title */}
+        {/* Product info */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-accent-500">
+            {/* Title */}
+            <h1 className="text-2xl md:text-3xl font-bold text-accent-700">
               {listing.title}
             </h1>
-            {/* Only show subtitle if it exists */}
+            {/* Subtitle (conditional) */}
             {listing.subtitle && (
-              <p className="text-lg text-accent-700">- {listing.subtitle}</p>
+              <p className="text-lg text-accent-500">- {listing.subtitle}</p>
             )}
+            {/* Category */}
             <p className="text-sm mt-1 text-accent-500">{listing.category}</p>
           </div>
         </div>
@@ -78,6 +80,7 @@ const ProductDetailsTop: React.FC<ProductCardDetailsProps> = ({
           <p className="text-3xl font-bold text-accent-700">
             {listing.currency} {listing.price.toFixed(2)}
           </p>
+          {/* Purchase safeguard label */}
           {listing.protected && (
             <div className="flex items-center gap-2 mt-2">
               <Shield className="w-4 h-4 text-accent-500" />

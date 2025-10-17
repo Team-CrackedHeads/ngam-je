@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { Shield, Eye, MapPin, Clock } from "lucide-react";
+import { MapPin, Clock } from "lucide-react";
 import { UnifiedListingData } from "@/utils/mock-threads-data";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import { ActionButtons } from "./ActionButtons";
