@@ -1,13 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { MapPin, Clock } from "lucide-react";
 import { UnifiedListingData } from "@/utils/mock-threads-data";
 import { ImageGalleryModal } from "./ImageGalleryModal";
-import { ActionButtons } from "./ActionButtons";
 import ProductFAQSummary from "./ProductFAQSummary";
 import ProductDetailsTop from "./ProductDetailsTop";
+import ProductDetailsMiddle from "./ProductDetailsMiddle";
+import ProductDetailsBottom from "./ProductDetailsBottom";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -98,81 +97,16 @@ export const ProductDetails = ({
       </div>
 
       <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white p-6">
-        {/* Gallery - Only show if has images */}
-        {hasGalleryImages && (
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-accent-500">Gallery</h3>
-            <div className="flex flex-wrap gap-3 mt-2">
-              {galleryImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="w-24 h-24 rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => openModal(index)}
-                >
-                  <Image
-                    src={image.replace("w=1200", "w=200")}
-                    alt={`Gallery thumbnail ${index + 1}`}
-                    width={200}
-                    height={200}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Description */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-accent-500">Description</h2>
-          <p className="mt-2 text-accent-700">{listing.description}</p>
-        </div>
+        <ProductDetailsMiddle
+          galleryImages={galleryImages}
+          description={listing.description}
+          openModal={openModal}
+        />
       </div>
 
       <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white p-6">
-        {/* Seller Info */}
-        <div className="pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-200">
-                <svg
-                  className="w-6 h-6 text-accent-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-semibold text-accent-500">
-                  {listing.seller.name}
-                </p>
-                <div className="flex items-center gap-1 text-sm text-accent-700">
-                  <MapPin className="w-3 h-3" />
-                  <span>{listing.seller.location}</span>
-                </div>
-                <div className="flex items-center gap-1 text-sm text-accent-700">
-                  <Clock className="w-3 h-3" />
-                  <span>{listing.seller.timePosted}</span>
-                </div>
-              </div>
-            </div>
-            {listing.seller.verified && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-secondary-500 text-accent-500">
-                Verified
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Action Buttons - UPDATED WITH HANDLERS */}
-        <ActionButtons
+        <ProductDetailsBottom
+          seller={listing.seller}
           onChat={handleChatClick}
           onFAQ={handleFAQClick}
           onBuyNow={handleBuyNowClick}
