@@ -11,7 +11,7 @@ import {
 import { ChevronDown } from "lucide-react";
 
 // the different ways users can sort/filter threads
-type FilterType = "Best" | "Hot" | "New" | "Top" | "Rising";
+type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
 
 type FilterDropdownProps = {
   activeFilter: FilterType;

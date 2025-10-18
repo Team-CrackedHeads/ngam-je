@@ -10,16 +10,15 @@ import {
 } from "lucide-react";
 import ThreadCard from "../components/threads-ui/ThreadCard";
 import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
-
 import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
 import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
 import NgamOverview from "../components/threads-ui/NgamOverview";
 import FilterButton from "../components/threads-ui/FilterButton";
 import PageHeader from "../components/threads-ui/PageHeader";
-import BreadcrumbNav from "./BreadcrumbNav"; 
+import BreadcrumbNav from "./BreadcrumbNav";
 import { MockAIResponse } from "../../utils/mock-ai-data";
 
-type FilterType = "All" | "Hot" | "Top" | "New";
+type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
 
 function ThreadsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
@@ -37,7 +36,6 @@ function ThreadsPage() {
   const snapContainerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const inlineCreateBtnRef = useRef<HTMLButtonElement | null>(null);
-
   const searchSectionRef = useRef<HTMLElement | null>(null);
   const threadsSectionRef = useRef<HTMLElement | null>(null);
   const metaRowRef = useRef<HTMLDivElement | null>(null);
@@ -45,20 +43,19 @@ function ThreadsPage() {
   const overviewAnchorRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
 
+  // UI state
   const [showFab, setShowFab] = useState(false);
-  const [inlineBtnVisible, setInlineBtnVisible] = useState(true);
-  const [inThreadsSection, setInThreadsSection] = useState(false);
-  const FAB_SCROLL_THRESHOLD = 200;
-
   const [inSearchView, setInSearchView] = useState(false);
   const [inOverviewView, setInOverviewView] = useState(false);
   const [isMetaInView, setIsMetaInView] = useState(false);
 
+  const FAB_SCROLL_THRESHOLD = 200;
+
+  // Derived query keywords
   const queryKeywords = useMemo(() => {
     const base = (lastQuery || "").toLowerCase();
     const words = base.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
     const set = new Set<string>(words);
-
     if (/[^\w](sneaker|sneakers|shoe|shoes)\b/.test(" " + base)) {
       ["sneaker", "sneakers", "shoe", "shoes", "yeezy", "jordan", "nike", "adidas", "new balance", "nb", "asics", "salomon"].forEach((k) => set.add(k));
     }
@@ -68,10 +65,10 @@ function ThreadsPage() {
     if (/\bmacbook|mac\s?book\b/.test(base)) {
       ["macbook", "mac book", "apple"].forEach((k) => set.add(k));
     }
-
     return Array.from(set);
   }, [lastQuery]);
 
+  // Filter logic
   const getBaseFilteredThreads = useCallback((): ThreadData[] => {
     let filtered = [...MOCK_THREADS];
     switch (activeFilter) {
@@ -104,6 +101,7 @@ function ThreadsPage() {
 
   useEffect(() => setDisplayedCount(6), [activeFilter, lastQuery]);
 
+  // Infinite scroll observer
   const loadMoreItems = useCallback(() => {
     if (isLoading || displayedCount >= allFilteredThreads.length) return;
     setIsLoading(true);
@@ -113,9 +111,62 @@ function ThreadsPage() {
     }, 500);
   }, [isLoading, displayedCount, allFilteredThreads.length]);
 
-  // intersection + scroll effects omitted for brevity (same as before)
-  // ... [no change in your IntersectionObserver logic] ...
+  // 👇 Scroll + Intersection logic
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) loadMoreItems();
+      },
+      { threshold: 1.0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMoreItems]);
+
+  // 👇 FAB visibility logic
+  useEffect(() => {
+    const container = snapContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      setShowFab(scrollTop > FAB_SCROLL_THRESHOLD);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 👇 View detection for CTA state
+  useEffect(() => {
+    const searchEl = searchSectionRef.current;
+    const overviewEl = overviewWrapRef.current;
+    const metaEl = metaRowRef.current;
+    if (!searchEl || !overviewEl || !metaEl) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === searchEl) setInSearchView(entry.isIntersecting);
+          if (entry.target === overviewEl) setInOverviewView(entry.isIntersecting);
+          if (entry.target === metaEl) setIsMetaInView(entry.isIntersecting);
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(searchEl);
+    observer.observe(overviewEl);
+    observer.observe(metaEl);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // AI Handlers
   const handleAISearchStart = () => {
     setIsAILoading(true);
     setCurrentOverview(null);
@@ -135,8 +186,9 @@ function ThreadsPage() {
     setLastQuery((r as any)?.prompt || "");
   };
 
-  const hasQueryFilter = queryKeywords.length > 0;
+  // CTA State
   const hasOverview = !!(currentOverview || isAILoading);
+  const hasQueryFilter = queryKeywords.length > 0;
 
   const ctaState = useMemo(() => {
     if (inSearchView || inOverviewView) {
@@ -156,7 +208,6 @@ function ThreadsPage() {
 
   return (
     <>
-      {/* SNAP CONTAINER */}
       <div ref={snapContainerRef} className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth">
         {/* SECTION 1: AI Agent */}
         <section id="search" ref={searchSectionRef} className="h-full snap-start">
@@ -170,16 +221,11 @@ function ThreadsPage() {
         {/* SECTION 2: Threads */}
         <section id="ngam-overview" ref={threadsSectionRef} className="snap-start bg-gray-50">
           <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
-
-            {/* Breadcrumb Navigation */}
             <BreadcrumbNav />
-
-            {/* Page Header */}
             <div ref={headerRef}>
               <PageHeader />
             </div>
 
-            {/* AI Overview Section */}
             {hasOverview && (
               <>
                 <div id="overview" ref={overviewAnchorRef} className="snap-start h-0" />
@@ -194,17 +240,14 @@ function ThreadsPage() {
               </>
             )}
 
-            {/* Filters */}
             <FilterButton activeFilter={activeFilter} onFilterChange={setActiveFilter} />
 
-            {/* Meta + Create Button */}
             <div ref={metaRowRef} className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 mt-4">
               <div className="flex items-center gap-3">
                 <p className="text-sm sm:text-base text-gray-600">
                   Showing {threadsToShow.length} of {allFilteredThreads.length} threads
                   {activeFilter !== "All" && ` • Filter: ${activeFilter}`}
                 </p>
-
                 {hasQueryFilter && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-neutral-300 bg-white text-gray-700">
                     <FilterIcon className="w-3 h-3" />
@@ -216,7 +259,6 @@ function ThreadsPage() {
                   </span>
                 )}
               </div>
-
               <button
                 ref={inlineCreateBtnRef}
                 onClick={() => setIsCreateOpen(true)}
@@ -227,14 +269,12 @@ function ThreadsPage() {
               </button>
             </div>
 
-            {/* Grid of Threads */}
             <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {threadsToShow.map((thread) => (
                 <ThreadCard key={thread.id} thread={thread} />
               ))}
             </div>
 
-            {/* Loading + Empty + End State */}
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -250,13 +290,12 @@ function ThreadsPage() {
               </div>
             )}
 
-            {/* Infinite Scroll Sentinel */}
             <div ref={sentinelRef} className="h-px" />
           </div>
         </section>
       </div>
 
-      {/* Floating Create Thread Button */}
+      {/* Floating Create Button */}
       {showFab && (
         <button
           onClick={() => setIsCreateOpen(true)}
@@ -281,7 +320,6 @@ function ThreadsPage() {
         </button>
       )}
 
-      {/* Overlays */}
       <CreateThreadsSection isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
     </>
   );

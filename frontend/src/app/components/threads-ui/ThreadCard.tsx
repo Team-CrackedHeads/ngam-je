@@ -21,7 +21,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ThreadData } from "../../../utils/mock-threads-data";
+import { ThreadData } from "@/utils/mock-threads-data";
 import { motion } from "framer-motion";
 
 /* Helper Function*/
@@ -133,17 +133,19 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
       </CardHeader>
 
       {/*  Card Body */}
+      
+      {/*  Title + Badge */}
       <CardContent className="flex flex-col flex-grow p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-2 mt-2">
           <Badge className="bg-secondary-500 text-accent-700 font-semibold text-xs sm:text-sm px-2 py-1 rounded-md">
             Tier {tierLevel}
           </Badge>
-        </div>
-
-        {/* Card title */}
-        <h2 className="text-base sm:text-lg md:text-xl font-semibold text-accent-700 line-clamp-2 mb-1">
-          {thread.title}
-        </h2>
+        
+          {/* Card title */}
+          <h2 className="flex-1 text-base sm:text-lg md:text-xl font-semibold text-accent-700 line-clamp-2 mb-1">
+            {thread.title}
+          </h2>
+        </div> 
 
         {/* Card Desc */}
         <p className="text-sm sm:text-base text-gray-500 line-clamp-2 flex-grow mb-3">
@@ -162,9 +164,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
             </Badge>
           ))}
         </div>
-
-        <hr className="border-t-2 border-gray-100 my-4"></hr>
-
+    
         {/* Tier Progress Section */}
         <div className="mt-3 flex flex-col">
           <div className="flex justify-between items-center mb-2">
@@ -253,7 +253,6 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
                       )}
                     </motion.div>
 
-                    {/* Labels now have more spacing */}
                     <span
                       className={`absolute left-1/2 -translate-x-1/2 top-7 text-[11px] font-medium whitespace-nowrap ${
                         isActive ? "text-accent-700" : "text-gray-400"
