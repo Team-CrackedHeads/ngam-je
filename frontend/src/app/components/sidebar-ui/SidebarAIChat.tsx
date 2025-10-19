@@ -49,10 +49,10 @@ type SidebarAIChatProps = {
   isOpen: boolean;
   onClose: () => void;
   // NOTE: chatId is now the unique path/identifier for the chat thread
-  chatId: string | null; 
+  chatId: number | null; 
   initialMessages?: Message[];
   // New prop to handle navigation when a history item is clicked
-  onHistoryClick: (chatId: string) => void;
+  onHistoryClick?: (chatId: string) => void;
 };
 
 const WELCOME_MESSAGE: Message = {
