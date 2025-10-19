@@ -1,9 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // maryam
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
 
 /* function to determine if the user is on a mobile (coarse pointer) device */
 function useIsMobile(): boolean {
@@ -23,6 +32,7 @@ function useIsMobile(): boolean {
 
 /* responsive for desktop hover or mobile popover) */
 function TierBadge({ tierLevel }: { tierLevel: number }) {
+  const router = useRouter(); // maryam
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -43,6 +53,12 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
   };
 
   const tierColor = getTierColor(tierLevel);
+
+  // maryam
+  const handleBadgeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/threads/pricing?tier=${tierLevel}`);
+  };
 
   const TierContent = (
     <div className="w-72 p-4 rounded-lg shadow-md border border-gray-100 bg-white">
@@ -89,14 +105,10 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
                 whileHover={{ scale: 1.3 }}
                 transition={{ type: "spring", stiffness: 300, damping: 15 }}
                 className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer ${
-                  isActive
-                    ? "bg-[var(--color-secondary-500)]"
-                    : "bg-gray-200"
+                  isActive ? "bg-[var(--color-secondary-500)]" : "bg-gray-200"
                 }`}
               >
-                {isCurrent && (
-                  <div className="w-2 h-2 rounded-full bg-white" />
-                )}
+                {isCurrent && <div className="w-2 h-2 rounded-full bg-white" />}
               </motion.div>
               <span
                 className={`absolute left-1/2 -translate-x-1/2 top-7 text-[11px] font-medium whitespace-nowrap ${
@@ -117,10 +129,7 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Badge
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(!open);
-            }}
+            onClick={handleBadgeClick}
             className={`${tierColor.bg} ${tierColor.text} font-semibold text-xs sm:text-sm px-2 py-1 rounded-md cursor-pointer`}
           >
             Tier {tierLevel}
@@ -144,7 +153,7 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
       <HoverCardTrigger asChild>
         <Badge
           className={`${tierColor.bg} ${tierColor.text} font-semibold text-xs sm:text-sm px-2 py-1 rounded-md cursor-pointer`}
-          onClick={(e) => e.stopPropagation()}
+          onClick={handleBadgeClick}
         >
           Tier {tierLevel}
         </Badge>
