@@ -1,7 +1,7 @@
 name: Mirror to GitLab
 on:
   schedule:
-    - cron: '5 23 * * *'  # Daily at 7:05 AM KUL-TIME: UTC +8
+    - cron: '15 17 * * *'  # Daily at 1:15 AM KUL-TIME (UTC +8, so 17:15 UTC previous day)
   workflow_dispatch:   # manual trigger from the Actions tab
 
 jobs:
@@ -41,4 +41,3 @@ jobs:
               echo "Skipping main/master branch: $b"
             fi
           done
-
