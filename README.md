@@ -12,7 +12,7 @@ An AI-powered full-stack application built with modern technologies for agentic 
 
 ### Backend
 
-- **FastAPI** with Python 3.13.7
+- **FastAPI** with Python 3.12
 - **uv** for dependency management
 - **LangChain** for AI orchestration
 - **Google Gemini** for AI capabilities
@@ -40,7 +40,7 @@ ngam-je/
 
 ### Prerequisites
 
-- Python 3.13.7
+- Python 3.12
 - Bun
 - uv
 
