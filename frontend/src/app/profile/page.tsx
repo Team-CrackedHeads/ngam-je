@@ -5,16 +5,7 @@ import { usePathname } from "next/navigation";
 import { Star, CheckCircle, Camera, Lock } from "lucide-react";
 import { mockSaleListings, mockWantedListings } from "@/utils/mock-listings-data";
 import { MOCK_ACHIEVEMENTS, getAchievementStats } from "@/utils/mock-achievements-data";
-
-export type User = {
-  name: string;
-  email: string;
-  verified: boolean;
-  rating: number;
-  ratingCount: number;
-  totalListings: number;
-  completedDeals: number;
-};
+import { MOCK_USER, type User } from "@/utils/mock-user-data";
 
 export interface Listing {
   id: number;
@@ -39,17 +30,6 @@ interface ProfilePageProps {
   wantedListings?: Listing;
 }
 
-// Placeholder user if no prop is passed
-const placeholderUser: User = {
-  name: "John Michael Smith",
-  email: "user@example.com",
-  verified: true,
-  rating: 4.8,
-  ratingCount: 24,
-  totalListings: 12,
-  completedDeals: 28,
-};
-
 // Tabs configuration
 const tabs = [
   { label: "Overview", href: "/profile" },
@@ -57,7 +37,7 @@ const tabs = [
 ];
 
 export default function ProfilePage({ user, saleListings, wantedListings }: ProfilePageProps) {
-  const userData = user ?? placeholderUser;
+  const userData = user ?? MOCK_USER;
   const saleListingsData = saleListings ?? mockSaleListings;
   const wantedListingsData = wantedListings ?? mockWantedListings;
   const pathname = usePathname();
@@ -107,7 +87,7 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
               <p className="text-xs sm:text-sm text-gray-600 truncate">{userData.email}</p>
               <div className="flex items-center flex-wrap gap-2 mt-1">
                 {userData.verified && (
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-success-50 text-success-900 font-medium">
                     Verified
                   </span>
                 )}
@@ -142,16 +122,27 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
             className="rounded-2xl shadow p-4 md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <h3 className="font-semibold mb-3">Active Listings</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Active Listings</h3>
+              <span className="px-2 sm:px-3 py-1 text-xs rounded-full bg-secondary-500 text-accent-700 font-medium whitespace-nowrap">
+                {saleListingsData.length + wantedListingsData.length}
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl p-4 text-center bg-secondary-500">
+              <Link
+                href="/listings?type=sale"
+                className="rounded-xl p-4 text-center bg-secondary-500 hover:bg-secondary-600 transition-colors cursor-pointer"
+              >
                 <p className="text-2xl font-bold">{saleListingsData.length}</p>
                 <p className="text-sm">For Sale</p>
-              </div>
-              <div className="rounded-xl p-4 text-center bg-secondary-100">
+              </Link>
+              <Link
+                href="/listings?type=wanted"
+                className="rounded-xl p-4 text-center bg-secondary-100 hover:bg-secondary-200 transition-colors cursor-pointer"
+              >
                 <p className="text-2xl font-bold">{wantedListingsData.length}</p>
                 <p className="text-sm">Want to Buy</p>
-              </div>
+              </Link>
             </div>
           </div>
 
