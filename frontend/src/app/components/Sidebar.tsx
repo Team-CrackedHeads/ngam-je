@@ -652,7 +652,7 @@ function BuyListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockSaleListings.slice(0, visibleListings).map((listing) => (
+              {mockSaleListings.filter(listing => listing.isOwner).slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}
@@ -788,7 +788,7 @@ function SellListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockWantedListings.slice(0, visibleListings).map((listing) => (
+              {mockWantedListings.filter(listing => listing.isOwner).slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}

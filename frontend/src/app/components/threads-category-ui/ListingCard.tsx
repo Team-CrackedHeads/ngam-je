@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Heart, MessageSquare, CircleHelp } from "lucide-react";
+import { Heart, MessageSquare, CircleHelp, MapPin, Clock, User } from "lucide-react";
 import {
   UNIFIED_LISTINGS,
   UnifiedListingData,
@@ -26,7 +26,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const {
     id,
     title,
-    description,
     price,
     currency, // Now separate from price
     seller, // Now an object
@@ -81,19 +80,45 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
       <div>
         {/* Title */}
-        <h3 className="mt-3 font-bold text-lg line-clamp-2 text-accent-700">
+        <h3 className="mt-2 font-bold text-lg line-clamp-2 text-accent-700">
           {title}
         </h3>
 
+        {/* Seller info - moved below title */}
+        <div className="flex items-center text-xs text-gray-600 mt-3 gap-2">
+          <img
+            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seller.name}`}
+            alt={seller.name}
+            className="w-8 h-8 rounded-full bg-gray-200"
+          />
+          <div className="flex items-center gap-1">
+            <span className="font-medium">{seller.name}</span>
+          </div>
+        </div>
+
+        {/* Location and Time */}
+        <div className="flex items-center text-xs text-gray-600 mt-1 gap-4">
+          <div className="flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5" />
+            <span>{seller.location}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.s5" />
+            <span>{seller.timePosted}</span>
+          </div>
+        </div>
+
+        {/* Price - Now with currency */}
+        <div className="font-bold text-xl mt-3 text-accent-700">
+            {currency} {price.toFixed(2)}
+        </div>
+
         {/* Subtitle (if exists) */}
         {listing.subtitle && (
-          <p className="text-sm font-medium text-gray-700 mt-1">
+          <p className="text-sm font-medium text-gray-700 mt-2">
             {listing.subtitle}
           </p>
         )}
-
-        {/* Description */}
-        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{description}</p>
 
         {/* Tags */}
         <div className="flex gap-2 mt-3 flex-wrap">
@@ -101,7 +126,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <span
               key={tag}
               className="text-xs px-3 py-1 rounded-full font-medium transition-colors hover:opacity-90 bg-secondary-100 text-accent-600"
-              style = {{ 
+              style = {{
                 backgroundColor: "var(--color-secondary-500)"
               }}
             >
@@ -116,23 +141,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         </div>
       </div>
 
-      {/* Price - Now with currency */}
-      <div className="font-bold text-xl mt-3 text-accent-700">
-        {currency} {price.toFixed(2)}
-      </div>
-
-      {/* Seller info */}
-      <div className="flex items-center text-sm text-gray-500 mt-2 gap-2">
-        <span className="font-medium text-accent-500">
-          {seller.name}
-        </span>
-        <span>• {seller.location}</span>
-        <span>• {seller.timePosted}</span>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex gap-3 mt-4 mt-auto">
-      </div>
+      
     </div>
   );
 };

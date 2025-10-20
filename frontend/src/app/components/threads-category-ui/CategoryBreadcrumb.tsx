@@ -31,7 +31,7 @@ export const CategoryBreadcrumb = ({ category, activeType }: CategoryBreadcrumbP
   ];
 
   return (
-    <nav className="flex items-center space-x-2 mb-4 p-3 bg-neutral-white rounded-lg">
+    <nav className="flex items-center space-x-2 py-3">
       {breadcrumbs.map((item, index) => (
         <div key={index} className="flex items-center space-x-2">
           {index > 0 && (

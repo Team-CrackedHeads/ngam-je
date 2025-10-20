@@ -10,18 +10,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 
-// the different ways users can sort/filter threads
-type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
+type ListingType = "wtb" | "wts" | "general";
 
-type FilterDropdownProps = {
-  activeFilter: FilterType;
-  onFilterChange: (filter: FilterType) => void;
+type ListingTypeDropdownProps = {
+  activeType: ListingType;
+  onTypeChange: (type: ListingType) => void;
 };
 
-export default function FilterDropdown({
-  activeFilter,
-  onFilterChange,
-}: FilterDropdownProps) {
+export default function ListingTypeDropdown({
+  activeType,
+  onTypeChange,
+}: ListingTypeDropdownProps) {
+  const getTypeLabel = (type: ListingType) => {
+    switch (type) {
+      case "wtb":
+        return "Want to Buy";
+      case "wts":
+        return "Want to Sell";
+      case "general":
+        return "All";
+    }
+  };
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -29,38 +39,38 @@ export default function FilterDropdown({
           variant="ghost"
           className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 h-auto hover:bg-secondary-600 bg-secondary-500 text-accent-700 rounded-full border border-secondary-600"
         >
-          {activeFilter}
+          {getTypeLabel(activeType)}
           <ChevronDown size={16} className="opacity-70" />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         side="bottom"
-        align="end"
+        align="start"
         sideOffset={8}
         avoidCollisions={false}
         className="min-w-fit bg-primary-50 border border-primary-200 shadow-lg px-2 py-1 z-[9999]"
       >
         <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2">
-          Sort by
+          Listing Type
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {(["Best", "Hot", "New", "Top", "Rising"] as FilterType[]).map(
-          (filter) => (
+        {(["general", "wtb", "wts"] as ListingType[]).map(
+          (type) => (
             <DropdownMenuItem
-              key={filter}
-              onClick={() => onFilterChange(filter)}
+              key={type}
+              onClick={() => onTypeChange(type)}
               className={`cursor-pointer transition-colors ${
-                filter === activeFilter ? "text-black" : ""
+                type === activeType ? "text-black" : ""
               }`}
               style={{
                 backgroundColor:
-                  filter === activeFilter
+                  type === activeType
                     ? "var(--color-secondary-500)"
                     : "transparent",
               }}
             >
-              {filter}
+              {getTypeLabel(type)}
             </DropdownMenuItem>
           )
         )}

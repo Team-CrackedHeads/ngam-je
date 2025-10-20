@@ -7,6 +7,9 @@ import { CategoryBreadcrumb } from "@/app/components/threads-category-ui/Categor
 import {UNIFIED_LISTINGS, UnifiedListingData} from "@/utils/mock-threads-data";
 import SearchFilter, {type FilterOptions} from "@/app/components/threads-category-ui/SearchFilter";
 import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/app/components/threads-category-ui/Sorting";
+import ViewDropdown from "@/app/components/threads-ui/ViewDropdown";
+import ListingTypeDropdown from "@/app/components/threads-category-ui/ListingTypeDropdown";
+import { Plus, ArrowLeft } from "lucide-react";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -26,6 +29,8 @@ const CategoryPage: React.FC = () => {
   const [activeType, setActiveType] = useState<ListingType>(
     (searchParams.get("type") as ListingType) || "general"
   );
+
+  const [viewType, setViewType] = useState<"grid" | "list">("grid");
 
   // Updated state for SearchFilter to include new fields
   const [appliedFilters, setAppliedFilters] = useState<FilterOptions>({
@@ -291,13 +296,21 @@ const CategoryPage: React.FC = () => {
           <CategoryBreadcrumb category={category} activeType={activeType} />
         </div>
 
-        {/* Search and Filter Card */}
-        <div className="bg-neutral-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-6">
-          {/* Category Header */}
-          <h1 className="text-2xl font-bold mb-6 capitalize text-accent-700">
+        {/* Category Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-neutral-700" />
+            </button>
+          <h1 className="text-2xl font-bold capitalize text-accent-700">
             {category} Marketplace
           </h1>
+        </div>
 
+        {/* Search and Filter Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
           {/* Search Filter Component */}
           <div className="mb-6">
             <SearchFilter
@@ -333,74 +346,61 @@ const CategoryPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Type Card */}
-        <div className="bg-neutral-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-6">
-          {/* WTB/WTS/General Toggle Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleTypeChange("wtb")}
-              className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
-                activeType === "wtb"
-                  ? "bg-secondary-500 text-accent-700"
-                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-              }`}
-            >
-              Want to Buy {" "}  {/* Hide the (2) by wrapping in span set the className to hidden */}
-              <span className="hidden">
-                ({
-                  UNIFIED_LISTINGS.filter(
-                    (l) =>
-                      l.category === category && l.listingType === "want-to-buy"
-                  ).length
-                })
-              </span>
-            </button>
-            <button
-              onClick={() => handleTypeChange("general")}
-              className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
-                activeType === "general"
-                  ? "bg-secondary-500 text-accent-700"
-                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-              }`}
-            >
-              General {" "}
-              <span className = "hidden">
-                ({
-                  UNIFIED_LISTINGS.filter(
-                    (l) => l.category === category
-                  ).length
-                })
-              </span>
-            </button>
-            <button
-              onClick={() => handleTypeChange("wts")}
-              className={`flex-1 px-4 py-3 rounded-lg font-medium transition ${
-                activeType === "wts"
-                  ? "bg-secondary-500 text-accent-700"
-                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-              }`}
-            >
-              Want to Sell {" "}
-              <span className="hidden">
-              ({
-                UNIFIED_LISTINGS.filter(
-                  (l) => l.category === category && l.listingType === "for-sale"
-                ).length
-              })
-              </span>
-            </button>
+        {/* Control Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 font-medium">Sort By:</span>
+              <ListingTypeDropdown activeType={activeType} onTypeChange={handleTypeChange} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 font-medium">View:</span>
+              <ViewDropdown activeView={viewType} onViewChange={setViewType} />
+            </div>
           </div>
-        </div>
 
-        {/* Create Listing Button */}
-        <div className="mb-6">
           <button
             onClick={handleCreateListing}
-            className="w-full bg-accent-700 hover:bg-accent-800 text-secondary-500 font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600"
           >
-            <span className="text-lg">+</span>
+            <Plus className="w-4 h-4" />
             Create Listing
           </button>
+        </div>
+
+        {/* Results count */}
+        <div className="py-3 text-base text-gray-600">
+          Showing {filteredListings.length}{" "}
+          {activeType === "wtb"
+            ? "want to buy"
+            : activeType === "wts"
+            ? "for sale"
+            : ""} listings in{" "}
+          {category}
+          {filteredListings.length !==
+          UNIFIED_LISTINGS.filter(
+            (l) => {
+              if (activeType === "general") {
+                return l.category === category;
+              }
+              return l.category === category &&
+                l.listingType ===
+                  (activeType === "wtb" ? "want-to-buy" : "for-sale");
+            }
+          ).length
+            ? ` (filtered from ${
+                UNIFIED_LISTINGS.filter(
+                  (l) => {
+                    if (activeType === "general") {
+                      return l.category === category;
+                    }
+                    return l.category === category &&
+                      l.listingType ===
+                        (activeType === "wtb" ? "want-to-buy" : "for-sale");
+                  }
+                ).length
+              } total)`
+            : ""}
         </div>
 
         {/* Active Filters Display */}
@@ -479,7 +479,10 @@ const CategoryPage: React.FC = () => {
         )}
 
         {/* Listings Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className={viewType === "grid"
+          ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          : "flex flex-col gap-4"
+        }>
           {filteredListings.map((listing) => (
             <ListingCard
               key={listing.id}
@@ -489,41 +492,6 @@ const CategoryPage: React.FC = () => {
               onFAQ={handleFAQ}
             />
           ))}
-        </div>
-
-        {/* Results count */}
-        <div className="mt-8 text-center text-gray-600">
-          Showing {filteredListings.length}{" "}
-          {activeType === "wtb"
-            ? "want to buy"
-            : activeType === "wts"
-            ? "for sale"
-            : "general"} listings in{" "}
-          {category}
-          {filteredListings.length !==
-          UNIFIED_LISTINGS.filter(
-            (l) => {
-              if (activeType === "general") {
-                return l.category === category;
-              }
-              return l.category === category &&
-                l.listingType ===
-                  (activeType === "wtb" ? "want-to-buy" : "for-sale");
-            }
-          ).length
-            ? ` (filtered from ${
-                UNIFIED_LISTINGS.filter(
-                  (l) => {
-                    if (activeType === "general") {
-                      return l.category === category;
-                    }
-                    return l.category === category &&
-                      l.listingType ===
-                        (activeType === "wtb" ? "want-to-buy" : "for-sale");
-                  }
-                ).length
-              } total)`
-            : ""}
         </div>
 
         {/* Floating Create Listing Button */}

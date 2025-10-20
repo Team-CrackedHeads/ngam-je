@@ -14,14 +14,17 @@ import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection"
 import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
 import NgamOverview from "../components/threads-ui/NgamOverview";
 import FilterButton from "../components/threads-ui/FilterButton";
+import ViewDropdown from "../components/threads-ui/ViewDropdown";
 import PageHeader from "../components/threads-ui/PageHeader";
 import BreadcrumbNav from "./BreadcrumbNav";
 import { MockAIResponse } from "../../utils/mock-ai-data";
 
 type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
+type ViewType = "grid" | "list";
 
 function ThreadsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
+  const [viewType, setViewType] = useState<ViewType>("grid");
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(6);
@@ -44,12 +47,9 @@ function ThreadsPage() {
   const headerRef = useRef<HTMLDivElement | null>(null);
 
   // UI state
-  const [showFab, setShowFab] = useState(false);
   const [inSearchView, setInSearchView] = useState(false);
   const [inOverviewView, setInOverviewView] = useState(false);
   const [isMetaInView, setIsMetaInView] = useState(false);
-
-  const FAB_SCROLL_THRESHOLD = 200;
 
   // Derived query keywords
   const queryKeywords = useMemo(() => {
@@ -127,26 +127,12 @@ function ThreadsPage() {
     return () => observer.disconnect();
   }, [loadMoreItems]);
 
-  // 👇 FAB visibility logic
-  useEffect(() => {
-    const container = snapContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const scrollTop = container.scrollTop;
-      setShowFab(scrollTop > FAB_SCROLL_THRESHOLD);
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
-
   // 👇 View detection for CTA state
   useEffect(() => {
     const searchEl = searchSectionRef.current;
     const overviewEl = overviewWrapRef.current;
     const metaEl = metaRowRef.current;
-    if (!searchEl || !overviewEl || !metaEl) return;
+    if (!searchEl || !metaEl) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -160,11 +146,11 @@ function ThreadsPage() {
     );
 
     observer.observe(searchEl);
-    observer.observe(overviewEl);
+    if (overviewEl) observer.observe(overviewEl);
     observer.observe(metaEl);
 
     return () => observer.disconnect();
-  }, []);
+  }, [currentOverview, isAILoading]);
 
   // AI Handlers
   const handleAISearchStart = () => {
@@ -184,6 +170,12 @@ function ThreadsPage() {
     setCurrentOverview(r);
     setIsAILoading(false);
     setLastQuery((r as any)?.prompt || "");
+  };
+
+  const handleDismissOverview = () => {
+    setCurrentOverview(null);
+    setIsAILoading(false);
+    setLastQuery("");
   };
 
   // CTA State
@@ -226,39 +218,18 @@ function ThreadsPage() {
               <PageHeader />
             </div>
 
-            {hasOverview && (
-              <>
-                <div id="overview" ref={overviewAnchorRef} className="snap-start h-0" />
-                <div ref={overviewWrapRef} className="mb-4 relative">
-                  <NgamOverview
-                    content={currentOverview?.content}
-                    images={currentOverview?.images}
-                    sources={currentOverview?.sources}
-                    isLoading={isAILoading}
-                  />
-                </div>
-              </>
-            )}
-
-            <FilterButton activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-
-            <div ref={metaRowRef} className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 mt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mt-4">
               <div className="flex items-center gap-3">
-                <p className="text-sm sm:text-base text-gray-600">
-                  Showing {threadsToShow.length} of {allFilteredThreads.length} threads
-                  {activeFilter !== "All" && ` • Filter: ${activeFilter}`}
-                </p>
-                {hasQueryFilter && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-neutral-300 bg-white text-gray-700">
-                    <FilterIcon className="w-3 h-3" />
-                    Query filter
-                    {lastQuery && <span className="max-w-[160px] truncate">: {lastQuery}</span>}
-                    <button onClick={() => setLastQuery("")} className="ml-1 hover:opacity-70">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 font-medium">Sort By:</span>
+                  <FilterButton activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 font-medium">View:</span>
+                  <ViewDropdown activeView={viewType} onViewChange={setViewType} />
+                </div>
               </div>
+
               <button
                 ref={inlineCreateBtnRef}
                 onClick={() => setIsCreateOpen(true)}
@@ -269,7 +240,47 @@ function ThreadsPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {hasOverview && (
+              <>
+                <div id="overview" ref={overviewAnchorRef} className="snap-start h-0" />
+                <div ref={overviewWrapRef} className="mb-4 mt-4 relative">
+                  <button
+                    onClick={handleDismissOverview}
+                    className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm transition-colors"
+                    aria-label="Dismiss overview"
+                  >
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <NgamOverview
+                    content={currentOverview?.content}
+                    images={currentOverview?.images}
+                    sources={currentOverview?.sources}
+                    isLoading={isAILoading}
+                  />
+                </div>
+              </>
+            )}
+
+            <div ref={metaRowRef} className="flex items-center gap-3 py-3">
+              <p className="text-base text-gray-600">
+                Showing {threadsToShow.length} of {allFilteredThreads.length} threads
+              </p>
+              {hasQueryFilter && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-neutral-300 bg-white text-gray-700">
+                  <FilterIcon className="w-3 h-3" />
+                  Query filter
+                  {lastQuery && <span className="max-w-[160px] truncate">: {lastQuery}</span>}
+                  <button onClick={() => setLastQuery("")} className="ml-1 hover:opacity-70">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+
+            <div className={viewType === "grid"
+              ? "grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              : "flex flex-col gap-4"
+            }>
               {threadsToShow.map((thread) => (
                 <ThreadCard key={thread.id} thread={thread} />
               ))}
@@ -294,18 +305,6 @@ function ThreadsPage() {
           </div>
         </section>
       </div>
-
-      {/* Floating Create Button */}
-      {showFab && (
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          aria-label="Create Thread"
-          className="fixed bottom-20 md:bottom-6 right-2 md:right-6 z-50 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 shadow-xl bg-secondary-500 text-accent-700 border border-secondary-600 hover:scale-105 active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="hidden sm:inline font-semibold">Create Thread</span>
-        </button>
-      )}
 
       {/* Bottom CTA */}
       {shouldShowCTA && (
