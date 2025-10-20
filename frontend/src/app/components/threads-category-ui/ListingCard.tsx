@@ -121,18 +121,14 @@ const ListingCard: React.FC<ListingCardProps> = ({
         {currency} {price.toFixed(2)}
       </div>
 
-      {/* Seller info - Updated for new structure */}
+      {/* Seller info */}
       <div className="flex items-center text-sm text-gray-500 mt-2 gap-2">
         <span className="font-medium text-accent-500">
           {seller.name}
-          {seller.verified && <span className="text-green-500 ml-1">✓</span>}
         </span>
         <span>• {seller.location}</span>
         <span>• {seller.timePosted}</span>
       </div>
-
-      {/* Views count (optional) */}
-      <div className="text-xs text-gray-400 mt-1">{listing.views} views</div>
 
       {/* Action buttons */}
       <div className="flex gap-3 mt-4 mt-auto">

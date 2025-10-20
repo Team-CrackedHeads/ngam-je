@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +11,7 @@ import {
 import { ChevronDown } from "lucide-react";
 
 // the different ways users can sort/filter threads
-type FilterType = "Best" | "Hot" | "New" | "Top" | "Rising";
+type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
 
 type FilterDropdownProps = {
   activeFilter: FilterType;
@@ -35,8 +34,15 @@ export default function FilterDropdown({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-40 bg-background/95 backdrop-blur-md border border-border shadow-lg">
-        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+      <DropdownMenuContent
+        side="bottom"
+        align="end" 
+        sideOffset={8}
+        className="min-w-fit bg-background/95 backdrop-blur-md border border-border shadow-lg px-2 py-1"
+      >
+        <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2">
+          Sort by
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {(["Best", "Hot", "New", "Top", "Rising"] as FilterType[]).map(
           (filter) => (
@@ -44,25 +50,13 @@ export default function FilterDropdown({
               key={filter}
               onClick={() => onFilterChange(filter)}
               className={`cursor-pointer transition-colors ${
-                filter === activeFilter ? "font-semibold text-black" : ""
+                filter === activeFilter ? "text-black" : ""
               }`}
               style={{
                 backgroundColor:
                   filter === activeFilter
                     ? "var(--color-secondary-500)"
                     : "transparent",
-              }}
-              onMouseEnter={(e) => {
-                if (filter !== activeFilter) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor =
-                    "var(--color-secondary-500)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (filter !== activeFilter) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor =
-                    "transparent";
-                }
               }}
             >
               {filter}

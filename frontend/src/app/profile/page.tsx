@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Star, CheckCircle, Camera } from "lucide-react";
+import { mockSaleListings, mockWantedListings } from "@/utils/mock-listings-data"
 
 export type User = {
   name: string;
@@ -12,13 +13,30 @@ export type User = {
   ratingCount: number;
   totalListings: number;
   completedDeals: number;
-  forSale: number;
-  wantToBuy: number;
   achievements: { label: string }[];
 };
 
+export interface Listing {
+  id: number;
+  title: string;
+  price?: string;
+  budget?: string;
+  location: string;
+  timestamp: string;
+  description: string;
+  imageUrl?: string;
+  views: number;
+  likes: number;
+  category: string;
+  expiresAt: string
+  subscriptionTier: "basic" | "pro" | "enterprise";
+  isOwner?: boolean;
+}
+
 interface ProfilePageProps {
   user?: User;
+  saleListings?: Listing;
+  wantedListings?: Listing;
 }
 
 // Placeholder user if no prop is passed
@@ -30,8 +48,6 @@ const placeholderUser: User = {
   ratingCount: 24,
   totalListings: 12,
   completedDeals: 28,
-  forSale: 3,
-  wantToBuy: 2,
   achievements: [
     { label: "First Sale" },
     { label: "Trusted Seller" },
@@ -48,8 +64,10 @@ const tabs = [
   { label: "Activity", href: "/profile/activity" },
 ];
 
-export default function ProfilePage({ user }: ProfilePageProps) {
-  const data = user ?? placeholderUser;
+export default function ProfilePage({ user, saleListings, wantedListings }: ProfilePageProps) {
+  const userData = user ?? placeholderUser;
+  const saleListingsData = saleListings ?? mockSaleListings;
+  const wantedListingsData = wantedListings ?? mockWantedListings;
   const pathname = usePathname();
 
   return (
@@ -86,7 +104,7 @@ export default function ProfilePage({ user }: ProfilePageProps) {
           >
             {/* Avatar */}
             <div className="relative w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white bg-secondary-500">
-              {data.name.charAt(0).toUpperCase()}
+              {userData.name.charAt(0).toUpperCase()}
               <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow">
                 <Camera size={16} className="text-accent-500" />
               </div>
@@ -94,10 +112,10 @@ export default function ProfilePage({ user }: ProfilePageProps) {
 
             {/* Profile Info */}
             <div className="flex-1">
-              <h2 className="font-bold text-lg">{data.name}</h2>
-              <p className="text-sm text-gray-600">{data.email}</p>
+              <h2 className="font-bold text-lg">{userData.name}</h2>
+              <p className="text-sm text-gray-600">{userData.email}</p>
               <div className="flex items-center space-x-2 mt-1">
-                {data.verified && (
+                {userData.verified && (
                   <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
                     Verified
                   </span>
@@ -105,7 +123,7 @@ export default function ProfilePage({ user }: ProfilePageProps) {
                 <div className="flex items-center text-sm text-yellow-600">
                   <Star size={16} fill="gold" />
                   <span className="ml-1">
-                    {data.rating} ({data.ratingCount})
+                    {userData.rating} ({userData.ratingCount})
                   </span>
                 </div>
               </div>
@@ -117,14 +135,14 @@ export default function ProfilePage({ user }: ProfilePageProps) {
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.totalListings}</p>
+            <p className="text-2xl font-bold">{saleListingsData.length + wantedListingsData.length}</p>
             <p className="text-sm">Total Listings</p>
           </div>
           <div
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.completedDeals}</p>
+            <p className="text-2xl font-bold">{userData.completedDeals}</p>
             <p className="text-sm">Completed Deals</p>
           </div>
 
@@ -136,11 +154,11 @@ export default function ProfilePage({ user }: ProfilePageProps) {
             <h3 className="font-semibold mb-3">Active Listings</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl p-4 text-center bg-secondary-500">
-                <p className="text-2xl font-bold">{data.forSale}</p>
+                <p className="text-2xl font-bold">{saleListingsData.length}</p>
                 <p className="text-sm">For Sale</p>
               </div>
               <div className="rounded-xl p-4 text-center bg-secondary-100">
-                <p className="text-2xl font-bold">{data.wantToBuy}</p>
+                <p className="text-2xl font-bold">{wantedListingsData.length}</p>
                 <p className="text-sm">Want to Buy</p>
               </div>
             </div>
@@ -153,7 +171,7 @@ export default function ProfilePage({ user }: ProfilePageProps) {
           >
             <h3 className="font-semibold mb-3">Achievements</h3>
             <div className="flex flex-col gap-3">
-              {data.achievements.map((ach, idx) => (
+              {userData.achievements.map((ach, idx) => (
                 <div
                   key={idx}
                   className="rounded-xl p-4 flex items-center justify-between bg-primary-200"

@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
-import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
-import { AIMatchingProps, MatchedListing } from "../types";
+import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { AIMatchingProps, MatchedListing, ColumnType } from "../types";
 import { ListingComparisonModal } from "../ListingComparisonModal";
+import { mockAIMatchings, userAIListing } from "@/utils/mock-ai-matching-data";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -26,149 +28,63 @@ export function AIMatchingSwipe({
   const [activeTab, setActiveTab] = useState<TabType>("queue");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [compareMode, setCompareMode] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [showReaction, setShowReaction] = useState<'like' | 'pass' | null>(null);
+  const [showReaction, setShowReaction] = useState<'like' | 'pass' | 'undo' | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showGalleryView, setShowGalleryView] = useState(false);
 
-  // Mock user's original listing
-  const getUserListing = (): MatchedListing => ({
-    id: "user-listing",
-    title: "Looking for MacBook Pro M3 for Video Editing",
-    description: "I need a MacBook Pro M3 for professional video editing work. Must be in excellent condition.",
-    price: 8000,
-    originalAsk: 8000,
-    images: ["https://via.placeholder.com/400x300"],
-    tags: ["Electronics", "Laptop", "Wanted", "MacBook"],
-    location: "Kuala Lumpur",
-    timeAgo: "1 day ago",
-    seller: "You",
-    type: "buy" as const,
-    category: "Electronics",
-    matchScore: 0,
-    matchReasons: []
+  // Card organization by column - stores listing IDs instead of indices
+  const [cardsByColumn, setCardsByColumn] = useState<Record<ColumnType, string[]>>({
+    passed: [],
+    queue: mockAIMatchings.map(listing => listing.id), // All listings start in queue
+    liked: [],
   });
 
-  // Mock data for comparison
-  const getMockListingsForComparison = (): MatchedListing[] => {
-    return selectedForCompare.map((cardId, idx) => ({
-      id: cardId,
-      title: "MacBook Pro M3 16-inch - Excellent Condition",
-      description: "Need for video editing work. Willing to pay good price for excellent condition.",
-      price: 8500 - (idx * 500),
-      originalAsk: 9000 - (idx * 500),
-      images: ["https://via.placeholder.com/400x300"],
-      tags: ["Electronics", "Laptop", "Apple", "M3"],
-      location: "Kuala Lumpur",
-      timeAgo: "2 hours ago",
-      seller: "John Doe",
-      type: "sell" as const,
-      category: "Electronics",
-      matchScore: [85, 60, 30, 45][idx] || 50,
-      matchReasons: [
-        "Price matches your budget range",
-        "Located in your preferred area",
-        "High seller rating and verified account"
-      ]
-    }));
+  // Carousel API for vertical scrolling
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
+  // Get listing by ID from mockAIMatchings
+  const getListingById = (id: string): MatchedListing | undefined => {
+    return mockAIMatchings.find(listing => listing.id === id);
   };
 
-  // Generate mock listings if none provided
-  const getMockListings = (): MatchedListing[] => {
-    if (availableListings.length > 0) {
-      return availableListings;
-    }
+  // Get user's listing
+  const getUserListing = (): MatchedListing => userAIListing;
 
-    // Fallback mock data
-    return [
-      {
-        id: "1",
-        title: "MacBook Pro M3 16-inch - Excellent Condition",
-        description: "Professional-grade laptop for video editing. Barely used, comes with original box and accessories.",
-        price: 8500,
-        originalAsk: 9000,
-        images: ["https://via.placeholder.com/400x300"],
-        tags: ["Electronics", "Laptop", "Apple", "M3"],
-        location: "Kuala Lumpur",
-        timeAgo: "2 hours ago",
-        seller: "John Doe",
-        type: "sell" as const,
-        category: "Electronics",
-        matchScore: 85,
-        matchReasons: [
-          "Price matches your budget range",
-          "Located in your preferred area",
-          "High seller rating and verified account"
-        ]
-      },
-      {
-        id: "2",
-        title: "MacBook Pro M3 14-inch - Like New",
-        description: "Lightly used MacBook Pro perfect for creative work. 512GB SSD, 16GB RAM.",
-        price: 7800,
-        originalAsk: 8500,
-        images: ["https://via.placeholder.com/400x300"],
-        tags: ["Electronics", "Laptop", "Apple"],
-        location: "Petaling Jaya",
-        timeAgo: "5 hours ago",
-        seller: "Jane Smith",
-        type: "sell" as const,
-        category: "Electronics",
-        matchScore: 60,
-        matchReasons: [
-          "Similar specifications",
-          "Within budget",
-          "Nearby location"
-        ]
-      },
-      {
-        id: "3",
-        title: "MacBook Pro M2 16-inch",
-        description: "Previous generation but still powerful. Great condition, well maintained.",
-        price: 6500,
-        originalAsk: 7000,
-        images: ["https://via.placeholder.com/400x300"],
-        tags: ["Electronics", "Laptop"],
-        location: "Shah Alam",
-        timeAgo: "1 day ago",
-        seller: "Tech Store",
-        type: "sell" as const,
-        category: "Electronics",
-        matchScore: 45,
-        matchReasons: [
-          "Good value for money",
-          "Trusted seller"
-        ]
-      }
-    ];
+  // Get listings for comparison from selected IDs
+  const getListingsForComparison = (): MatchedListing[] => {
+    return selectedForCompare
+      .map(id => getListingById(id))
+      .filter((listing): listing is MatchedListing => listing !== undefined);
   };
 
-  const allListings = getMockListings();
-
-  // Mock cards for each tab
-  const getCardsForTab = (tab: TabType) => {
-    if (tab === "queue") return allListings.slice(currentCardIndex, currentCardIndex + 3);
-    if (tab === "liked") return [];
-    if (tab === "passed") return [];
-    return [];
+  // Get cards (listings) for current tab
+  const getCardsForTab = (tab: TabType): MatchedListing[] => {
+    const listingIds = cardsByColumn[tab];
+    return listingIds
+      .map(id => getListingById(id))
+      .filter((listing): listing is MatchedListing => listing !== undefined);
   };
 
   const cards = getCardsForTab(activeTab);
 
-  // Swipeable Card Component
+  // Swipeable Card Component for Queue
   const SwipeableCard = ({
     listing,
     index,
     totalCards,
-    onSwipe
+    isSelected,
+    onSwipe,
+    onCycle
   }: {
     listing: MatchedListing;
     index: number;
     totalCards: number;
+    isSelected: boolean;
     onSwipe: (direction: 'left' | 'right') => void;
+    onCycle: (direction: 'left' | 'right') => void;
   }) => {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -181,7 +97,11 @@ export function AIMatchingSwipe({
 
       if (Math.abs(velocity) >= 500 || Math.abs(info.offset.x) >= threshold) {
         const direction = info.offset.x > 0 ? 'right' : 'left';
-        onSwipe(direction);
+        if (selectMode) {
+          onCycle(direction);
+        } else {
+          onSwipe(direction);
+        }
       }
     };
 
@@ -223,19 +143,42 @@ export function AIMatchingSwipe({
 
         <div
           onClick={() => {
-            if (!isTopCard || compareMode) return;
-            onViewDetails(listing);
+            if (!isTopCard) return;
+            if (selectMode) {
+              if (isSelected) {
+                setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+              } else {
+                setSelectedForCompare(prev => [...prev, listing.id]);
+              }
+            } else {
+              onViewDetails(listing);
+            }
           }}
           className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden flex flex-col ${
             isTopCard ? 'cursor-pointer' : ''
-          } border-neutral-300`}
+          } ${isSelected ? 'border-4 border-secondary-500' : 'border-neutral-300'}`}
         >
           {/* Card Image */}
           <div className="relative flex-[3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
             <span className="text-accent-400">Image</span>
 
+            {/* Selection Checkbox for Select Mode */}
+            {selectMode && isTopCard && (
+              <div className="absolute top-4 left-4">
+                <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
+                  isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+                }`}>
+                  {isSelected && (
+                    <svg className="w-5 h-5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Match Score Badge */}
-            {isTopCard && activeTab === "queue" && (
+            {isTopCard && activeTab === "queue" && !selectMode && (
               <div className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}>
                 <Sparkles size={14} />
                 <span className="text-sm font-bold">{matchScore}%</span>
@@ -273,29 +216,303 @@ export function AIMatchingSwipe({
     );
   };
 
-  // Handle swipe action
+  // Swipeable Card Component for Liked/Passed (with undo)
+  // Swipeable Carousel Card Component
+  const SwipeableCarouselCard = ({
+    listing,
+    isSelected,
+    isSelectMode,
+    isQueue,
+    onSwipe,
+    onToggleSelect,
+    onViewDetails,
+  }: {
+    listing: MatchedListing;
+    isSelected: boolean;
+    isSelectMode: boolean;
+    isQueue: boolean;
+    onSwipe: (direction: 'left' | 'right') => void;
+    onToggleSelect: () => void;
+    onViewDetails: () => void;
+  }) => {
+    const x = useMotionValue(0);
+    const rotate = useTransform(x, [-200, 0, 200], [-25, 0, 25]);
+    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
+
+    const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const threshold = 100;
+      const velocity = info.velocity.x;
+
+      if (Math.abs(velocity) >= 500 || Math.abs(info.offset.x) >= threshold) {
+        const direction = info.offset.x > 0 ? 'right' : 'left';
+        if (!isSelectMode) {
+          // Queue tab: swipe to pass/like
+          // Liked/Passed tabs: any swipe triggers undo/move back to queue
+          onSwipe(direction);
+        }
+      }
+    };
+
+    const matchScore = listing.matchScore || 85;
+    const getMatchColor = (score: number) => {
+      if (score >= 75) return { bg: 'from-green-100 to-green-200', text: 'text-green-700', border: 'border-green-300' };
+      if (score >= 50) return { bg: 'from-secondary-100 to-secondary-200', text: 'text-secondary-700', border: 'border-secondary-300' };
+      return { bg: 'from-red-100 to-red-200', text: 'text-red-700', border: 'border-red-300' };
+    };
+    const colors = getMatchColor(matchScore);
+
+    return (
+      <motion.div
+        style={{
+          x: !isSelectMode ? x : 0,
+          rotate: !isSelectMode ? rotate : 0,
+          opacity: !isSelectMode ? opacity : 1,
+        }}
+        drag={!isSelectMode ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={1}
+        onDragEnd={handleDragEnd}
+        onClick={() => {
+          if (isSelectMode) {
+            onToggleSelect();
+          } else {
+            onViewDetails();
+          }
+        }}
+        className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden flex flex-col cursor-pointer ${
+          isSelected ? 'border-4 border-secondary-500' : 'border-neutral-300'
+        }`}
+      >
+        {/* Card Image */}
+        <div className="relative flex-[3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+          <span className="text-accent-400">Image</span>
+
+          {/* Selection Checkbox for Select Mode */}
+          {isSelectMode && (
+            <div className="absolute top-4 left-4">
+              <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
+                isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+              }`}>
+                {isSelected && (
+                  <svg className="w-5 h-5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Match Score Badge */}
+          {isQueue && !isSelectMode && (
+            <div className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}>
+              <Sparkles size={14} />
+              <span className="text-sm font-bold">{matchScore}%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Card Content */}
+        <div className="p-4 flex-[2] flex flex-col overflow-hidden">
+          <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
+            {listing.title}
+          </h3>
+          <div className="text-2xl font-bold text-secondary-600 mb-2">
+            RM {listing.price?.toLocaleString() || '0'}
+          </div>
+          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
+            {listing.category}
+          </span>
+          <div className="flex items-center gap-3 text-xs text-accent-500 mb-2">
+            <div className="flex items-center gap-1">
+              <MapPin size={12} />
+              <span>{listing.location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock size={12} />
+              <span>{listing.timeAgo}</span>
+            </div>
+          </div>
+          <p className="text-sm text-accent-500 line-clamp-2">
+            {listing.description}
+          </p>
+        </div>
+      </motion.div>
+    );
+  };
+
+  const UndoableCard = ({
+    listing,
+    index,
+    totalCards,
+    isSelected,
+    onUndo,
+    onCycle
+  }: {
+    listing: MatchedListing;
+    index: number;
+    totalCards: number;
+    isSelected: boolean;
+    onUndo: (id: string) => void;
+    onCycle: (direction: 'left' | 'right') => void;
+  }) => {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const rotate = useTransform(x, [-200, 0, 200], [-25, 0, 25]);
+    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
+
+    const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const threshold = 100;
+      const velocity = info.velocity.x;
+
+      if (Math.abs(velocity) >= 500 || Math.abs(info.offset.x) >= threshold) {
+        const direction = info.offset.x > 0 ? 'right' : 'left';
+        if (selectMode) {
+          onCycle(direction);
+        } else {
+          // Any swipe direction triggers undo in normal mode
+          onUndo(listing.id);
+        }
+      }
+    };
+
+    const isTopCard = index === 0;
+
+    return (
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          x: isTopCard ? x : 0,
+          y: isTopCard ? y : 0,
+          rotate: isTopCard ? rotate : 0,
+          opacity: isTopCard ? opacity : 1,
+          zIndex: totalCards - index,
+        }}
+        animate={{
+          scale: isTopCard ? 1 : 1 - (index * 0.05),
+          y: isTopCard ? 0 : index * 10,
+        }}
+        drag={isTopCard ? true : false}
+        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        dragElastic={1}
+        onDragEnd={handleDragEnd}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div
+          onClick={() => {
+            if (selectMode) {
+              if (isSelected) {
+                setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+              } else {
+                setSelectedForCompare(prev => [...prev, listing.id]);
+              }
+            } else if (index === 0) {
+              onViewDetails(listing);
+            }
+          }}
+          className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden ${
+            isTopCard ? 'cursor-pointer' : ''
+          } ${isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'}`}
+        >
+          {/* Card Image */}
+          <div className="relative h-1/2 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+            <span className="text-accent-400">Image</span>
+
+            {/* Selection Checkbox for Select Mode */}
+            {selectMode && index === 0 && (
+              <div className="absolute top-4 left-4">
+                <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
+                  isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+                }`}>
+                  {isSelected && (
+                    <svg className="w-5 h-5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Card Content */}
+          <div className="p-4 h-1/2 flex flex-col">
+            <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
+              {listing.title}
+            </h3>
+            <div className="text-2xl font-bold text-secondary-600 mb-2">
+              RM {listing.price?.toLocaleString() || '0'}
+            </div>
+            <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
+              {listing.category}
+            </span>
+            <div className="flex items-center gap-3 text-xs text-accent-500 mb-2">
+              <div className="flex items-center gap-1">
+                <MapPin size={12} />
+                <span>{listing.location}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock size={12} />
+                <span>{listing.timeAgo}</span>
+              </div>
+            </div>
+            <p className="text-sm text-accent-500 line-clamp-2">
+              {listing.description}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Handle swipe action - move card between columns
   const handleSwipe = (direction: 'left' | 'right') => {
-    const currentCard = cards[0];
+    if (!carouselApi) return;
+
+    const currentIndex = carouselApi.selectedScrollSnap();
+    const currentCard = cards[currentIndex];
     if (!currentCard) return;
 
-    // Show reaction animation
-    setShowReaction(direction === 'right' ? 'like' : 'pass');
+    if (activeTab === "queue") {
+      // Queue: swipe left = pass, swipe right = like
+      const targetColumn: ColumnType = direction === 'right' ? 'liked' : 'passed';
 
-    // Hide reaction after animation
-    setTimeout(() => {
-      setShowReaction(null);
-    }, 800);
+      // Show reaction animation
+      setShowReaction(direction === 'right' ? 'like' : 'pass');
 
-    if (direction === 'right') {
-      // Liked
-      onMatch(currentCard, 'like');
+      // Hide reaction after animation
+      setTimeout(() => {
+        setShowReaction(null);
+      }, 800);
+
+      // Move card from queue to target column
+      setCardsByColumn(prev => ({
+        ...prev,
+        queue: prev.queue.filter(id => id !== currentCard.id),
+        [targetColumn]: [...prev[targetColumn], currentCard.id],
+      }));
+
+      // Call the onMatch callback
+      if (direction === 'right') {
+        onMatch(currentCard, 'like');
+      } else {
+        onMatch(currentCard, 'pass');
+      }
     } else {
-      // Passed
-      onMatch(currentCard, 'pass');
-    }
+      // Liked/Passed: any swipe moves back to queue (undo)
+      // Show undo animation
+      setShowReaction('undo');
 
-    // Move to next card
-    setCurrentCardIndex(prev => prev + 1);
+      // Hide reaction after animation
+      setTimeout(() => {
+        setShowReaction(null);
+      }, 800);
+
+      setCardsByColumn(prev => ({
+        ...prev,
+        [activeTab]: prev[activeTab].filter(id => id !== currentCard.id),
+        queue: [...prev.queue, currentCard.id],
+      }));
+    }
   };
 
   // Handle button actions
@@ -314,6 +531,54 @@ export function AIMatchingSwipe({
       onViewDetails(cards[0]);
     }
   };
+
+  // Handle undo - move card back to queue
+  const handleUndo = (listingId: string) => {
+    setCardsByColumn(prev => ({
+      ...prev,
+      queue: [...prev.queue, listingId],
+      liked: prev.liked.filter(id => id !== listingId),
+      passed: prev.passed.filter(id => id !== listingId),
+    }));
+  };
+
+  // Handle cycle - navigate carousel
+  const handleCycle = (direction: 'left' | 'right') => {
+    if (!carouselApi) return;
+
+    if (direction === 'left') {
+      // Next card (swipe left or up)
+      carouselApi.scrollNext();
+    } else {
+      // Previous card (swipe right or down)
+      carouselApi.scrollPrev();
+    }
+  };
+
+  // Handle select current card
+  const handleSelectCurrent = () => {
+    if (!carouselApi) return;
+
+    const currentIndex = carouselApi.selectedScrollSnap();
+    const currentCard = cards[currentIndex];
+    if (!currentCard) return;
+
+    if (selectedForCompare.includes(currentCard.id)) {
+      setSelectedForCompare(prev => prev.filter(id => id !== currentCard.id));
+    } else {
+      setSelectedForCompare(prev => [...prev, currentCard.id]);
+    }
+  };
+
+  // Debug: Log carousel API status
+  React.useEffect(() => {
+    if (carouselApi) {
+      console.log('Carousel API initialized:', carouselApi);
+      console.log('Can scroll next:', carouselApi.canScrollNext());
+      console.log('Can scroll prev:', carouselApi.canScrollPrev());
+      console.log('Current snap:', carouselApi.selectedScrollSnap());
+    }
+  }, [carouselApi]);
 
   return (
     <>
@@ -352,8 +617,14 @@ export function AIMatchingSwipe({
                   </button>
                   <button
                     onClick={() => {
-                      setCurrentCardIndex(0);
+                      // Move all cards back to queue
+                      setCardsByColumn({
+                        passed: [],
+                        queue: mockAIMatchings.map(listing => listing.id),
+                        liked: [],
+                      });
                       setShowResetConfirm(false);
+                      setActiveTab("queue");
                     }}
                     className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                   >
@@ -379,43 +650,296 @@ export function AIMatchingSwipe({
               {/* Gallery Header */}
               <div className="flex items-center justify-between p-4 border-b border-neutral-200 shrink-0">
                 <h2 className="text-lg font-bold text-accent-700">All Matches</h2>
-                <button
-                  onClick={() => setShowGalleryView(false)}
-                  className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
-                >
-                  <Minimize2 size={20} className="text-accent-600" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Select Button */}
+                  <button
+                    onClick={() => {
+                      const newSelectMode = !selectMode;
+                      setSelectMode(newSelectMode);
+                      if (!newSelectMode) {
+                        setSelectedForCompare([]);
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      selectMode
+                        ? 'bg-secondary-500 text-accent-700'
+                        : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
+                    }`}
+                  >
+                    {selectMode ? 'Done' : 'Select'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowGalleryView(false);
+                      setSelectMode(false);
+                      setSelectedForCompare([]);
+                    }}
+                    className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
+                  >
+                    <X size={20} className="text-accent-600" />
+                  </button>
+                </div>
               </div>
 
-              {/* Gallery Grid */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {allListings.map((listing) => (
-                    <div
-                      key={listing.id}
-                      onClick={() => {
-                        setShowGalleryView(false);
-                        onViewDetails(listing);
-                      }}
-                      className="bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm active:scale-95 transition-transform"
-                    >
-                      <div className="aspect-square bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center relative">
-                        <span className="text-accent-400 text-xs">Image</span>
-                        <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-gradient-to-r from-green-100 to-green-200 text-green-700 text-xs font-bold">
-                          {listing.matchScore}%
-                        </div>
+              {/* Tabs */}
+              <div className="flex border-b border-neutral-200 shrink-0">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium text-sm transition-colors relative ${
+                      activeTab === tab.id
+                        ? 'text-accent-700'
+                        : 'text-accent-400 hover:text-accent-600'
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-neutral-100">
+                      {cardsByColumn[tab.id].length}
+                    </span>
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="galleryActiveTab"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary-500"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Select Mode Action Bar */}
+              {selectMode && selectedForCompare.length >= 1 && (() => {
+                // Determine which columns the selected cards are from
+                const hasQueue = selectedForCompare.some(id => cardsByColumn.queue.includes(id));
+                const hasLiked = selectedForCompare.some(id => cardsByColumn.liked.includes(id));
+                const hasPassed = selectedForCompare.some(id => cardsByColumn.passed.includes(id));
+
+                // Show all movement buttons if selections span multiple tabs, otherwise exclude current tab
+                const showQueueButton = hasLiked || hasPassed;
+                const showLikedButton = hasQueue || hasPassed;
+                const showPassedButton = hasQueue || hasLiked;
+
+                const buttonCount = [showQueueButton, showLikedButton, showPassedButton, true].filter(Boolean).length;
+
+                return (
+                  <div className="px-4 py-3 bg-secondary-100 border-b border-secondary-200 shrink-0">
+                    <div className="flex flex-col gap-2">
+                      {/* Selection count */}
+                      <div className="text-sm font-medium text-accent-700 text-center">
+                        {selectedForCompare.length} selected {selectedForCompare.length > 5 && <span className="text-red-600">(max 5)</span>}
                       </div>
-                      <div className="p-3">
-                        <h3 className="font-bold text-sm text-accent-700 line-clamp-2 mb-1">
-                          {listing.title}
-                        </h3>
-                        <div className="text-lg font-bold text-secondary-600">
-                          RM {listing.price?.toLocaleString() || '0'}
-                        </div>
+
+                      {/* Batch movement buttons - dynamic grid based on button count */}
+                      <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${buttonCount}, 1fr)` }}>
+                        {showQueueButton && (
+                          <button
+                            onClick={() => {
+                              setCardsByColumn(prev => {
+                                // Only move cards that aren't already in queue
+                                const cardsToMove = selectedForCompare.filter(id => !prev.queue.includes(id));
+                                return {
+                                  queue: [...prev.queue, ...cardsToMove],
+                                  liked: prev.liked.filter(id => !selectedForCompare.includes(id)),
+                                  passed: prev.passed.filter(id => !selectedForCompare.includes(id)),
+                                };
+                              });
+                              setSelectedForCompare([]);
+                            }}
+                            className="text-xs px-3 py-2 bg-white hover:bg-neutral-50 text-accent-700 rounded-lg transition-colors font-medium border border-neutral-300"
+                          >
+                            To Queue
+                          </button>
+                        )}
+                        {showLikedButton && (
+                          <button
+                            onClick={() => {
+                              setCardsByColumn(prev => {
+                                // Only move cards that aren't already in liked
+                                const cardsToMove = selectedForCompare.filter(id => !prev.liked.includes(id));
+                                return {
+                                  queue: prev.queue.filter(id => !selectedForCompare.includes(id)),
+                                  liked: [...prev.liked, ...cardsToMove],
+                                  passed: prev.passed.filter(id => !selectedForCompare.includes(id)),
+                                };
+                              });
+                              setSelectedForCompare([]);
+                            }}
+                            className="text-xs px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors font-medium"
+                          >
+                            To Liked
+                          </button>
+                        )}
+                        {showPassedButton && (
+                          <button
+                            onClick={() => {
+                              setCardsByColumn(prev => {
+                                // Only move cards that aren't already in passed
+                                const cardsToMove = selectedForCompare.filter(id => !prev.passed.includes(id));
+                                return {
+                                  queue: prev.queue.filter(id => !selectedForCompare.includes(id)),
+                                  liked: prev.liked.filter(id => !selectedForCompare.includes(id)),
+                                  passed: [...prev.passed, ...cardsToMove],
+                                };
+                              });
+                              setSelectedForCompare([]);
+                            }}
+                            className="text-xs px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+                          >
+                            To Passed
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (selectedForCompare.length <= 5) {
+                              setShowGalleryView(false);
+                              setShowCompareModal(true);
+                            }
+                          }}
+                          disabled={selectedForCompare.length > 5}
+                          className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
+                            selectedForCompare.length > 5
+                              ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                              : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
+                          }`}
+                        >
+                          Compare
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                );
+              })()}
+
+              {/* Gallery Grid */}
+              <div className="flex-1 overflow-y-auto p-4 pb-24">
+                {cardsByColumn[activeTab].length === 0 ? (
+                  /* Empty state */
+                  <div className="flex flex-col items-center justify-center h-full text-center px-8">
+                    <div className="mb-3 text-accent-400">
+                      <Layers size={48} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-accent-700 mb-2">
+                      {activeTab === "queue" && "No more matches!"}
+                      {activeTab === "liked" && "No liked matches yet"}
+                      {activeTab === "passed" && "No passed matches yet"}
+                    </h3>
+                    <p className="text-sm text-accent-500">
+                      {activeTab === "queue" && "You've reviewed all potential matches"}
+                      {activeTab === "liked" && "Start liking listings to see them here"}
+                      {activeTab === "passed" && "Passed listings will appear here"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {cardsByColumn[activeTab].map((listingId) => {
+                      const listing = getListingById(listingId);
+                      if (!listing) return null;
+                    const isSelected = selectedForCompare.includes(listing.id);
+                    return (
+                      <div
+                        key={listing.id}
+                        onClick={() => {
+                          if (selectMode) {
+                            if (isSelected) {
+                              setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+                            } else {
+                              setSelectedForCompare(prev => [...prev, listing.id]);
+                            }
+                          } else {
+                            setShowGalleryView(false);
+                            onViewDetails(listing);
+                          }
+                        }}
+                        className={`bg-white rounded-xl border overflow-hidden shadow-sm active:scale-95 transition-transform relative ${
+                          isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-200'
+                        }`}
+                      >
+                        {/* Selection Checkbox */}
+                        {selectMode && (
+                          <div className="absolute top-2 left-2 z-10">
+                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                              isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+                            }`}>
+                              {isSelected && (
+                                <svg className="w-4 h-4 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <div className="aspect-square bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center relative">
+                          <span className="text-accent-400 text-xs">Image</span>
+                          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-gradient-to-r from-green-100 to-green-200 text-green-700 text-xs font-bold">
+                            {listing.matchScore}%
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-bold text-sm text-accent-700 line-clamp-2 mb-1">
+                            {listing.title}
+                          </h3>
+                          <div className="text-lg font-bold text-secondary-600">
+                            RM {listing.price?.toLocaleString() || '0'}
+                          </div>
+                          {/* Move Actions - Only show when not in select mode */}
+                          {!selectMode && (
+                            <div className="mt-2 flex justify-center gap-2">
+                              {activeTab !== "queue" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCardsByColumn(prev => ({
+                                      ...prev,
+                                      queue: [...prev.queue, listing.id],
+                                      [activeTab]: prev[activeTab].filter(id => id !== listing.id),
+                                    }));
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors"
+                                  title="Move to Queue"
+                                >
+                                  <Sparkles size={14} className="text-accent-600" />
+                                </button>
+                              )}
+                              {activeTab !== "liked" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCardsByColumn(prev => ({
+                                      ...prev,
+                                      liked: [...prev.liked, listing.id],
+                                      [activeTab]: prev[activeTab].filter(id => id !== listing.id),
+                                    }));
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 flex items-center justify-center transition-colors"
+                                  title="Move to Liked"
+                                >
+                                  <Heart size={14} className="text-green-700" />
+                                </button>
+                              )}
+                              {activeTab !== "passed" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCardsByColumn(prev => ({
+                                      ...prev,
+                                      passed: [...prev.passed, listing.id],
+                                      [activeTab]: prev[activeTab].filter(id => id !== listing.id),
+                                    }));
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
+                                  title="Move to Passed"
+                                >
+                                  <X size={14} className="text-red-700" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -425,15 +949,16 @@ export function AIMatchingSwipe({
       {/* Comparison Modal */}
       <ListingComparisonModal
         isOpen={showCompareModal}
-        listings={getMockListingsForComparison()}
+        listings={getListingsForComparison()}
         userListing={getUserListing()}
-        onClose={() => setShowCompareModal(false)}
+        onClose={() => {
+          setShowCompareModal(false);
+          setSelectedForCompare([]);
+        }}
         onSelectListing={(listing) => {
-          console.log('View details:', listing);
           onViewDetails(listing);
         }}
         onMessage={(listing) => {
-          console.log('Message:', listing);
           onMessage(listing);
         }}
         onNegotiate={(listing) => {
@@ -441,7 +966,7 @@ export function AIMatchingSwipe({
         }}
       />
 
-      <div className={`${compareMode ? "mb-32" : "mb-24"} overflow-hidden`}>
+      <div className="mb-12 overflow-hidden">
       <div className="flex flex-col bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden h-full relative">
         {/* Toolbar */}
         <div className="flex flex-col border-b border-neutral-200 shrink-0">
@@ -451,11 +976,6 @@ export function AIMatchingSwipe({
               <span className="text-sm font-medium text-accent-600">
                 {cards.length} {activeTab === "queue" ? "remaining" : "items"}
               </span>
-              {compareMode && selectedForCompare.length > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 font-medium">
-                  {selectedForCompare.length} selected
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -468,20 +988,6 @@ export function AIMatchingSwipe({
                 title="Search & Filters"
               >
                 <Search size={18} className={showFilters ? "text-white" : "text-accent-600"} />
-              </button>
-
-              {/* Compare Mode Toggle */}
-              <button
-                onClick={() => {
-                  setCompareMode(!compareMode);
-                  setSelectedForCompare([]);
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  compareMode ? "bg-secondary-500 text-accent-700" : "hover:bg-primary-100"
-                }`}
-                title="Compare Mode"
-              >
-                <GitCompare size={18} className={compareMode ? "text-accent-700" : "text-accent-600"} />
               </button>
 
               {/* Gallery View Toggle */}
@@ -500,6 +1006,25 @@ export function AIMatchingSwipe({
                 title="Reset all cards"
               >
                 <RotateCcw size={18} className="text-accent-600" />
+              </button>
+
+              {/* Select Mode Toggle */}
+              <button
+                onClick={() => {
+                  const newSelectMode = !selectMode;
+                  setSelectMode(newSelectMode);
+                  if (!newSelectMode) {
+                    setSelectedForCompare([]);
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  selectMode
+                    ? 'bg-secondary-500 text-accent-700'
+                    : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
+                }`}
+                title="Select Mode"
+              >
+                {selectMode ? 'Done' : 'Select'}
               </button>
             </div>
           </div>
@@ -555,20 +1080,30 @@ export function AIMatchingSwipe({
             ))}
           </div>
 
-          {/* Compare Mode Banner */}
-          {compareMode && (
+          {/* Select Mode Banner */}
+          {selectMode && (
             <div className="p-3 bg-secondary-100 border-b border-secondary-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <GitCompare size={16} className="text-secondary-700" />
                   <span className="text-xs font-medium text-accent-700">
-                    Tap cards to compare (max 4)
+                    {selectedForCompare.length} selected
+                    {selectedForCompare.length > 5 && <span className="text-red-600 ml-1">(max 5 to compare)</span>}
                   </span>
                 </div>
-                {selectedForCompare.length >= 2 && (
+                {selectedForCompare.length >= 1 && (
                   <button
-                    onClick={() => setShowCompareModal(true)}
-                    className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-xs font-medium transition-colors"
+                    onClick={() => {
+                      if (selectedForCompare.length <= 5) {
+                        setShowCompareModal(true);
+                      }
+                    }}
+                    disabled={selectedForCompare.length > 5}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      selectedForCompare.length > 5
+                        ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                        : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700'
+                    }`}
                   >
                     Compare {selectedForCompare.length}
                   </button>
@@ -592,9 +1127,13 @@ export function AIMatchingSwipe({
                 <div className="bg-secondary-500 rounded-full p-8 shadow-2xl">
                   <Heart size={80} className="text-accent-700 fill-accent-700" />
                 </div>
-              ) : (
+              ) : showReaction === 'pass' ? (
                 <div className="bg-red-100 border-4 border-red-300 rounded-full p-8 shadow-2xl">
                   <X size={80} className="text-red-700" strokeWidth={3} />
+                </div>
+              ) : (
+                <div className="bg-primary-100 border-4 border-accent-300 rounded-full p-8 shadow-2xl">
+                  <RotateCcw size={80} className="text-accent-600" strokeWidth={3} />
                 </div>
               )}
             </motion.div>
@@ -621,125 +1160,170 @@ export function AIMatchingSwipe({
               </p>
             </div>
           ) : (
-            /* Card Stack - Using SwipeableCard */
-            <div className="relative w-full" style={{ height: '100%', minHeight: '400px' }}>
-              <AnimatePresence mode="popLayout">
-                {activeTab === "queue" ? (
-                  // Swipeable cards for "For You" tab
-                  cards.map((listing, index) => (
-                    <SwipeableCard
-                      key={listing.id}
-                      listing={listing}
-                      index={index}
-                      totalCards={cards.length}
-                      onSwipe={handleSwipe}
-                    />
-                  ))
-                ) : (
-                // Static cards for liked/passed tabs
-                cards.map((cardIndex, index) => {
-                  const cardId = `${activeTab}-card-${cardIndex}`;
-                  const isSelected = selectedForCompare.includes(cardId);
-
-                  return (
-                    <motion.div
-                      key={cardId}
-                      className="absolute inset-0"
-                      initial={false}
-                      animate={{
-                        scale: 1 - index * 0.05,
-                        y: index * 10,
-                        zIndex: cards.length - index,
-                      }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    >
-                      <div
-                        onClick={() => {
-                          if (compareMode) {
-                            if (isSelected) {
-                              setSelectedForCompare(prev => prev.filter(id => id !== cardId));
-                            } else if (selectedForCompare.length < 4) {
-                              setSelectedForCompare(prev => [...prev, cardId]);
-                            }
+            /* Vertical Carousel */
+            <div className="relative w-full overflow-hidden" style={{ height: '500px' }}>
+              <Carousel
+                orientation="vertical"
+                opts={{
+                  align: "start",
+                  loop: false,
+                  dragFree: false,
+                  containScroll: false,
+                  axis: "y",
+                }}
+                setApi={setCarouselApi}
+                className="w-full h-full"
+              >
+                <CarouselContent className="-mt-8" style={{ height: '500px' }}>
+                  {cards.map((listing, index) => (
+                    <CarouselItem key={`${activeTab}-${listing.id}`} className="pt-8" style={{ height: '500px' }}>
+                      <SwipeableCarouselCard
+                        listing={listing}
+                        isSelected={selectedForCompare.includes(listing.id)}
+                        isSelectMode={selectMode}
+                        isQueue={activeTab === "queue"}
+                        onSwipe={handleSwipe}
+                        onToggleSelect={() => {
+                          if (selectedForCompare.includes(listing.id)) {
+                            setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+                          } else {
+                            setSelectedForCompare(prev => [...prev, listing.id]);
                           }
                         }}
-                        className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden ${
-                          isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
-                        }`}
-                      >
-                        {/* Card Image */}
-                        <div className="relative h-1/2 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                          <span className="text-accent-400">Image</span>
-
-                          {/* Selection Checkbox for Compare Mode */}
-                          {compareMode && index === 0 && (
-                            <div className="absolute top-4 left-4">
-                              <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
-                                isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
-                              }`}>
-                                {isSelected && (
-                                  <svg className="w-5 h-5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="p-4 h-1/2 flex flex-col">
-                          <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
-                            MacBook Pro M3 16-inch - Excellent Condition
-                          </h3>
-                          <div className="text-2xl font-bold text-secondary-600 mb-2">
-                            RM 8,500
-                          </div>
-                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
-                            Electronics
-                          </span>
-                          <p className="text-sm text-accent-500 line-clamp-3 mb-4">
-                            Need for video editing work. Willing to pay good price for excellent condition.
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-                )}
-              </AnimatePresence>
+                        onViewDetails={() => onViewDetails(listing)}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
             </div>
           )}
         </div>
 
-        {/* Action Buttons - only shown when there are cards and not in compare mode */}
-        {cards.length > 0 && !compareMode && activeTab === "queue" && (
-          <div className="p-4 pb-8 bg-white border-t border-neutral-200 shrink-0 relative z-[100]">
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              {/* Pass */}
-              <button
-                onClick={handlePass}
-                className="w-16 h-16 rounded-full bg-white border-2 border-red-300 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md active:scale-95"
-              >
-                <X size={28} className="text-red-500" />
-              </button>
+        {/* Action Buttons - always shown when there are cards and not in gallery or comparison modal */}
+        {cards.length > 0 && !showGalleryView && !showCompareModal && (
+          <div className="p-4 pb-4 bg-white border-t border-neutral-200 shrink-0 relative z-[100]">
+            {activeTab === "queue" ? (
+              selectMode ? (
+                /* Select Mode: Down Arrow | Checkmark | Up Arrow */
+                <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+                  {/* Previous Card */}
+                  <button
+                    onClick={() => handleCycle('right')}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <ChevronDown size={28} className="text-accent-600" />
+                  </button>
 
-              {/* View Details */}
-              <button
-                onClick={handleInfo}
-                className="w-14 h-14 rounded-full bg-white border-2 border-accent-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-sm active:scale-95"
-              >
-                <Info size={20} className="text-accent-600" />
-              </button>
+                  {/* Select Current Card */}
+                  <button
+                    onClick={handleSelectCurrent}
+                    className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-colors shadow-md active:scale-95 ${
+                      (() => {
+                        const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                        const currentCard = cards[currentIndex];
+                        return currentCard && selectedForCompare.includes(currentCard.id)
+                          ? 'bg-secondary-500 border-secondary-500'
+                          : 'bg-white border-secondary-300 hover:bg-secondary-50';
+                      })()
+                    }`}
+                  >
+                    <Check size={28} className={(() => {
+                      const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                      const currentCard = cards[currentIndex];
+                      return currentCard && selectedForCompare.includes(currentCard.id) ? 'text-accent-700' : 'text-secondary-600';
+                    })()} />
+                  </button>
 
-              {/* Like */}
-              <button
-                onClick={handleLike}
-                className="w-16 h-16 rounded-full bg-white border-2 border-green-300 flex items-center justify-center hover:bg-green-50 transition-colors shadow-md active:scale-95"
-              >
-                <Heart size={28} className="text-green-500" />
-              </button>
-            </div>
+                  {/* Next Card */}
+                  <button
+                    onClick={() => handleCycle('left')}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <ChevronUp size={28} className="text-accent-600" />
+                  </button>
+                </div>
+              ) : (
+                /* Normal Mode: Pass/Info/Like buttons */
+                <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+                  {/* Pass */}
+                  <button
+                    onClick={handlePass}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-red-300 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <X size={28} className="text-red-500" />
+                  </button>
+
+                  {/* View Details */}
+                  <button
+                    onClick={handleInfo}
+                    className="w-14 h-14 rounded-full bg-white border-2 border-accent-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-sm active:scale-95"
+                  >
+                    <Info size={20} className="text-accent-600" />
+                  </button>
+
+                  {/* Like */}
+                  <button
+                    onClick={handleLike}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-green-300 flex items-center justify-center hover:bg-green-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <Heart size={28} className="text-green-500" />
+                  </button>
+                </div>
+              )
+            ) : (
+              /* Liked/Passed tabs */
+              selectMode ? (
+                /* Select Mode: Down Arrow | Checkmark | Up Arrow */
+                <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+                  {/* Previous Card */}
+                  <button
+                    onClick={() => handleCycle('right')}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <ChevronDown size={28} className="text-accent-600" />
+                  </button>
+
+                  {/* Select Current Card */}
+                  <button
+                    onClick={handleSelectCurrent}
+                    className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-colors shadow-md active:scale-95 ${
+                      (() => {
+                        const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                        const currentCard = cards[currentIndex];
+                        return currentCard && selectedForCompare.includes(currentCard.id)
+                          ? 'bg-secondary-500 border-secondary-500'
+                          : 'bg-white border-secondary-300 hover:bg-secondary-50';
+                      })()
+                    }`}
+                  >
+                    <Check size={28} className={(() => {
+                      const currentIndex = carouselApi?.selectedScrollSnap() || 0;
+                      const currentCard = cards[currentIndex];
+                      return currentCard && selectedForCompare.includes(currentCard.id) ? 'text-accent-700' : 'text-secondary-600';
+                    })()} />
+                  </button>
+
+                  {/* Next Card */}
+                  <button
+                    onClick={() => handleCycle('left')}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <ChevronUp size={28} className="text-accent-600" />
+                  </button>
+                </div>
+              ) : (
+                /* Normal Mode: Undo button */
+                <div className="flex items-center justify-center max-w-md mx-auto">
+                  <button
+                    onClick={() => cards[0] && handleUndo(cards[0].id)}
+                    className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-neutral-50 transition-colors shadow-md active:scale-95"
+                  >
+                    <Undo size={28} className="text-neutral-600" />
+                  </button>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>
