@@ -45,6 +45,9 @@ import {
 } from "@/components/ui/sidebar";
 
 import SearchHistory from "./sidebar-ui/SearchHistory";
+import BuyListingsMenuItem from "@/app/components/sidebar-ui/menu-items/BuyListingsMenuItem";
+import SellListingsMenuItem from "@/app/components/sidebar-ui/menu-items/SellListingsMenuItem";
+import MatchedListingsMenuItem from "@/app/components/sidebar-ui/menu-items/MatchedListingsMenuItem";
 
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
@@ -794,7 +797,7 @@ function SellListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockWantedListings.filter(listing => listing.isOwner).slice(0, visibleListings).map((listing) => (
+              {mockWantedListings.slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}
@@ -1185,6 +1188,19 @@ export function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          <div className="ml-1 mr-5">
+            <SidebarSeparator />
+          </div>
+
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <MatchedListingsMenuItem />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
         </SidebarContent>{" "}
         {/* <-- This closes SidebarContent */}
         <SidebarFooter className="group-data-[collapsible=icon]:hidden mt-auto">
