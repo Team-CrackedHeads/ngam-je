@@ -26,9 +26,27 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
+  // Tier colors
+  const getTierColor = (tier: number) => {
+    switch (tier) {
+      case 0:
+        return { bg: "bg-neutral-300", text: "text-neutral-700" };
+      case 1:
+        return { bg: "bg-primary-400", text: "text-primary-900" };
+      case 2:
+        return { bg: "bg-secondary-400", text: "text-accent-700" };
+      case 3:
+        return { bg: "bg-accent-600", text: "text-white" };
+      default:
+        return { bg: "bg-neutral-300", text: "text-neutral-700" };
+    }
+  };
+
+  const tierColor = getTierColor(tierLevel);
+
   const TierContent = (
     <div className="w-72 p-4 rounded-lg shadow-md border border-gray-100 bg-white">
-      <h4 className="text-xs font-semibold text-gray-700 mb-3">Tier Progress</h4>
+      <h4 className="text-xs font-semibold text-gray-700 mb-3">Current Tier</h4>
       <div className="relative px-5 py-6 overflow-visible">
         {/* Base Line */}
         <div
@@ -103,7 +121,7 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
               e.stopPropagation();
               setOpen(!open);
             }}
-            className="bg-secondary-500 text-accent-700 font-semibold text-xs sm:text-sm px-2 py-1 rounded-md cursor-pointer"
+            className={`${tierColor.bg} ${tierColor.text} font-semibold text-xs sm:text-sm px-2 py-1 rounded-md cursor-pointer`}
           >
             Tier {tierLevel}
           </Badge>
@@ -119,13 +137,13 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
       </Popover>
     );
   }
-  
+
   /* Desktop Hover Card */
   return (
     <HoverCard openDelay={150} closeDelay={150}>
       <HoverCardTrigger asChild>
         <Badge
-          className="bg-secondary-500 text-accent-700 font-semibold text-xs sm:text-sm px-2 py-1 rounded-md cursor-pointer"
+          className={`${tierColor.bg} ${tierColor.text} font-semibold text-xs sm:text-sm px-2 py-1 rounded-md cursor-pointer`}
           onClick={(e) => e.stopPropagation()}
         >
           Tier {tierLevel}

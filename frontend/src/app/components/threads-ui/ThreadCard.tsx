@@ -9,6 +9,10 @@ import {
   Eye,
   ArrowUp,
   Clock,
+  Bell,
+  UserPlus,
+  Circle,
+  User,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,11 +42,11 @@ function ThreadCard({ thread }: { thread: ThreadData }) {
 
   return (
     <Card
-      className="flex flex-col h-full border border-gray-100 overflow-hidden transition-shadow hover:shadow-lg cursor-pointer"
+      className="flex flex-col h-full border border-gray-100 overflow-hidden transition-shadow hover:shadow-lg cursor-pointer p-0"
       onClick={() => router.push(`/threads/${thread.category}`)}
     >
       {/* Header Section */}
-      <CardHeader className="p-0 relative flex-shrink-0">
+      <CardHeader className="p-0 m-0 relative flex-shrink-0">
         <div className="relative w-full h-40 sm:h-44 md:h-48 lg:h-52">
           <img
             src={thread.imageUrl}
@@ -55,21 +59,8 @@ function ThreadCard({ thread }: { thread: ThreadData }) {
             }}
           />
 
-          {/* Top-left Badges */}
-          <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-            {thread.isPinned && (
-              <Badge className="bg-secondary-500 text-accent-700 border border-secondary-600">
-                <Pin className="w-3 h-3 mr-1" /> Pinned
-              </Badge>
-            )}
-            {thread.isHot && (
-              <Badge className="bg-orange-500 text-white">
-                <Flame className="w-3 h-3 mr-1" /> Hot
-              </Badge>
-            )}
-          </div>
 
-          {/* Popover for Stats */}
+          {/* Menu for options */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -84,17 +75,30 @@ function ThreadCard({ thread }: { thread: ThreadData }) {
             <PopoverContent
               side="bottom"
               align="end"
-              className="w-52 p-2.5 rounded-lg shadow-xl border border-gray-100 bg-white"
+              className="w-48 p-2 rounded-lg shadow-xl border border-gray-100 bg-white"
               onClick={(e) => e.stopPropagation()}
             >
-              <h4 className="text-[13px] font-semibold text-gray-800 pb-1 mb-1 border-b border-gray-100">
-                Thread Stats
-              </h4>
-              <div className="flex flex-col gap-0.5">
-                <Stat icon={<Users className="w-3 h-3 text-black-500" />} label="Contributors" value={thread.contributions} />
-                <Stat icon={<Eye className="w-3 h-3 text-black-500" />} label="Views" value={thread.views} />
-                <Stat icon={<ArrowUp className="w-3 h-3 text-black-500" />} label="Upvotes" value={thread.upvotes} />
-                <Stat icon={<Clock className="w-3 h-3 text-black-500" />} label="Posted" value={thread.timeAgo} />
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Add follow logic here
+                  }}
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Follow Thread
+                </button>
+                <button
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Add mute logic here
+                  }}
+                >
+                  <Bell className="w-4 h-4" />
+                  Mute Notifications
+                </button>
               </div>
             </PopoverContent>
           </Popover>
@@ -103,13 +107,25 @@ function ThreadCard({ thread }: { thread: ThreadData }) {
 
       {/* Body */}
       <CardContent className="flex flex-col flex-grow p-4 sm:p-5">
-        {/* Title + Tier Badge */}
-        <div className="flex items-center gap-2 mb-2 mt-2">
-          <TierBadge tierLevel={tierLevel} /> {/* call the Tier Badge component */}
-          <h2 className="flex-1 text-base sm:text-lg md:text-xl font-semibold text-accent-700 line-clamp-2 mb-1">
-            {thread.title}
-          </h2>
+        {/* Tier Badge and User Stats */}
+        <div className="flex items-center justify-between mb-2">
+          <TierBadge tierLevel={tierLevel} />
+          <div className="flex items-center gap-3 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5">
+              <Circle className="w-2 h-2 fill-success-500 text-success-500" />
+              <span>{thread.onlineUsers || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" />
+              <span>{thread.totalUsers || 0}</span>
+            </div>
+          </div>
         </div>
+
+        {/* Title */}
+        <h2 className="text-base sm:text-lg md:text-xl font-semibold text-accent-700 line-clamp-2 mb-2">
+          {thread.title}
+        </h2>
 
         {/* Description */}
         <p className="text-sm sm:text-base text-gray-500 line-clamp-2 flex-grow mb-3">
@@ -117,7 +133,7 @@ function ThreadCard({ thread }: { thread: ThreadData }) {
         </p>
 
         {/* Tags */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 mb-3">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
           {thread.tags.map((tag, i) => (
             <Badge
               key={i}

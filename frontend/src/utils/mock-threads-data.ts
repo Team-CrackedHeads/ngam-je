@@ -16,6 +16,8 @@ export type ThreadData = {
   timeAgo: string;
   contributions: number;
   category: string; // new: for url routing
+  onlineUsers?: number;
+  totalUsers?: number;
 };
 
 // community data (level 1) - updated with category
@@ -37,6 +39,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "30m ago",
     contributions: 4200,
     category: "apple-devices", // more specific
+    onlineUsers: 342,
+    totalUsers: 8420,
   },
   {
     id: 2,
@@ -55,6 +59,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "45m ago",
     contributions: 3800,
     category: "gaming", // new
+    onlineUsers: 156,
+    totalUsers: 5230,
   },
   {
     id: 3,
@@ -73,6 +79,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "1h ago",
     contributions: 1850,
     category: "fashion", // new
+    onlineUsers: 89,
+    totalUsers: 3420,
   },
   {
     id: 4,
@@ -92,6 +100,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "3h ago",
     contributions: 2100,
     category: "furniture", // new
+    onlineUsers: 67,
+    totalUsers: 2890,
   },
   {
     id: 5,
@@ -110,6 +120,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "5h ago",
     contributions: 920,
     category: "books", // new
+    onlineUsers: 34,
+    totalUsers: 1560,
   },
   {
     id: 6,
@@ -129,6 +141,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "2h ago",
     contributions: 1650,
     category: "sport", // new
+    onlineUsers: 123,
+    totalUsers: 4210,
   },
   {
     id: 7,

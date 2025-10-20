@@ -970,44 +970,93 @@ export function AIMatchingKanban({
                       );
                     })}
 
-                    {/* Floating Action Buttons */}
-                    {column.id === "queue" && cardsByColumn.queue.length > 0 && !selectMode && (
+                    {/* Combined Action and Scroll Buttons (not in selectMode) */}
+                    {cardsByColumn[column.id].length > 0 && !selectMode && (
                       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 z-20">
+                        {/* Scroll Buttons (Up) */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Move top card to passed
-                            const topCard = cardsByColumn.queue[0];
-                            if (topCard !== undefined) {
-                              setCardsByColumn(prev => ({
-                                ...prev,
-                                queue: prev.queue.slice(1),
-                                passed: [topCard, ...prev.passed],
-                              }));
-                            }
+                            handleCycle(column.id, 'up');
                           }}
-                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-red-300 hover:bg-red-50 transition-colors shadow-lg"
+                          className="p-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
                         >
-                          <X size={18} className="text-red-500" />
-                          <span className="text-sm font-medium text-red-600">Pass</span>
+                          <ChevronUp size={18} className="text-accent-600" />
                         </button>
+
+                        {/* Action Buttons for Queue Column (Pass/Like) */}
+                        {column.id === "queue" && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Move top card to passed
+                                const topCard = cardsByColumn.queue[0];
+                                if (topCard !== undefined) {
+                                  setCardsByColumn(prev => ({
+                                    ...prev,
+                                    queue: prev.queue.slice(1),
+                                    passed: [topCard, ...prev.passed],
+                                  }));
+                                }
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-red-300 hover:bg-red-50 transition-colors shadow-lg"
+                            >
+                              <X size={18} className="text-red-500" />
+                              <span className="text-sm font-medium text-red-600">Pass</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Move top card to liked
+                                const topCard = cardsByColumn.queue[0];
+                                if (topCard !== undefined) {
+                                  setCardsByColumn(prev => ({
+                                    ...prev,
+                                    queue: prev.queue.slice(1),
+                                    liked: [topCard, ...prev.liked],
+                                  }));
+                                }
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-green-300 hover:bg-green-50 transition-colors shadow-lg"
+                            >
+                              <Heart size={18} className="text-green-500" />
+                              <span className="text-sm font-medium text-green-600">Like</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Action Buttons for Liked/Passed Columns (Undo) */}
+                        {(column.id === "liked" || column.id === "passed") && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Move top card back to queue
+                              const topCard = cardsByColumn[column.id][0];
+                              if (topCard !== undefined) {
+                                setCardsByColumn(prev => ({
+                                  ...prev,
+                                  [column.id]: prev[column.id].slice(1),
+                                  queue: [topCard, ...prev.queue],
+                                }));
+                              }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-lg"
+                          >
+                            <Undo2 size={18} className="text-accent-600" />
+                            <span className="text-sm font-medium text-accent-700">Undo</span>
+                          </button>
+                        )}
+
+                        {/* Scroll Buttons (Down) */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Move top card to liked
-                            const topCard = cardsByColumn.queue[0];
-                            if (topCard !== undefined) {
-                              setCardsByColumn(prev => ({
-                                ...prev,
-                                queue: prev.queue.slice(1),
-                                liked: [topCard, ...prev.liked],
-                              }));
-                            }
+                            handleCycle(column.id, 'down');
                           }}
-                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-green-300 hover:bg-green-50 transition-colors shadow-lg"
+                          className="p-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
                         >
-                          <Heart size={18} className="text-green-500" />
-                          <span className="text-sm font-medium text-green-600">Like</span>
+                          <ChevronDown size={18} className="text-accent-600" />
                         </button>
                       </div>
                     )}
@@ -1036,30 +1085,6 @@ export function AIMatchingKanban({
                         >
                           <ChevronUp size={18} className="text-accent-600" />
                           <span className="text-sm font-medium text-accent-600">Next</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Undo Button - for Liked and Passed columns (not in select mode) */}
-                    {(column.id === "liked" || column.id === "passed") && cardsByColumn[column.id].length > 0 && !selectMode && (
-                      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center z-20">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Move top card back to queue
-                            const topCard = cardsByColumn[column.id][0];
-                            if (topCard !== undefined) {
-                              setCardsByColumn(prev => ({
-                                ...prev,
-                                [column.id]: prev[column.id].slice(1),
-                                queue: [topCard, ...prev.queue],
-                              }));
-                            }
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-lg"
-                        >
-                          <Undo2 size={18} className="text-accent-600" />
-                          <span className="text-sm font-medium text-accent-700">Undo</span>
                         </button>
                       </div>
                     )}

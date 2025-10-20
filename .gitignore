@@ -118,7 +118,7 @@ bun.lockb
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+humbs.db
 
 # Database
 *.db
