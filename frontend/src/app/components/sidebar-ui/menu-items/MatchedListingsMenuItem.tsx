@@ -22,7 +22,7 @@ export default function BuyListingsMenuItem() {
   const DELOAD_TO_COUNT = 15;
 
   const handleListingClick = (listingId: number) => {
-    router.push(`/listings/${listingId}/matches?type=sale`);
+    router.push(`/listings/${listingId}/matches?type=matched`);
   };
 
   const loadMoreListings = () => {
