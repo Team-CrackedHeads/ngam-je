@@ -17,7 +17,7 @@ export default function BreadcrumbNav() {
 
   return (
     <Breadcrumb>
-      <BreadcrumbList className="flex items-center space-x-1 pb-4">
+      <BreadcrumbList className="flex items-center space-x-1 py-3">
         {/*  Always show Home --- */}
         <BreadcrumbItem>
           <BreadcrumbLink href="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">

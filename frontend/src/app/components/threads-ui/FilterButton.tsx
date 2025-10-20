@@ -23,11 +23,11 @@ export default function FilterDropdown({
   onFilterChange,
 }: FilterDropdownProps) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className="flex items-center gap-1 text-sm font-medium"
+          variant="ghost"
+          className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 h-auto hover:bg-secondary-600 bg-secondary-500 text-accent-700 rounded-full border border-secondary-600"
         >
           {activeFilter}
           <ChevronDown size={16} className="opacity-70" />
@@ -36,9 +36,10 @@ export default function FilterDropdown({
 
       <DropdownMenuContent
         side="bottom"
-        align="end" 
+        align="end"
         sideOffset={8}
-        className="min-w-fit bg-background/95 backdrop-blur-md border border-border shadow-lg px-2 py-1"
+        avoidCollisions={false}
+        className="min-w-fit bg-primary-50 border border-primary-200 shadow-lg px-2 py-1 z-[9999]"
       >
         <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2">
           Sort by
