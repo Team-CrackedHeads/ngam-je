@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from "react";
+import {
+  ShieldCheck,
+  MapPin,
+  Lock,
+  Clock,
+  Eye,
+  Image,
+  Sparkles,
+  ArrowDown,
+  ArrowUp,
+  PlusCircle,
+  MinusCircle,
+} from "lucide-react";
 
-// Updated types to match UnifiedListingData structure
+// --- Constants ---
+const ICON_SIZE = 16;
+
+// --- Types ---
 export type PrimaryFilter = "Verified Sellers" | "Nearby" | null;
 export type QuickFilter =
   | "Protected Listings"
@@ -27,7 +43,6 @@ interface SortingProps {
   };
 }
 
-// A component for the primary filter and sort navigation bar.
 const Sorting: React.FC<SortingProps> = ({
   onFiltersChange,
   initialFilters = {
@@ -36,6 +51,7 @@ const Sorting: React.FC<SortingProps> = ({
     quickSort: null,
   },
 }) => {
+  // --- States ---
   const [activePrimaryFilter, setActivePrimaryFilter] = useState<PrimaryFilter>(
     initialFilters.primaryFilter
   );
@@ -47,141 +63,127 @@ const Sorting: React.FC<SortingProps> = ({
     initialFilters.quickSort
   );
 
-  // Emit changes to parent component
+  // --- Emit changes to parent ---
   useEffect(() => {
-    if (onFiltersChange) {
-      onFiltersChange({
-        primaryFilter: activePrimaryFilter,
-        quickFilters: activeQuickFilters,
-        quickSort: activeQuickSort,
-      });
-    }
-  }, [
-    activePrimaryFilter,
-    activeQuickFilters,
-    activeQuickSort,
-    onFiltersChange,
-  ]);
+    onFiltersChange?.({
+      primaryFilter: activePrimaryFilter,
+      quickFilters: activeQuickFilters,
+      quickSort: activeQuickSort,
+    });
+  }, [activePrimaryFilter, activeQuickFilters, activeQuickSort, onFiltersChange]);
 
-  // --- Primary Button Handlers ---
-
+  // --- Handlers ---
   const handlePrimaryFilterClick = (filter: PrimaryFilter) => {
-    // Toggle the filter if it's already active, otherwise set it
     setActivePrimaryFilter((current) => (current === filter ? null : filter));
-    console.log(`Primary filter set to: ${filter}`);
   };
 
-  const handleToggleMore = () => {
-    setIsMoreOpen(!isMoreOpen);
-  };
-
-  // --- Secondary Filter/Sort Handlers (within the 'More' dropdown) ---
+  const handleToggleMore = () => setIsMoreOpen(!isMoreOpen);
 
   const handleQuickFilterToggle = (filter: QuickFilter) => {
-    setActiveQuickFilters(
-      (current) =>
-        current.includes(filter)
-          ? current.filter((f) => f !== filter) // Remove if active
-          : [...current, filter] // Add if inactive
+    setActiveQuickFilters((current) =>
+      current.includes(filter)
+        ? current.filter((f) => f !== filter)
+        : [...current, filter]
     );
-    console.log(`Toggled quick filter: ${filter}`);
   };
 
   const handleQuickSortChange = (sort: QuickSort) => {
-    // Allow unselecting by clicking the active sort option again, or set the new one
     setActiveQuickSort((current) => (current === sort ? null : sort));
-    console.log(`Set quick sort to: ${sort}`);
   };
 
-  // Updated primary buttons to match UnifiedListingData features
+  // --- Primary Buttons ---
   const primaryButtons = [
     {
       label: "Verified",
       filter: "Verified Sellers" as PrimaryFilter,
-      icon: "✓",
+      icon: <ShieldCheck size={ICON_SIZE} />,
     },
-    { label: "Nearby", filter: "Nearby" as PrimaryFilter, icon: "📍" },
+    {
+      label: "Nearby",
+      filter: "Nearby" as PrimaryFilter,
+      icon: <MapPin size={ICON_SIZE}/>,
+    },
   ];
 
-  // Updated quick filter options to match UnifiedListingData fields
-  const quickFilterOptions: {
-    label: string;
-    filter: QuickFilter;
-    icon: string;
-  }[] = [
-    { label: "Protected Listings", filter: "Protected Listings", icon: "🔒" }, // Based on 'protected' field
-    { label: "Posted Today", filter: "Posted Today", icon: "🕒" },
-    { label: "High Views", filter: "High Views", icon: "👁️" }, // Based on 'views' field
-    { label: "Has Gallery", filter: "Has Gallery", icon: "🖼️" }, // Based on 'gallery' field
+  // --- Quick Filters ---
+  const quickFilterOptions = [
+    {
+      label: "Protected Listings",
+      filter: "Protected Listings" as QuickFilter,
+      icon: <Lock size={ICON_SIZE} />,
+    },
+    {
+      label: "Posted Today",
+      filter: "Posted Today" as QuickFilter,
+      icon: <Clock size={ICON_SIZE} />,
+    },
+    {
+      label: "High Views",
+      filter: "High Views" as QuickFilter,
+      icon: <Eye size={ICON_SIZE} />,
+    },
+    {
+      label: "Has Gallery",
+      filter: "Has Gallery" as QuickFilter,
+      icon: <Image size={ICON_SIZE} />,
+    },
   ];
 
-  // Updated quick sort options to match UnifiedListingData structure
-  const quickSortOptions: { label: string; sort: QuickSort; icon: string }[] = [
-    { label: "Nearest First", sort: "Nearest First", icon: "📍" },
-    { label: "Newest First", sort: "Newest First", icon: "🆕" },
-    { label: "Lowest Price", sort: "Lowest Price", icon: "💰" },
-    { label: "Highest Price", sort: "Highest Price", icon: "💎" }, // NEW: Added high to low price
-    { label: "Most Views", sort: "Most Views", icon: "👁️" }, // NEW: Based on views field
+  // --- Quick Sort ---
+  const quickSortOptions = [
+    { label: "Nearest First", sort: "Nearest First" as QuickSort, icon: <MapPin size={ICON_SIZE} /> },
+    { label: "Newest First", sort: "Newest First" as QuickSort, icon: <Sparkles size={ICON_SIZE} /> },
+    { label: "Lowest Price", sort: "Lowest Price" as QuickSort, icon: <ArrowDown size={ICON_SIZE} /> },
+    { label: "Highest Price", sort: "Highest Price" as QuickSort, icon: <ArrowUp size={ICON_SIZE} /> },
+    { label: "Most Views", sort: "Most Views" as QuickSort, icon: <Eye size={ICON_SIZE} /> },
   ];
 
-  // Helper function for primary button styling with theme colors
+  // --- Styles ---
   const getPrimaryButtonClasses = (filter: PrimaryFilter) => {
     const isActive = activePrimaryFilter === filter;
     return `
-            flex items-center space-x-1 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200
-            ${
-              isActive
-                ? "text-white" // Active state
-                : "text-gray-800 hover:bg-gray-200" // Inactive state
-            }
-        `;
+      flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200
+      ${isActive ? "bg-secondary-500 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}
+    `;
   };
 
-  // Helper function for chip styling with theme colors
-  const getChipClasses = (isActive: boolean) => {
-    return `
-            flex items-center space-x-1 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap
-            ${
-              isActive
-                ? "text-white" // Active state for chips
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300" // Inactive state for chips
-            }
-        `;
-  };
+  const getChipClasses = (isActive: boolean) => `
+      flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer
+      ${isActive ? "bg-accent-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
+  `;
 
+  // --- Render ---
   return (
     <div className="w-full">
-      {/* --- PRIMARY BUTTONS (Verified Sellers, Nearby, More/Less) --- */}
+      {/* --- PRIMARY BUTTONS --- */}
       <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
         {primaryButtons.map(({ label, filter, icon }) => (
           <button
             key={filter}
             onClick={() => handlePrimaryFilterClick(filter)}
-            className={`${getPrimaryButtonClasses(filter)} ${
-              activePrimaryFilter === filter ? "bg-secondary-500" : "bg-gray-100"
-            }`}
+            className={getPrimaryButtonClasses(filter)}
           >
-            <span>{icon}</span>
+            {icon}
             <span>{label}</span>
           </button>
         ))}
 
-        {/* 'More' / 'Less' Button */}
+        {/* 'More' Button */}
         <button
           onClick={handleToggleMore}
-          className={`flex items-center space-x-1 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200
-                        ${
-                          isMoreOpen
-                            ? "bg-gray-400 text-white"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        }`}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200
+            ${isMoreOpen ? "bg-gray-400 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}
         >
-          <span>{isMoreOpen ? "➖" : "✨"}</span>
+          {isMoreOpen ? (
+            <MinusCircle size={ICON_SIZE} />
+          ) : (
+            <PlusCircle size={ICON_SIZE} />
+          )}
           <span>{isMoreOpen ? "Less" : "More"}</span>
         </button>
       </div>
 
-      {/* --- DROPDOWN/FILTER PANEL (Content shown when 'More' is clicked) --- */}
+      {/* --- MORE DROPDOWN --- */}
       {isMoreOpen && (
         <div className="mt-4 p-4 border-t border-gray-200 animate-fadeIn">
           {/* Quick Filters */}
@@ -193,11 +195,9 @@ const Sorting: React.FC<SortingProps> = ({
               <div
                 key={filter}
                 onClick={() => handleQuickFilterToggle(filter)}
-                className={`${getChipClasses(activeQuickFilters.includes(filter))} ${
-                  activeQuickFilters.includes(filter) ? "bg-accent-700" : ""
-                }`}
+                className={getChipClasses(activeQuickFilters.includes(filter))}
               >
-                <span>{icon}</span>
+                {icon}
                 <span>{label}</span>
               </div>
             ))}
@@ -212,11 +212,9 @@ const Sorting: React.FC<SortingProps> = ({
               <div
                 key={sort}
                 onClick={() => handleQuickSortChange(sort)}
-                className={`${getChipClasses(activeQuickSort === sort)} ${
-                  activeQuickSort === sort ? "bg-accent-700" : ""
-                }`}
+                className={getChipClasses(activeQuickSort === sort)}
               >
-                <span>{icon}</span>
+                {icon}
                 <span>{label}</span>
               </div>
             ))}
