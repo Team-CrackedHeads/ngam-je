@@ -266,20 +266,51 @@ export default function ListingMatchesPage() {
 
           {/* Footer Actions */}
           <div className="px-6 py-4 border-t border-neutral-200 bg-primary-50 shrink-0">
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setSelectedListing(null)}
-                variant="outline"
-                className="flex-1"
-              >
-                Close
-              </Button>
-              <Button
-                className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700"
-              >
-                Contact Seller
-              </Button>
-            </div>
+            {listingType !== "matched" ?
+              (
+              // Buy and sell
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700"
+                >
+                  Contact
+                </Button>
+                <Button
+                  onClick={() => setSelectedListing(null)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+              </div>
+              ) : (
+              // Matched
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700"
+                >
+                  Checkout
+                </Button>
+                <Button
+                  className="flex-1 bg-secondary-400 hover:bg-secondary-600 text-accent-700"
+                >
+                  Contact
+                </Button>
+                <Button
+                  className="flex-1 bg-secondary-200 hover:bg-secondary-600 text-accent-700"
+                >
+                  Unmatch
+                </Button>
+                <Button
+                  onClick={() => setSelectedListing(null)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+              </div>
+              )
+            }
           </div>
         </Card>
       </motion.div>
@@ -341,8 +372,10 @@ export default function ListingMatchesPage() {
             <div className="flex items-center gap-3 mb-4">
               {listingType === "sale" ? (
                 <ShoppingCart className="w-6 h-6 text-secondary-600" />
-              ) : (
+              ) : listingType === "wanted" ? (
                 <Package className="w-6 h-6 text-secondary-600" />
+              ) : (
+                <Cable className="w-6 h-6 text-secondary-600" />
               )}
               <h2 className="text-2xl font-bold text-accent-700">
                 Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing
@@ -369,9 +402,11 @@ export default function ListingMatchesPage() {
             {/* Header with icon and label */}
             <div className="flex items-center gap-2 mb-3">
               {listingType === "sale" ? (
-                <ShoppingCart className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+                <ShoppingCart className="w-6 h-6 text-secondary-600" />
+              ) : listingType === "wanted" ? (
+                <Package className="w-6 h-6 text-secondary-600" />
               ) : (
-                <Package className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+                <Cable className="w-6 h-6 text-secondary-600" />
               )}
               <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing</span>
             </div>
@@ -395,24 +430,28 @@ export default function ListingMatchesPage() {
           </div>
         )}
 
-        {/* Matches Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <Sparkles className="w-6 h-6 text-secondary-600" />
-          <h2 className="text-2xl font-bold text-accent-700">
-            Your Matches
-          </h2>
-        </div>
+        {listingType !== "matched" && (
+          <>
+            {/* Matches Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <Sparkles className="w-6 h-6 text-secondary-600" />
+              <h2 className="text-2xl font-bold text-accent-700">
+                Your Matches
+              </h2>
+            </div>
 
-        {/* AI Matching Component */}
-        <AIMatchingContainer
-          userMode={listingType === "sale" ? "seller" : "buyer"}
-          userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
-          availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
-          onMatch={() => {}}
-          onMessage={() => {}}
-          onViewDetails={(listing) => setSelectedListing(listing)}
-          onClose={() => {}}
-        />
+            {/* AI Matching Component */}
+            <AIMatchingContainer
+              userMode={listingType === "sale" ? "seller" : "buyer"}
+              userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
+              availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
+              onMatch={() => {}}
+              onMessage={() => {}}
+              onViewDetails={(listing) => setSelectedListing(listing)}
+              onClose={() => {}}
+            />
+          </>
+        )}
         </div>
       </div>
     </>
