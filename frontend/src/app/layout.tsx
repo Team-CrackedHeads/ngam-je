@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full overflow-hidden" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-y-auto`}
         style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
       >
         <MockAuthProvider>
