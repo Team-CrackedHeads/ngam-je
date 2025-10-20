@@ -38,8 +38,8 @@ const tabs = [
 
 export default function ProfilePage({ user, saleListings, wantedListings }: ProfilePageProps) {
   const userData = user ?? MOCK_USER;
-  const saleListingsData = saleListings ?? mockSaleListings;
-  const wantedListingsData = wantedListings ?? mockWantedListings;
+  const saleListingsData = (saleListings ?? mockSaleListings).filter(listing => listing.isOwner === true);
+  const wantedListingsData = (wantedListings ?? mockWantedListings).filter(listing => listing.isOwner === true);
   const pathname = usePathname();
 
   return (
@@ -122,7 +122,7 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
             className="rounded-2xl shadow p-4 md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <h3 className="font-semibold">Active Listings</h3>
               <span className="px-2 sm:px-3 py-1 text-xs rounded-full bg-secondary-500 text-accent-700 font-medium whitespace-nowrap">
                 {saleListingsData.length + wantedListingsData.length}

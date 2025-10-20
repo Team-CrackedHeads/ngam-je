@@ -471,7 +471,7 @@ export default function ListingsPage() {
 
   // Filter to show only the user's own listings
   const allListings = activeTab === "sale" ? mockSaleListings : mockWantedListings;
-  const userListings = allListings;
+  const userListings = allListings.filter(listing => listing.isOwner === true);
   const categories = [...new Set(userListings.map(listing => listing.category))];
   const currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
   const ActiveIcon = activeTab === "sale" ? ShoppingCart : Package;
