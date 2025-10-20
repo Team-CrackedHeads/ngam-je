@@ -1,11 +1,13 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, AlertTriangle, Sparkles } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ViewDropdown from "@/app/components/threads-ui/ViewDropdown";
+import CategoryDropdown from "@/app/components/ui/CategoryDropdown";
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -449,6 +451,7 @@ export default function ListingsPage() {
   const [activeTab, setActiveTab] = useState<"sale" | "wanted">("sale");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     const type = searchParams.get("type") as "sale" | "wanted";
@@ -468,7 +471,9 @@ export default function ListingsPage() {
 
   // Filter to show only the user's own listings
   const allListings = activeTab === "sale" ? mockSaleListings : mockWantedListings;
-  const currentListings = allListings.filter(listing => listing.isOwner === true);
+  const userListings = allListings;
+  const categories = [...new Set(userListings.map(listing => listing.category))];
+  const currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
   const ActiveIcon = activeTab === "sale" ? ShoppingCart : Package;
 
   return (
@@ -497,37 +502,25 @@ export default function ListingsPage() {
           })}
         </div>
 
-        {/* Listings Count and Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-accent-600">
-              {currentListings.length} {activeTab === "sale" ? "items for sale" : "wanted items"}
-            </span>
+        {/* Control Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-secondary-500 text-accent-700"
-                    : "bg-white text-accent-500 hover:bg-secondary-200"
-                }`}
-              >
-                <Grid size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === "list"
-                    ? "bg-secondary-500 text-accent-700"
-                    : "bg-white text-accent-500 hover:bg-secondary-200"
-                }`}
-              >
-                <List size={16} />
-              </button>
+              <span className="text-sm text-gray-600 font-medium">Sort By:</span>
+              <CategoryDropdown categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 font-medium">View:</span>
+              <ViewDropdown activeView={viewMode} onViewChange={setViewMode} />
             </div>
           </div>
-          <button className="px-4 py-2 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-            + New {activeTab === "sale" ? "Sale" : "Request"}
+
+          <button
+            onClick={() => {}}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600"
+          >
+            <Plus className="w-4 h-4" />
+            Create Listing
           </button>
         </div>
 
