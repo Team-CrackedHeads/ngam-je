@@ -116,7 +116,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
       <CardContent className="flex flex-col flex-grow p-4 sm:p-5">
         {/* Tier Badge and User Stats */}
         <div className="flex items-center justify-between mb-2">
-          <TierBadge tierLevel={tierLevel} />
+          <TierBadge tierLevel={tierLevel} category={thread.category} />
           <div className="flex items-center gap-3 text-xs text-gray-600">
             <div className="flex items-center gap-1.5">
               <Circle className="w-2 h-2 fill-success-500 text-success-500" />

@@ -161,7 +161,9 @@ export const MOCK_THREADS: ThreadData[] = [
     isHot: true, // Now hot
     timeAgo: "30m ago",
     contributions: 4200,
-    category: "ai-tools", // More specific for AI/software content
+    category: "ai-tools", // More specific for AI/software content,
+    onlineUsers: 101,
+    totalUsers: 2154,
   },
   {
     id: 8,
@@ -181,6 +183,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "45m ago",
     contributions: 3800,
     category: "fashion", // Kept 'fashion'
+    onlineUsers: 120,
+    totalUsers: 1928,
   },
   {
     id: 9,
@@ -200,6 +204,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "1h ago",
     contributions: 1850,
     category: "gaming", // Changed from 'fashion' to 'gaming'
+    onlineUsers: 19,
+    totalUsers: 1020,
   },
   {
     id: 10,
@@ -219,6 +225,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "3h ago",
     contributions: 2100,
     category: "furniture", // Kept 'furniture'
+    onlineUsers: 100,
+    totalUsers: 1200,
   },
   {
     id: 11,
@@ -238,6 +246,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "5h ago",
     contributions: 920,
     category: "books", // Kept 'books'
+    onlineUsers: 10,
+    totalUsers: 2010,
   },
   {
     id: 12,
@@ -257,6 +267,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "2h ago",
     contributions: 1650,
     category: "sport", // Kept 'sport'
+    onlineUsers: 102,
+    totalUsers: 1029,
   },
 
   {
@@ -276,6 +288,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "1d ago",
     contributions: 1900,
     category: "furniture",
+    onlineUsers: 104,
+    totalUsers: 4038,
   },
   {
     id: 14,
@@ -295,6 +309,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "15m ago",
     contributions: 5500,
     category: "pc-building",
+    onlineUsers: 102,
+    totalUsers: 2038,
   },
   {
     id: 15,
@@ -313,6 +329,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "6h ago",
     contributions: 1100,
     category: "fashion",
+    onlineUsers: 213,
+    totalUsers: 8420,
   },
   {
     id: 16,
@@ -332,6 +350,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "2h ago",
     contributions: 3200,
     category: "sport",
+    onlineUsers: 27,
+    totalUsers: 727,
   },
   {
     id: 17,
@@ -351,6 +371,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "4h ago",
     contributions: 1550,
     category: "books",
+    onlineUsers: 342,
+    totalUsers: 8420,
   },
   {
     id: 18,
@@ -370,6 +392,8 @@ export const MOCK_THREADS: ThreadData[] = [
     timeAgo: "55m ago",
     contributions: 4000,
     category: "smart-home",
+    onlineUsers: 12,
+    totalUsers: 840,
   },
 ];
 // Define the ListingData type structure as provided by you (LUQMAN)

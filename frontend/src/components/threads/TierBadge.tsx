@@ -31,7 +31,7 @@ function useIsMobile(): boolean {
 }
 
 /* responsive for desktop hover or mobile popover) */
-function TierBadge({ tierLevel }: { tierLevel: number }) {
+function TierBadge({ tierLevel, category }: { tierLevel: number; category?: string }) {
   const router = useRouter(); // maryam
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
@@ -57,7 +57,8 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
   // maryam
   const handleBadgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/threads/pricing?tier=${tierLevel}`);
+    const categoryParam = category ? `&category=${category}` : '';
+    router.push(`/threads/pricing?tier=${tierLevel}${categoryParam}`);
   };
 
   const TierContent = (
