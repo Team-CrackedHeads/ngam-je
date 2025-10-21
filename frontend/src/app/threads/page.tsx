@@ -8,17 +8,17 @@ import {
   ChevronUp,
   MessageSquarePlus,
 } from "lucide-react";
-import ThreadCard from "../components/threads-ui/ThreadCard";
-import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
+import ThreadCard from "@/components/threads/ThreadCard";
+import { MOCK_THREADS, ThreadData } from "@/utils/mock-threads-data";
 
-import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
-import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
-import NgamOverview from "../components/threads-ui/NgamOverview";
-import FilterButton, { FilterType } from "../components/threads-ui/FilterButton";
-import ViewDropdown from "../components/threads-ui/ViewDropdown";
-import PageHeader from "../components/threads-ui/PageHeader";
+import CreateThreadsSection from "@/components/threads/CreateThreadsSection";
+import AIAgentSearch from "@/components/threads/AIAgentSearch";
+import NgamOverview from "@/components/threads/NgamOverview";
+import FilterButton, { FilterType } from "@/components/threads/FilterButton";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import PageHeader from "@/components/threads/PageHeader";
 import BreadcrumbNav from "./BreadcrumbNav"; // ✅ Added import
-import { MockAIResponse } from "../../utils/mock-ai-data";
+import { MockAIResponse } from "@/utils/mock-ai-data";
 
 type ViewType = "grid" | "list";
 
@@ -235,7 +235,7 @@ function ThreadsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600 font-medium">View:</span>
-                  <ViewDropdown activeView={viewType} onViewChange={setViewType} />
+                  <ViewDropdown activeView={viewType} viewAction={setViewType} />
                 </div>
               </div>
 

@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
 import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
-import { AIMatchingProps, MatchedListing } from "../types";
-import { ListingComparisonModal } from "../ListingComparisonModal";
+import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
+import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 
 type TabType = "queue" | "liked" | "passed";
 

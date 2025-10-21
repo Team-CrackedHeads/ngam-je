@@ -1,4 +1,4 @@
-import { Question } from "../app/components/threads-product-faq/types";
+import { Question } from "@/components/threads/product-faq/types";
 
 export const mockQuestions: Question[] = [
   {

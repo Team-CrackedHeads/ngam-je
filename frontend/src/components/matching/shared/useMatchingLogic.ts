@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MatchedListing, SortOption } from "../types";
+import { MatchedListing, SortOption } from "@/components/matching/types";
 
 export interface ListingType {
   id: number | string;

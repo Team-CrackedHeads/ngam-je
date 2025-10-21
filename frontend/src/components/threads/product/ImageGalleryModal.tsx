@@ -1,4 +1,4 @@
-// src/app/components/threads-product-ui/ImageGalleryModal.tsx
+// src/components/threads/product/ImageGalleryModal.tsx
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 

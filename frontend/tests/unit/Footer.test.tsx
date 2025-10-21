@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { usePathname } from 'next/navigation'
-import Footer from '@/app/components/Footer'
+import Footer from '@/components/layout/Footer'
 import {
   renderWithViewport,
   testAllViewports,

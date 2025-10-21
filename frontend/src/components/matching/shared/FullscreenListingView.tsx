@@ -20,8 +20,8 @@ import {
   ChevronRight,
   Undo2,
 } from "lucide-react";
-import { MatchedListing } from "../types";
-import { useCompare } from "../contexts/CompareContext";
+import { MatchedListing } from "@/components/matching/types";
+import { useCompare } from "@/components/matching/contexts/CompareContext";
 
 interface FullscreenListingViewProps {
   isOpen: boolean;

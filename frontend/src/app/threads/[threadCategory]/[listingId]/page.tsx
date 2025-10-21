@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { BreadcrumbNav } from "@/app/components/threads-product-ui/BreadcrumbNav";
-import { ProductDetails } from "@/app/components/threads-product-ui/ProductDetails";
+import { BreadcrumbNav } from "@/components/threads/product/BreadcrumbNav";
+import { ProductDetails } from "@/components/threads/product/ProductDetails";
 // Import unified data instead
 import { getListingById } from "@/utils/mock-threads-data";
 

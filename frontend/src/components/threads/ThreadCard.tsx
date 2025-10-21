@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { ThreadData } from "@/utils/mock-threads-data";
 import { motion } from "framer-motion";
-import TierBadge from "@/app/components/threads-ui/TierBadge";
+import TierBadge from "@/components/threads/TierBadge";
 
 /* ---------------- Helper Functions ---------------- */
 function getTierLevel(current: number, goal: number): number {

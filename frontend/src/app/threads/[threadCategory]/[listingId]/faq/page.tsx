@@ -3,10 +3,10 @@
 import "@/app/globals.css";
 import React, { useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import AISummary from "../../../../components/threads-product-faq/AISummary";
-import Question from "../../../../components/threads-product-faq/Question";
-import { Question as QuestionType, Answer, VoteType } from "../../../../components/threads-product-faq/types";
-import { mockQuestions, mockAiSummary } from "../../../../../utils/mock-threads-faq-data";
+import AISummary from "@/components/threads/product-faq/AISummary";
+import Question from "@/components/threads/product-faq/Question";
+import { Question as QuestionType, Answer, VoteType } from "@/components/threads/product-faq/types";
+import { mockQuestions, mockAiSummary } from "@/utils/mock-threads-faq-data";
 
 const FAQPage: React.FC = () => {
   const handleBackClick = () => window.history.back();

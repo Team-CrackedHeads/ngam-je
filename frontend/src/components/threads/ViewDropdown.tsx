@@ -8,19 +8,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Grid3x3, List } from "lucide-react";
 
-type CategoryDropdownProps = {
-  categories: string[];
-  selectedCategory: string | null;
-  onSelectCategory: (category: string | null) => void;
+type ViewType = "grid" | "list";
+
+type ViewDropdownProps = {
+  activeView: ViewType;
+  viewAction: (view: ViewType) => void;
 };
 
-export default function CategoryDropdown({
-  categories,
-  selectedCategory,
-  onSelectCategory,
-}: CategoryDropdownProps) {
+export default function ViewDropdown({
+  activeView,
+  viewAction,
+}: ViewDropdownProps) {
+  const viewLabel = activeView === "grid" ? "Grid" : "List";
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -28,7 +30,7 @@ export default function CategoryDropdown({
           variant="ghost"
           className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 h-auto hover:bg-secondary-600 bg-secondary-500 text-accent-700 rounded-full border border-secondary-600"
         >
-          {selectedCategory || "All Categories"}
+          {viewLabel}
           <ChevronDown size={16} className="opacity-70" />
         </Button>
       </DropdownMenuTrigger>
@@ -41,40 +43,39 @@ export default function CategoryDropdown({
         className="min-w-fit bg-primary-50 border border-primary-200 shadow-lg px-2 py-1 z-[9999]"
       >
         <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2">
-          Sort by Category
+          View as
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => onSelectCategory(null)}
+          onClick={() => viewAction("grid")}
           className={`cursor-pointer transition-colors flex items-center gap-2 ${
-            !selectedCategory ? "text-black" : ""
+            activeView === "grid" ? "text-black" : ""
           }`}
           style={{
             backgroundColor:
-              !selectedCategory
+              activeView === "grid"
                 ? "var(--color-secondary-500)"
                 : "transparent",
           }}
         >
-          All Categories
+          <Grid3x3 className="w-4 h-4" />
+          Grid
         </DropdownMenuItem>
-        {categories.map((category) => (
-          <DropdownMenuItem
-            key={category}
-            onClick={() => onSelectCategory(category)}
-            className={`cursor-pointer transition-colors flex items-center gap-2 ${
-              selectedCategory === category ? "text-black" : ""
-            }`}
-            style={{
-              backgroundColor:
-                selectedCategory === category
-                  ? "var(--color-secondary-500)"
-                  : "transparent",
-            }}
-          >
-            {category}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuItem
+          onClick={() => viewAction("list")}
+          className={`cursor-pointer transition-colors flex items-center gap-2 ${
+            activeView === "list" ? "text-black" : ""
+          }`}
+          style={{
+            backgroundColor:
+              activeView === "list"
+                ? "var(--color-secondary-500)"
+                : "transparent",
+          }}
+        >
+          <List className="w-4 h-4" />
+          List
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

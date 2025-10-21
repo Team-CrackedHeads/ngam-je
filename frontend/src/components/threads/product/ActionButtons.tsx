@@ -1,4 +1,4 @@
-// src/app/components/threads-product-ui/ActionButtons.tsx
+// src/components/threads/product/ActionButtons.tsx
 import { MessageCircle, HelpCircle, ShoppingCart } from "lucide-react";
 // Import shared styles from the ProductDetails file
 import { wideButtonClasses } from "./ProductDetails";

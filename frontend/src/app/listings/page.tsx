@@ -6,8 +6,8 @@ import { useState, useEffect, Suspense } from "react";
 import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ViewDropdown from "@/app/components/threads-ui/ViewDropdown";
-import CategoryDropdown from "@/app/components/ui/CategoryDropdown";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import CategoryDropdown from "@/components/ui/CategoryDropdown";
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -507,11 +507,15 @@ function ListingsPageContent() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">Sort By:</span>
-              <CategoryDropdown categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+              <CategoryDropdown
+                categories={categories}
+                selectedCategory={selectedCategory}
+                categoryAction={setSelectedCategory}
+              />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">View:</span>
-              <ViewDropdown activeView={viewMode} onViewChange={setViewMode} />
+              <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
             </div>
           </div>
 

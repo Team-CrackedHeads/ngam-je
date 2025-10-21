@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react";
-import { AuthContextType, AuthUser, LoginCredentials } from "../types";
-import { AuthContext_Internal } from "../AuthContext";
+import { AuthContextType, AuthUser, LoginCredentials } from "@/lib/auth/types";
+import { AuthContext_Internal } from "@/lib/auth/AuthContext";
 
 interface MockAuthProviderProps {
   children: ReactNode;

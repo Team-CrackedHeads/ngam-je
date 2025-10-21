@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPin, Clock, Heart, Sparkles, X, Undo2 } from "lucide-react";
-import { MatchedListing } from "../types";
+import { MatchedListing } from "@/components/matching/types";
 
 interface MatchCardProps {
   listing: MatchedListing;

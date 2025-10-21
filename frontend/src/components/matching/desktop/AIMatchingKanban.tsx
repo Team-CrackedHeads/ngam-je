@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
-import { AIMatchingProps, ColumnType, MatchedListing } from "../types";
-import { ListingComparisonModal } from "../ListingComparisonModal";
+import { AIMatchingProps, ColumnType, MatchedListing } from "@/components/matching/types";
+import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCompare } from "../contexts/CompareContext";
+import { useCompare } from "@/components/matching/contexts/CompareContext";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-ai-matching-data";
 
 interface ColumnData {

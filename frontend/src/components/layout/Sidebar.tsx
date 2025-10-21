@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MOCK_THREADS } from "@/utils/mock-threads-data";
-import SidebarAIChat from "@/app/components/sidebar-ui/SidebarAIChat";
+import SidebarAIChat from "@/components/sidebar/SidebarAIChat";
 import {
   Sidebar,
   SidebarContent,
@@ -37,10 +37,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import SearchHistory from "./sidebar-ui/SearchHistory";
-import BuyListingsMenuItem from "@/app/components/sidebar-ui/menu-items/BuyListingsMenuItem";
-import SellListingsMenuItem from "@/app/components/sidebar-ui/menu-items/SellListingsMenuItem";
-import MatchedListingsMenuItem from "@/app/components/sidebar-ui/menu-items/MatchedListingsMenuItem";
+import SearchHistory from "@/components/sidebar/SearchHistory";
+import BuyListingsMenuItem from "@/components/sidebar/menu-items/BuyListingsMenuItem";
+import SellListingsMenuItem from "@/components/sidebar/menu-items/SellListingsMenuItem";
+import MatchedListingsMenuItem from "@/components/sidebar/menu-items/MatchedListingsMenuItem";
 
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },

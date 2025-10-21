@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import ListingCard from "@/app/components/threads-category-ui/ListingCard";
-import { CategoryBreadcrumb } from "@/app/components/threads-category-ui/CategoryBreadcrumb";
+import ListingCard from "@/components/threads/category/ListingCard";
+import { CategoryBreadcrumb } from "@/components/threads/category/CategoryBreadcrumb";
 import {UNIFIED_LISTINGS, UnifiedListingData} from "@/utils/mock-threads-data";
-import SearchFilter, {type FilterOptions} from "@/app/components/threads-category-ui/SearchFilter";
-import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/app/components/threads-category-ui/Sorting";
-import ViewDropdown from "@/app/components/threads-ui/ViewDropdown";
-import ListingTypeDropdown from "@/app/components/threads-category-ui/ListingTypeDropdown";
+import SearchFilter, {type FilterOptions} from "@/components/threads/category/SearchFilter";
+import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads/category/Sorting";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
 import { Plus, ArrowLeft } from "lucide-react";
 
 type ListingType = "wtb" | "wts" | "general";
@@ -344,7 +344,7 @@ const CategoryPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">View:</span>
-              <ViewDropdown activeView={viewType} onViewChange={setViewType} />
+              <ViewDropdown activeView={viewType} viewAction={setViewType} />
             </div>
           </div>
 
