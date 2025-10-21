@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Info, X } from "lucide-react";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Info, X, Cable } from "lucide-react";
 import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { generateMatchesForListing } from "@/utils/mock-match-data";
 import { motion, AnimatePresence } from "motion/react";
@@ -27,15 +27,16 @@ export default function ListingMatchesPage() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
 
   const listingId = parseInt(params.listingId as string);
-  const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted";
+  const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted" | "matched";
 
   // Get the current listing
-  const yourListing: Listing | undefined = listingType === "sale"
-    ? mockSaleListings.find(l => l.id === listingId)
-    : mockWantedListings.find(l => l.id === listingId);
+  const yourListing: Listing | undefined =
+    listingType === "sale" ? mockSaleListings.find(l => l.id === listingId) :
+    listingType === "wanted" ? mockWantedListings.find(l => l.id === listingId) :
+    mockWantedListings.find(l => l.id === listingId);
 
   // Get matches for this listing
-  const matches = yourListing ? generateMatchesForListing(listingId, listingType) : [];
+  const matches = yourListing && listingType !== "matched" ? generateMatchesForListing(listingId, listingType) : [];
   const matchedListings = matches.map(match => match.matchedListing);
 
   if (!yourListing) {
@@ -122,7 +123,7 @@ export default function ListingMatchesPage() {
   );
 
   // Detailed Listing Modal Component
-  const ListingDetailsModal = ({ listing, type }: { listing: Listing; type: "sale" | "wanted" }) => (
+  const ListingDetailsModal = ({ listing, type }: { listing: Listing; type: "sale" | "wanted" | "matched" }) => (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -144,8 +145,10 @@ export default function ListingMatchesPage() {
             <div className="flex items-center gap-3">
               {type === "sale" ? (
                 <ShoppingCart className="w-5 h-5 text-secondary-600" />
-              ) : (
+              ) : type === "wanted" ? (
                 <Package className="w-5 h-5 text-secondary-600" />
+              ) : (
+                <Cable className="w-5 h-5 text-secondary-600" />
               )}
               <h2 className="text-xl font-bold text-accent-700">
                 Listing Details
@@ -281,7 +284,7 @@ export default function ListingMatchesPage() {
         {selectedListing && (
           <ListingDetailsModal
             listing={selectedListing}
-            type={selectedListing.id === yourListing.id ? listingType : (listingType === "sale" ? "wanted" : "sale")}
+            type={selectedListing.id === yourListing.id ? listingType : (listingType === "sale" ? "wanted" : listingType === "wanted" ? "sale" : "matched")}
           />
         )}
       </AnimatePresence>
@@ -309,7 +312,7 @@ export default function ListingMatchesPage() {
                   onClick={() => router.push(`/listings?type=${listingType}`)}
                   className="cursor-pointer hover:text-accent-700"
                 >
-                  {listingType === "sale" ? "My Sale Listings" : "My Want Listings"}
+                  {listingType === "sale" ? "My Sale Listings" : listingType === "wanted" ? "My Want Listings" : "My Matched Listings"}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -333,7 +336,7 @@ export default function ListingMatchesPage() {
                 <Package className="w-6 h-6 text-secondary-600" />
               )}
               <h2 className="text-2xl font-bold text-accent-700">
-                Your {listingType === "sale" ? "Sale" : "Wanted"} Listing
+                Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing
               </h2>
             </div>
 
@@ -348,44 +351,39 @@ export default function ListingMatchesPage() {
           </>
         )}
 
-        {/* Mobile: Your Listing Header and Card */}
+        {/* Mobile: Compact Your Listing Banner */}
         {isMobile && (
-          <>
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
+          <div
+            onClick={() => setSelectedListing(yourListing)}
+            className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            {/* Header with icon and label */}
+            <div className="flex items-center gap-2 mb-3">
               {listingType === "sale" ? (
-                <ShoppingCart className="w-6 h-6 text-secondary-600" />
+                <ShoppingCart className="w-4 h-4 text-secondary-600 flex-shrink-0" />
               ) : (
-                <Package className="w-6 h-6 text-secondary-600" />
+                <Package className="w-4 h-4 text-secondary-600 flex-shrink-0" />
               )}
-              <h2 className="text-2xl font-bold text-accent-700">
-                Your {listingType === "sale" ? "Sale" : "Wanted"} Listing
-              </h2>
+              <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing</span>
             </div>
 
-            {/* Card */}
-            <div
-              onClick={() => setSelectedListing(yourListing)}
-              className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
-            >
-              <div className="flex items-center gap-3">
-                {/* Small Image */}
-                <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <span className="text-accent-400 text-xs">Image</span>
-                </div>
+            <div className="flex items-center gap-3">
+              {/* Small Image */}
+              <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
+                <span className="text-accent-400 text-xs">Image</span>
+              </div>
 
-                {/* Listing Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
-                    {yourListing.title}
-                  </h3>
-                  <span className="text-lg font-bold text-secondary-600">
-                    {listingType === "sale" ? yourListing.price : yourListing.budget}
-                  </span>
-                </div>
+              {/* Listing Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
+                  {yourListing.title}
+                </h3>
+                <span className="text-lg font-bold text-secondary-600">
+                  {listingType === "sale" ? yourListing.price : yourListing.budget}
+                </span>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* Matches Header */}

@@ -346,7 +346,7 @@ function SearchFilter({
                         onClick={() =>
                           setFilters((prev) => ({
                             ...prev,
-                            listingType: option.value as "for-sale" | "want-to-buy" | "all",
+                            listingType: option.value as "all" | "sale" | "wanted",
                           }))
                         }
                         className={`px-3 py-2 rounded-lg border text-sm transition-colors text-left ${
@@ -363,7 +363,8 @@ function SearchFilter({
                 {/* Price Range */}
                 <div>
                   <label className="block text-sm font-medium mb-4">
-                    Price Range: {currency} {formatPrice(minPrice)} - {currency} {formatPrice(maxPriceValue)}
+                    Price Range: **{currency} {formatPrice(minPrice)}** - **
+                    {currency} {formatPrice(maxPriceValue)}**
                   </label>
 
                   {/* Custom Draggable Slider UI */}
