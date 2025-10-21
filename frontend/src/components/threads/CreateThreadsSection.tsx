@@ -18,7 +18,6 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
   ];
 
   const style = tierStyles[tierLevel];
-
   return (
     <Badge className={`${style.bg} ${style.text} text-xs font-medium px-3 py-1`}>
       {tierLabels[tierLevel]}
@@ -26,43 +25,35 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
   );
 }
 
-/* Props Type */
 type CreateThreadModalProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-/* Main Component */
 function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [tierLevel, setTierLevel] = useState(3);
+  const [tierLevel] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Don't show anything if modal is closed
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveImage = () => {
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleAddTag = () => {
@@ -84,52 +75,99 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
   };
 
   const handleSubmit = () => {
-    const threadData = {
-      imagePreview,
-      tierLevel,
-      title,
-      description,
-      tags,
-    };
-    console.log("Thread Data:", threadData);
-    
-    // Reset form
+    const threadData = { imagePreview, tierLevel, title, description, tags };
+    console.log("Thread Created:", threadData);
+
     setImagePreview(null);
-    setTierLevel(3);
     setTitle("");
     setDescription("");
     setTags([]);
     setTagInput("");
-    
-    // Close modal
+    setIsPreviewMode(false);
     onClose();
   };
 
+  /* --- Preview Mode before creating the thread --- */
+  if (isPreviewMode) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-y-auto">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-800">Preview Thread</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {imagePreview && (
+              <div className="w-full h-48 rounded-lg overflow-hidden">
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <TierBadge tierLevel={tierLevel} />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">{title || "Untitled Thread"}</h3>
+            </div>
+
+            <p className="text-gray-600 text-sm whitespace-pre-wrap">
+              {description || "No description provided."}
+            </p>
+
+            {tags.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {tags.map((tag, i) => (
+                  <Badge
+                    key={i}
+                    className="bg-[var(--color-secondary-500)] text-black text-xs sm:text-sm flex items-center gap-1"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => setIsPreviewMode(false)}
+            >
+              Back to Edit
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-neutral-900"
+            >
+              Confirm & Create Thread
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* --- Normal Form Mode --- */
   return (
-    // Full screen overlay
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      {/* Modal window */}
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header with close button */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-800">Create New Thread</h2>
-          
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Form Content */}
+        {/* Form */}
         <div className="p-6">
           {/* Image Upload */}
           <div className="mb-6">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">
-              Thread Image
-            </Label>
+            <Label className="text-sm font-medium text-gray-700 mb-2 block">Thread Image</Label>
             {!imagePreview ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -148,11 +186,7 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               </div>
             ) : (
               <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 <Button
                   size="icon"
                   variant="ghost"
@@ -166,27 +200,23 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
             )}
           </div>
 
-          {/* Tier Selection */}
+          {/* Tier Display */}
           <div className="mb-6">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">
-              Tier Level
-            </Label>
-            <div className="flex gap-2">
-              {[0, 1, 2, 3].map((tier) => (
-                <button
-                  key={tier}
-                  type="button"
-                  onClick={() => setTierLevel(tier)}
-                  className={`flex-1 p-3 border-2 rounded-lg transition-all ${
-                    tierLevel === tier
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <TierBadge tierLevel={tier} />
-                </button>
-              ))}
+            <div className="flex items-center mb-3">
+              <Label className="flex items-center text-sm font-medium text-gray-700">
+                Current Tier Level:
+                <span className="ml-2">
+                  <TierBadge tierLevel={tierLevel} />
+                </span>
+              </Label>
             </div>
+            <p className="text-xs text-gray-500 mt-3">
+              Your thread starts at <strong>Tier 0</strong>. Unlock higher tiers and exclusive benefits by exploring the{" "}
+              <span className="text-[var(--color-secondary-500)] font-medium cursor-pointer hover:underline">
+                Pricing
+              </span>{" "}
+              page.
+            </p>
           </div>
 
           {/* Title */}
@@ -201,11 +231,9 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., High-End PC Building & Overclocking"
               className="w-full text-base"
-              maxLength={100}
+              maxLength={50}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">
-              {title.length}/100 characters
-            </p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/50 characters</p>
           </div>
 
           {/* Description */}
@@ -219,11 +247,9 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what this thread is about..."
               className="w-full text-sm min-h-24"
-              maxLength={300}
+              maxLength={100}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">
-              {description.length}/300 characters
-            </p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/100 characters</p>
           </div>
 
           {/* Tags */}
@@ -238,15 +264,10 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagInputKeyDown}
-                placeholder="Add tags (press Enter or comma)"
+                placeholder="press Enter to add tags"
                 className="flex-1 text-sm"
               />
-              <Button
-                type="button"
-                onClick={handleAddTag}
-                variant="outline"
-                size="icon"
-              >
+              <Button type="button" onClick={handleAddTag} variant="outline" size="icon">
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
@@ -255,8 +276,7 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
                 {tags.map((tag, i) => (
                   <Badge
                     key={i}
-                    variant="secondary"
-                    className="text-xs sm:text-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 whitespace-nowrap flex items-center gap-1"
+                    className="bg-[var(--color-secondary-500)] text-black hover:brightness-95 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1"
                   >
                     {tag}
                     <button
@@ -274,12 +294,16 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={() => setIsPreviewMode(true)}
+              className="text-neutral-700 border-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-100)]"
             >
-              Cancel
+              Preview
             </Button>
             <Button
               type="button"
