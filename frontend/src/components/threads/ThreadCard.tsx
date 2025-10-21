@@ -1,16 +1,7 @@
 "use client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  MoreVertical,
-  Bell,
-  UserPlus,
-  Circle,
-  User,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { MoreVertical, Bell, UserPlus, Circle, User } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +33,6 @@ type ThreadCardProps = {
 export default function ThreadCard({ thread }: ThreadCardProps) {
   const router = useRouter();
   const tierLevel = getTierLevel(thread.currentTokens, thread.goalTokens);
-  const [showTierDetails, setShowTierDetails] = useState(false);
 
   return (
     <Card
@@ -64,7 +54,6 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
                 "https://placehold.co/800x400/cccccc/333333?text=No+Image";
             }}
           />
-
 
           {/* Menu for options */}
           <Popover>
@@ -149,112 +138,6 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
               {tag}
             </Badge>
           ))}
-        </div>
-
-        {/* ---------- Tier Progress Section ---------- */}
-        <div className="mt-3 flex flex-col">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs sm:text-sm font-medium text-accent-500">
-              Current Tier: <span className="font-semibold">{tierLevel}</span>
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-accent-500 hover:text-accent-700 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowTierDetails(!showTierDetails);
-              }}
-            >
-              {showTierDetails ? (
-                <>
-                  Hide Details <ChevronUp className="w-3 h-3 ml-1" />
-                </>
-              ) : (
-                <>
-                  See Details <ChevronDown className="w-3 h-3 ml-1" />
-                </>
-              )}
-            </Button>
-          </div>
-
-          {showTierDetails && (
-            <div
-              className="relative px-5 py-6 mt-2 overflow-visible"
-              style={{ minHeight: "80px" }} // Increased height to prevent cutoff
-            >
-              {/* Base Line */}
-              <div
-                className="absolute left-5 right-5 h-[2px] bg-gray-300 z-0"
-                style={{ top: "50%", transform: "translateY(-50%)" }}
-              />
-
-              {/* Progress Line */}
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `calc(${(tierLevel / 3) * 100}%)` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="absolute left-5 h-[2px] bg-[var(--color-secondary-500)] z-0"
-                style={{
-                  maxWidth: "calc(100% - 40px)",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                }}
-              />
-
-              {/* Tier Nodes */}
-              {[0, 1, 2, 3].map((tier, index) => {
-                const isActive = tier <= tierLevel;
-                const isCurrent = tier === tierLevel;
-                const availableWidth = "calc(100% - 40px)";
-                const position =
-                  index === 0
-                    ? "20px"
-                    : index === 3
-                    ? "calc(100% - 20px)"
-                    : `calc(20px + (${availableWidth}) * ${index / 3})`;
-
-                return (
-                  <div
-                    key={tier}
-                    className="absolute z-10 overflow-visible"
-                    style={{
-                      left: position,
-                      top: "50%",
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.3 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 15,
-                      }}
-                      className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer ${
-                        isActive
-                          ? "bg-[var(--color-secondary-500)]"
-                          : "bg-gray-200"
-                      }`}
-                    >
-                      {isCurrent && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
-                      )}
-                    </motion.div>
-
-                    {/* Labels now have more spacing */}
-                    <span
-                      className={`absolute left-1/2 -translate-x-1/2 top-7 text-[11px] font-medium whitespace-nowrap ${
-                        isActive ? "text-accent-700" : "text-gray-400"
-                      }`}
-                    >
-                      {tier}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
