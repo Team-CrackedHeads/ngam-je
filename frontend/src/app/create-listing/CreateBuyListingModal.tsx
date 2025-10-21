@@ -286,10 +286,31 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                   <div className="max-w-3xl mx-auto space-y-6">
                     {/* Images Section */}
                     <div>
-                      <Label className="text-base font-medium mb-3 block text-[var(--color-accent-700)]">
-                        Product Images <span className="text-red-500">*</span>
-                      </Label>
-                      
+                      <div className="flex justify-between items-center mb-3">
+                        <Label className="text-base font-medium text-[var(--color-accent-700)]">
+                          Product Images <span className="text-red-500">*</span>
+                        </Label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                          onClick={generatePhotosWithAI}
+                          disabled={isGeneratingPhotos || !hasAnyInput()}
+                        >
+                          {isGeneratingPhotos ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              Generate Photos with AI
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
                       {formData.generatedImages.length > 0 ? (
                         <div className="space-y-3">
                           <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)]">
@@ -330,61 +351,32 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                         </div>
                       )}
 
-                      <div className="flex gap-3 mt-3">
-                        <div className="flex-1">
-                          <input
-                            type="file"
-                            id="imageUpload"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                          />
-                          <Button
-                            variant="outline"
-                            className="w-full border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
-                            onClick={() => document.getElementById('imageUpload')?.click()}
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload Photos
-                          </Button>
-                        </div>
+                      <div className="mt-3">
+                        <input
+                          type="file"
+                          id="imageUpload"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
                         <Button
                           variant="outline"
-                          className="flex-1 border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
-                          onClick={generatePhotosWithAI}
-                          disabled={isGeneratingPhotos || !hasAnyInput()}
+                          className="w-full border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
+                          onClick={() => document.getElementById('imageUpload')?.click()}
                         >
-                          {isGeneratingPhotos ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Generate Photos with AI
-                            </>
-                          )}
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Photos
                         </Button>
                       </div>
                     </div>
 
                     {/* Title Section */}
                     <div>
-                      <Label htmlFor="title" className="text-base font-medium text-[var(--color-accent-700)]">
-                        Title <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="title"
-                        value={formData.generatedTitle}
-                        onChange={(e) => setFormData({...formData, generatedTitle: e.target.value})}
-                        placeholder="Enter listing title"
-                        className="mt-2 text-base border-[var(--color-primary-200)]"
-                        maxLength={100}
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-sm text-[var(--color-primary-900)]">{formData.generatedTitle.length}/100 characters</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <Label htmlFor="title" className="text-base font-medium text-[var(--color-accent-700)]">
+                          Title <span className="text-red-500">*</span>
+                        </Label>
                         <Button
                           variant="outline"
                           size="sm"
@@ -405,23 +397,23 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                           )}
                         </Button>
                       </div>
+                      <Input
+                        id="title"
+                        value={formData.generatedTitle}
+                        onChange={(e) => setFormData({...formData, generatedTitle: e.target.value})}
+                        placeholder="Enter listing title"
+                        className="text-base border-[var(--color-primary-200)]"
+                        maxLength={100}
+                      />
+                      <p className="text-sm text-[var(--color-primary-900)] mt-2">{formData.generatedTitle.length}/100 characters</p>
                     </div>
 
                     {/* Description Section */}
                     <div>
-                      <Label htmlFor="description" className="text-base font-medium text-[var(--color-accent-700)]">
-                        Description <span className="text-red-500">*</span>
-                      </Label>
-                      <Textarea
-                        id="description"
-                        value={formData.generatedDescription}
-                        onChange={(e) => setFormData({...formData, generatedDescription: e.target.value})}
-                        placeholder="Describe what you're looking for..."
-                        className="mt-2 min-h-[250px] text-base border-[var(--color-primary-200)]"
-                        maxLength={1000}
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-sm text-[var(--color-primary-900)]">{formData.generatedDescription.length}/1000 characters</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <Label htmlFor="description" className="text-base font-medium text-[var(--color-accent-700)]">
+                          Description <span className="text-red-500">*</span>
+                        </Label>
                         <Button
                           variant="outline"
                           size="sm"
@@ -442,6 +434,15 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                           )}
                         </Button>
                       </div>
+                      <Textarea
+                        id="description"
+                        value={formData.generatedDescription}
+                        onChange={(e) => setFormData({...formData, generatedDescription: e.target.value})}
+                        placeholder="Describe what you're looking for..."
+                        className="min-h-[250px] text-base border-[var(--color-primary-200)]"
+                        maxLength={1000}
+                      />
+                      <p className="text-sm text-[var(--color-primary-900)] mt-2">{formData.generatedDescription.length}/1000 characters</p>
                     </div>
 
                     {/* Tags Section - Shows after content is filled */}

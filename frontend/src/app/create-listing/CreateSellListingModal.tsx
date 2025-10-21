@@ -293,9 +293,30 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                   <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
                     {/* Images Section */}
                     <div>
-                      <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block text-[var(--color-accent-700)]">
-                        Product Images <span className="text-red-500">*</span>
-                      </Label>
+                      <div className="flex justify-between items-center mb-2 sm:mb-3">
+                        <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
+                          Product Images <span className="text-red-500">*</span>
+                        </Label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={generatePhotosWithAI}
+                          disabled={isGeneratingPhotos || !hasAnyInput()}
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                        >
+                          {isGeneratingPhotos ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              Generate Photos with AI
+                            </>
+                          )}
+                        </Button>
+                      </div>
 
                       {formData.uploadedImages.length > 0 ? (
                         <div className="space-y-2 sm:space-y-3">
@@ -337,42 +358,22 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         </div>
                       )}
 
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2 sm:mt-3">
-                        <div className="flex-1">
-                          <input
-                            type="file"
-                            id="imageUpload"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                          />
-                          <Button
-                            variant="outline"
-                            className="w-full text-xs sm:text-sm border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
-                            onClick={() => document.getElementById('imageUpload')?.click()}
-                          >
-                            <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                            Upload Photos
-                          </Button>
-                        </div>
+                      <div className="mt-2 sm:mt-3">
+                        <input
+                          type="file"
+                          id="imageUpload"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
                         <Button
                           variant="outline"
-                          className="flex-1 text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
-                          onClick={generatePhotosWithAI}
-                          disabled={isGeneratingPhotos || !hasAnyInput()}
+                          className="w-full text-xs sm:text-sm border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
+                          onClick={() => document.getElementById('imageUpload')?.click()}
                         >
-                          {isGeneratingPhotos ? (
-                            <>
-                              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                              Generate Photos with AI
-                            </>
-                          )}
+                          <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          Upload Photos
                         </Button>
                       </div>
                     </div>
@@ -432,19 +433,10 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
                     {/* Title Section */}
                     <div>
-                      <Label htmlFor="title" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
-                        Title <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="title"
-                        value={formData.generatedTitle}
-                        onChange={(e) => setFormData({...formData, generatedTitle: e.target.value})}
-                        placeholder="Enter listing title"
-                        className="mt-2 text-sm sm:text-base border-[var(--color-primary-200)]"
-                        maxLength={100}
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedTitle.length}/100 characters</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <Label htmlFor="title" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
+                          Title <span className="text-red-500">*</span>
+                        </Label>
                         <Button
                           variant="outline"
                           size="sm"
@@ -465,23 +457,25 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                           )}
                         </Button>
                       </div>
+                      <Input
+                        id="title"
+                        value={formData.generatedTitle}
+                        onChange={(e) => setFormData({...formData, generatedTitle: e.target.value})}
+                        placeholder="Enter listing title"
+                        className="text-sm sm:text-base border-[var(--color-primary-200)]"
+                        maxLength={100}
+                      />
+                      <div className="mt-2">
+                        <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedTitle.length}/100 characters</p>
+                      </div>
                     </div>
 
                     {/* Description Section */}
                     <div>
-                      <Label htmlFor="description" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
-                        Description <span className="text-red-500">*</span>
-                      </Label>
-                      <Textarea
-                        id="description"
-                        value={formData.generatedDescription}
-                        onChange={(e) => setFormData({...formData, generatedDescription: e.target.value})}
-                        placeholder="Describe your product..."
-                        className="mt-2 min-h-[150px] sm:min-h-[250px] text-sm sm:text-base border-[var(--color-primary-200)]"
-                        maxLength={1000}
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedDescription.length}/1000 characters</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <Label htmlFor="description" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
+                          Description <span className="text-red-500">*</span>
+                        </Label>
                         <Button
                           variant="outline"
                           size="sm"
@@ -501,6 +495,17 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                             </>
                           )}
                         </Button>
+                      </div>
+                      <Textarea
+                        id="description"
+                        value={formData.generatedDescription}
+                        onChange={(e) => setFormData({...formData, generatedDescription: e.target.value})}
+                        placeholder="Describe your product..."
+                        className="min-h-[150px] sm:min-h-[250px] text-sm sm:text-base border-[var(--color-primary-200)]"
+                        maxLength={1000}
+                      />
+                      <div className="mt-2">
+                        <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedDescription.length}/1000 characters</p>
                       </div>
                     </div>
 

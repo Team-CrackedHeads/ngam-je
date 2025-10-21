@@ -132,121 +132,92 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
           Product Category Tags
         </Label>
-        {tags.length === 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={generateTagsFromContent}
-            disabled={isGeneratingTags}
-            className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
-          >
-            {isGeneratingTags ? (
-              <>
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3 h-3 mr-1" />
-                Generate Tags
-              </>
-            )}
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={generateTagsFromContent}
+          disabled={isGeneratingTags}
+          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+        >
+          {isGeneratingTags ? (
+            <>
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3 h-3 mr-1" />
+              Generate Tags
+            </>
+          )}
+        </Button>
       </div>
 
-      {tags.length > 0 ? (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag, index) => (
-              <EditableTag
-                key={index}
-                tag={tag}
-                onRemove={removeTag}
-                onEdit={editTag}
-              />
-            ))}
-          </div>
+      {/* Add new tag input - always visible */}
+      <div className="flex gap-2 relative mb-3">
+        <div className="flex-1 relative">
+          <Input
+            value={newTagInput}
+            onChange={(e) => handleTagInputChange(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addTag();
+              }
+            }}
+            onFocus={() => {
+              if (newTagInput.trim() && filteredTagSuggestions.length > 0) {
+                setShowTagSuggestions(true);
+              }
+            }}
+            onBlur={() => {
+              // Delay to allow clicking on suggestions
+              setTimeout(() => setShowTagSuggestions(false), 200);
+            }}
+            placeholder="Add new tags..."
+            className="text-sm border-[var(--color-primary-200)]"
+          />
 
-          <div className="flex gap-2 relative">
-            <div className="flex-1 relative">
-              <Input
-                value={newTagInput}
-                onChange={(e) => handleTagInputChange(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
+          {/* Tag Suggestions Dropdown */}
+          {showTagSuggestions && filteredTagSuggestions.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[var(--color-secondary-500)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              {filteredTagSuggestions.map((tag, index) => (
+                <button
+                  key={index}
+                  onMouseDown={(e) => {
                     e.preventDefault();
-                    addTag();
-                  }
-                }}
-                onFocus={() => {
-                  if (newTagInput.trim() && filteredTagSuggestions.length > 0) {
-                    setShowTagSuggestions(true);
-                  }
-                }}
-                onBlur={() => {
-                  // Delay to allow clicking on suggestions
-                  setTimeout(() => setShowTagSuggestions(false), 200);
-                }}
-                placeholder="Add new tag..."
-                className="text-sm border-[var(--color-primary-200)]"
-              />
-
-              {/* Tag Suggestions Dropdown */}
-              {showTagSuggestions && filteredTagSuggestions.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[var(--color-secondary-500)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {filteredTagSuggestions.map((tag, index) => (
-                    <button
-                      key={index}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        addTag(tag);
-                      }}
-                      className="w-full text-left px-3 py-2 hover:bg-[var(--color-secondary-100)] transition-colors flex items-center gap-2 text-sm"
-                    >
-                      <Tag className="w-3 h-3 text-[var(--color-secondary-500)]" />
-                      <span className="text-[var(--color-accent-700)]">{tag}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    addTag(tag);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-[var(--color-secondary-100)] transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Tag className="w-3 h-3 text-[var(--color-secondary-500)]" />
+                  <span className="text-[var(--color-accent-700)]">{tag}</span>
+                </button>
+              ))}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addTag()}
-              disabled={!newTagInput.trim()}
-              className="border-[var(--color-primary-300)]"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <Button
-            variant="link"
-            size="sm"
-            onClick={generateTagsFromContent}
-            disabled={isGeneratingTags}
-            className="text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] p-0"
-          >
-            {isGeneratingTags ? (
-              <>
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Regenerating...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-3 h-3 mr-1" />
-                Regenerate Tags with AI
-              </>
-            )}
-          </Button>
+          )}
         </div>
-      ) : (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center bg-[var(--color-primary-50)]">
-          <Tag className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-[var(--color-primary-500)]" />
-          <p className="text-xs sm:text-sm text-[var(--color-primary-900)] mb-1 sm:mb-2">No tags yet</p>
-          <p className="text-xs text-[var(--color-primary-700)]">Generate tags from your content to help categorize your listing</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => addTag()}
+          disabled={!newTagInput.trim()}
+          className="border-[var(--color-primary-300)]"
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <EditableTag
+              key={index}
+              tag={tag}
+              onRemove={removeTag}
+              onEdit={editTag}
+            />
+          ))}
         </div>
       )}
 
