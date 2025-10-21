@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   MessageCircle,
   HelpCircle,
@@ -73,9 +74,11 @@ export const ProductDetails = ({
     <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white">
       {/* Product Image - Clicking this opens the modal */}
       <div className="relative w-full">
-        <img
+        <Image
           src={mainImageSrc}
-          alt={listing.title} // Use dynamic title
+          alt={listing.title}
+          width={1200}
+          height={600}
           className="w-full h-64 sm:h-[50vh] object-cover sm:rounded-t-lg"
           onClick={() => hasGalleryImages && openModal(0)}
           style={{ cursor: hasGalleryImages ? "pointer" : "default" }}
@@ -180,9 +183,11 @@ export const ProductDetails = ({
                   className="w-24 h-24 rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => openModal(index)}
                 >
-                  <img
+                  <Image
                     src={image.replace("w=1200", "w=200")}
                     alt={`Gallery thumbnail ${index + 1}`}
+                    width={200}
+                    height={200}
                     className="w-full h-full object-cover"
                   />
                 </div>

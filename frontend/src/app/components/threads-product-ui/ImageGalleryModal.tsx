@@ -1,4 +1,5 @@
 // src/app/components/threads-product-ui/ImageGalleryModal.tsx
+import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ImageGalleryModalProps {
@@ -43,9 +44,11 @@ export const ImageGalleryModal = ({
         )}
 
         {/* Current Image */}
-        <img
+        <Image
           src={images[currentIndex]}
           alt={`Gallery image ${currentIndex + 1}`}
+          width={1200}
+          height={800}
           className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
         />
 

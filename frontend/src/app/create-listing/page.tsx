@@ -1,14 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Upload, Sparkles, Edit3, DollarSign, Truck, Eye, Check, ChevronLeft, ChevronRight, Loader2, RefreshCw, X, Camera } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, Upload, Sparkles, DollarSign, Truck, Eye, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Unified types for both buyer and seller listings
 interface FormData {
@@ -32,8 +26,7 @@ interface FormData {
 }
 
 export default function CreateListingPage() {
-  const [currentStep, setCurrentStep] = useState(0); // Start at 0 for intent selection
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     listingType: null,
     generatedTitle: '',
@@ -47,12 +40,6 @@ export default function CreateListingPage() {
     uploadedImages: [],
     availableFromDate: '',
     inventoryQuantity: ''
-  });
-
-  const [recommendedPriceRange, setRecommendedPriceRange] = useState({
-    min: 0,
-    max: 0,
-    average: 0
   });
 
   // Dynamic steps based on listing type
@@ -106,127 +93,8 @@ export default function CreateListingPage() {
     setCurrentStep(0);
   };
 
-  const generateListingWithAI = async () => {
-    setIsGenerating(true);
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    // Different mock data based on listing type
-    const mockData = formData.listingType === 'buy' ? {
-      title: 'Air Jordan 1 Retro High OG "Chicago"',
-      description: `Looking for authentic Air Jordan 1 Retro High OG "Chicago" in excellent condition with minimal signs of wear.
-
-Key Features Desired:
-• Authentic Air Jordan 1 Retro High OG "Chicago"
-• Red color scheme (primary or accent)
-• Original or well-maintained condition
-• Complete with original box and accessories (preferred)
-• Size: Open to various sizes
-• Gender: Unisex models accepted
-
-Condition: Prefer gently used to new condition. Minor wear acceptable if reflected in price. Must have no major defects, sole separation, or structural damage.`
-    } : {
-      title: 'Off-White x Air Jordan 1 Retro High OG "Chicago"',
-      description: `Authentic Off-White x Air Jordan 1 Retro High OG "Chicago". These iconic sneakers are in excellent condition with minimal signs of wear.
-
-Product Details:
-• Brand: Nike / Air Jordan
-• Model: Air Jordan 1 Retro High OG
-• Colorway: University Red/Black/White
-• Size: US 10 / EU 44
-• Condition: 8.5/10 - Gently used, well maintained
-• Original box included
-• No major creasing or sole separation
-• Slight wear on outsole from normal use
-
-This classic silhouette features premium leather construction, the iconic Wings logo, and Nike Air cushioning. Perfect for collectors or anyone looking to add a timeless sneaker to their rotation.
-
-All pictures show the actual item you will receive. Item will be shipped with care in original packaging.`
-    };
-
-    setFormData(prev => ({
-      ...prev,
-      generatedTitle: mockData.title,
-      generatedDescription: mockData.description,
-      ...(formData.listingType === 'buy' && {
-        generatedImage: 'https://images.unsplash.com/photo-1695697104675-429f5fcdede6?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-      })
-    }));
-
-    setIsGenerating(false);
-    setCurrentStep(2);
-  };
-
-  const fetchPriceRecommendation = async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const priceData = formData.listingType === 'buy' ? {
-      min: 150,
-      max: 450,
-      average: 280
-    } : {
-      min: 280,
-      max: 420,
-      average: 350
-    };
-
-    setRecommendedPriceRange(priceData);
-  };
-
-  const handleNext = () => {
-    if (currentStep === 1) {
-      generateListingWithAI();
-    } else if (currentStep === 3) {
-      if (!recommendedPriceRange.average) {
-        fetchPriceRecommendation();
-      }
-      setCurrentStep(currentStep + 1);
-    } else if (currentStep < 5) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
   const handleBack = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
-  };
-
-  const handleRegenerate = () => {
-    generateListingWithAI();
-  };
-
-  const handleSubmit = async () => {
-    const listingTypeText = formData.listingType === 'buy' ? 'Buy' : 'Sell';
-    console.log(`${listingTypeText} listing submitted:`, formData);
-    alert(`${listingTypeText} listing created successfully!`);
-  };
-
-  // Validation logic based on listing type
-  const isStepValid = () => {
-    switch(currentStep) {
-      case 0: return formData.listingType !== null;
-      case 1:
-        if (formData.listingType === 'buy') {
-          return formData.userDescription.length >= 10;
-        } else {
-          return formData.uploadedImages.length > 0;
-        }
-      case 2: return formData.generatedTitle.length >= 3 && formData.generatedDescription.length >= 10;
-      case 3:
-        if (formData.listingType === 'buy') {
-          return formData.minPrice && formData.maxPrice && formData.quantity &&
-                 parseInt(formData.quantity) > 0 && parseFloat(formData.minPrice) < parseFloat(formData.maxPrice);
-        } else {
-          return formData.minPrice && formData.maxPrice && parseFloat(formData.minPrice) < parseFloat(formData.maxPrice);
-        }
-      case 4:
-        if (formData.listingType === 'buy') {
-          return formData.shippingOptions.length > 0;
-        } else {
-          return formData.shippingOptions.length > 0 && formData.availableFromDate &&
-                 formData.inventoryQuantity && parseInt(formData.inventoryQuantity) > 0;
-        }
-      case 5: return true;
-      default: return false;
-    }
   };
 
   const getPageTitle = () => {

@@ -323,19 +323,6 @@ const CategoryPage: React.FC = () => {
               maxPrice={10000}
               currency="RM"
               searchPlaceholder={`Search ${category} items...`}
-              availableCategories={[
-                "apple-devices",
-                "gaming-gear",
-                "audio-gear",
-                "smart-home",
-                "pc-building",
-                "ai-tools",
-                "furniture",
-                "books",
-                "clothing",
-                "sports",
-                "fashion"
-              ]}
             />
           </div>
 

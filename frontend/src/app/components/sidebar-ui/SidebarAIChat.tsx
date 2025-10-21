@@ -1,5 +1,4 @@
 "use client";
-import { mockFullChatHistory } from "@/utils/mock-search-history";
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from 'next/navigation';

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Plus, Sparkles } from "lucide-react";
 import { mockAIResponses, MockAIResponse } from "../../../utils/mock-ai-data";
 
@@ -71,9 +72,11 @@ export default function AIAgentSearch({
       >
         {/* Illustration - image overlay */}
         <div className="flex justify-center">
-          <img
+          <Image
             src="/images/ai-image.png"
             alt="Marketplace illustration"
+            width={192}
+            height={192}
             className="w-32 md:w-40 lg:w-48 h-auto object-contain transition-transform duration-700 hover:scale-105"
           />
         </div>

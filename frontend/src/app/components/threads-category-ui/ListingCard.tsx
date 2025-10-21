@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Heart, MapPin, Clock } from "lucide-react";
 
 type ListingCardProps = {
@@ -71,9 +72,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
       {/* Image with themed badge */}
       <div className="relative">
-        <img
+        <Image
           src={imageUrl}
           alt={title}
+          width={800}
+          height={400}
           className="w-full rounded-lg object-cover h-48 sm:h-64"
           onError={(e) => {
             e.currentTarget.src =
@@ -98,9 +101,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
         {/* Seller info - moved below title */}
         <div className="flex items-center text-xs text-gray-600 mt-3 gap-2">
-          <img
+          <Image
             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seller.name}`}
             alt={seller.name}
+            width={32}
+            height={32}
             className="w-8 h-8 rounded-full bg-gray-200"
           />
           <div className="flex items-center gap-1">

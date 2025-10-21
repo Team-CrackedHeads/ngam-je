@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { Puzzle, ExternalLink, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -217,10 +218,12 @@ export default function NgamOverview({
               {displayedImages && displayedImages.length > 0 && (
                 <div className="flex flex-wrap gap-4">
                   {displayedImages.map((image, index) => (
-                    <img
+                    <Image
                       key={`img-${index}`}
                       src={image}
                       alt={`Reference image ${index + 1}`}
+                      width={160}
+                      height={160}
                       className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border border-border"
                     />
                   ))}

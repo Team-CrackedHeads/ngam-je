@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Home,
   MessageCircle,
@@ -20,7 +20,6 @@ import {
 import { useEffect, useState } from "react";
 import { MOCK_THREADS } from "@/utils/mock-threads-data";
 import SidebarAIChat from "@/app/components/sidebar-ui/SidebarAIChat";
-import { mockFullChatHistory } from "@/utils/mock-search-history";
 import {
   Sidebar,
   SidebarContent,
@@ -172,180 +171,11 @@ const mockChatHistory = [
     "timestamp": "1 month ago",
     "created_at": "2025-08-28T16:10:00Z"
   },
-  // {
-  //   id: 21,
-  //   title: "Collectible toy market trends",
-  //   timestamp: "1 month ago",
-  //   created_at: "2025-08-25T12:00:00Z",
-  // },
-  // {
-  //   id: 22,
-  //   title: "Textbook edition differences",
-  //   timestamp: "1 month ago",
-  //   created_at: "2025-08-22T09:30:00Z",
-  // },
-  // {
-  //   id: 23,
-  //   title: "Garden equipment seasonal pricing",
-  //   timestamp: "2 months ago",
-  //   created_at: "2025-08-15T10:30:00Z",
-  // },
-  // {
-  //   id: 24,
-  //   title: "Sports gear quality indicators",
-  //   timestamp: "2 months ago",
-  //   created_at: "2025-08-10T14:15:00Z",
-  // },
-  // {
-  //   id: 25,
-  //   title: "Vintage clothing sizing guide",
-  //   timestamp: "2 months ago",
-  //   created_at: "2025-08-05T09:45:00Z",
-  // },
-  // {
-  //   id: 26,
-  //   title: "Electronic component lifespan",
-  //   timestamp: "2 months ago",
-  //   created_at: "2025-07-30T17:20:00Z",
-  // },
-  // {
-  //   id: 27,
-  //   title: "Jewelry appraisal process",
-  //   timestamp: "3 months ago",
-  //   created_at: "2025-07-20T11:30:00Z",
-  // },
-  // {
-  //   id: 28,
-  //   title: "Car parts compatibility matrix",
-  //   timestamp: "3 months ago",
-  //   created_at: "2025-07-15T14:45:00Z",
-  // },
-  // {
-  //   id: 29,
-  //   title: "Antique furniture restoration cost",
-  //   timestamp: "3 months ago",
-  //   created_at: "2025-07-10T16:20:00Z",
-  // },
-  // {
-  //   id: 30,
-  //   title: "Tech gadget depreciation rates",
-  //   timestamp: "4 months ago",
-  //   created_at: "2025-06-25T13:10:00Z",
-  // },
 ];
 
-function AIAssistantCard() {
-  const router = useRouter();
-  const [visibleChats, setVisibleChats] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const KEEP_RECENT_COUNT = 10;
-  const MAX_LOADED_COUNT = 25;
-  const DELOAD_TO_COUNT = 15;
-
-  const handleNewChat = () => {
-    console.log("Creating new AI chat...");
-  };
-
-  const handleChatClick = (chatId: number) => {
-    router.push(`/chat/${chatId}`);
-    console.log("Opening chat:", chatId);
-  };
-
-  const loadMoreChats = () => {
-    if (loading || visibleChats >= mockChatHistory.length) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const newCount = Math.min(visibleChats + 5, mockChatHistory.length);
-
-      if (newCount > MAX_LOADED_COUNT) {
-        setVisibleChats(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
-      } else {
-        setVisibleChats(newCount);
-      }
-
-      setLoading(false);
-    }, 300);
-  };
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-
-    if (scrollHeight - scrollTop <= clientHeight + 5) {
-      loadMoreChats();
-    }
-
-    if (scrollTop === 0 && visibleChats > KEEP_RECENT_COUNT) {
-      const currentTarget = e.currentTarget;
-      setTimeout(() => {
-        if (currentTarget && currentTarget.scrollTop === 0) {
-          setVisibleChats(KEEP_RECENT_COUNT);
-        }
-      }, 500);
-    }
-  };
-
-  return (
-    <div className="p-3 mx-2 rounded-lg border bg-neutral-50 border-primary-200">
-      <div className="flex items-center gap-2 mb-3">
-        <Clock className="w-4 h-4 text-accent-700" />
-        <span className="text-sm font-medium text-accent-700">
-          Chat History
-        </span>
-      </div>
-
-      <div
-        className="max-h-32 overflow-y-auto mb-3 space-y-1"
-        onScroll={handleScroll}
-      >
-        {mockChatHistory.slice(0, visibleChats).map((chat) => (
-          <div
-            key={chat.id}
-            onClick={() => handleChatClick(chat.id)}
-            className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-          >
-            <div className="truncate font-medium">{chat.title}</div>
-            <div className="text-[10px] text-accent-400">{chat.timestamp}</div>
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex justify-center py-2">
-            <div className="text-xs text-accent-400">Loading...</div>
-          </div>
-        )}
-
-        {visibleChats >= mockChatHistory.length &&
-          mockChatHistory.length > 5 && (
-            <div className="flex justify-center py-2">
-              <div className="text-xs text-accent-400">No more chats</div>
-            </div>
-          )}
-
-        {visibleChats < mockChatHistory.length &&
-          visibleChats >= MAX_LOADED_COUNT && (
-            <div className="flex justify-center py-2">
-              <div className="text-xs text-accent-300">
-                {mockChatHistory.length - visibleChats} older chats hidden
-              </div>
-            </div>
-          )}
-      </div>
-
-      <button
-        onClick={handleNewChat}
-        className="w-full p-2 rounded-md flex items-center justify-center gap-2 text-xs font-medium transition-all duration-200 border bg-secondary-100 text-accent-700 border-accent-600 hover:bg-accent-600 hover:-translate-y-0.5"
-      >
-        <Plus className="w-3 h-3" />
-        <span>New Chat</span>
-      </button>
-    </div>
-  );
-}
 
 function FollowingMenuItem() {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
 
   const mostVisitedThreads = MOCK_THREADS.sort(
     (a, b) => b.views - a.views
@@ -376,20 +206,10 @@ function FollowingMenuItem() {
             <SidebarMenuSubItem key={thread.id}>
               <SidebarMenuSubButton
                 asChild
-                isActive={pathname === `/threads/${thread.category}`}
-                className={
-                  pathname === `/threads/${thread.category}`
-                    ? "bg-secondary-500 text-accent-700"
-                    : ""
-                }
               >
                 <Link
                   href={`/threads/${thread.category}`}
-                  className={`flex items-center gap-3 ${
-                    pathname === `/threads/${thread.category}`
-                      ? "text-accent-700 bg-secondary-500"
-                      : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-                  }`}
+                  className="flex items-center gap-3 text-accent-500 hover:bg-primary-200 hover:text-accent-700"
                 >
                   <div className="w-6 h-6 rounded-full bg-primary-200 border border-primary-300 flex-shrink-0 overflow-hidden">
                     <Image
@@ -569,7 +389,6 @@ function NgamJeAssistantMenuItem({
 
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true);
-  const pathname = usePathname();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
 
@@ -580,24 +399,10 @@ function NavigationMenuItem() {
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
-              isActive={
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href))
-              }
-              className={
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href))
-                  ? "bg-secondary-500 text-accent-700"
-                  : ""
-              }
             >
               <Link
                 href={item.href}
-                className={`${
-                  pathname === item.href
-                    ? "text-accent-700 bg-secondary-500"
-                    : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-                }`}
+                className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
               >
                 <item.icon />
                 <span>{item.label}</span>
@@ -634,24 +439,10 @@ function NavigationMenuItem() {
             <SidebarMenuSubItem key={item.href}>
               <SidebarMenuSubButton
                 asChild
-                isActive={
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href))
-                }
-                className={
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href))
-                    ? "bg-secondary-500 text-accent-700"
-                    : ""
-                }
               >
                 <Link
                   href={item.href}
-                  className={`${
-                    pathname === item.href
-                      ? "text-accent-700 bg-secondary-500"
-                      : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-                  }`}
+                  className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
                 >
                   <item.icon />
                   <span>{item.label}</span>
@@ -683,7 +474,6 @@ function CustomSidebarTrigger({
 }
 
 export function AppSidebar() {
-  const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);

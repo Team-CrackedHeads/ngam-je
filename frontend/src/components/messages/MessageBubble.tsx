@@ -9,7 +9,6 @@ interface ProductInfo {
 }
 
 interface MessageBubbleProps {
-  sender: string;
   content: string;
   timestamp: string;
   isCurrentUser?: boolean;
@@ -17,7 +16,6 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({
-  sender,
   content,
   timestamp,
   isCurrentUser = false,

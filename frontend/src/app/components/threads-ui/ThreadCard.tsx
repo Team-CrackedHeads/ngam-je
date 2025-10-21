@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   MoreVertical,
   Bell,
@@ -23,10 +24,6 @@ import { motion } from "framer-motion";
 import TierBadge from "@/app/components/threads-ui/TierBadge";
 
 /* ---------------- Helper Functions ---------------- */
-function formatNumber(num: number): string {
-  return new Intl.NumberFormat().format(num);
-}
-
 function getTierLevel(current: number, goal: number): number {
   if (goal <= 0) return 0;
   const progress = (current / goal) * 100;
@@ -55,9 +52,11 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
       {/* Header Section */}
       <CardHeader className="p-0 m-0 relative flex-shrink-0">
         <div className="relative w-full h-40 sm:h-44 md:h-48 lg:h-52">
-          <img
+          <Image
             src={thread.imageUrl}
             alt={thread.title}
+            width={800}
+            height={400}
             className="w-full h-full object-cover"
             onError={(e) => {
               e.currentTarget.onerror = null;

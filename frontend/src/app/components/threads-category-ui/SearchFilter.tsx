@@ -21,7 +21,6 @@ interface FilterProps {
   maxPrice?: number;
   currency?: string;
   searchPlaceholder?: string;
-  availableCategories?: string[]; // NEW: Categories from your data
 }
 
 function SearchFilter({
@@ -31,14 +30,7 @@ function SearchFilter({
   initialFilters = {},
   maxPrice = 10000,
   currency = "RM",
-  searchPlaceholder = "Search community listings...", // Updated placeholder
-  availableCategories = [
-    "electronics",
-    "furniture",
-    "books",
-    "clothing",
-    "sports",
-  ], // Default categories
+  searchPlaceholder = "Search community listings...",
 }: FilterProps) {
   // Refs for slider track dimensions
   const trackRef = useRef<HTMLDivElement>(null);
@@ -99,10 +91,10 @@ function SearchFilter({
     return (value / maxPrice) * 100;
   };
 
-  const percentToValue = (percent: number): number => {
+  const percentToValue = useCallback((percent: number): number => {
     const rawValue = (percent / 100) * maxPrice;
     return Math.round(rawValue / priceStep) * priceStep;
-  };
+  }, [maxPrice, priceStep]);
 
   const handleMouseDown = useCallback((handle: "min" | "max") => {
     setIsDragging(handle);
@@ -132,7 +124,7 @@ function SearchFilter({
         }
       });
     },
-    [isDragging, maxPrice, priceStep, percentToValue]
+    [isDragging, percentToValue]
   );
 
   const handleMouseUp = useCallback(() => {

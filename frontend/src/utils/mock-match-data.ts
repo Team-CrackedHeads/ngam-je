@@ -38,9 +38,6 @@ export function generateMatchesForListing(
 
   if (!yourListing) return [];
 
-  // Get opposite type listings (if you're selling, show buyers and vice versa)
-  const potentialMatches = listingType === "sale" ? mockWantedListings : mockSaleListings;
-
   // Generate matches based on the listing
   const matches: ListingMatch[] = [];
 

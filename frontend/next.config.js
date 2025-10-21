@@ -1,12 +1,29 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove the entire experimental.turbopack block
-  // experimental: {
-  //   turbopack: {
-  //     root: './',
-  //   },
-  // },
-  // ... any other Next.js config you have (keep them if they were there)
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+    ],
+  },
 };
 
-export default nextConfig; // Keep this as 'export default'
+export default nextConfig;
