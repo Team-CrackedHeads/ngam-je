@@ -10,13 +10,14 @@ import {
 } from "lucide-react";
 import ThreadCard from "../components/threads-ui/ThreadCard";
 import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
+
 import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
 import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
 import NgamOverview from "../components/threads-ui/NgamOverview";
 import FilterButton from "../components/threads-ui/FilterButton";
 import ViewDropdown from "../components/threads-ui/ViewDropdown";
 import PageHeader from "../components/threads-ui/PageHeader";
-import BreadcrumbNav from "./BreadcrumbNav";
+import BreadcrumbNav from "./BreadcrumbNav"; // ✅ Added import
 import { MockAIResponse } from "../../utils/mock-ai-data";
 
 type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
@@ -39,6 +40,7 @@ function ThreadsPage() {
   const snapContainerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const inlineCreateBtnRef = useRef<HTMLButtonElement | null>(null);
+
   const searchSectionRef = useRef<HTMLElement | null>(null);
   const threadsSectionRef = useRef<HTMLElement | null>(null);
   const metaRowRef = useRef<HTMLDivElement | null>(null);
@@ -56,6 +58,7 @@ function ThreadsPage() {
     const base = (lastQuery || "").toLowerCase();
     const words = base.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
     const set = new Set<string>(words);
+
     if (/[^\w](sneaker|sneakers|shoe|shoes)\b/.test(" " + base)) {
       ["sneaker", "sneakers", "shoe", "shoes", "yeezy", "jordan", "nike", "adidas", "new balance", "nb", "asics", "salomon"].forEach((k) => set.add(k));
     }
@@ -65,10 +68,10 @@ function ThreadsPage() {
     if (/\bmacbook|mac\s?book\b/.test(base)) {
       ["macbook", "mac book", "apple"].forEach((k) => set.add(k));
     }
+
     return Array.from(set);
   }, [lastQuery]);
 
-  // Filter logic
   const getBaseFilteredThreads = useCallback((): ThreadData[] => {
     let filtered = [...MOCK_THREADS];
     switch (activeFilter) {
@@ -101,7 +104,6 @@ function ThreadsPage() {
 
   useEffect(() => setDisplayedCount(6), [activeFilter, lastQuery]);
 
-  // Infinite scroll observer
   const loadMoreItems = useCallback(() => {
     if (isLoading || displayedCount >= allFilteredThreads.length) return;
     setIsLoading(true);
@@ -180,7 +182,6 @@ function ThreadsPage() {
 
   // CTA State
   const hasOverview = !!(currentOverview || isAILoading);
-  const hasQueryFilter = queryKeywords.length > 0;
 
   const ctaState = useMemo(() => {
     if (inSearchView || inOverviewView) {
@@ -200,6 +201,7 @@ function ThreadsPage() {
 
   return (
     <>
+      {/* SNAP CONTAINER */}
       <div ref={snapContainerRef} className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth">
         {/* SECTION 1: AI Agent */}
         <section id="search" ref={searchSectionRef} className="h-full snap-start">
@@ -213,7 +215,11 @@ function ThreadsPage() {
         {/* SECTION 2: Threads */}
         <section id="ngam-overview" ref={threadsSectionRef} className="snap-start bg-gray-50">
           <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
+
+            {/* ✅ Breadcrumb Navigation */}
             <BreadcrumbNav />
+
+            {/* Page Header */}
             <div ref={headerRef}>
               <PageHeader />
             </div>
@@ -286,6 +292,7 @@ function ThreadsPage() {
               ))}
             </div>
 
+            {/* Loading + Empty + End State */}
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -301,6 +308,7 @@ function ThreadsPage() {
               </div>
             )}
 
+            {/* Infinite Scroll Sentinel */}
             <div ref={sentinelRef} className="h-px" />
           </div>
         </section>
@@ -319,6 +327,7 @@ function ThreadsPage() {
         </button>
       )}
 
+      {/* Overlays */}
       <CreateThreadsSection isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
     </>
   );
