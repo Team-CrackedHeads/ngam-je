@@ -79,7 +79,7 @@ export function AIMatchingSwipe({
   // Generate mock listings if none provided
   const getMockListings = (): MatchedListing[] => {
     if (availableListings.length > 0) {
-      return availableListings;
+      return availableListings as unknown as MatchedListing[];
     }
 
     // Fallback mock data

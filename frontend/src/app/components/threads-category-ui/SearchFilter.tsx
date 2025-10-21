@@ -10,7 +10,7 @@ export interface FilterOptions {
   selectedTags: string[];
   sortBy: string;
   category?: string; // NEW: Added category filter
-  listingType?: "for-sale" | "want-to-buy" | "all"; // NEW: Added listing type filter
+  listingType?: "sale" | "wanted" | "all"; // NEW: Added listing type filter
 }
 
 interface FilterProps {
@@ -188,8 +188,8 @@ function SearchFilter({
   // NEW: Listing type options
   const listingTypeOptions = [
     { value: "all", label: "All Listings" },
-    { value: "for-sale", label: "For Sale" },
-    { value: "want-to-buy", label: "Want to Buy" },
+    { value: "sale", label: "For Sale" },
+    { value: "wanted", label: "Want to Buy" },
   ];
 
   // Helper to format price for display

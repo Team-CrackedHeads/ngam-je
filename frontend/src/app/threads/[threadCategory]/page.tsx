@@ -200,8 +200,9 @@ const CategoryPage: React.FC = () => {
 
     // Apply listing type filter from SearchFilter
     if (appliedFilters.listingType && appliedFilters.listingType !== "all") {
+      const mappedType = appliedFilters.listingType === "sale" ? "for-sale" : "want-to-buy";
       categoryListings = categoryListings.filter(
-        (listing) => listing.listingType === appliedFilters.listingType
+        (listing) => listing.listingType === mappedType
       );
     }
     // --- APPLY FILTERS FROM SORTING COMPONENT ---
@@ -422,7 +423,7 @@ const CategoryPage: React.FC = () => {
               {/* Filters from SearchFilter */}
               {appliedFilters.search && (
                 <span className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs">
-                  Search: "{appliedFilters.search}"
+                  Search: &quot;{appliedFilters.search}&quot;
                 </span>
               )}
               {appliedFilters.location && (

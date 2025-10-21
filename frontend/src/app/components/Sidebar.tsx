@@ -700,7 +700,7 @@ export function AppSidebar() {
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
-  const [initialAIChatMessages, setInitialAIChatMessages] = useState<any[]>([]);
+  const [initialAIChatMessages, setInitialAIChatMessages] = useState<Array<{ id: string; role: string; content: string; timestamp: Date }>>([]);
 
   useEffect(() => {
     setMounted(true);

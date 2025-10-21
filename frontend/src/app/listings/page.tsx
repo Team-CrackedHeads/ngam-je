@@ -67,7 +67,7 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing;
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
-  const matchCount = getMatchCount(listing.id, type);
+  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -185,7 +185,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
   const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
-  const matchCount = getMatchCount(listing.id, type);
+  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();

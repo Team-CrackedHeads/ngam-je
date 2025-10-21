@@ -1,10 +1,25 @@
 import { useState, useEffect, useMemo } from "react";
 import { MatchedListing, SortOption } from "../types";
 
+export interface ListingType {
+  id: number | string;
+  title: string;
+  description: string;
+  price?: string | number;
+  budget?: string | number;
+  images?: string[];
+  tags?: string[];
+  location: string;
+  timestamp?: string;
+  seller?: string;
+  type: "sell" | "buy";
+  category: string;
+}
+
 interface UseMatchingLogicProps {
   userMode: "buyer" | "seller";
-  userListings: unknown[];
-  availableListings: unknown[];
+  userListings: ListingType[];
+  availableListings: ListingType[];
 }
 
 export function useMatchingLogic({
@@ -25,23 +40,23 @@ export function useMatchingLogic({
     const generateMatches = (): MatchedListing[] => {
       const oppositeType = userMode === "buyer" ? "sell" : "buy";
       const relevantListings = availableListings.filter(
-        (listing: any) => listing.type === oppositeType
+        (listing) => listing.type === oppositeType
       );
 
       return relevantListings
-        .map((listing: any) => {
+        .map((listing) => {
           const reasons: string[] = [];
           let score = 0;
 
           // Category matching
-          const userCategories = userListings.map((l: any) => l.category);
+          const userCategories = userListings.map((l) => l.category);
           if (userCategories.includes(listing.category)) {
             score += 30;
             reasons.push(`Matches your interest in ${listing.category}`);
           }
 
           // Tag overlap
-          const userTags = userListings.flatMap((l: any) => l.tags || []);
+          const userTags = userListings.flatMap((l) => l.tags || []);
           const commonTags = listing.tags?.filter((tag: string) =>
             userTags.includes(tag)
           );
@@ -52,14 +67,15 @@ export function useMatchingLogic({
 
           // Price compatibility
           if (userListings.length > 0) {
-            const parsePrice = (priceStr: unknown) => {
+            const parsePrice = (priceStr: string | number | undefined) => {
+              if (typeof priceStr === 'number') return priceStr;
               if (typeof priceStr !== 'string') return 0;
               return parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
             };
 
-            const userBudgets = userListings.map((l: any) => parsePrice(l.price || l.budget));
+            const userBudgets = userListings.map((l) => parsePrice(l.price || l.budget));
             const avgBudget = userBudgets.reduce((a, b) => a + b, 0) / userBudgets.length;
-            const listingPrice = parsePrice((listing as any).price || (listing as any).budget);
+            const listingPrice = parsePrice(listing.price || listing.budget);
             const priceDiff = Math.abs(listingPrice - avgBudget);
             const priceScore = avgBudget > 0 ? Math.max(0, 20 - (priceDiff / avgBudget) * 20) : 0;
             score += priceScore;
@@ -69,7 +85,7 @@ export function useMatchingLogic({
           }
 
           // Location proximity
-          const userLocations = userListings.map((l: any) => l.location);
+          const userLocations = userListings.map((l) => l.location);
           if (userLocations.some((loc) => loc === listing.location)) {
             score += 15;
             reasons.push("Same location as you");

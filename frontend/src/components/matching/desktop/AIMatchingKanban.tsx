@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, GitCompare, Maximize2 } from "lucide-react";
+import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, GitCompare, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
 import { AIMatchingProps, ColumnType, MatchedListing } from "../types";
 import { ListingComparisonModal } from "../ListingComparisonModal";
 import { Card } from "@/components/ui/card";
@@ -92,6 +92,31 @@ export function AIMatchingKanban({
     return mockAIMatchings.find(listing => listing.id === id);
   };
 
+  // Handle cycling cards in a column
+  const handleCycle = (column: ColumnType, direction: 'up' | 'down') => {
+    setCardsByColumn(prev => {
+      const currentColumn = prev[column];
+      if (currentColumn.length === 0) return prev;
+
+      if (direction === 'up') {
+        // Move top card to back
+        const [first, ...rest] = currentColumn;
+        return {
+          ...prev,
+          [column]: [...rest, first],
+        };
+      } else {
+        // Move bottom card to top
+        const last = currentColumn[currentColumn.length - 1];
+        const rest = currentColumn.slice(0, -1);
+        return {
+          ...prev,
+          [column]: [last, ...rest],
+        };
+      }
+    });
+  };
+
   // Keyboard shortcuts
   React.useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -170,7 +195,7 @@ export function AIMatchingKanban({
                 <div className="p-6">
                   <h2 className="text-lg font-bold text-accent-700 mb-3">Reset All Cards?</h2>
                   <p className="text-sm text-accent-600 mb-2">
-                    This will move all cards back to "For You". Cards in "Liked" and "Passed" will be reset.
+                    This will move all cards back to &quot;For You&quot;. Cards in &quot;Liked&quot; and &quot;Passed&quot; will be reset.
                   </p>
                   <p className="text-xs text-accent-400">
                     This action cannot be undone.

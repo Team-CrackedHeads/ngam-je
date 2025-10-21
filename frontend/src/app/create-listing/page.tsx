@@ -269,7 +269,7 @@ All pictures show the actual item you will receive. Item will be shipped with ca
                         <Search className="w-8 h-8 text-primary-600" />
                       </div>
                       <h2 className="text-2xl font-bold mb-3 text-accent-700">
-                        I'm Looking to Buy
+                        I&apos;m Looking to Buy
                       </h2>
                       <p className="text-base leading-relaxed mb-4 text-accent-500">
                         Set your budget and let sellers compete to fulfill your needs
@@ -278,7 +278,7 @@ All pictures show the actual item you will receive. Item will be shipped with ca
                       <div className="space-y-2 text-left mb-6">
                         <div className="flex items-center text-accent-500">
                           <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
-                          <span className="text-sm">Describe what you're looking for</span>
+                          <span className="text-sm">Describe what you&apos;re looking for</span>
                         </div>
                         <div className="flex items-center text-accent-500">
                           <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>

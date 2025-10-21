@@ -72,7 +72,7 @@ function ThreadsPage() {
   }, [lastQuery]);
 
   const getBaseFilteredThreads = useCallback((): ThreadData[] => {
-    let filtered = [...MOCK_THREADS];
+    const filtered = [...MOCK_THREADS];
     switch (activeFilter) {
       case "Hot":
         return filtered.filter((t) => t.isHot).sort((a, b) => b.upvotes - a.upvotes);
@@ -170,7 +170,7 @@ function ThreadsPage() {
   const handleAISearchComplete = (r: MockAIResponse) => {
     setCurrentOverview(r);
     setIsAILoading(false);
-    setLastQuery((r as any)?.prompt || "");
+    setLastQuery((r as MockAIResponse & { prompt?: string })?.prompt || "");
   };
 
   const handleDismissOverview = () => {

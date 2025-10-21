@@ -84,7 +84,7 @@ export function ConversationList({
           />
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => onTabChange(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => onTabChange(v as "all" | "general" | "market" | "ai")}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="all">All ({messages.length})</TabsTrigger>
             <TabsTrigger value="general">General</TabsTrigger>

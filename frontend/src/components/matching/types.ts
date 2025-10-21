@@ -15,10 +15,25 @@ export interface MatchedListing {
   matchReasons: string[];
 }
 
+export interface ListingType {
+  id: number | string;
+  title: string;
+  description: string;
+  price?: string | number;
+  budget?: string | number;
+  images?: string[];
+  tags?: string[];
+  location: string;
+  timestamp?: string;
+  seller?: string;
+  type: "sell" | "buy";
+  category: string;
+}
+
 export interface AIMatchingProps {
   userMode: "buyer" | "seller";
-  userListings: unknown[];
-  availableListings: unknown[];
+  userListings: ListingType[];
+  availableListings: ListingType[];
   onMatch: (listing: MatchedListing, action: "like" | "pass") => void;
   onMessage: (listing: MatchedListing) => void;
   onViewDetails: (listing: MatchedListing) => void;

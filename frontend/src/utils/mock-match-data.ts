@@ -210,5 +210,6 @@ export function getAllUserMatches(userListingIds: number[]): Map<number, Listing
 
 // Get total match count for a listing
 export function getMatchCount(listingId: number, listingType: "buy" | "sell"): number {
-  return generateMatchesForListing(listingId, listingType).length;
+  const mappedType = listingType === "sell" ? "sale" : "wanted";
+  return generateMatchesForListing(listingId, mappedType).length;
 }

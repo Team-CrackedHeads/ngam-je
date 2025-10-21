@@ -6,12 +6,18 @@ export type SearchSuggestion = {
   icon?: string; // Optional icon name for display
 };
 
+type ToolCall = {
+  name: string;
+  status: string;
+  result?: string;
+};
+
 export type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
-  toolCalls?: any[]; // Simplified for this context, use your actual ToolCall type if needed
+  toolCalls?: ToolCall[];
 };
 
 export type ChatHistoryItem = {

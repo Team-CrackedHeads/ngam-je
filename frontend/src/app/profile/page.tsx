@@ -26,6 +26,8 @@ export interface Listing {
 
 interface ProfilePageProps {
   user?: User;
+  saleListings?: Listing[];
+  wantedListings?: Listing[];
 }
 
 // Tabs configuration
@@ -92,7 +94,7 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
                 <div className="flex items-center text-xs sm:text-sm text-yellow-600">
                   <Star size={14} className="sm:w-4 sm:h-4" fill="gold" />
                   <span className="ml-1">
-                    {data.rating} ({data.ratingCount})
+                    {userData.rating} ({userData.ratingCount})
                   </span>
                 </div>
               </div>
@@ -104,14 +106,14 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.totalListings}</p>
+            <p className="text-2xl font-bold">{userData.totalListings}</p>
             <p className="text-sm">Total Listings</p>
           </div>
           <div
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.completedDeals}</p>
+            <p className="text-2xl font-bold">{userData.completedDeals}</p>
             <p className="text-sm">Completed Deals</p>
           </div>
 
