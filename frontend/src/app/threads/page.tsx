@@ -14,13 +14,12 @@ import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
 import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
 import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
 import NgamOverview from "../components/threads-ui/NgamOverview";
-import FilterButton from "../components/threads-ui/FilterButton";
+import FilterButton, { FilterType } from "../components/threads-ui/FilterButton";
 import ViewDropdown from "../components/threads-ui/ViewDropdown";
 import PageHeader from "../components/threads-ui/PageHeader";
 import BreadcrumbNav from "./BreadcrumbNav"; // ✅ Added import
 import { MockAIResponse } from "../../utils/mock-ai-data";
 
-type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
 type ViewType = "grid" | "list";
 
 function ThreadsPage() {
@@ -182,6 +181,7 @@ function ThreadsPage() {
 
   // CTA State
   const hasOverview = !!(currentOverview || isAILoading);
+  const hasQueryFilter = queryKeywords.length > 0 || lastQuery.length > 0;
 
   const ctaState = useMemo(() => {
     if (inSearchView || inOverviewView) {

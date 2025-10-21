@@ -1,18 +1,14 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Pin,
-  Flame,
   MoreVertical,
-  Users,
-  Eye,
-  ArrowUp,
-  Clock,
   Bell,
   UserPlus,
   Circle,
   User,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +18,9 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ThreadData } from "../../../utils/mock-threads-data";
+import { ThreadData } from "@/utils/mock-threads-data";
 import { motion } from "framer-motion";
+import TierBadge from "@/app/components/threads-ui/TierBadge";
 
 /* ---------------- Helper Functions ---------------- */
 function formatNumber(num: number): string {
@@ -262,29 +259,5 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-/* ---------------- Stat Component ---------------- */
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  const displayValue = typeof value === "number" ? formatNumber(value) : value;
-  return (
-    <div className="flex justify-between items-center py-0.5 px-1 hover:bg-gray-100 rounded-md transition-colors">
-      <div className="flex items-center gap-1">
-        {icon}
-        <span className="text-gray-600 text-[11px] font-normal">{label}</span>
-      </div>
-      <span className="font-semibold text-gray-900 text-[11px]">
-        {displayValue}
-      </span>
-    </div>
   );
 }
