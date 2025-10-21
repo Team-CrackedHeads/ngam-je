@@ -456,7 +456,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                 <div className="space-y-6">
                   <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Set Your Budget</h2>
-                    <p className="text-lg text-[var(--color-primary-900)]">Define your price range for this item</p>
+                    <p className="text-lg text-[var(--color-primary-900)]">And select shipping options</p>
                   </div>
 
                   <div className="max-w-2xl mx-auto space-y-8">
@@ -476,7 +476,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                             <select
                               value={formData.currency}
                               onChange={(e) => setFormData({...formData, currency: e.target.value})}
-                              className="px-3 py-2 border border-gray-300 rounded-lg text-[var(--color-accent-700)]"
+                              className="px-3 py-0 border border-gray-300 rounded-lg text-[var(--color-accent-700)]"
                             >
                               <option value="MYR">MYR</option>
                               <option value="USD">USD</option>
@@ -498,7 +498,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                         <div>
                           <Label htmlFor="maxPrice" className="text-sm text-[var(--color-primary-900)]">Maximum Price (per unit)</Label>
                           <div className="flex gap-2 mt-2">
-                            <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 flex items-center text-[var(--color-primary-900)]">
+                            <div className="px-3 py-0 border border-gray-300 rounded-lg bg-gray-50 flex items-center text-[var(--color-primary-900)]">
                               {formData.currency}
                             </div>
                             <Input
@@ -527,7 +527,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                           min="1"
                           step="1"
                         />
-                        <p className="text-sm mt-1 text-[var(--color-primary-900)]">How many units do you want to buy?</p>
+                        
                       </div>
 
                       {formData.minPrice && formData.maxPrice && formData.quantity && parseInt(formData.quantity) > 0 && (
@@ -572,7 +572,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                 <div className="space-y-6">
                   <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Review Your Listing</h2>
-                    <p className="text-lg text-[var(--color-primary-900)]">Make sure everything looks good before publishing</p>
+                    <p className="text-lg text-[var(--color-primary-900)]">Check the details</p>
                   </div>
 
                   <div className="max-w-4xl mx-auto">

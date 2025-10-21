@@ -281,10 +281,10 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
               {/* Step 1: AI Generate */}
               {currentStep === 1 && (
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="text-center mb-6 sm:mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
-                    <p className="text-sm sm:text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
+                    <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
                   </div>
 
                   <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
@@ -519,10 +519,10 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
               {/* Step 2: Pricing & Shipping */}
               {currentStep === 2 && (
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="text-center mb-6 sm:mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Pricing & Shipping</h2>
-                    <p className="text-sm sm:text-lg text-[var(--color-primary-900)]">Set your price range and shipping options</p>
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Set Your Selling Price</h2>
+                    <p className="text-lg text-[var(--color-primary-900)]">And select shipping options</p>
                   </div>
 
                   <div className="max-w-2xl mx-auto space-y-8">
@@ -564,7 +564,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                          <Label htmlFor="minPrice" className="text-xs sm:text-sm text-[var(--color-primary-900)]">Minimum Price</Label>
+                          <Label htmlFor="minPrice" className="text-xs sm:text-sm text-[var(--color-primary-900)]">Minimum Price (per unit)</Label>
                           <div className="flex gap-2 mt-2">
                             <select
                               value={formData.currency}
@@ -589,7 +589,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         </div>
 
                         <div>
-                          <Label htmlFor="maxPrice" className="text-xs sm:text-sm text-[var(--color-primary-900)]">Maximum Price</Label>
+                          <Label htmlFor="maxPrice" className="text-xs sm:text-sm text-[var(--color-primary-900)]">Maximum Price (per unit)</Label>
                           <div className="flex gap-2 mt-2">
                             <div className="px-2 sm:px-3 py-2 border rounded-lg flex items-center text-sm bg-[var(--color-primary-100)] border-[var(--color-primary-200)] text-[var(--color-primary-900)]">
                               {formData.currency}
@@ -626,9 +626,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         <Label htmlFor="inventoryQuantity" className="text-sm font-medium mb-1 sm:mb-2 block text-[var(--color-accent-700)]">
                           Units Available
                         </Label>
-                        <p className="text-xs sm:text-sm mb-2 text-[var(--color-primary-900)]">
-                          Units in stock?
-                        </p>
+
                         <Input
                           id="inventoryQuantity"
                           type="number"
@@ -662,10 +660,10 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
               {/* Step 4: Preview */}
               {currentStep === 4 && (
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="text-center mb-6 sm:mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Review Your Listing</h2>
-                    <p className="text-sm sm:text-lg text-[var(--color-primary-900)]">Make sure everything looks good</p>
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Review Your Listing</h2>
+                    <p className="text-lg text-[var(--color-primary-900)]">Check the details</p>
                   </div>
 
                   <div className="max-w-4xl mx-auto">
