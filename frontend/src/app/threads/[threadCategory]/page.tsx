@@ -141,11 +141,11 @@ const CategoryPage: React.FC = () => {
     // Filter by listing type (WTB/WTS/General)
     if (activeType === "wtb") {
       categoryListings = categoryListings.filter(
-        (listing) => listing.listingType === "want-to-buy"
+        (listing) => listing.listingType === "wanted"
       );
     } else if (activeType === "wts") {
       categoryListings = categoryListings.filter(
-        (listing) => listing.listingType === "for-sale"
+        (listing) => listing.listingType === "sale"
       );
     }
     // For "general", don't filter by listing type - show both
@@ -200,9 +200,8 @@ const CategoryPage: React.FC = () => {
 
     // Apply listing type filter from SearchFilter
     if (appliedFilters.listingType && appliedFilters.listingType !== "all") {
-      const mappedType = appliedFilters.listingType === "sale" ? "for-sale" : "want-to-buy";
       categoryListings = categoryListings.filter(
-        (listing) => listing.listingType === mappedType
+        (listing) => listing.listingType === appliedFilters.listingType
       );
     }
     // --- APPLY FILTERS FROM SORTING COMPONENT ---
@@ -388,7 +387,7 @@ const CategoryPage: React.FC = () => {
               }
               return l.category === category &&
                 l.listingType ===
-                  (activeType === "wtb" ? "want-to-buy" : "for-sale");
+                  (activeType === "wtb" ? "wanted" : "sale");
             }
           ).length
             ? ` (filtered from ${
@@ -399,7 +398,7 @@ const CategoryPage: React.FC = () => {
                     }
                     return l.category === category &&
                       l.listingType ===
-                        (activeType === "wtb" ? "want-to-buy" : "for-sale");
+                        (activeType === "wtb" ? "wanted" : "sale");
                   }
                 ).length
               } total)`

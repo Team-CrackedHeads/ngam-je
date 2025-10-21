@@ -88,7 +88,7 @@ export function MockAuthProvider({ children, initialUser }: MockAuthProviderProp
    * For mock: we check localStorage for owned resources
    * For real auth: this would query the database
    */
-  const checkIsOwner = (resourceId: string, resourceType?: 'listing' | 'thread' | 'comment'): boolean => {
+  const checkIsOwner = (resourceId: string): boolean => {
     if (!user?.isAuthenticated) return false;
 
     // Check localStorage for mock ownership data

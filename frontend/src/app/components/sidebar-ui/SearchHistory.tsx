@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Search, User, Bell, Shield, MessageSquare, Sparkles, Bookmark, HelpCircle, LifeBuoy, X } from 'lucide-react';
 import { mockSearchSuggestions, SearchSuggestion } from '@/utils/mock-search-history';
 
@@ -29,8 +28,6 @@ export default function SearchHistory({ onSuggestionClick }: SearchHistoryProps)
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  // Removed useRouter as navigation is handled by parent via onSuggestionClick
-  // const router = useRouter();
 
   useEffect(() => {
     if (searchQuery.length > 0) {

@@ -15,13 +15,10 @@ const tabs: { id: TabType; label: string; icon: React.ReactNode; color: string }
 ];
 
 export function AIMatchingSwipe({
-  userMode,
-  userListings,
   availableListings,
   onMatch,
   onMessage,
   onViewDetails,
-  onClose,
 }: AIMatchingProps) {
   const [activeTab, setActiveTab] = useState<TabType>("queue");
   const [searchQuery, setSearchQuery] = useState("");

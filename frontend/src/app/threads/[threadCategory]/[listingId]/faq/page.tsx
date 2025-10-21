@@ -11,7 +11,6 @@ import { mockQuestions, mockAiSummary } from "../../../../../utils/mock-threads-
 const FAQPage: React.FC = () => {
   const handleBackClick = () => window.history.back();
 
-  const [aiQuestion, setAiQuestion] = useState<string>("");
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [newAnswerInputs, setNewAnswerInputs] = useState<{ [key: string]: string }>({});
   const [replyInputs, setReplyInputs] = useState<{ [key: string]: string }>({});
@@ -160,13 +159,6 @@ const FAQPage: React.FC = () => {
       newSet.delete(parentAnswerId);
       return newSet;
     });
-  };
-
-  const sendAiQuestion = () => {
-    if (aiQuestion.trim()) {
-      console.log("Asking AI:", aiQuestion);
-      setAiQuestion("");
-    }
   };
 
   const filteredQuestions = questions.filter((q) =>

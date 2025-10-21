@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
@@ -15,10 +16,6 @@ import {
   Sparkles,
   Navigation as NavIcon,
   TrendingUp,
-  Search,
-  ShoppingBag,
-  ShoppingCart,
-  Package,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MOCK_THREADS } from "@/utils/mock-threads-data";
@@ -30,7 +27,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel, // Note: SidebarGroupLabel is imported but not used in the provided code.
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -39,7 +35,6 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
   SidebarSeparator,
-  SidebarTrigger, // Note: SidebarTrigger is imported but not used in the provided code.
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -397,9 +392,11 @@ function FollowingMenuItem() {
                   }`}
                 >
                   <div className="w-6 h-6 rounded-full bg-primary-200 border border-primary-300 flex-shrink-0 overflow-hidden">
-                    <img
+                    <Image
                       src={thread.imageUrl}
                       alt={thread.title}
+                      width={24}
+                      height={24}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -430,7 +427,7 @@ function NgamJeAssistantMenuItem({
   onNewChat: () => void;
   // onOpenChat: (chatId: number) => void;
 }) {
-  const router =useRouter();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [visibleChats, setVisibleChats] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -700,7 +697,6 @@ export function AppSidebar() {
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
-  const [initialAIChatMessages, setInitialAIChatMessages] = useState<Array<{ id: string; role: string; content: string; timestamp: Date }>>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -749,18 +745,6 @@ export function AppSidebar() {
   };
 
   const handleOpenExistingChat = (chatId: number) => {
-    const chat = mockFullChatHistory.find(c => c.id === chatId);
-    if (chat && chat.messages) {
-      // Convert mock messages to the Message type expected by SidebarAIChat
-      const formattedMessages = chat.messages.map(msg => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp), // Ensure timestamp is a Date object
-        id: msg.id.toString(), // Ensure id is a string
-      }));
-      setInitialAIChatMessages(formattedMessages);
-    } else {
-      setInitialAIChatMessages([]); // Fallback if no messages found
-    }
     setCurrentChatId(chatId);
     setIsChatOpen(true);
   };

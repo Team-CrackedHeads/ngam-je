@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { mockFullChatHistory, ChatHistoryItem, Message } from '@/utils/mock-search-history';
+import { mockFullChatHistory, ChatHistoryItem } from '@/utils/mock-search-history';
 import ReactMarkdown from 'react-markdown';
-import { Clock, MessageSquare, User, Sparkles, ArrowLeft } from 'lucide-react';
+import { Clock, User, Sparkles, ArrowLeft } from 'lucide-react';
 
 type ChatHistoryDisplayProps = {
   initialChatId?: number; // Optional prop for direct access to a specific chat

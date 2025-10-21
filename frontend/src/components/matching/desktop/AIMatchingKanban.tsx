@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, GitCompare, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
+import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
 import { AIMatchingProps, ColumnType, MatchedListing } from "../types";
 import { ListingComparisonModal } from "../ListingComparisonModal";
 import { Card } from "@/components/ui/card";
@@ -43,13 +43,8 @@ const columns: ColumnData[] = [
 ];
 
 export function AIMatchingKanban({
-  userMode,
-  userListings,
-  availableListings,
-  onMatch,
   onMessage,
   onViewDetails,
-  onClose,
 }: AIMatchingProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -168,7 +163,7 @@ export function AIMatchingKanban({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showCompareModal, expandedPopupColumn, selectMode]);
+  }, [showCompareModal, expandedPopupColumn, selectMode, setSelectedForCompare]);
 
   return (
     <>

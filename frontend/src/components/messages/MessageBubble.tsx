@@ -9,7 +9,7 @@ interface ProductInfo {
 }
 
 interface MessageBubbleProps {
-  sender: "me" | "them";
+  sender: string;
   content: string;
   timestamp: string;
   isCurrentUser?: boolean;

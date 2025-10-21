@@ -92,7 +92,6 @@ export default function SidebarAIChat({
   onClose,
   chatId,
   initialMessages = [],
-  onHistoryClick
 }: SidebarAIChatProps) {
   const router = useRouter(); // Initialize useRouter
   const [messages, setMessages] = useState<Message[]>(initialMessages.length > 0 ? initialMessages : [WELCOME_MESSAGE]);

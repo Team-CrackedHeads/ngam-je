@@ -25,7 +25,6 @@ type ViewType = "grid" | "list";
 function ThreadsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
   const [viewType, setViewType] = useState<ViewType>("grid");
-  const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
@@ -173,6 +172,10 @@ function ThreadsPage() {
     setLastQuery((r as MockAIResponse & { prompt?: string })?.prompt || "");
   };
 
+  const handleOpenAI = () => {
+    // Open AI chat or navigate to AI interface
+  };
+
   const handleDismissOverview = () => {
     setCurrentOverview(null);
     setIsAILoading(false);
@@ -206,7 +209,7 @@ function ThreadsPage() {
         {/* SECTION 1: AI Agent */}
         <section id="search" ref={searchSectionRef} className="h-full snap-start">
           <AIAgentSearch
-            onOpenAI={() => setIsAIOpen(true)}
+            onOpenAI={handleOpenAI}
             onSearchStart={handleAISearchStart}
             onSearchComplete={handleAISearchComplete}
           />

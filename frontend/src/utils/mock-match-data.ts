@@ -27,13 +27,6 @@ export interface ListingMatch {
   };
 }
 
-// Helper function to determine match quality from score
-function getMatchQuality(score: number): MatchQuality {
-  if (score >= 90) return "excellent";
-  if (score >= 70) return "good";
-  return "possible";
-}
-
 // Generate mock matches for a specific listing
 export function generateMatchesForListing(
   listingId: number,

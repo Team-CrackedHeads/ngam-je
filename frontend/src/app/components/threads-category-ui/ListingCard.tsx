@@ -1,37 +1,49 @@
 "use client";
 
 import React, { useState } from "react";
-import { Heart, MessageSquare, CircleHelp, MapPin, Clock, User } from "lucide-react";
-import {
-  UNIFIED_LISTINGS,
-  UnifiedListingData,
-  getListingsByCategory,
-} from "@/utils/mock-threads-data";
+import { Heart, MapPin, Clock } from "lucide-react";
 
 type ListingCardProps = {
-  listing: UnifiedListingData; // Changed from ListingData
+  listing: UnifiedListingData;
   onClick?: (listing: UnifiedListingData) => void;
   onMessage?: (listing: UnifiedListingData) => void;
   onFAQ?: (listing: UnifiedListingData) => void;
 };
 
+type UnifiedListingData = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description: string;
+  price: number;
+  currency: string;
+  seller: {
+    name: string;
+    location: string;
+    verified: boolean;
+    timePosted: string;
+  };
+  tags: string[];
+  imageUrl: string;
+  category: string;
+  listingType: "sale" | "wanted";
+  views: number;
+  protected: boolean;
+};
+
 const ListingCard: React.FC<ListingCardProps> = ({
   listing,
   onClick,
-  onMessage,
-  onFAQ,
 }) => {
   const [liked, setLiked] = useState(false);
 
   const {
-    id,
     title,
     price,
-    currency, // Now separate from price
-    seller, // Now an object
+    currency,
+    seller,
     tags,
     imageUrl,
-    category,
     listingType,
   } = listing;
 
@@ -71,10 +83,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
         {/* For Sale - badge */}
         <span
           className={`absolute top-2 left-2 text-accent-700 text-xs px-3 py-1 rounded-full font-medium shadow-md ${
-            listingType === "for-sale" ? "bg-secondary-500" : "bg-primary-500"
+            listingType === "sale" ? "bg-secondary-500" : "bg-primary-500"
           }`}
         >
-          {listingType === "for-sale" ? "For Sale" : "Want to Buy"}
+          {listingType === "sale" ? "For Sale" : "Want to Buy"}
         </span>
       </div>
 

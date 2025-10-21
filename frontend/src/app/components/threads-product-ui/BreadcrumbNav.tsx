@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 interface BreadcrumbNavProps {
   category: string;
   listingTitle: string;
-  listingType: "for-sale" | "want-to-buy";
+  listingType: "sale" | "wanted";
 }
 
 export const BreadcrumbNav = ({
@@ -15,8 +15,8 @@ export const BreadcrumbNav = ({
   const router = useRouter();
 
   // Determine the type parameter for going back to category
-  const typeParam = listingType === "want-to-buy" ? "wtb" : "wts";
-  const typeName = listingType === "want-to-buy" ? "Want to Buy" : "Want to Sell";
+  const typeParam = listingType === "wanted" ? "wtb" : "wts";
+  const typeName = listingType === "wanted" ? "Want to Buy" : "Want to Sell";
 
   const breadcrumbs = [
     {

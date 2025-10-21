@@ -2,7 +2,6 @@
 
 import { MapPin, Clock, Heart, Sparkles, X, Undo2 } from "lucide-react";
 import { MatchedListing } from "../types";
-import Image from "next/image";
 
 interface MatchCardProps {
   listing: MatchedListing;

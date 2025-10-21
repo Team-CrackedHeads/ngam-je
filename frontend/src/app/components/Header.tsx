@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Puzzle, Bell, LogOut, Home, MessageCircle, User, Settings } from "lucide-react";
+import { Puzzle, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,7 +11,6 @@ type HeaderProps = {
 };
 
 const Header = ({ username, notifications = 0 }: HeaderProps) => {
-  const pathname = usePathname();
 
 
   return (
