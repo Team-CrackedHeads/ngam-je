@@ -57,9 +57,6 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg bg-primary-gradient">
-          <MessageCircle className="w-10 h-10 text-white" />
-        </div>
         <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Frequently Asked Questions</h2>
         <p className="text-lg text-[var(--color-primary-900)]">Help sellers understand your requirements better</p>
       </div>

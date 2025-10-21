@@ -283,9 +283,6 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
               {currentStep === 1 && (
                 <div className="space-y-4 sm:space-y-6">
                   <div className="text-center mb-6 sm:mb-8">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg bg-primary-gradient">
-                      <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
                     <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
                     <p className="text-sm sm:text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
                   </div>
@@ -295,7 +292,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     <div>
                       <div className="flex justify-between items-center mb-2 sm:mb-3">
                         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
-                          Product Images <span className="text-red-500">*</span>
+                          Product Images
                         </Label>
                         <Button
                           variant="outline"
@@ -381,7 +378,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     {/* Ownership Proof Section */}
                     <div className="pt-4 sm:pt-6 border-t-2 border-[var(--color-primary-300)]">
                       <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block text-[var(--color-accent-700)]">
-                        Proof of Ownership <span className="text-red-500">*</span>
+                        Proof of Ownership
                       </Label>
 
                       {formData.ownershipProofImage ? (
@@ -435,7 +432,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <Label htmlFor="title" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
-                          Title <span className="text-red-500">*</span>
+                          Title
                         </Label>
                         <Button
                           variant="outline"
@@ -474,7 +471,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <Label htmlFor="description" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
-                          Description <span className="text-red-500">*</span>
+                          Description
                         </Label>
                         <Button
                           variant="outline"
@@ -524,9 +521,6 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
               {currentStep === 2 && (
                 <div className="space-y-4 sm:space-y-6">
                   <div className="text-center mb-6 sm:mb-8">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg bg-primary-gradient">
-                      <DollarSign className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
                     <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Pricing & Shipping</h2>
                     <p className="text-sm sm:text-lg text-[var(--color-primary-900)]">Set your price range and shipping options</p>
                   </div>
@@ -565,7 +559,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     {/* Price Range Input */}
                     <div className="space-y-3 sm:space-y-4">
                       <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
-                        Your Selling Price Range <span className="text-red-500">*</span>
+                        Your Selling Price Range
                       </Label>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -630,7 +624,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
                       <div>
                         <Label htmlFor="inventoryQuantity" className="text-sm font-medium mb-1 sm:mb-2 block text-[var(--color-accent-700)]">
-                          Units Available <span className="text-red-500">*</span>
+                          Units Available
                         </Label>
                         <p className="text-xs sm:text-sm mb-2 text-[var(--color-primary-900)]">
                           Units in stock?
@@ -670,9 +664,6 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
               {currentStep === 4 && (
                 <div className="space-y-4 sm:space-y-6">
                   <div className="text-center mb-6 sm:mb-8">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg bg-primary-gradient">
-                      <Eye className="w-8 h-8 sm:w-10 sm:h-10 text-[var(--color-accent-700)]" />
-                    </div>
                     <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Review Your Listing</h2>
                     <p className="text-sm sm:text-lg text-[var(--color-primary-900)]">Make sure everything looks good</p>
                   </div>

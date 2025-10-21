@@ -276,9 +276,6 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
           {currentStep === 1 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
-                    <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg bg-primary-gradient">
-                      <Sparkles className="w-10 h-10 text-white" />
-                    </div>
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
                     <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
                   </div>
@@ -288,7 +285,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                     <div>
                       <div className="flex justify-between items-center mb-3">
                         <Label className="text-base font-medium text-[var(--color-accent-700)]">
-                          Product Images <span className="text-red-500">*</span>
+                          Product Images
                         </Label>
                         <Button
                           variant="outline"
@@ -375,7 +372,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <Label htmlFor="title" className="text-base font-medium text-[var(--color-accent-700)]">
-                          Title <span className="text-red-500">*</span>
+                          Title
                         </Label>
                         <Button
                           variant="outline"
@@ -412,7 +409,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <Label htmlFor="description" className="text-base font-medium text-[var(--color-accent-700)]">
-                          Description <span className="text-red-500">*</span>
+                          Description
                         </Label>
                         <Button
                           variant="outline"
@@ -458,9 +455,6 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
               {currentStep === 2 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
-                    <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg bg-primary-gradient">
-                      <DollarSign className="w-10 h-10 text-white" />
-                    </div>
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Set Your Budget</h2>
                     <p className="text-lg text-[var(--color-primary-900)]">Define your price range for this item</p>
                   </div>
@@ -472,7 +466,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                     {/* Pricing Section */}
                     <div className="space-y-4">
                       <Label className="text-base font-medium text-[var(--color-accent-700)]">
-                        Your Budget Range <span className="text-red-500">*</span>
+                        Your Budget Range
                       </Label>
                       
                       <div className="grid grid-cols-2 gap-4">
@@ -522,7 +516,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                       </div>
 
                       <div>
-                        <Label htmlFor="quantity" className="text-sm text-[var(--color-primary-900)]">Number of Units <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="quantity" className="text-sm text-[var(--color-primary-900)]">Number of Units</Label>
                         <Input
                           id="quantity"
                           type="number"
@@ -577,9 +571,6 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
               {currentStep === 4 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
-                    <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg bg-primary-gradient">
-                      <Eye className="w-10 h-10 text-white" />
-                    </div>
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Review Your Listing</h2>
                     <p className="text-lg text-[var(--color-primary-900)]">Make sure everything looks good before publishing</p>
                   </div>

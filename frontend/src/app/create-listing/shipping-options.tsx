@@ -33,7 +33,7 @@ export function ShippingPreferences({ shippingOptions, onShippingOptionsChange }
       <div className="flex items-center gap-2 mb-4">
         <Truck className="w-6 h-6 text-[var(--color-secondary-500)]" />
         <Label className="text-base font-medium text-[var(--color-accent-700)]">
-          Shipping Preferences <span className="text-red-500">*</span>
+          Shipping Preferences
         </Label>
       </div>
 
