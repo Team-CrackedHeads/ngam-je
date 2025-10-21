@@ -55,11 +55,11 @@ You should see both `ngam-je-postgres` and `ngam-je-pgadmin` services running an
 
 #### Option 1: Using pgAdmin (Recommended - Web UI)
 
+We use **pgAdmin 9.9**, the latest version with enhanced PostgreSQL 13-18 support.
+
 1. Open your browser and navigate to: **http://localhost:5050**
 
-2. Login with the credentials from your `.env` file:
-   - Email: `admin@ngamje.local` (default)
-   - Password: `admin` (default)
+2. **No login required!** pgAdmin is configured in desktop mode for local development. You'll be automatically logged in.
 
 3. Add a new server connection:
    - Right-click "Servers" → "Register" → "Server"
@@ -76,6 +76,10 @@ You should see both `ngam-je-postgres` and `ngam-je-pgadmin` services running an
    - Save password: ✓ (check this)
 
 4. Click "Save" - you should now be connected!
+
+**Note:** If you need to change pgAdmin settings, the default credentials are:
+   - Email: `admin@localhost.com` (configured in docker-compose.yml)
+   - Password: `admin` (default)
 
 #### Option 2: Using psql (Command Line)
 
@@ -177,12 +181,16 @@ docker-compose stop pgadmin
 
 ## Database Migrations
 
-After the database is running, apply migrations:
+After the database is running, apply migrations using Alembic (our "Git for databases"):
 
 ```bash
 cd backend
 uv run alembic upgrade head
 ```
+
+**What is Alembic?** Alembic is a database migration tool that tracks schema changes over time, just like Git tracks code changes. It allows you to version control your database schema, apply changes consistently across environments, and roll back if needed.
+
+For a comprehensive guide on using Alembic, see the [Database Migration Guide](../database/alembic-guide.md).
 
 ## Troubleshooting
 
