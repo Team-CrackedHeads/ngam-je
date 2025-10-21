@@ -1,9 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
 import { MOCK_THREADS } from "@/utils/mock-threads-data";
-import BreadcrumbNav from "@/app/threads/BreadcrumbNav";
 
 // tier features data
 const tierFeatures = [
@@ -143,20 +142,35 @@ function PricingPage() {
   const boostsToNextTier =
     currentTier < 3 ? boostRequirements[currentTier + 1] : 0;
 
+  const handleBackClick = () => {
+    router.push(`/threads`);
+  };
+
   return (
-    <div className="min-h-screen bg-primary-50">
-      {/* breadcrumb navigation */}
+    <div className="min-h-screen bg-gradient-to-br from-[#fff7e0] to-[#ffe29d]">
+      {/* back button navigation */}
       <div className="container mx-auto px-4 pt-4">
-        <BreadcrumbNav />
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={handleBackClick}
+            className="p-2 rounded-full hover:bg-secondary-subtle transition-colors"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-6 w-6 text-accent-700" />
+          </button>
+          <h1 className="text-2xl font-semibold text-accent-800">
+            Pricing Plan - {threadData.title}
+          </h1>
+        </div>
       </div>
 
-      {/* hero section with gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#fff7e0] to-[#ffe29d]">
+      {/* hero section */}
+      <div className="relative overflow-hidden">
         <div className="relative container mx-auto py-8 sm:py-12 md:py-16 px-4">
           <div className="text-center">
             {/* thread image */}
             <div className="flex justify-center mb-4 sm:mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-neutral-white shadow-lg">
+              <div className="w-30 h-30 sm:w-30 sm:h-30 rounded-full overflow-hidden border-2 border-neutral-white shadow-lg">
                 <img
                   src={threadData.imageUrl}
                   alt={threadData.title}
@@ -165,34 +179,30 @@ function PricingPage() {
               </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-accent-700 mb-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-accent-700 mb-10 sm:mb-12">
               {threadData.title}
-            </h1>
-            <p className="text-base sm:text-lg text-accent-500 mb-4 sm:mb-6">
-              <Sparkles className="w-4 h-4 inline mr-1" />
-              No Boosts
-            </p>
+            </h2>
 
             {/* action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 px-4">
               <button className="bg-neutral-white text-accent-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-neutral-100 transition-colors text-sm sm:text-base">
                 Boost This Thread
               </button>
-              <button className="bg-secondary-500 text-neutral-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-secondary-600 transition-colors text-sm sm:text-base">
-                Get Nitro with 2 Free Boosts
+              <button className="bg-secondary-500 text-accent-500 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-secondary-600 transition-colors text-sm sm:text-base">
+                Get Token with 2 Free Boosts
               </button>
             </div>
 
             {/* boosts needed tooltip */}
             {currentTier < 3 && (
-              <div className="inline-block bg-neutral-white/90 text-accent-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <div className="inline-block bg-neutral-white/90 text-accent-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium my-4 sm:my-6">
                 {boostsToNextTier} more Boosts to Level {currentTier + 1}
               </div>
             )}
 
             {/* tier progress visualization */}
             <div className="max-w-3xl mx-auto px-4">
-              <div className="relative py-8 sm:py-12 pt-12 sm:pt-16">
+              <div className="relative py-8 sm:py-12 pt-8 sm:pt-8">
                 <div className="relative flex items-center pt-6 sm:pt-8">
                   {/* base line */}
                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-primary-200/50" />
@@ -249,7 +259,7 @@ function PricingPage() {
                               <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-neutral-white" />
                             )}
                             {!isCurrent && isActive && (
-                              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-white" />
+                              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-accent-500" />
                             )}
                           </div>
 
@@ -273,7 +283,7 @@ function PricingPage() {
       </div>
 
       {/* tier cards section */}
-      <div className="container mx-auto px-4 py-8 sm:py-12">
+      <div className="container mx-auto px-4 py-4 sm:py-1">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {[0, 1, 2, 3].map((tier) => (
             <TierCard
@@ -367,13 +377,6 @@ function PricingPage() {
           </div>
         </div>
       </div>
-
-      {/* floating button - bottom right corner */}
-      <button className="fixed bottom-6 right-6 bg-secondary-500 hover:bg-secondary-600 text-accent-700 font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-50 flex items-center gap-2">
-        <Sparkles className="w-5 h-5" />
-        <span className="hidden sm:inline">Boost Thread</span>
-        <span className="sm:hidden">Boost</span>
-      </button>
     </div>
   );
 }
