@@ -1,42 +1,65 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { mockFullChatHistory, ChatHistoryItem } from '@/utils/mock-search-history';
-import ReactMarkdown from 'react-markdown';
-import { Clock, User, Sparkles, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  mockFullChatHistory,
+  ChatHistoryItem,
+} from "@/utils/mock-search-history";
+import ReactMarkdown from "react-markdown";
+import { Clock, User, Sparkles, ArrowLeft, Search } from "lucide-react";
 
 type ChatHistoryDisplayProps = {
   initialChatId?: number; // Optional prop for direct access to a specific chat
 };
 
-export default function ChatHistoryDisplay({ initialChatId }: ChatHistoryDisplayProps) {
+export default function ChatHistoryDisplay({
+  initialChatId,
+}: ChatHistoryDisplayProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const [selectedChat, setSelectedChat] = useState<ChatHistoryItem | null>(null);
+  const searchParams = useSearchParams();
+  const [selectedChat, setSelectedChat] = useState<ChatHistoryItem | null>(
+    null
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Determine if we're on a specific chat page (e.g., /chat/1)
+  // Handle chat selection from URL query param or initialChatId
   useEffect(() => {
-    const pathSegments = pathname.split('/');
-    const idFromPath = pathSegments[pathSegments.length - 1];
-    const chatId = initialChatId || (idFromPath && !isNaN(Number(idFromPath)) ? Number(idFromPath) : null);
+    const idFromQuery = searchParams.get("id");
+    const chatId = initialChatId || (idFromQuery ? Number(idFromQuery) : null);
 
     if (chatId) {
-      const chat = mockFullChatHistory.find(c => c.id === chatId);
+      const chat = mockFullChatHistory.find((c) => c.id === chatId);
       setSelectedChat(chat || null);
     } else {
-      setSelectedChat(null); // No specific chat selected
+      setSelectedChat(null);
     }
-  }, [pathname, initialChatId]);
+  }, [searchParams, initialChatId]);
 
-   const handleChatSelect = (chatId: number) => {
-    const chat = mockFullChatHistory.find(c => c.id === chatId);
-    setSelectedChat(chat || null);
-    // No router.push() here, so the URL does not change.
+  // Auto-scroll to bottom when chat changes
+  useEffect(() => {
+    if (selectedChat) {
+      setTimeout(
+        () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100
+      );
+    }
+  }, [selectedChat?.id]);
+
+  // Filter chats based on search
+  const filteredChats = mockFullChatHistory.filter((chat) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return chat.title.toLowerCase().includes(query);
+  });
+
+  const handleChatSelect = (chatId: number) => {
+    router.push(`/chat/history?id=${chatId}`);
   };
 
   const handleBackToHistory = () => {
-    router.push('/chat/history');
+    router.push("/chat/history");
   };
 
   // Helper to format timestamp
@@ -45,81 +68,169 @@ export default function ChatHistoryDisplay({ initialChatId }: ChatHistoryDisplay
   };
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">
-      {/* Chat History List (Left Panel) */}
-      <div className={`w-full md:w-1/3 border-r border-primary-200 p-4 overflow-y-auto ${selectedChat ? 'hidden md:block' : 'block'}`}>
-        <h2 className="text-lg font-bold text-accent-700 mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5" /> Chat History
-        </h2>
-        <div className="space-y-2">
-          {mockFullChatHistory.map((chat) => (
+    <div className="flex h-full bg-neutral-white overflow-hidden">
+      {/* Sidebar - Chat History List */}
+      <div
+        className={`${
+          selectedChat ? "hidden lg:flex" : "flex"
+        } w-full lg:w-80 flex-col bg-neutral-white border-r border-neutral-200`}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-neutral-200">
+          <div className="flex items-center gap-3 mb-4">
             <button
-              key={chat.id}
-              onClick={() => handleChatSelect(chat.id)}
-              className={`w-full text-left p-3 rounded-lg transition-colors ${
-                selectedChat?.id === chat.id
-                  ? 'bg-secondary-100 border border-secondary-300 text-accent-700'
-                  : 'bg-primary-50 hover:bg-primary-100 text-accent-600'
-              }`}
+              onClick={() => window.history.back()}
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             >
-              <div className="font-medium text-sm truncate">{chat.title}</div>
-              <div className="text-xs text-accent-400 mt-1">{chat.timestamp}</div>
+              <ArrowLeft className="w-5 h-5 text-neutral-700" />
             </button>
-          ))}
+            <h1 className="text-xl font-bold text-neutral-900">Chat History</h1>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search chats..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Chat History List */}
+        <div className="flex-1 overflow-y-auto">
+          {filteredChats.length === 0 ? (
+            <div className="p-6 text-center text-neutral-500 text-sm">
+              No chats found
+            </div>
+          ) : (
+            filteredChats.map((chat) => (
+              <button
+                key={chat.id}
+                onClick={() => handleChatSelect(chat.id)}
+                className={`w-full p-4 flex items-start gap-3 hover:bg-neutral-50 transition-colors border-b border-neutral-100 ${
+                  selectedChat?.id === chat.id ? "bg-secondary-50" : ""
+                }`}
+              >
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-secondary-500 flex items-center justify-center text-accent-700 font-bold">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-neutral-900 truncate">
+                      {chat.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-500">{chat.timestamp}</p>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
 
-      {/* Chat Messages Display (Right Panel) */}
-      <div className={`w-full md:w-2/3 flex flex-col ${selectedChat ? 'block' : 'hidden md:flex'}`}>
-        {selectedChat ? (
-          <>
-            <div className="flex items-center gap-3 p-4 border-b border-primary-200 bg-primary-50">
-              <button onClick={handleBackToHistory} className="md:hidden p-1 rounded-full hover:bg-primary-100">
-                <ArrowLeft className="w-5 h-5 text-accent-600" />
-              </button>
-              <h3 className="text-lg font-semibold text-accent-700 truncate flex-1">{selectedChat.title}</h3>
+      {/* Chat Area */}
+      <div
+        className={`${
+          selectedChat ? "flex" : "hidden lg:flex"
+        } flex-1 flex-col bg-white`}
+      >
+        {!selectedChat ? (
+          <div className="flex-1 flex items-center justify-center text-neutral-500">
+            <div className="text-center">
+              <Clock className="w-16 h-16 mx-auto mb-4 text-neutral-300" />
+              <p className="text-sm">Select a chat to view conversation</p>
             </div>
+          </div>
+        ) : (
+          <>
+            {/* Chat Header */}
+            <div className="p-4 border-b border-neutral-200 flex items-center gap-3">
+              <button
+                onClick={handleBackToHistory}
+                className="lg:hidden p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-neutral-700" />
+              </button>
+              <div className="w-10 h-10 rounded-full bg-secondary-500 flex items-center justify-center text-accent-700 font-bold">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-neutral-900">
+                  {selectedChat.title}
+                </h2>
+                <p className="text-xs text-neutral-500">AI Assistant</p>
+              </div>
+            </div>
+
+            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {selectedChat.messages?.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${
-                    message.role === "user" ? "flex-row-reverse" : "flex-row"
-                  }`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.role === "user" ? "bg-accent-700" : "bg-secondary-500"
-                    }`}
-                  >
-                    {message.role === "user" ? (
-                      <User className="w-4 h-4 text-white" />
-                    ) : (
-                      <Sparkles className="w-4 h-4 text-accent-700" />
-                    )}
-                  </div>
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                      message.role === "user"
-                        ? "bg-secondary-500 text-accent-700"
-                        : "bg-white text-accent-700 border border-primary-200"
-                    }`}
-                  >
-                    <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-accent-700 prose-strong:font-bold">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+              {selectedChat.messages && selectedChat.messages.length > 0 ? (
+                <>
+                  {selectedChat.messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${
+                        message.role === "user"
+                          ? "flex-row-reverse"
+                          : "flex-row"
+                      }`}
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          message.role === "user"
+                            ? "bg-primary-500"
+                            : "bg-secondary-500"
+                        }`}
+                      >
+                        {message.role === "user" ? (
+                          <User className="w-4 h-4 text-white" />
+                        ) : (
+                          <Sparkles className="w-4 h-4 text-accent-700" />
+                        )}
+                      </div>
+                      <div
+                        className={`max-w-xs px-4 py-2 rounded-2xl ${
+                          message.role === "user"
+                            ? "bg-secondary-500 text-accent-700 rounded-br-sm"
+                            : "bg-neutral-100 text-neutral-900 rounded-bl-sm"
+                        }`}
+                      >
+                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                        <p
+                          className={`text-xs mt-1 ${
+                            message.role === "user"
+                              ? "text-accent-700/70"
+                              : "text-neutral-500"
+                          }`}
+                        >
+                          {formatTimestamp(message.timestamp)}
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-[10px] opacity-60 mt-1 block">
-                      {formatTimestamp(message.timestamp)}
-                    </span>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full text-neutral-500">
+                  <div className="text-center">
+                    <Clock className="w-12 h-12 mx-auto mb-4 text-neutral-300" />
+                    <p className="text-sm mb-2">No messages yet</p>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-accent-500 text-center p-4">
-            <p>Select a chat from the left to view its messages.</p>
-          </div>
         )}
       </div>
     </div>
