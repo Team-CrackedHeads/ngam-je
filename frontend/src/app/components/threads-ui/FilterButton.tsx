@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
 import { ChevronDown } from "lucide-react";
 
 // the different ways users can sort/filter threads
-type FilterType = "All"| "Best" | "Hot" | "New" | "Top" | "Rising";
+export type FilterType = "All" | "Best" | "Hot" | "New" | "Top" | "Rising";
 
 type FilterDropdownProps = {
   activeFilter: FilterType;
@@ -51,13 +52,25 @@ export default function FilterDropdown({
               key={filter}
               onClick={() => onFilterChange(filter)}
               className={`cursor-pointer transition-colors ${
-                filter === activeFilter ? "text-black" : ""
+                filter === activeFilter ? "font-semibold text-black" : ""
               }`}
               style={{
                 backgroundColor:
                   filter === activeFilter
                     ? "var(--color-secondary-500)"
                     : "transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (filter !== activeFilter) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    "var(--color-secondary-500)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== activeFilter) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    "transparent";
+                }
               }}
             >
               {filter}

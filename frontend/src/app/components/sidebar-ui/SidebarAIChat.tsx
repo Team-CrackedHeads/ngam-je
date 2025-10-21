@@ -1,7 +1,8 @@
 "use client";
-
+import { mockFullChatHistory } from "@/utils/mock-search-history";
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { useRouter } from 'next/navigation';
 import {
   X,
   Send,
@@ -16,14 +17,8 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  ExternalLink,
 } from "lucide-react";
-
-type SidebarAIChatProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  chatId: number | null;
-  initialMessages?: Message[];
-};
 
 type ToolCall = {
   name: string;
@@ -43,6 +38,23 @@ type Message = {
 type Tab = "chat" | "history";
 type Mode = "reactive" | "proactive";
 
+export type ChatHistoryItem = {
+    id: number;
+    title: string;
+    date: string;
+    path: string;
+};
+
+type SidebarAIChatProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  // NOTE: chatId is now the unique path/identifier for the chat thread
+  chatId: number | null; 
+  initialMessages?: Message[];
+  // New prop to handle navigation when a history item is clicked
+  onHistoryClick?: (chatId: string) => void;
+};
+
 const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
@@ -51,11 +63,28 @@ const WELCOME_MESSAGE: Message = {
   timestamp: new Date(),
 };
 
-// Mock data for demo
-const mockHistoryChats = [
-  { id: 1, title: "iPhone 14 Pro price comparison", date: "2 hours ago" },
-  { id: 2, title: "Gaming PC under RM4000", date: "5 hours ago" },
-  { id: 3, title: "Verify Nintendo Switch seller", date: "1 day ago" },
+// Mock data (renamed from mockHistoryChats for consistency with SearchHistory.tsx)
+const mockHistory: ChatHistoryItem[] = [
+  { "id": 1, "title": "iPhone 14 Pro price comparison", "date": "2 hours ago", "path": "/chat/1" },
+  { "id": 2, "title": "Gaming PC under RM4000", "date": "5 hours ago", "path": "/chat/2" },
+  { "id": 3, "title": "Verify Nintendo Switch seller", "date": "1 day ago", "path": "/chat/3" },
+  { "id": 4, "title": "Gaming PC parts compatibility", "date": "1 day ago", "path": "/chat/4" },
+  { "id": 5, "title": "Vintage watch authenticity verification", "date": "2 days ago", "path": "/chat/5" },
+  { "id": 6, "title": "Camera lens condition assessment", "date": "3 days ago", "path": "/chat/6" },
+  { "id": 7, "title": "Furniture quality vs price analysis", "date": "4 days ago", "path": "/chat/7" },
+  { "id": 8, "title": "Electric bike safety standards", "date": "5 days ago", "path": "/chat/8" },
+  { "id": 9, "title": "Designer handbag authentication tips", "date": "1 week ago", "path": "/chat/9" },
+  { "id": 10, "title": "Motorcycle maintenance costs Honda", "date": "1 week ago", "path": "/chat/10" },
+  { "id": 11, "title": "Smartphone trade-in value check", "date": "1 week ago", "path": "/chat/11" },
+  { "id": 12, "title": "Laptop performance benchmarks", "date": "1 week ago", "path": "/chat/12" },
+  { "id": 13, "title": "Art print value estimation", "date": "2 weeks ago", "path": "/chat/13" },
+  { "id": 14, "title": "Kitchen appliance energy ratings", "date": "2 weeks ago", "path": "/chat/14" },
+  { "id": 15, "title": "Exercise equipment durability test", "date": "2 weeks ago", "path": "/chat/15" },
+  { "id": 16, "title": "Board game condition grading", "date": "3 weeks ago", "path": "/chat/16" },
+  { "id": 17, "title": "Power tools safety inspection", "date": "3 weeks ago", "path": "/chat/17" },
+  { "id": 18, "title": "Sneaker authenticity red flags", "date": "3 weeks ago", "path": "/chat/18" },
+  { "id": 19, "title": "Home theater setup compatibility", "date": "1 month ago", "path": "/chat/19" },
+  { "id": 20, "title": "Musical instrument condition check", "date": "1 month ago", "path": "/chat/20" },
 ];
 
 export default function SidebarAIChat({
@@ -63,8 +92,10 @@ export default function SidebarAIChat({
   onClose,
   chatId,
   initialMessages = [],
+  onHistoryClick
 }: SidebarAIChatProps) {
-  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const router = useRouter(); // Initialize useRouter
+  const [messages, setMessages] = useState<Message[]>(initialMessages.length > 0 ? initialMessages : [WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
@@ -72,17 +103,18 @@ export default function SidebarAIChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // When the sidebar opens or the chat ID changes, reset/load messages
   useEffect(() => {
     if (!isOpen) return;
 
     if (chatId === null) {
       setMessages([WELCOME_MESSAGE]);
-    } else {
-      if (initialMessages.length > 0) {
+    } else if (initialMessages.length > 0) {
+        // Load the initial messages if provided (simulating history load)
         setMessages(initialMessages);
-      } else {
+    } else {
+        // Fallback or loading state for a new chat
         setMessages([WELCOME_MESSAGE]);
-      }
     }
     setActiveTab("chat");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -321,6 +353,14 @@ export default function SidebarAIChat({
     }
   };
 
+  // MODIFIED: This function now uses router.push to navigate to /chat/history
+  const handleHistoryClick = (path: string) => {
+      onClose(); // Close the sidebar
+      router.push(path); // Navigate to the specified URL
+      // The original onHistoryClick prop is no longer directly used for navigation here,
+      // but it remains part of the component's interface.
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -342,7 +382,7 @@ export default function SidebarAIChat({
               <div>
                 <h2 className="text-lg font-bold text-accent-700">Ngam AI</h2>
                 <p className="text-xs text-accent-500">
-                  {chatId === null ? "New conversation" : "Continuing chat"}
+                  {chatId === null ? "New conversation" : `Viewing thread ${chatId}`}
                 </p>
               </div>
             </div>
@@ -443,7 +483,7 @@ export default function SidebarAIChat({
                                 : tool.status === "running"
                                 ? "bg-secondary-50 border border-secondary-200"
                                 : tool.status === "failed"
-                                ? "bg-error-50 border border-red-200"
+                                ? "bg-red-50 border border-red-200"
                                 : "bg-primary-50 border border-primary-200"
                             }`}
                           >
@@ -454,7 +494,7 @@ export default function SidebarAIChat({
                               <CheckCircle2 className="w-3 h-3 text-secondary-700" />
                             )}
                             {tool.status === "failed" && (
-                              <XCircle className="w-3 h-3 text-error-500" />
+                              <XCircle className="w-3 h-3 text-red-500" />
                             )}
                             {tool.status === "pending" && (
                               <div className="w-3 h-3 text-accent-400">
@@ -463,13 +503,13 @@ export default function SidebarAIChat({
                             )}
 
                             <span className="text-accent-700 font-semibold">
-                              [{tool.name}]
+                              [{getToolLabel(tool.name)}]
                             </span>
 
                             <span className="text-accent-600 flex-1">
                               {tool.status === "pending" && "Queued"}
                               {tool.status === "running" &&
-                                getToolLabel(tool.name) + "..."}
+                                "Executing tool..."}
                               {tool.status === "completed" && tool.result}
                               {tool.status === "failed" && "Failed"}
                             </span>
@@ -522,16 +562,20 @@ export default function SidebarAIChat({
                 Recent Conversations
               </h3>
               <div className="space-y-2">
-                {mockHistoryChats.map((chat) => (
-                  <div
+                {mockHistory.map((chat) => (
+                  <button
                     key={chat.id}
-                    className="p-3 bg-white rounded-lg border border-primary-200 hover:border-secondary-500 hover:shadow-sm transition-all cursor-pointer"
+                    onClick={() => handleHistoryClick(chat.path)}
+                    className="w-full p-3 flex justify-between items-center text-left bg-white rounded-lg border border-primary-200 hover:border-secondary-500 hover:shadow-sm transition-all cursor-pointer group"
                   >
-                    <div className="font-medium text-sm text-accent-700 mb-1">
-                      {chat.title}
+                    <div>
+                        <div className="font-medium text-sm text-accent-700 mb-1">
+                          {chat.title}
+                        </div>
+                        <div className="text-xs text-accent-400">{chat.date}</div>
                     </div>
-                    <div className="text-xs text-accent-400">{chat.date}</div>
-                  </div>
+                    <ExternalLink className="w-4 h-4 text-accent-400 group-hover:text-secondary-600 transition-colors" />
+                  </button>
                 ))}
               </div>
             </div>

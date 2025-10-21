@@ -23,7 +23,7 @@ import {
 import { useEffect, useState } from "react";
 import { MOCK_THREADS } from "@/utils/mock-threads-data";
 import SidebarAIChat from "@/app/components/sidebar-ui/SidebarAIChat";
-import { mockSaleListings, mockWantedListings } from "@/utils/mock-listings-data";
+import { mockFullChatHistory } from "@/utils/mock-search-history";
 import {
   Sidebar,
   SidebarContent,
@@ -43,6 +43,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import SearchHistory from "./sidebar-ui/SearchHistory";
+import BuyListingsMenuItem from "@/app/components/sidebar-ui/menu-items/BuyListingsMenuItem";
+import SellListingsMenuItem from "@/app/components/sidebar-ui/menu-items/SellListingsMenuItem";
+import MatchedListingsMenuItem from "@/app/components/sidebar-ui/menu-items/MatchedListingsMenuItem";
+
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
   { href: "/messages", label: "Messages", icon: MessageCircle },
@@ -53,188 +58,189 @@ const navItems = [
 // Mock chat history data - 2nd hand marketplace purchase decisions
 const mockChatHistory = [
   {
-    id: 1,
-    title: "iPhone 14 Pro price comparison",
-    timestamp: "2 hours ago",
-    created_at: "2025-10-03T14:00:00Z",
+    "id": 1,
+    "title": "iPhone 14 Pro price comparison",
+    "timestamp": "2 hours ago",
+    "created_at": "2025-10-03T14:00:00Z"
   },
   {
-    id: 2,
-    title: "MacBook Air M2 battery health check",
-    timestamp: "5 hours ago",
-    created_at: "2025-10-03T11:00:00Z",
+    "id": 2,
+    "title": "Gaming PC under RM4000",
+    "timestamp": "5 hours ago",
+    "created_at": "2025-10-03T11:00:00Z"
   },
   {
-    id: 3,
-    title: "Used car inspection checklist Toyota",
-    timestamp: "1 day ago",
-    created_at: "2025-10-02T16:00:00Z",
+    "id": 3,
+    "title": "Verify Nintendo Switch seller",
+    "timestamp": "1 day ago",
+    "created_at": "2025-10-02T16:00:00Z"
   },
   {
-    id: 4,
-    title: "Gaming PC parts compatibility",
-    timestamp: "1 day ago",
-    created_at: "2025-10-02T13:30:00Z",
+    "id": 4,
+    "title": "Gaming PC parts compatibility",
+    "timestamp": "1 day ago",
+    "created_at": "2025-10-02T13:30:00Z"
   },
   {
-    id: 5,
-    title: "Vintage watch authenticity verification",
-    timestamp: "2 days ago",
-    created_at: "2025-10-01T19:45:00Z",
+    "id": 5,
+    "title": "Vintage watch authenticity verification",
+    "timestamp": "2 days ago",
+    "created_at": "2025-10-01T19:45:00Z"
   },
   {
-    id: 6,
-    title: "Camera lens condition assessment",
-    timestamp: "3 days ago",
-    created_at: "2025-09-30T10:30:00Z",
+    "id": 6,
+    "title": "Camera lens condition assessment",
+    "timestamp": "3 days ago",
+    "created_at": "2025-09-30T10:30:00Z"
   },
   {
-    id: 7,
-    title: "Furniture quality vs price analysis",
-    timestamp: "4 days ago",
-    created_at: "2025-09-29T14:20:00Z",
+    "id": 7,
+    "title": "Furniture quality vs price analysis",
+    "timestamp": "4 days ago",
+    "created_at": "2025-09-29T14:20:00Z"
   },
   {
-    id: 8,
-    title: "Electric bike safety standards",
-    timestamp: "5 days ago",
-    created_at: "2025-09-28T08:15:00Z",
+    "id": 8,
+    "title": "Electric bike safety standards",
+    "timestamp": "5 days ago",
+    "created_at": "2025-09-28T08:15:00Z"
   },
   {
-    id: 9,
-    title: "Designer handbag authentication tips",
-    timestamp: "1 week ago",
-    created_at: "2025-09-26T16:40:00Z",
+    "id": 9,
+    "title": "Designer handbag authentication tips",
+    "timestamp": "1 week ago",
+    "created_at": "2025-09-26T16:40:00Z"
   },
   {
-    id: 10,
-    title: "Motorcycle maintenance costs Honda",
-    timestamp: "1 week ago",
-    created_at: "2025-09-26T09:15:00Z",
+    "id": 10,
+    "title": "Motorcycle maintenance costs Honda",
+    "timestamp": "1 week ago",
+    "created_at": "2025-09-26T09:15:00Z"
   },
   {
-    id: 11,
-    title: "Smartphone trade-in value check",
-    timestamp: "1 week ago",
-    created_at: "2025-09-25T12:30:00Z",
+    "id": 11,
+    "title": "Smartphone trade-in value check",
+    "timestamp": "1 week ago",
+    "created_at": "2025-09-25T12:30:00Z"
   },
   {
-    id: 12,
-    title: "Laptop performance benchmarks",
-    timestamp: "1 week ago",
-    created_at: "2025-09-24T15:45:00Z",
+    "id": 12,
+    "title": "Laptop performance benchmarks",
+    "timestamp": "1 week ago",
+    "created_at": "2025-09-24T15:45:00Z"
   },
   {
-    id: 13,
-    title: "Art print value estimation",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-19:14:45:00Z",
+    "id": 13,
+    "title": "Art print value estimation",
+    "timestamp": "2 weeks ago",
+    "created_at": "2025-09-19T14:45:00Z"
   },
   {
-    id: 14,
-    title: "Kitchen appliance energy ratings",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-18T11:20:00Z",
+    "id": 14,
+    "title": "Kitchen appliance energy ratings",
+    "timestamp": "2 weeks ago",
+    "created_at": "2025-09-18T11:20:00Z"
   },
   {
-    id: 15,
-    title: "Exercise equipment durability test",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-17T18:30:00Z",
+    "id": 15,
+    "title": "Exercise equipment durability test",
+    "timestamp": "2 weeks ago",
+    "created_at": "2025-09-17T18:30:00Z"
   },
   {
-    id: 16,
-    title: "Board game condition grading",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-12T15:30:00Z",
+    "id": 16,
+    "title": "Board game condition grading",
+    "timestamp": "3 weeks ago",
+    "created_at": "2025-09-12T15:30:00Z"
   },
   {
-    id: 17,
-    title: "Power tools safety inspection",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-11T08:45:00Z",
+    "id": 17,
+    "title": "Power tools safety inspection",
+    "timestamp": "3 weeks ago",
+    "created_at": "2025-09-11T08:45:00Z"
   },
   {
-    id: 18,
-    title: "Sneaker authenticity red flags",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-10T20:15:00Z",
+    "id": 18,
+    "title": "Sneaker authenticity red flags",
+    "timestamp": "3 weeks ago",
+    "created_at": "2025-09-10T20:15:00Z"
   },
   {
-    id: 19,
-    title: "Home theater setup compatibility",
-    timestamp: "1 month ago",
-    created_at: "2025-09-03T13:20:00Z",
+    "id": 19,
+    "title": "Home theater setup compatibility",
+    "timestamp": "1 month ago",
+    "created_at": "2025-09-03T13:20:00Z"
   },
   {
-    id: 20,
-    title: "Musical instrument condition check",
-    timestamp: "1 month ago",
-    created_at: "2025-08-28T16:10:00Z",
+    "id": 20,
+    "title": "Musical instrument condition check",
+    "timestamp": "1 month ago",
+    "created_at": "2025-08-28T16:10:00Z"
   },
-  {
-    id: 21,
-    title: "Collectible toy market trends",
-    timestamp: "1 month ago",
-    created_at: "2025-08-25T12:00:00Z",
-  },
-  {
-    id: 22,
-    title: "Textbook edition differences",
-    timestamp: "1 month ago",
-    created_at: "2025-08-22T09:30:00Z",
-  },
-  {
-    id: 23,
-    title: "Garden equipment seasonal pricing",
-    timestamp: "2 months ago",
-    created_at: "2025-08-15T10:30:00Z",
-  },
-  {
-    id: 24,
-    title: "Sports gear quality indicators",
-    timestamp: "2 months ago",
-    created_at: "2025-08-10T14:15:00Z",
-  },
-  {
-    id: 25,
-    title: "Vintage clothing sizing guide",
-    timestamp: "2 months ago",
-    created_at: "2025-08-05T09:45:00Z",
-  },
-  {
-    id: 26,
-    title: "Electronic component lifespan",
-    timestamp: "2 months ago",
-    created_at: "2025-07-30T17:20:00Z",
-  },
-  {
-    id: 27,
-    title: "Jewelry appraisal process",
-    timestamp: "3 months ago",
-    created_at: "2025-07-20T11:30:00Z",
-  },
-  {
-    id: 28,
-    title: "Car parts compatibility matrix",
-    timestamp: "3 months ago",
-    created_at: "2025-07-15T14:45:00Z",
-  },
-  {
-    id: 29,
-    title: "Antique furniture restoration cost",
-    timestamp: "3 months ago",
-    created_at: "2025-07-10T16:20:00Z",
-  },
-  {
-    id: 30,
-    title: "Tech gadget depreciation rates",
-    timestamp: "4 months ago",
-    created_at: "2025-06-25T13:10:00Z",
-  },
+  // {
+  //   id: 21,
+  //   title: "Collectible toy market trends",
+  //   timestamp: "1 month ago",
+  //   created_at: "2025-08-25T12:00:00Z",
+  // },
+  // {
+  //   id: 22,
+  //   title: "Textbook edition differences",
+  //   timestamp: "1 month ago",
+  //   created_at: "2025-08-22T09:30:00Z",
+  // },
+  // {
+  //   id: 23,
+  //   title: "Garden equipment seasonal pricing",
+  //   timestamp: "2 months ago",
+  //   created_at: "2025-08-15T10:30:00Z",
+  // },
+  // {
+  //   id: 24,
+  //   title: "Sports gear quality indicators",
+  //   timestamp: "2 months ago",
+  //   created_at: "2025-08-10T14:15:00Z",
+  // },
+  // {
+  //   id: 25,
+  //   title: "Vintage clothing sizing guide",
+  //   timestamp: "2 months ago",
+  //   created_at: "2025-08-05T09:45:00Z",
+  // },
+  // {
+  //   id: 26,
+  //   title: "Electronic component lifespan",
+  //   timestamp: "2 months ago",
+  //   created_at: "2025-07-30T17:20:00Z",
+  // },
+  // {
+  //   id: 27,
+  //   title: "Jewelry appraisal process",
+  //   timestamp: "3 months ago",
+  //   created_at: "2025-07-20T11:30:00Z",
+  // },
+  // {
+  //   id: 28,
+  //   title: "Car parts compatibility matrix",
+  //   timestamp: "3 months ago",
+  //   created_at: "2025-07-15T14:45:00Z",
+  // },
+  // {
+  //   id: 29,
+  //   title: "Antique furniture restoration cost",
+  //   timestamp: "3 months ago",
+  //   created_at: "2025-07-10T16:20:00Z",
+  // },
+  // {
+  //   id: 30,
+  //   title: "Tech gadget depreciation rates",
+  //   timestamp: "4 months ago",
+  //   created_at: "2025-06-25T13:10:00Z",
+  // },
 ];
 
 function AIAssistantCard() {
+  const router = useRouter();
   const [visibleChats, setVisibleChats] = useState(5);
   const [loading, setLoading] = useState(false);
   const KEEP_RECENT_COUNT = 10;
@@ -246,6 +252,7 @@ function AIAssistantCard() {
   };
 
   const handleChatClick = (chatId: number) => {
+    router.push(`/chat/${chatId}`);
     console.log("Opening chat:", chatId);
   };
 
@@ -418,11 +425,12 @@ function FollowingMenuItem() {
 
 function NgamJeAssistantMenuItem({
   onNewChat,
-  onOpenChat,
+  // onOpenChat,
 }: {
   onNewChat: () => void;
-  onOpenChat: (chatId: number) => void;
+  // onOpenChat: (chatId: number) => void;
 }) {
+  const router =useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [visibleChats, setVisibleChats] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -435,7 +443,7 @@ function NgamJeAssistantMenuItem({
   };
 
   const handleChatClick = (chatId: number) => {
-    onOpenChat(chatId);
+    router.push(`/chat/${chatId}`);
   };
 
   const loadMoreChats = () => {
@@ -562,278 +570,6 @@ function NgamJeAssistantMenuItem({
   );
 }
 
-function BuyListingsMenuItem() {
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [visibleListings, setVisibleListings] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const KEEP_RECENT_COUNT = 10;
-  const MAX_LOADED_COUNT = 25;
-  const DELOAD_TO_COUNT = 15;
-
-  const handleNewListing = () => {
-    console.log("Creating new buy listing...");
-  };
-
-  const handleListingClick = (listingId: number) => {
-    // Navigate to matches page for this listing
-    router.push(`/listings/${listingId}/matches?type=sale`);
-  };
-
-  const loadMoreListings = () => {
-    if (loading || visibleListings >= mockSaleListings.length) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, mockSaleListings.length);
-
-      if (newCount > MAX_LOADED_COUNT) {
-        setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
-      } else {
-        setVisibleListings(newCount);
-      }
-
-      setLoading(false);
-    }, 300);
-  };
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-
-    if (scrollHeight - scrollTop <= clientHeight + 5) {
-      loadMoreListings();
-    }
-
-    if (scrollTop === 0 && visibleListings > KEEP_RECENT_COUNT) {
-      const currentTarget = e.currentTarget;
-      setTimeout(() => {
-        if (currentTarget && currentTarget.scrollTop === 0) {
-          setVisibleListings(KEEP_RECENT_COUNT);
-        }
-      }, 500);
-    }
-  };
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        onClick={() => setIsOpen(!isOpen)}
-        className="group/menu-item text-accent-700 font-semibold"
-      >
-        <ShoppingCart className="w-5 h-5" />
-        <span>Sale Listings</span>
-        {isOpen ? (
-          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-        ) : (
-          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
-        )}
-      </SidebarMenuButton>
-
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-out ${
-          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <SidebarMenuSub>
-          {/* Recent Listings Header */}
-          <SidebarMenuSubItem>
-            <SidebarMenuSubButton
-              onClick={() => router.push('/listings?type=sale', { scroll: false })}
-              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
-            >
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">Recent Listings</span>
-            </SidebarMenuSubButton>
-          </SidebarMenuSubItem>
-
-          {/* Listings List */}
-          <SidebarMenuSubItem>
-            <div
-              className="max-h-32 overflow-y-auto space-y-1 px-2"
-              onScroll={handleScroll}
-            >
-              {mockSaleListings.filter(listing => listing.isOwner).slice(0, visibleListings).map((listing) => (
-                <div
-                  key={listing.id}
-                  onClick={() => handleListingClick(listing.id)}
-                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-                >
-                  <div className="truncate font-medium">{listing.title}</div>
-                  <div className="flex justify-between text-[10px] text-accent-400">
-                    <span>{listing.price || listing.budget}</span>
-                    <span>{listing.timestamp}</span>
-                  </div>
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex justify-center py-2">
-                  <div className="text-xs text-accent-400">Loading...</div>
-                </div>
-              )}
-
-              {visibleListings >= mockSaleListings.length &&
-                mockSaleListings.length > 5 && (
-                  <div className="flex justify-center py-2">
-                    <div className="text-xs text-accent-400">
-                      No more listings
-                    </div>
-                  </div>
-                )}
-
-              {visibleListings < mockSaleListings.length &&
-                visibleListings >= MAX_LOADED_COUNT && (
-                  <div className="flex justify-center py-2">
-                    <div className="text-xs text-accent-300">
-                      {mockSaleListings.length - visibleListings} older listings
-                      hidden
-                    </div>
-                  </div>
-                )}
-            </div>
-          </SidebarMenuSubItem>
-        </SidebarMenuSub>
-      </div>
-    </SidebarMenuItem>
-  );
-}
-
-function SellListingsMenuItem() {
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [visibleListings, setVisibleListings] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const KEEP_RECENT_COUNT = 10;
-  const MAX_LOADED_COUNT = 25;
-  const DELOAD_TO_COUNT = 15;
-
-  const handleNewListing = () => {
-    console.log("Creating new sell listing...");
-  };
-
-  const handleListingClick = (listingId: number) => {
-    // Navigate to matches page for this listing
-    router.push(`/listings/${listingId}/matches?type=wanted`);
-  };
-
-  const loadMoreListings = () => {
-    if (loading || visibleListings >= mockWantedListings.length) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, mockWantedListings.length);
-
-      if (newCount > MAX_LOADED_COUNT) {
-        setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
-      } else {
-        setVisibleListings(newCount);
-      }
-
-      setLoading(false);
-    }, 300);
-  };
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-
-    if (scrollHeight - scrollTop <= clientHeight + 5) {
-      loadMoreListings();
-    }
-
-    if (scrollTop === 0 && visibleListings > KEEP_RECENT_COUNT) {
-      const currentTarget = e.currentTarget;
-      setTimeout(() => {
-        if (currentTarget && currentTarget.scrollTop === 0) {
-          setVisibleListings(KEEP_RECENT_COUNT);
-        }
-      }, 500);
-    }
-  };
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        onClick={() => setIsOpen(!isOpen)}
-        className="group/menu-item text-accent-700 font-semibold"
-      >
-        <Package className="w-5 h-5" />
-        <span>Want Listings</span>
-        {isOpen ? (
-          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-        ) : (
-          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
-        )}
-      </SidebarMenuButton>
-
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-out ${
-          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <SidebarMenuSub>
-          {/* Recent Listings Header */}
-          <SidebarMenuSubItem>
-            <SidebarMenuSubButton
-              onClick={() => router.push('/listings?type=wanted', { scroll: false })}
-              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
-            >
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">Recent Listings</span>
-            </SidebarMenuSubButton>
-          </SidebarMenuSubItem>
-
-          {/* Listings List */}
-          <SidebarMenuSubItem>
-            <div
-              className="max-h-32 overflow-y-auto space-y-1 px-2"
-              onScroll={handleScroll}
-            >
-              {mockWantedListings.filter(listing => listing.isOwner).slice(0, visibleListings).map((listing) => (
-                <div
-                  key={listing.id}
-                  onClick={() => handleListingClick(listing.id)}
-                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-                >
-                  <div className="truncate font-medium">{listing.title}</div>
-                  <div className="flex justify-between text-[10px] text-accent-400">
-                    <span>{listing.price || listing.budget}</span>
-                    <span>{listing.timestamp}</span>
-                  </div>
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex justify-center py-2">
-                  <div className="text-xs text-accent-400">Loading...</div>
-                </div>
-              )}
-
-              {visibleListings >= mockWantedListings.length &&
-                mockWantedListings.length > 5 && (
-                  <div className="flex justify-center py-2">
-                    <div className="text-xs text-accent-400">
-                      No more listings
-                    </div>
-                  </div>
-                )}
-
-              {visibleListings < mockWantedListings.length &&
-                visibleListings >= MAX_LOADED_COUNT && (
-                  <div className="flex justify-center py-2">
-                    <div className="text-xs text-accent-300">
-                      {mockWantedListings.length - visibleListings} older listings
-                      hidden
-                    </div>
-                  </div>
-                )}
-            </div>
-          </SidebarMenuSubItem>
-        </SidebarMenuSub>
-      </div>
-    </SidebarMenuItem>
-  );
-}
-
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true);
   const pathname = usePathname();
@@ -951,18 +687,20 @@ function CustomSidebarTrigger({
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { state, setOpen } = useSidebar();
   const [isManuallyToggled, setIsManuallyToggled] = useState(
     state === "expanded"
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  // const [searchQuery, setSearchQuery] = useState("");
+  // const [isSearching, setIsSearching] = useState(false);
 
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+  const [initialAIChatMessages, setInitialAIChatMessages] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -988,22 +726,22 @@ export function AppSidebar() {
     setOpen(newState);
   };
 
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) return;
+  // const handleSearch = async (query: string) => {
+  //   if (!query.trim()) return;
 
-    setIsSearching(true);
-    console.log("AI searching for best tool based on:", query);
+  //   setIsSearching(true);
+  //   console.log("AI searching for best tool based on:", query);
 
-    setTimeout(() => {
-      console.log("AI found best tool for:", query);
-      setIsSearching(false);
-    }, 1000);
-  };
+  //   setTimeout(() => {
+  //     console.log("AI found best tool for:", query);
+  //     setIsSearching(false);
+  //   }, 1000);
+  // };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSearch(searchQuery);
-  };
+  // const handleSearchSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   handleSearch(searchQuery);
+  // };
 
   const handleNewChat = () => {
     setCurrentChatId(null);
@@ -1011,8 +749,34 @@ export function AppSidebar() {
   };
 
   const handleOpenExistingChat = (chatId: number) => {
+    const chat = mockFullChatHistory.find(c => c.id === chatId);
+    if (chat && chat.messages) {
+      // Convert mock messages to the Message type expected by SidebarAIChat
+      const formattedMessages = chat.messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp), // Ensure timestamp is a Date object
+        id: msg.id.toString(), // Ensure id is a string
+      }));
+      setInitialAIChatMessages(formattedMessages);
+    } else {
+      setInitialAIChatMessages([]); // Fallback if no messages found
+    }
     setCurrentChatId(chatId);
     setIsChatOpen(true);
+  };
+  // New handler for search suggestions from SearchHistory.tsx
+  const handleSearchSuggestionClick = (suggestionPath: string, suggestionType: string) => {
+    if (suggestionType === 'ai-chat') {
+      const chatId = parseInt(suggestionPath.split('/').pop() || '', 10);
+      if (!isNaN(chatId)) {
+        handleOpenExistingChat(chatId);
+      } else {
+        // Handle case where AI chat path is not a simple ID, e.g., a new AI interaction
+        handleNewChat(); // Or a more specific AI interaction
+      }
+    } else {
+      router.push(suggestionPath);
+    }
   };
 
   if (!mounted) {
@@ -1022,8 +786,30 @@ export function AppSidebar() {
   return (
     <>
       {" "}
+       <Sidebar
+        variant="sidebar"
+        collapsible="icon"
+        className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
+      >
+        <SidebarHeader className="relative p-2">
+          <CustomSidebarTrigger onManualToggle={handleManualToggle} />
+
+          <div className="mt-2">
+            {/* Integrate SearchHistory component here */}
+            <div className="group-data-[collapsible=icon]:hidden">
+              <SearchHistory onSuggestionClick={handleSearchSuggestionClick} />
+            </div>
+            {/* Placeholder for collapsed state if needed, or just hide */}
+            <div className="group-data-[collapsible=icon]:block hidden">
+              <div className="relative max-w-48 mx-auto">
+                <div className="w-full pl-10 pr-3 py-2 text-xs opacity-0 pointer-events-none">
+                  placeholder
+                </div>
+              </div>
+            </div>
+          </div>
       {/* This is the main fragment that wraps everything */}
-      <Sidebar
+      {/* <Sidebar
         variant="sidebar"
         collapsible="icon"
         className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
@@ -1060,7 +846,7 @@ export function AppSidebar() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </SidebarHeader>
         <SidebarContent
           className="pt-1.5 flex-1"
@@ -1076,7 +862,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 <NgamJeAssistantMenuItem
                   onNewChat={handleNewChat}
-                  onOpenChat={handleOpenExistingChat}
+                  // onOpenChat={handleOpenExistingChat}
                 />
               </SidebarMenu>
             </SidebarGroupContent>
@@ -1129,6 +915,19 @@ export function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          <div className="ml-1 mr-5">
+            <SidebarSeparator />
+          </div>
+
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <MatchedListingsMenuItem />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
         </SidebarContent>{" "}
         {/* <-- This closes SidebarContent */}
         <SidebarFooter className="group-data-[collapsible=icon]:hidden mt-auto">

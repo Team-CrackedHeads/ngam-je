@@ -1,5 +1,5 @@
-// specific thread category product listings page
 "use client";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ListingCard from "@/app/components/threads-category-ui/ListingCard";
@@ -149,6 +149,7 @@ const CategoryPage: React.FC = () => {
       );
     }
     // For "general", don't filter by listing type - show both
+
     // --- APPLY FILTERS FROM SEARCH FILTER COMPONENT ---
     // Apply search filter
     if (appliedFilters.search) {
@@ -204,7 +205,8 @@ const CategoryPage: React.FC = () => {
       );
     }
     // --- APPLY FILTERS FROM SORTING COMPONENT ---
-    // Apply Primary Filter
+
+    // 1. Apply Primary Filter
     if (sortingFilters.primaryFilter === "Verified Sellers") {
       categoryListings = categoryListings.filter(
         (listing) => listing.seller.verified
@@ -216,7 +218,7 @@ const CategoryPage: React.FC = () => {
       );
     }
 
-    // Apply Quick Filters - UPDATED for new data structure
+    // 2. Apply Quick Filters - UPDATED for new data structure
     if (sortingFilters.quickFilters.includes("Protected Listings")) {
       categoryListings = categoryListings.filter(
         (listing) => listing.protected
@@ -240,7 +242,7 @@ const CategoryPage: React.FC = () => {
       );
     }
 
-    // Apply Sorting - UPDATED for UnifiedListingData
+    // 3. Apply Sorting - UPDATED for UnifiedListingData
     const activeSort = sortingFilters.quickSort || appliedFilters.sortBy;
 
     switch (activeSort) {

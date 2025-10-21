@@ -99,7 +99,6 @@ out/
 .output
 .vercel
 .netlify
-package-lock.json
 
 # Bun
 bun.lockb
