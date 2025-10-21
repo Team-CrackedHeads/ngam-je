@@ -250,12 +250,6 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
         </div>
       )}
 
-      <Alert className="mt-3 bg-[var(--color-secondary-50)] border-[var(--color-secondary-300)]">
-        <Tag className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--color-accent-700)]" />
-        <AlertDescription className="text-xs sm:text-sm text-[var(--color-accent-700)]">
-          Tags help buyers find your listing more easily. Click on any tag to edit it.
-        </AlertDescription>
-      </Alert>
     </div>
   );
 }

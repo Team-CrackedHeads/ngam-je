@@ -157,12 +157,6 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
           </Button>
         </div>
 
-        <Alert className="bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-          <MessageCircle className="w-4 h-4 text-[var(--color-accent-700)]" />
-          <AlertDescription className="text-[var(--color-accent-700)]">
-            <strong>Pro Tip:</strong> Adding FAQs helps sellers understand your exact requirements and reduces back-and-forth communication. FAQs are optional but recommended!
-          </AlertDescription>
-        </Alert>
       </div>
     </div>
   );

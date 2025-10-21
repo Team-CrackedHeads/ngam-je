@@ -273,10 +273,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
 
         {/* Content */}
         <div className="p-8">
-          <Card className="shadow-lg">
-            <CardContent className="p-8">
-              
-              {currentStep === 1 && (
+          {currentStep === 1 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
                     <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg bg-primary-gradient">
@@ -389,11 +386,11 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-sm text-[var(--color-primary-900)]">{formData.generatedTitle.length}/100 characters</p>
                         <Button
-                          variant="link"
+                          variant="outline"
                           size="sm"
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
                           onClick={generateTitleWithAI}
                           disabled={isGeneratingTitle || !hasAnyInput()}
-                          className="text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)]"
                         >
                           {isGeneratingTitle ? (
                             <>
@@ -426,11 +423,11 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-sm text-[var(--color-primary-900)]">{formData.generatedDescription.length}/1000 characters</p>
                         <Button
-                          variant="link"
+                          variant="outline"
                           size="sm"
                           onClick={generateDescriptionWithAI}
                           disabled={isGeneratingDescription || !hasAnyInput()}
-                          className="text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)]"
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
                         >
                           {isGeneratingDescription ? (
                             <>
@@ -446,13 +443,6 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                         </Button>
                       </div>
                     </div>
-
-                    <Alert className="bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-                      <Sparkles className="w-4 h-4 text-[var(--color-accent-700)]" />
-                      <AlertDescription className="text-[var(--color-accent-700)]">
-                        <strong>Pro Tip:</strong> Fill in any field (title, description, or upload photos) and AI can generate the rest based on your input!
-                      </AlertDescription>
-                    </Alert>
 
                     {/* Tags Section - Shows after content is filled */}
                     <TagGenerator
@@ -563,11 +553,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                       )}
                     </div>
 
-                    <Alert className="bg-[var(--color-warning-50)] border-[var(--color-warning-500)]">
-                      <AlertDescription className="text-[var(--color-accent-700)]">
-                        <strong>Tip:</strong> Set a realistic budget range. Sellers within your range will be able to make offers!
-                      </AlertDescription>
-                    </Alert>
+
 
                     {/* Shipping Section */}
                     <ShippingPreferences
@@ -780,49 +766,41 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                       </Button>
                     </div>
 
-                    <Alert className="mt-6 bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-                      <Sparkles className="w-5 h-5 text-[var(--color-secondary-500)]" />
-                      <AlertDescription className="text-[var(--color-accent-700)]">
-                        <strong>Ready to publish?</strong> Your listing will be visible to sellers who can make offers within your budget range. You'll receive notifications when sellers respond!
-                      </AlertDescription>
-                    </Alert>
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-between items-center mt-8 pt-6 border-t">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={currentStep === 1}
-                  className="px-6"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
+          <div className="flex justify-between items-center mt-8 pt-6 border-t">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="px-6"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
 
-                {currentStep < 4 ? (
-                  <Button
-                    onClick={handleNext}
-                    disabled={!isStepValid()}
-                    className="px-6 text-white hover:opacity-90 bg-[var(--color-secondary-500)]"
-                  >
-                    Continue
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!isStepValid()}
-                    className="px-8 bg-green-600 hover:bg-green-700 text-lg font-semibold text-white"
-                  >
-                    <Check className="w-5 h-5 mr-2" />
-                    Publish Buy Listing
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+            {currentStep < 4 ? (
+              <Button
+                onClick={handleNext}
+                disabled={!isStepValid()}
+                className="px-6 text-white hover:opacity-90 bg-[var(--color-secondary-500)]"
+              >
+                Continue
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={!isStepValid()}
+                className="px-8 bg-green-600 hover:bg-green-700 text-lg font-semibold text-white"
+              >
+                <Check className="w-5 h-5 mr-2" />
+                Publish Buy Listing
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -63,11 +63,6 @@ export function ShippingPreferences({ shippingOptions, onShippingOptionsChange }
         );
       })}
 
-      <Alert className="bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-        <AlertDescription className="text-[var(--color-accent-700)]">
-          You can select multiple shipping options to increase your chances of finding a seller!
-        </AlertDescription>
-      </Alert>
     </div>
   );
 }

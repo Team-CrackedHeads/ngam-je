@@ -277,9 +277,8 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
         {/* Content */}
         <div className="p-3 sm:p-4 md:p-8">
-          <Card className="shadow-lg bg-white">
-            <CardContent className="p-4 sm:p-6 md:p-8">
-              
+          <div className="p-4 sm:p-6 md:p-8">
+
               {/* Step 1: AI Generate */}
               {currentStep === 1 && (
                 <div className="space-y-4 sm:space-y-6">
@@ -383,12 +382,6 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                       <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block text-[var(--color-accent-700)]">
                         Proof of Ownership <span className="text-red-500">*</span>
                       </Label>
-                      <Alert className="mb-3 bg-[var(--color-secondary-50)] border-[var(--color-secondary-300)]">
-                        <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--color-accent-700)]" />
-                        <AlertDescription className="text-xs sm:text-sm text-[var(--color-accent-700)]">
-                          <strong>Important:</strong> Please upload ONE photo showing the item with a handwritten note containing your name and today's date. This verifies you own the item.
-                        </AlertDescription>
-                      </Alert>
 
                       {formData.ownershipProofImage ? (
                         <div className="space-y-2 sm:space-y-3">
@@ -413,8 +406,8 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         <div className="border-2 border-dashed border-[var(--color-secondary-400)] rounded-lg p-6 sm:p-8 text-center bg-[var(--color-secondary-50)]">
                           <ImageIcon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-[var(--color-secondary-500)]" />
                           <p className="text-sm sm:text-base text-[var(--color-accent-700)] mb-1 font-medium">No ownership proof uploaded</p>
-                          <p className="text-xs sm:text-sm text-[var(--color-primary-700)] mb-1">Required: Photo with item + handwritten note</p>
-                          <p className="text-xs text-[var(--color-primary-600)]">Note should include your name and date of writing</p>
+                          <p className="text-xs sm:text-sm text-[var(--color-primary-700)] mb-1">Please upload a photo showing the item with a handwritten note containing your name and date of writing.</p>
+                          <p className="text-xs text-[var(--color-primary-600)]">This verifies you own the item.</p>
                         </div>
                       )}
 
@@ -453,11 +446,11 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedTitle.length}/100 characters</p>
                         <Button
-                          variant="link"
+                          variant="outline"
                           size="sm"
                           onClick={generateTitleWithAI}
                           disabled={isGeneratingTitle || !hasAnyInput()}
-                          className="text-xs sm:text-sm text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)]"
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
                         >
                           {isGeneratingTitle ? (
                             <>
@@ -490,11 +483,11 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedDescription.length}/1000 characters</p>
                         <Button
-                          variant="link"
+                          variant="outline"
                           size="sm"
                           onClick={generateDescriptionWithAI}
                           disabled={isGeneratingDescription || !hasAnyInput()}
-                          className="text-xs sm:text-sm text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)]"
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
                         >
                           {isGeneratingDescription ? (
                             <>
@@ -510,13 +503,6 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         </Button>
                       </div>
                     </div>
-
-                    <Alert className="bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--color-accent-700)]" />
-                      <AlertDescription className="text-xs sm:text-sm text-[var(--color-accent-700)]">
-                        <strong>Pro Tip:</strong> Fill in any field (title, description, or upload photos) and AI can generate the rest based on your input!
-                      </AlertDescription>
-                    </Alert>
 
                     {/* Tags Section - Shows after content is filled */}
                     <TagGenerator
@@ -633,11 +619,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                       )}
                     </div>
 
-                    <Alert className="bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-                      <AlertDescription className="text-xs sm:text-sm text-[var(--color-accent-700)]">
-                        <strong>Tip:</strong> Set a range to allow negotiation flexibility!
-                      </AlertDescription>
-                    </Alert>
+
 
                     {/* Inventory Quantity */}
                     <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
@@ -931,8 +913,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                   </Button>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
         </div>
       </div>
     </div>
