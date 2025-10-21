@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, X, Cable } from "lucide-react";
-import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
+import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-match-data";
 import { motion, AnimatePresence } from "motion/react";
@@ -34,7 +34,7 @@ export default function ListingMatchesPage() {
   const yourListing: Listing | undefined =
     listingType === "sale" ? mockSaleListings.find(l => l.id === listingId) :
     listingType === "wanted" ? mockWantedListings.find(l => l.id === listingId) :
-    mockWantedListings.find(l => l.id === listingId);
+    getMockMatchedListings().find(l => l.id === listingId);
 
   // Get matches for this listing
   const matches = yourListing && listingType !== "matched" ? generateMatchesForListing(listingId, listingType) : [];

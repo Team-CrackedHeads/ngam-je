@@ -30,7 +30,7 @@ export interface ListingMatch {
 // Generate mock matches for a specific listing
 export function generateMatchesForListing(
   listingId: number,
-  listingType: "sale" | "wanted"
+  listingType: "sale" | "wanted" | "matched"
 ): ListingMatch[] {
   const yourListing = listingType === "sale"
     ? mockSaleListings.find(l => l.id === listingId)

@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Cable } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
-import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
+import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ViewDropdown from "@/components/threads/ViewDropdown";
@@ -60,10 +60,11 @@ function getExtensionPrice(subscriptionTier: string): string {
 const tabs = [
   { label: "Sale Listings", value: "sale", icon: ShoppingCart },
   { label: "Want Listings", value: "wanted", icon: Package },
+  { label: "Matched Listings", value: "matched", icon: Cable },
 ];
 
 // Mobile-specific compact card component
-function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; isHighlighted?: boolean }) {
+function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
@@ -180,7 +181,7 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing;
   );
 }
 
-function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
@@ -448,16 +449,16 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
 function ListingsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"sale" | "wanted">("sale");
+  const [activeTab, setActiveTab] = useState<"sale" | "wanted" | "matched">("sale");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    const type = searchParams.get("type") as "sale" | "wanted";
+    const type = searchParams.get("type") as "sale" | "wanted" | "matched";
     const highlight = searchParams.get("highlight");
 
-    if (type && (type === "sale" || type === "wanted")) {
+    if (type && (type === "sale" || type === "wanted" || type === "matched")) {
       setActiveTab(type);
     }
 
@@ -470,7 +471,7 @@ function ListingsPageContent() {
   }, [searchParams]);
 
   // Filter to show only the user's own listings
-  const allListings = activeTab === "sale" ? mockSaleListings : mockWantedListings;
+  const allListings = activeTab === "sale" ? mockSaleListings : activeTab === "wanted" ? mockWantedListings : getMockMatchedListings();
   const userListings = allListings.filter(listing => listing.isOwner === true);
   const categories = [...new Set(userListings.map(listing => listing.category))];
   const currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
@@ -549,7 +550,7 @@ function ListingsPageContent() {
               No {activeTab === "sale" ? "items for sale" : "wanted items"} yet
             </h3>
             <p className="text-accent-400 mb-4">
-              Be the first to post a {activeTab === "sale" ? "sale listing" : "wanted request"}!
+              Be the first to post a {activeTab === "sale" ? "sale listing" : activeTab === "wanted" ? "wanted request" : "matched request"}!
             </p>
             <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
               Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}

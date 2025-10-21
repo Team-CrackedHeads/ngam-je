@@ -15,6 +15,7 @@ export interface Listing {
   expiresAt: string; // ISO date string
   subscriptionTier: "basic" | "pro" | "enterprise";
   isOwner?: boolean; // Whether current user owns this listing
+  isMatched?: boolean;
 }
 
 // Mock data for sale listings (items user is selling - have prices)
@@ -32,7 +33,8 @@ export const mockSaleListings: Listing[] = [
     category: "Electronics",
     expiresAt: "2025-11-15T10:00:00Z", // 5 days from now
     subscriptionTier: "basic",
-    isOwner: true
+    isOwner: true,
+    isMatched: true
   },
   {
     id: 2,
@@ -47,7 +49,8 @@ export const mockSaleListings: Listing[] = [
     category: "Electronics",
     expiresAt: "2025-12-08T15:30:00Z", // 29 days from now
     subscriptionTier: "pro",
-    isOwner: false
+    isOwner: false,
+    isMatched: true
   },
   {
     id: 3,
@@ -186,7 +189,8 @@ export const mockWantedListings: Listing[] = [
     category: "Electronics",
     expiresAt: "2025-10-12T08:00:00Z", // 2 days from now (urgent)
     subscriptionTier: "basic",
-    isOwner: true
+    isOwner: true,
+    isMatched: true
   },
   {
     id: 2,
@@ -201,7 +205,8 @@ export const mockWantedListings: Listing[] = [
     category: "Transportation",
     expiresAt: "2025-11-25T14:20:00Z", // 46 days from now
     subscriptionTier: "pro",
-    isOwner: false
+    isOwner: false,
+    isMatched: true
   },
   {
     id: 3,
@@ -324,3 +329,10 @@ export const mockWantedListings: Listing[] = [
     isOwner: false
   }
 ];
+
+export function getMockMatchedListings (): Listing[] {
+  const matchedSales = mockSaleListings.filter((listing) => !listing.isOwner && listing.isMatched);
+  const matchedWanted = mockWantedListings.filter((listing) => !listing.isOwner && listing.isMatched);
+  // return [...matchedSales, ...matchedWanted];
+  return [...matchedSales];
+}

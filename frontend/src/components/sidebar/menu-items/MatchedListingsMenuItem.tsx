@@ -10,7 +10,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { mockSaleListings } from "@/utils/mock-listings-data";
+import { getMockMatchedListings } from "@/utils/mock-listings-data";
 
 export default function BuyListingsMenuItem() {
   const router = useRouter();
@@ -26,11 +26,11 @@ export default function BuyListingsMenuItem() {
   };
 
   const loadMoreListings = () => {
-    if (loading || visibleListings >= mockSaleListings.length) return;
+    if (loading || visibleListings >= getMockMatchedListings().length) return;
 
     setLoading(true);
     setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, mockSaleListings.length);
+      const newCount = Math.min(visibleListings + 5, getMockMatchedListings().length);
 
       if (newCount > MAX_LOADED_COUNT) {
         setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
@@ -83,7 +83,7 @@ export default function BuyListingsMenuItem() {
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
               onClick={() =>
-                router.push("/listings?type=sale", { scroll: false })
+                router.push("/listings?type=matched", { scroll: false })
               }
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
             >
@@ -97,7 +97,7 @@ export default function BuyListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockSaleListings.slice(0, visibleListings).map((listing) => (
+              {getMockMatchedListings().slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}
@@ -117,8 +117,8 @@ export default function BuyListingsMenuItem() {
                 </div>
               )}
 
-              {visibleListings >= mockSaleListings.length &&
-                mockSaleListings.length > 5 && (
+              {visibleListings >= getMockMatchedListings().length &&
+                getMockMatchedListings().length > 5 && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-400">
                       No more listings
@@ -126,11 +126,11 @@ export default function BuyListingsMenuItem() {
                   </div>
                 )}
 
-              {visibleListings < mockSaleListings.length &&
+              {visibleListings < getMockMatchedListings().length &&
                 visibleListings >= MAX_LOADED_COUNT && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-300">
-                      {mockSaleListings.length - visibleListings} older listings
+                      {getMockMatchedListings().length - visibleListings} older listings
                       hidden
                     </div>
                   </div>
