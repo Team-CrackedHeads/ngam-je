@@ -547,14 +547,18 @@ function ListingsPageContent() {
           <div className="text-center py-12">
             <ActiveIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-accent-600 mb-2">
-              No {activeTab === "sale" ? "items for sale" : "wanted items"} yet
+              No {activeTab === "sale" ? "items for sale" : activeTab === "wanted" ? "wanted items" : "matched items"} yet
             </h3>
-            <p className="text-accent-400 mb-4">
-              Be the first to post a {activeTab === "sale" ? "sale listing" : activeTab === "wanted" ? "wanted request" : "matched request"}!
-            </p>
-            <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-              Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
-            </button>
+            {activeTab !== "matched" && (
+              <>
+                <p className="text-accent-400 mb-4">
+                  Be the first to post a {activeTab === "sale" ? "sale listing" : activeTab === "wanted" ? "wanted request" : "matched request"}!
+                </p>
+                <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
+                  Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
