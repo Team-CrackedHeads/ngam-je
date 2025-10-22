@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, Package, Cable, X, MapPin, Clock, Eye, Heart } from "lucide-react";
 import { type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
-import React from "react";
+import React, { useState } from "react";
+import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
 
 interface ListingDetailsModalProps {
   listing: Listing | MatchedListing;
@@ -15,15 +16,43 @@ interface ListingDetailsModalProps {
 }
 
 export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsModalProps) {
+  const [showCheckout, setShowCheckout] = useState(false);
+
+  const handleCheckout = () => {
+    setShowCheckout(true);
+  };
+
+  const handleCheckoutConfirm = (dealDetails: DealDetails) => {
+    console.log("Deal confirmed:", dealDetails);
+    // TODO: Handle the deal confirmation (API call, navigation, etc.)
+    onClose();
+  };
+
+  const handleCheckoutBack = () => {
+    setShowCheckout(false);
+  };
+
+  if (showCheckout) {
+    return (
+      <CheckoutModal
+        listing={listing}
+        onClose={onClose}
+        onBack={handleCheckoutBack}
+        onConfirm={handleCheckoutConfirm}
+      />
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
+        key="listing-details"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -31,9 +60,9 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl"
       >
-        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[85vh] flex flex-col">
+        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[85vh] flex flex-col py-0">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 shrink-0 bg-primary-50">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-200 shrink-0 bg-primary-50">
             <div className="flex items-center gap-3">
               {type === "sale" ? (
                 <ShoppingCart className="w-5 h-5 text-secondary-600" />
@@ -169,23 +198,17 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <Button className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Contact
                 </Button>
-                <Button onClick={onClose} variant="outline" className="flex-1">
-                  Close
-                </Button>
               </div>
             ) : (
               <div className="flex gap-2">
-                <Button className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
+                <Button onClick={handleCheckout} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Checkout
                 </Button>
-                <Button className="flex-1 bg-secondary-400 hover:bg-secondary-600 text-accent-700">
+                <Button className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
                   Contact
                 </Button>
-                <Button className="flex-1 bg-secondary-200 hover:bg-secondary-600 text-accent-700">
+                <Button className="flex-1 bg-error-500 hover:bg-error-900 text-white">
                   Unmatch
-                </Button>
-                <Button onClick={onClose} variant="outline" className="flex-1">
-                  Close
                 </Button>
               </div>
             )}
