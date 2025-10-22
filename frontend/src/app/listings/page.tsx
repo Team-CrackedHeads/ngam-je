@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Cable } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Cable, Search } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
@@ -453,6 +453,7 @@ function ListingsPageContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const type = searchParams.get("type") as "sale" | "wanted" | "matched";
@@ -474,8 +475,20 @@ function ListingsPageContent() {
   const allListings = activeTab === "sale" ? mockSaleListings : activeTab === "wanted" ? mockWantedListings : getMockMatchedListings();
   const userListings = allListings.filter(listing => listing.isOwner === true);
   const categories = [...new Set(userListings.map(listing => listing.category))];
-  const currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
-  const ActiveIcon = activeTab === "sale" ? ShoppingCart : Package;
+
+  // Apply category and search filters
+  let currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
+
+  // Apply search filter
+  if (searchQuery.trim()) {
+    currentListings = currentListings.filter(listing =>
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  const ActiveIcon = activeTab === "sale" ? ShoppingCart : activeTab === "wanted" ? Package : Cable;
 
   return (
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
@@ -522,13 +535,26 @@ function ListingsPageContent() {
           </div>
 
           {/* Right Section */}
-          <button
-            onClick={() => {}}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary-500 text-accent-700 font-semibold rounded-lg sm:rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
-          >
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            Create Listing
-          </button>
+          {activeTab === "matched" ? (
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search matched listings..."
+                className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-neutral-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+              />
+            </div>
+          ) : (
+            <button
+              onClick={() => {}}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary-500 text-accent-700 font-semibold rounded-lg sm:rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
+            >
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              Create Listing
+            </button>
+          )}
         </div>
 
         {/* Listings Grid */}
