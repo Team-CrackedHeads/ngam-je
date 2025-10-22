@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Upload, Sparkles, Edit3, DollarSign, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Image as ImageIcon, Trash2, Tag, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
 import { HistoricalPriceTrend } from './price-chart';
 import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
@@ -44,6 +45,12 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
   const [isGeneratingPhotos, setIsGeneratingPhotos] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
+  const [titleSuggestion, setTitleSuggestion] = useState('');
+  const [descriptionSuggestion, setDescriptionSuggestion] = useState('');
+  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
+  const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState<FormData>({
     uploadedImages: [],
     ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
@@ -137,6 +144,60 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     setIsGeneratingPhotos(false);
   };
 
+  const generateTitleSuggestion = useCallback((currentText: string) => {
+    // Clear existing timeout
+    if (titleTimeoutRef.current) {
+      clearTimeout(titleTimeoutRef.current);
+    }
+
+    if (!isAIModeEnabled || currentText.length < 3) {
+      setTitleSuggestion('');
+      return;
+    }
+
+    // Debounce: wait 300ms before generating suggestion
+    titleTimeoutRef.current = setTimeout(() => {
+      const fullSuggestion = MOCK_GENERATED_TITLE_SELL;
+      const lowerCurrent = currentText.toLowerCase();
+      const lowerSuggestion = fullSuggestion.toLowerCase();
+
+      // Check if suggestion starts with current text (case-insensitive)
+      if (lowerSuggestion.startsWith(lowerCurrent)) {
+        // Return only the remaining part
+        setTitleSuggestion(fullSuggestion.slice(currentText.length));
+      } else {
+        setTitleSuggestion('');
+      }
+    }, 300);
+  }, [isAIModeEnabled]);
+
+  const generateDescriptionSuggestion = useCallback((currentText: string) => {
+    // Clear existing timeout
+    if (descriptionTimeoutRef.current) {
+      clearTimeout(descriptionTimeoutRef.current);
+    }
+
+    if (!isAIModeEnabled || currentText.length < 3) {
+      setDescriptionSuggestion('');
+      return;
+    }
+
+    // Debounce: wait 300ms before generating suggestion
+    descriptionTimeoutRef.current = setTimeout(() => {
+      const fullSuggestion = MOCK_GENERATED_DESCRIPTION_SELL;
+      const lowerCurrent = currentText.toLowerCase();
+      const lowerSuggestion = fullSuggestion.toLowerCase();
+
+      // Check if suggestion starts with current text (case-insensitive)
+      if (lowerSuggestion.startsWith(lowerCurrent)) {
+        // Return only the remaining part
+        setDescriptionSuggestion(fullSuggestion.slice(currentText.length));
+      } else {
+        setDescriptionSuggestion('');
+      }
+    }, 300);
+  }, [isAIModeEnabled]);
+
   const removeImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
@@ -197,6 +258,9 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     });
     setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
     setSelectedImageIndex(0);
+    setIsAIModeEnabled(false);
+    setTitleSuggestion('');
+    setDescriptionSuggestion('');
     onClose();
   };
 
@@ -282,9 +346,21 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
               {/* Step 1: AI Generate */}
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <div className="text-center mb-8">
+                  <div className="text-center mb-8 relative">
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
                     <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
+                    <div className="absolute top-0 right-0 flex items-center gap-2">
+                      <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        AI Mode
+                      </Label>
+                      <Switch
+                        id="ai-mode"
+                        checked={isAIModeEnabled}
+                        onCheckedChange={setIsAIModeEnabled}
+                        className="data-[state=checked]:bg-[var(--color-secondary-500)]"
+                      />
+                    </div>
                   </div>
 
                   <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
@@ -294,25 +370,27 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
                           Product Images
                         </Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={generatePhotosWithAI}
-                          disabled={isGeneratingPhotos || !hasAnyInput()}
-                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
-                        >
-                          {isGeneratingPhotos ? (
-                            <>
-                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3 h-3 mr-1" />
-                              Generate Photos with AI
-                            </>
-                          )}
-                        </Button>
+                        {isAIModeEnabled && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={generatePhotosWithAI}
+                            disabled={isGeneratingPhotos || !hasAnyInput()}
+                            className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                          >
+                            {isGeneratingPhotos ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                Enhance Photos with AI
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
 
                       {formData.uploadedImages.length > 0 ? (
@@ -434,37 +512,79 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         <Label htmlFor="title" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
                           Title
                         </Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={generateTitleWithAI}
-                          disabled={isGeneratingTitle || !hasAnyInput()}
-                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                        {isAIModeEnabled && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={generateTitleWithAI}
+                            disabled={isGeneratingTitle || !hasAnyInput()}
+                            className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                          >
+                            {isGeneratingTitle ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                Generate Title with AI
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="title"
+                          value={formData.generatedTitle}
+                          onChange={(e) => {
+                            setFormData({...formData, generatedTitle: e.target.value});
+                            generateTitleSuggestion(e.target.value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Tab' && titleSuggestion) {
+                              e.preventDefault();
+                              setFormData({...formData, generatedTitle: formData.generatedTitle + titleSuggestion});
+                              setTitleSuggestion('');
+                            }
+                          }}
+                          placeholder="Enter listing title"
+                          className="text-sm sm:text-base border-[var(--color-primary-200)] relative z-10"
+                          style={{
+                            fontSize: '1rem',
+                            lineHeight: '1.5rem',
+                            fontFamily: 'inherit',
+                            fontWeight: 'inherit',
+                            letterSpacing: 'inherit',
+                            background: 'transparent'
+                          }}
+                          maxLength={100}
+                        />
+                        <div
+                          className="absolute top-0 left-0 right-0 bottom-0 h-9 flex items-center px-3 py-1 pointer-events-none overflow-hidden border border-transparent rounded-md z-0"
+                          style={{
+                            fontSize: '1rem',
+                            lineHeight: '1.5rem',
+                            fontFamily: 'inherit',
+                            fontWeight: 'inherit',
+                            letterSpacing: 'inherit'
+                          }}
                         >
-                          {isGeneratingTitle ? (
-                            <>
-                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3 h-3 mr-1" />
-                              Generate Title with AI
-                            </>
-                          )}
-                        </Button>
+                          <span style={{ color: 'transparent' }}>
+                            {formData.generatedTitle}
+                          </span>
+                          <span className="text-gray-400">
+                            {titleSuggestion}
+                          </span>
+                        </div>
                       </div>
-                      <Input
-                        id="title"
-                        value={formData.generatedTitle}
-                        onChange={(e) => setFormData({...formData, generatedTitle: e.target.value})}
-                        placeholder="Enter listing title"
-                        className="text-sm sm:text-base border-[var(--color-primary-200)]"
-                        maxLength={100}
-                      />
-                      <div className="mt-2">
-                        <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedTitle.length}/100 characters</p>
-                      </div>
+                      <p className="text-xs sm:text-sm text-[var(--color-primary-900)] mt-2">
+                        {formData.generatedTitle.length}/100 characters
+                        {titleSuggestion && (
+                          <span className="ml-2 text-[var(--color-secondary-500)]">• Press Tab to accept suggestion</span>
+                        )}
+                      </p>
                     </div>
 
                     {/* Description Section */}
@@ -473,37 +593,79 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         <Label htmlFor="description" className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
                           Description
                         </Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={generateDescriptionWithAI}
-                          disabled={isGeneratingDescription || !hasAnyInput()}
-                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                        {isAIModeEnabled && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={generateDescriptionWithAI}
+                            disabled={isGeneratingDescription || !hasAnyInput()}
+                            className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                          >
+                            {isGeneratingDescription ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                Generate Description with AI
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Textarea
+                          id="description"
+                          value={formData.generatedDescription}
+                          onChange={(e) => {
+                            setFormData({...formData, generatedDescription: e.target.value});
+                            generateDescriptionSuggestion(e.target.value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Tab' && descriptionSuggestion) {
+                              e.preventDefault();
+                              setFormData({...formData, generatedDescription: formData.generatedDescription + descriptionSuggestion});
+                              setDescriptionSuggestion('');
+                            }
+                          }}
+                          placeholder="Describe your product..."
+                          className="min-h-[150px] sm:min-h-[250px] text-sm sm:text-base border-[var(--color-primary-200)] relative z-10"
+                          style={{
+                            fontSize: '1rem',
+                            lineHeight: '1.5rem',
+                            fontFamily: 'inherit',
+                            fontWeight: 'inherit',
+                            letterSpacing: 'inherit',
+                            background: 'transparent'
+                          }}
+                          maxLength={1000}
+                        />
+                        <div
+                          className="absolute top-0 left-0 right-0 bottom-0 px-3 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words border border-transparent rounded-md z-0"
+                          style={{
+                            fontSize: '1rem',
+                            lineHeight: '1.5rem',
+                            fontFamily: 'inherit',
+                            fontWeight: 'inherit',
+                            letterSpacing: 'inherit'
+                          }}
                         >
-                          {isGeneratingDescription ? (
-                            <>
-                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3 h-3 mr-1" />
-                              Generate Description with AI
-                            </>
-                          )}
-                        </Button>
+                          <span style={{ color: 'transparent' }}>
+                            {formData.generatedDescription}
+                          </span>
+                          <span className="text-gray-400">
+                            {descriptionSuggestion}
+                          </span>
+                        </div>
                       </div>
-                      <Textarea
-                        id="description"
-                        value={formData.generatedDescription}
-                        onChange={(e) => setFormData({...formData, generatedDescription: e.target.value})}
-                        placeholder="Describe your product..."
-                        className="min-h-[150px] sm:min-h-[250px] text-sm sm:text-base border-[var(--color-primary-200)]"
-                        maxLength={1000}
-                      />
-                      <div className="mt-2">
-                        <p className="text-xs sm:text-sm text-[var(--color-primary-900)]">{formData.generatedDescription.length}/1000 characters</p>
-                      </div>
+                      <p className="text-xs sm:text-sm text-[var(--color-primary-900)] mt-2">
+                        {formData.generatedDescription.length}/1000 characters
+                        {descriptionSuggestion && (
+                          <span className="ml-2 text-[var(--color-secondary-500)]">• Press Tab to accept suggestion</span>
+                        )}
+                      </p>
                     </div>
 
                     {/* Tags Section - Shows after content is filled */}
