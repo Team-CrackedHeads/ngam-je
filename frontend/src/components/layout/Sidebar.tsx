@@ -260,7 +260,7 @@ function NgamJeAssistantMenuItem({
   };
 
   const handleChatClick = (chatId: number) => {
-    router.push(`/chat/${chatId}`);
+    router.push(`/chat/history?id=${chatId}`);
   };
 
   const loadMoreChats = () => {
