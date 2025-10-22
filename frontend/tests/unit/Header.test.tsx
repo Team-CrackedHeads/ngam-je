@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Header from '@/app/components/Header'
+import Header from '@/components/layout/Header'
 import {
   renderWithViewport,
   testAllViewports,

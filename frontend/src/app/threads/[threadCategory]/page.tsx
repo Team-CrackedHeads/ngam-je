@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import ListingCard from "@/app/components/threads-category-ui/ListingCard";
-import { CategoryBreadcrumb } from "@/app/components/threads-category-ui/CategoryBreadcrumb";
+import ListingCard from "@/components/threads/category/ListingCard";
+import { CategoryBreadcrumb } from "@/components/threads/category/CategoryBreadcrumb";
 import {UNIFIED_LISTINGS, UnifiedListingData} from "@/utils/mock-threads-data";
-import SearchFilter, {type FilterOptions} from "@/app/components/threads-category-ui/SearchFilter";
-import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/app/components/threads-category-ui/Sorting";
-import ViewDropdown from "@/app/components/threads-ui/ViewDropdown";
-import ListingTypeDropdown from "@/app/components/threads-category-ui/ListingTypeDropdown";
+import SearchFilter, {type FilterOptions} from "@/components/threads/category/SearchFilter";
+import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads/category/Sorting";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
 import { Plus, ArrowLeft } from "lucide-react";
 
 type ListingType = "wtb" | "wts" | "general";
@@ -141,11 +141,11 @@ const CategoryPage: React.FC = () => {
     // Filter by listing type (WTB/WTS/General)
     if (activeType === "wtb") {
       categoryListings = categoryListings.filter(
-        (listing) => listing.listingType === "want-to-buy"
+        (listing) => listing.listingType === "wanted"
       );
     } else if (activeType === "wts") {
       categoryListings = categoryListings.filter(
-        (listing) => listing.listingType === "for-sale"
+        (listing) => listing.listingType === "sale"
       );
     }
     // For "general", don't filter by listing type - show both
@@ -323,19 +323,6 @@ const CategoryPage: React.FC = () => {
               maxPrice={10000}
               currency="RM"
               searchPlaceholder={`Search ${category} items...`}
-              availableCategories={[
-                "apple-devices",
-                "gaming-gear",
-                "audio-gear",
-                "smart-home",
-                "pc-building",
-                "ai-tools",
-                "furniture",
-                "books",
-                "clothing",
-                "sports",
-                "fashion"
-              ]}
             />
           </div>
 
@@ -357,7 +344,7 @@ const CategoryPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">View:</span>
-              <ViewDropdown activeView={viewType} onViewChange={setViewType} />
+              <ViewDropdown activeView={viewType} viewAction={setViewType} />
             </div>
           </div>
 
@@ -387,7 +374,7 @@ const CategoryPage: React.FC = () => {
               }
               return l.category === category &&
                 l.listingType ===
-                  (activeType === "wtb" ? "want-to-buy" : "for-sale");
+                  (activeType === "wtb" ? "wanted" : "sale");
             }
           ).length
             ? ` (filtered from ${
@@ -398,7 +385,7 @@ const CategoryPage: React.FC = () => {
                     }
                     return l.category === category &&
                       l.listingType ===
-                        (activeType === "wtb" ? "want-to-buy" : "for-sale");
+                        (activeType === "wtb" ? "wanted" : "sale");
                   }
                 ).length
               } total)`
@@ -422,7 +409,7 @@ const CategoryPage: React.FC = () => {
               {/* Filters from SearchFilter */}
               {appliedFilters.search && (
                 <span className="px-2 py-1 bg-secondary-200 text-accent-700 rounded-full text-xs">
-                  Search: "{appliedFilters.search}"
+                  Search: &quot;{appliedFilters.search}&quot;
                 </span>
               )}
               {appliedFilters.location && (

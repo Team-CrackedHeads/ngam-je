@@ -20,10 +20,6 @@ export type Activity = {
   date: string;
 };
 
-interface ActivityPageProps {
-  activities?: Activity[];
-}
-
 // Tabs configuration
 const tabs = [
   { label: "Overview", href: "/profile" },
@@ -46,8 +42,8 @@ function getIcon(type: Activity["type"]) {
   }
 }
 
-export default function ActivityPage({ activities }: ActivityPageProps) {
-  const data = activities ?? placeholderActivities;
+export default function ActivityPage() {
+  const data = placeholderActivities;
   const pathname = usePathname();
 
   // Pagination state

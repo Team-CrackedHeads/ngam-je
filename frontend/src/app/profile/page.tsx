@@ -5,28 +5,7 @@ import { usePathname } from "next/navigation";
 import { Star, CheckCircle, Camera, Lock } from "lucide-react";
 import { mockSaleListings, mockWantedListings } from "@/utils/mock-listings-data";
 import { MOCK_ACHIEVEMENTS, getAchievementStats } from "@/utils/mock-achievements-data";
-import { MOCK_USER, type User } from "@/utils/mock-user-data";
-
-export interface Listing {
-  id: number;
-  title: string;
-  price?: string;
-  budget?: string;
-  location: string;
-  timestamp: string;
-  description: string;
-  imageUrl?: string;
-  views: number;
-  likes: number;
-  category: string;
-  expiresAt: string
-  subscriptionTier: "basic" | "pro" | "enterprise";
-  isOwner?: boolean;
-}
-
-interface ProfilePageProps {
-  user?: User;
-}
+import { MOCK_USER } from "@/utils/mock-user-data";
 
 // Tabs configuration
 const tabs = [
@@ -34,10 +13,10 @@ const tabs = [
   { label: "Activity", href: "/profile/activity" },
 ];
 
-export default function ProfilePage({ user, saleListings, wantedListings }: ProfilePageProps) {
-  const userData = user ?? MOCK_USER;
-  const saleListingsData = (saleListings ?? mockSaleListings).filter(listing => listing.isOwner === true);
-  const wantedListingsData = (wantedListings ?? mockWantedListings).filter(listing => listing.isOwner === true);
+export default function ProfilePage() {
+  const userData = MOCK_USER;
+  const saleListingsData = mockSaleListings.filter(listing => listing.isOwner === true);
+  const wantedListingsData = mockWantedListings.filter(listing => listing.isOwner === true);
   const pathname = usePathname();
 
   return (
@@ -92,7 +71,7 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
                 <div className="flex items-center text-xs sm:text-sm text-yellow-600">
                   <Star size={14} className="sm:w-4 sm:h-4" fill="gold" />
                   <span className="ml-1">
-                    {data.rating} ({data.ratingCount})
+                    {userData.rating} ({userData.ratingCount})
                   </span>
                 </div>
               </div>
@@ -104,14 +83,14 @@ export default function ProfilePage({ user, saleListings, wantedListings }: Prof
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.totalListings}</p>
+            <p className="text-2xl font-bold">{userData.totalListings}</p>
             <p className="text-sm">Total Listings</p>
           </div>
           <div
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.completedDeals}</p>
+            <p className="text-2xl font-bold">{userData.completedDeals}</p>
             <p className="text-sm">Completed Deals</p>
           </div>
 

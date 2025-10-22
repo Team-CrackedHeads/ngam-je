@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
 import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
-import { AIMatchingProps, MatchedListing } from "../types";
-import { ListingComparisonModal } from "../ListingComparisonModal";
+import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
+import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -15,13 +15,10 @@ const tabs: { id: TabType; label: string; icon: React.ReactNode; color: string }
 ];
 
 export function AIMatchingSwipe({
-  userMode,
-  userListings,
   availableListings,
   onMatch,
   onMessage,
   onViewDetails,
-  onClose,
 }: AIMatchingProps) {
   const [activeTab, setActiveTab] = useState<TabType>("queue");
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +76,7 @@ export function AIMatchingSwipe({
   // Generate mock listings if none provided
   const getMockListings = (): MatchedListing[] => {
     if (availableListings.length > 0) {
-      return availableListings;
+      return availableListings as unknown as MatchedListing[];
     }
 
     // Fallback mock data

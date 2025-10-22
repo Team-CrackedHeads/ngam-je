@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
-import { AuthContextType } from "./types";
+import { createContext, useContext } from "react";
+import { AuthContextType } from "@/lib/auth/types";
 
 /**
  * Auth Context - the interface that components consume

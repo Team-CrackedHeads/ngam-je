@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { BreadcrumbNav } from "@/app/components/threads-product-ui/BreadcrumbNav";
-import { ProductDetails } from "@/app/components/threads-product-ui/ProductDetails";
+import { BreadcrumbNav } from "@/components/threads/product/BreadcrumbNav";
+import { ProductDetails } from "@/components/threads/product/ProductDetails";
 // Import unified data instead
 import { getListingById } from "@/utils/mock-threads-data";
 
@@ -31,7 +31,7 @@ export default function ProductListingScreen() {
             Listing Not Found
           </h1>
           <p className="text-gray-600 mt-2">
-            The listing you're looking for doesn't exist.
+            The listing you&apos;re looking for doesn&apos;t exist.
           </p>
           <button
             onClick={handleBack}

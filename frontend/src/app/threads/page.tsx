@@ -8,24 +8,23 @@ import {
   ChevronUp,
   MessageSquarePlus,
 } from "lucide-react";
-import ThreadCard from "../components/threads-ui/ThreadCard";
-import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
+import ThreadCard from "@/components/threads/ThreadCard";
+import { MOCK_THREADS, ThreadData } from "@/utils/mock-threads-data";
 
-import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
-import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
-import NgamOverview from "../components/threads-ui/NgamOverview";
-import FilterButton, { FilterType } from "../components/threads-ui/FilterButton";
-import ViewDropdown from "../components/threads-ui/ViewDropdown";
-import PageHeader from "../components/threads-ui/PageHeader";
+import CreateThreadsSection from "@/components/threads/CreateThreadsSection";
+import AIAgentSearch from "@/components/threads/AIAgentSearch";
+import NgamOverview from "@/components/threads/NgamOverview";
+import FilterButton, { FilterType } from "@/components/threads/FilterButton";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import PageHeader from "@/components/threads/PageHeader";
 import BreadcrumbNav from "./BreadcrumbNav"; // ✅ Added import
-import { MockAIResponse } from "../../utils/mock-ai-data";
+import { MockAIResponse } from "@/utils/mock-ai-data";
 
 type ViewType = "grid" | "list";
 
 function ThreadsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
   const [viewType, setViewType] = useState<ViewType>("grid");
-  const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +71,7 @@ function ThreadsPage() {
   }, [lastQuery]);
 
   const getBaseFilteredThreads = useCallback((): ThreadData[] => {
-    let filtered = [...MOCK_THREADS];
+    const filtered = [...MOCK_THREADS];
     switch (activeFilter) {
       case "Hot":
         return filtered.filter((t) => t.isHot).sort((a, b) => b.upvotes - a.upvotes);
@@ -170,7 +169,11 @@ function ThreadsPage() {
   const handleAISearchComplete = (r: MockAIResponse) => {
     setCurrentOverview(r);
     setIsAILoading(false);
-    setLastQuery((r as any)?.prompt || "");
+    setLastQuery((r as MockAIResponse & { prompt?: string })?.prompt || "");
+  };
+
+  const handleOpenAI = () => {
+    // Open AI chat or navigate to AI interface
   };
 
   const handleDismissOverview = () => {
@@ -206,7 +209,7 @@ function ThreadsPage() {
         {/* SECTION 1: AI Agent */}
         <section id="search" ref={searchSectionRef} className="h-full snap-start">
           <AIAgentSearch
-            onOpenAI={() => setIsAIOpen(true)}
+            onOpenAI={handleOpenAI}
             onSearchStart={handleAISearchStart}
             onSearchComplete={handleAISearchComplete}
           />
@@ -232,7 +235,7 @@ function ThreadsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600 font-medium">View:</span>
-                  <ViewDropdown activeView={viewType} onViewChange={setViewType} />
+                  <ViewDropdown activeView={viewType} viewAction={setViewType} />
                 </div>
               </div>
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react";
-import { AuthContextType, AuthUser, LoginCredentials } from "../types";
-import { AuthContext_Internal } from "../AuthContext";
+import { AuthContextType, AuthUser, LoginCredentials } from "@/lib/auth/types";
+import { AuthContext_Internal } from "@/lib/auth/AuthContext";
 
 interface MockAuthProviderProps {
   children: ReactNode;
@@ -88,7 +88,7 @@ export function MockAuthProvider({ children, initialUser }: MockAuthProviderProp
    * For mock: we check localStorage for owned resources
    * For real auth: this would query the database
    */
-  const checkIsOwner = (resourceId: string, resourceType?: 'listing' | 'thread' | 'comment'): boolean => {
+  const checkIsOwner = (resourceId: string): boolean => {
     if (!user?.isAuthenticated) return false;
 
     // Check localStorage for mock ownership data

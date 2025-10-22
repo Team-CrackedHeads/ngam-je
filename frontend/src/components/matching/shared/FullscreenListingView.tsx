@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +20,8 @@ import {
   ChevronRight,
   Undo2,
 } from "lucide-react";
-import { MatchedListing } from "../types";
-import { useCompare } from "../contexts/CompareContext";
+import { MatchedListing } from "@/components/matching/types";
+import { useCompare } from "@/components/matching/contexts/CompareContext";
 
 interface FullscreenListingViewProps {
   isOpen: boolean;
@@ -199,9 +200,11 @@ export function FullscreenListingView({
                         cardSelected ? "ring-4 ring-secondary-500" : ""
                       }`}
                     >
-                      <img
+                      <Image
                         src={currentListing.images[0]}
                         alt={currentListing.title}
+                        width={600}
+                        height={450}
                         className="w-full h-full object-cover"
                       />
                       {/* Match Score Badge */}

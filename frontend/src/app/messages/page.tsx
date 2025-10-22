@@ -27,7 +27,7 @@ export default function MessagesPage() {
     if (conversation) {
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
-  }, [conversation?.messages.length]);
+  }, [conversation, conversation?.messages.length]);
 
   // Add product message when selecting a conversation with a product
   useEffect(() => {

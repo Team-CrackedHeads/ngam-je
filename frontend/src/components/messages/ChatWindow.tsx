@@ -71,7 +71,6 @@ export function ChatWindow({
           {messages.map((m) => (
             <MessageBubble
               key={m.id}
-              sender={m.sender}
               content={m.content}
               timestamp={m.timestamp}
               isCurrentUser={m.sender === "me"}

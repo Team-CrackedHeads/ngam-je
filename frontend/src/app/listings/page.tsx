@@ -2,12 +2,12 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ViewDropdown from "@/app/components/threads-ui/ViewDropdown";
-import CategoryDropdown from "@/app/components/ui/CategoryDropdown";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import CategoryDropdown from "@/components/ui/CategoryDropdown";
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -67,7 +67,7 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing;
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
-  const matchCount = getMatchCount(listing.id, type);
+  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -185,7 +185,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
   const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
-  const matchCount = getMatchCount(listing.id, type);
+  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -445,7 +445,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
   );
 }
 
-export default function ListingsPage() {
+function ListingsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"sale" | "wanted">("sale");
@@ -507,11 +507,15 @@ export default function ListingsPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">Sort By:</span>
-              <CategoryDropdown categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+              <CategoryDropdown
+                categories={categories}
+                selectedCategory={selectedCategory}
+                categoryAction={setSelectedCategory}
+              />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">View:</span>
-              <ViewDropdown activeView={viewMode} onViewChange={setViewMode} />
+              <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
             </div>
           </div>
 
@@ -554,5 +558,13 @@ export default function ListingsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ListingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 flex items-center justify-center"><div className="text-accent-500">Loading...</div></div>}>
+      <ListingsPageContent />
+    </Suspense>
   );
 }

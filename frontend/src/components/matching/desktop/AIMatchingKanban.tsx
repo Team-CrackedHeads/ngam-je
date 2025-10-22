@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, GitCompare, Maximize2 } from "lucide-react";
-import { AIMatchingProps, ColumnType, MatchedListing } from "../types";
-import { ListingComparisonModal } from "../ListingComparisonModal";
+import { Heart, Ban, Sparkles, Layers, X, Undo2, Search, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
+import { AIMatchingProps, ColumnType, MatchedListing } from "@/components/matching/types";
+import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCompare } from "../contexts/CompareContext";
+import { useCompare } from "@/components/matching/contexts/CompareContext";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-ai-matching-data";
 
 interface ColumnData {
@@ -43,13 +43,8 @@ const columns: ColumnData[] = [
 ];
 
 export function AIMatchingKanban({
-  userMode,
-  userListings,
-  availableListings,
-  onMatch,
   onMessage,
   onViewDetails,
-  onClose,
 }: AIMatchingProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -90,6 +85,31 @@ export function AIMatchingKanban({
   // Helper function to get listing by ID
   const getListingById = (id: string): MatchedListing | undefined => {
     return mockAIMatchings.find(listing => listing.id === id);
+  };
+
+  // Handle cycling cards in a column
+  const handleCycle = (column: ColumnType, direction: 'up' | 'down') => {
+    setCardsByColumn(prev => {
+      const currentColumn = prev[column];
+      if (currentColumn.length === 0) return prev;
+
+      if (direction === 'up') {
+        // Move top card to back
+        const [first, ...rest] = currentColumn;
+        return {
+          ...prev,
+          [column]: [...rest, first],
+        };
+      } else {
+        // Move bottom card to top
+        const last = currentColumn[currentColumn.length - 1];
+        const rest = currentColumn.slice(0, -1);
+        return {
+          ...prev,
+          [column]: [last, ...rest],
+        };
+      }
+    });
   };
 
   // Keyboard shortcuts
@@ -143,7 +163,7 @@ export function AIMatchingKanban({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showCompareModal, expandedPopupColumn, selectMode]);
+  }, [showCompareModal, expandedPopupColumn, selectMode, setSelectedForCompare]);
 
   return (
     <>
@@ -170,7 +190,7 @@ export function AIMatchingKanban({
                 <div className="p-6">
                   <h2 className="text-lg font-bold text-accent-700 mb-3">Reset All Cards?</h2>
                   <p className="text-sm text-accent-600 mb-2">
-                    This will move all cards back to "For You". Cards in "Liked" and "Passed" will be reset.
+                    This will move all cards back to &quot;For You&quot;. Cards in &quot;Liked&quot; and &quot;Passed&quot; will be reset.
                   </p>
                   <p className="text-xs text-accent-400">
                     This action cannot be undone.

@@ -4,15 +4,15 @@
  */
 
 // Core types
-export type { AuthUser, AuthContextType, LoginCredentials, ResourceOwnership } from "./types";
+export type { AuthUser, AuthContextType, LoginCredentials, ResourceOwnership } from "@/lib/auth/types";
 
 // Hook for components
-export { useAuth } from "./AuthContext";
+export { useAuth } from "@/lib/auth/AuthContext";
 
 // Providers - swap these based on environment or config
-export { MockAuthProvider } from "./providers/MockAuthProvider";
+export { MockAuthProvider } from "@/lib/auth/providers/MockAuthProvider";
 
 // Future providers will be exported here:
-// export { SupabaseAuthProvider } from "./providers/SupabaseAuthProvider";
-// export { ClerkAuthProvider } from "./providers/ClerkAuthProvider";
-// export { NextAuthProvider } from "./providers/NextAuthProvider";
+// export { SupabaseAuthProvider } from "@/lib/auth/providers/SupabaseAuthProvider";
+// export { ClerkAuthProvider } from "@/lib/auth/providers/ClerkAuthProvider";
+// export { NextAuthProvider } from "@/lib/auth/providers/NextAuthProvider";

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Info, X, Cable } from "lucide-react";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, X, Cable } from "lucide-react";
 import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
+import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-match-data";
 import { motion, AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,7 +25,7 @@ export default function ListingMatchesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [selectedListing, setSelectedListing] = useState<Listing | MatchedListing | null>(null);
 
   const listingId = parseInt(params.listingId as string);
   const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted" | "matched";
@@ -123,7 +124,7 @@ export default function ListingMatchesPage() {
   );
 
   // Detailed Listing Modal Component
-  const ListingDetailsModal = ({ listing, type }: { listing: Listing; type: "sale" | "wanted" | "matched" }) => (
+  const ListingDetailsModal = ({ listing, type }: { listing: Listing | MatchedListing; type: "sale" | "wanted" | "matched" }) => (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -177,7 +178,7 @@ export default function ListingMatchesPage() {
                 {listing.title}
               </h1>
               <span className="text-3xl font-bold text-secondary-600">
-                {type === "sale" ? listing.price : listing.budget}
+                {type === "sale" ? listing.price : ('budget' in listing ? listing.budget : listing.price)}
               </span>
             </div>
 
@@ -212,11 +213,12 @@ export default function ListingMatchesPage() {
                 <Clock className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-xs font-medium text-accent-500 mb-1">Posted</div>
-                  <div className="text-sm font-semibold text-accent-700">{listing.timestamp}</div>
+                  <div className="text-sm font-semibold text-accent-700">{'timestamp' in listing ? listing.timestamp : 'timeAgo' in listing ? listing.timeAgo : 'N/A'}</div>
                 </div>
               </div>
 
               {/* Views */}
+              {'views' in listing && (
               <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
                 <Eye className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
@@ -224,8 +226,10 @@ export default function ListingMatchesPage() {
                   <div className="text-sm font-semibold text-accent-700">{listing.views} views</div>
                 </div>
               </div>
+              )}
 
               {/* Likes */}
+              {'likes' in listing && (
               <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
                 <Heart className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
@@ -233,6 +237,7 @@ export default function ListingMatchesPage() {
                   <div className="text-sm font-semibold text-accent-700">{listing.likes} likes</div>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Additional Details */}
@@ -243,14 +248,18 @@ export default function ListingMatchesPage() {
                   <span className="text-accent-500">Listing ID</span>
                   <span className="font-medium text-accent-700">#{listing.id}</span>
                 </div>
+                {'subscriptionTier' in listing && (
                 <div className="flex justify-between">
                   <span className="text-accent-500">Subscription Tier</span>
                   <span className="font-medium text-accent-700 capitalize">{listing.subscriptionTier}</span>
                 </div>
+                )}
+                {'expiresAt' in listing && (
                 <div className="flex justify-between">
                   <span className="text-accent-500">Expires At</span>
                   <span className="font-medium text-accent-700">{new Date(listing.expiresAt).toLocaleDateString()}</span>
                 </div>
+                )}
               </div>
             </div>
           </div>
@@ -397,8 +406,8 @@ export default function ListingMatchesPage() {
         {/* AI Matching Component */}
         <AIMatchingContainer
           userMode={listingType === "sale" ? "seller" : "buyer"}
-          userListings={[yourListing]}
-          availableListings={matchedListings}
+          userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
+          availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
           onMatch={() => {}}
           onMessage={() => {}}
           onViewDetails={(listing) => setSelectedListing(listing)}

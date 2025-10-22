@@ -1,8 +1,8 @@
-import ChatHistoryDisplay from '@/app/components/sidebar-ui/ChatHistoryPage';
+import ChatHistoryDisplay from "@/components/sidebar/ChatHistoryPage";
 
 export default function ChatHistoryPage() {
   return (
-    <div className="p-4 h-full"> {/* Add padding and full height */}
+    <div className="h-full">
       <ChatHistoryDisplay />
     </div>
   );

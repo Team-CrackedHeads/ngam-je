@@ -27,13 +27,6 @@ export interface ListingMatch {
   };
 }
 
-// Helper function to determine match quality from score
-function getMatchQuality(score: number): MatchQuality {
-  if (score >= 90) return "excellent";
-  if (score >= 70) return "good";
-  return "possible";
-}
-
 // Generate mock matches for a specific listing
 export function generateMatchesForListing(
   listingId: number,
@@ -44,9 +37,6 @@ export function generateMatchesForListing(
     : mockWantedListings.find(l => l.id === listingId);
 
   if (!yourListing) return [];
-
-  // Get opposite type listings (if you're selling, show buyers and vice versa)
-  const potentialMatches = listingType === "sale" ? mockWantedListings : mockSaleListings;
 
   // Generate matches based on the listing
   const matches: ListingMatch[] = [];
@@ -210,5 +200,6 @@ export function getAllUserMatches(userListingIds: number[]): Map<number, Listing
 
 // Get total match count for a listing
 export function getMatchCount(listingId: number, listingType: "buy" | "sell"): number {
-  return generateMatchesForListing(listingId, listingType).length;
+  const mappedType = listingType === "sell" ? "sale" : "wanted";
+  return generateMatchesForListing(listingId, mappedType).length;
 }
