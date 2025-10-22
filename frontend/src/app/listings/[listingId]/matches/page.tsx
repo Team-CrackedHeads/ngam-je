@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, X, Cable } from "lucide-react";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Cable, X } from "lucide-react";
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-match-data";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Breadcrumb,
@@ -17,8 +17,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";
 
 export default function ListingMatchesPage() {
   const params = useParams();
@@ -123,200 +122,6 @@ export default function ListingMatchesPage() {
     </div>
   );
 
-  // Detailed Listing Modal Component
-  const ListingDetailsModal = ({ listing, type }: { listing: Listing | MatchedListing; type: "sale" | "wanted" | "matched" }) => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={() => setSelectedListing(null)}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ type: "spring", duration: 0.5 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl"
-      >
-        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[85vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 shrink-0 bg-primary-50">
-            <div className="flex items-center gap-3">
-              {type === "sale" ? (
-                <ShoppingCart className="w-5 h-5 text-secondary-600" />
-              ) : type === "wanted" ? (
-                <Package className="w-5 h-5 text-secondary-600" />
-              ) : (
-                <Cable className="w-5 h-5 text-secondary-600" />
-              )}
-              <h2 className="text-xl font-bold text-accent-700">
-                Listing Details
-              </h2>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedListing(null)}
-              className="rounded-full hover:bg-primary-100 transition-colors"
-            >
-              <X className="h-5 w-5 text-accent-600" />
-            </Button>
-          </div>
-
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {/* Image */}
-            <div className="w-full h-64 bg-primary-100 rounded-xl flex items-center justify-center mb-6">
-              <span className="text-accent-400 text-sm">Image</span>
-            </div>
-
-            {/* Title and Price */}
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold text-accent-700 mb-2">
-                {listing.title}
-              </h1>
-              <span className="text-3xl font-bold text-secondary-600">
-                {type === "sale" ? listing.price : ('budget' in listing ? listing.budget : listing.price)}
-              </span>
-            </div>
-
-            {/* Category Badge */}
-            <div className="mb-4">
-              <span className="inline-block px-3 py-1.5 text-sm rounded-full bg-primary-200 text-accent-600 font-medium">
-                {listing.category}
-              </span>
-            </div>
-
-            {/* Description */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-accent-700 mb-2 uppercase tracking-wide">Description</h3>
-              <p className="text-accent-600 leading-relaxed">
-                {listing.description}
-              </p>
-            </div>
-
-            {/* Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {/* Location */}
-              <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                <MapPin className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-xs font-medium text-accent-500 mb-1">Location</div>
-                  <div className="text-sm font-semibold text-accent-700">{listing.location}</div>
-                </div>
-              </div>
-
-              {/* Time Posted */}
-              <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                <Clock className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-xs font-medium text-accent-500 mb-1">Posted</div>
-                  <div className="text-sm font-semibold text-accent-700">{'timestamp' in listing ? listing.timestamp : 'timeAgo' in listing ? listing.timeAgo : 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Views */}
-              {'views' in listing && (
-              <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                <Eye className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-xs font-medium text-accent-500 mb-1">Views</div>
-                  <div className="text-sm font-semibold text-accent-700">{listing.views} views</div>
-                </div>
-              </div>
-              )}
-
-              {/* Likes */}
-              {'likes' in listing && (
-              <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                <Heart className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-xs font-medium text-accent-500 mb-1">Likes</div>
-                  <div className="text-sm font-semibold text-accent-700">{listing.likes} likes</div>
-                </div>
-              </div>
-              )}
-            </div>
-
-            {/* Additional Details */}
-            <div className="border-t border-neutral-200 pt-4">
-              <h3 className="text-sm font-semibold text-accent-700 mb-3 uppercase tracking-wide">Additional Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-accent-500">Listing ID</span>
-                  <span className="font-medium text-accent-700">#{listing.id}</span>
-                </div>
-                {'subscriptionTier' in listing && (
-                <div className="flex justify-between">
-                  <span className="text-accent-500">Subscription Tier</span>
-                  <span className="font-medium text-accent-700 capitalize">{listing.subscriptionTier}</span>
-                </div>
-                )}
-                {'expiresAt' in listing && (
-                <div className="flex justify-between">
-                  <span className="text-accent-500">Expires At</span>
-                  <span className="font-medium text-accent-700">{new Date(listing.expiresAt).toLocaleDateString()}</span>
-                </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-neutral-200 bg-primary-50 shrink-0">
-            {listingType !== "matched" ?
-              (
-              // Buy and sell
-              <div className="flex gap-3">
-                <Button
-                  className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700"
-                >
-                  Contact
-                </Button>
-                <Button
-                  onClick={() => setSelectedListing(null)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Close
-                </Button>
-              </div>
-              ) : (
-              // Matched
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700"
-                >
-                  Checkout
-                </Button>
-                <Button
-                  className="flex-1 bg-secondary-400 hover:bg-secondary-600 text-accent-700"
-                >
-                  Contact
-                </Button>
-                <Button
-                  className="flex-1 bg-secondary-200 hover:bg-secondary-600 text-accent-700"
-                >
-                  Unmatch
-                </Button>
-                <Button
-                  onClick={() => setSelectedListing(null)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Close
-                </Button>
-              </div>
-              )
-            }
-          </div>
-        </Card>
-      </motion.div>
-    </motion.div>
-  );
-
   return (
     <>
       {/* Listing Details Modal */}
@@ -324,7 +129,13 @@ export default function ListingMatchesPage() {
         {selectedListing && (
           <ListingDetailsModal
             listing={selectedListing}
-            type={selectedListing.id === yourListing.id ? listingType : (listingType === "sale" ? "wanted" : listingType === "wanted" ? "sale" : "matched")}
+            type={
+              selectedListing.id === yourListing.id
+                ? listingType : listingType === "sale"
+                ? "wanted" : listingType === "wanted"
+                ? "sale" : "matched"
+            }
+            onClose={() => setSelectedListing(null)}
           />
         )}
       </AnimatePresence>

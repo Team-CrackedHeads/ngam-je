@@ -10,7 +10,10 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { getMockMatchedListings } from "@/utils/mock-listings-data";
+import { getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
+import { MatchedListing } from "@/components/matching/types";
+import { AnimatePresence } from "motion/react";
+import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";
 
 export default function BuyListingsMenuItem() {
   const router = useRouter();
@@ -20,10 +23,11 @@ export default function BuyListingsMenuItem() {
   const KEEP_RECENT_COUNT = 10;
   const MAX_LOADED_COUNT = 25;
   const DELOAD_TO_COUNT = 15;
+  const [selectedListing, setSelectedListing] = useState<Listing | MatchedListing | null>(null);
 
-  const handleListingClick = (listingId: number) => {
-    router.push(`/listings/${listingId}/matches?type=matched`);
-  };
+  // const handleListingClick = (listingId: number) => {
+  //   router.push(`/listings/${listingId}/matches?type=matched`);
+  // };
 
   const loadMoreListings = () => {
     if (loading || visibleListings >= getMockMatchedListings().length) return;
@@ -60,85 +64,98 @@ export default function BuyListingsMenuItem() {
   };
 
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        onClick={() => setIsOpen(!isOpen)}
-        className="group/menu-item text-accent-700 font-semibold"
-      >
-        <Cable className="w-5 h-5" />
-        <span>Matched Listings</span>
-        {isOpen ? (
-          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-        ) : (
-          <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+    <>
+      <AnimatePresence>
+        {selectedListing && (
+          <ListingDetailsModal
+            listing={selectedListing}
+            type="matched"
+            onClose={() => setSelectedListing(null)}
+          />
         )}
-      </SidebarMenuButton>
+      </AnimatePresence>
 
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-out ${
-          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <SidebarMenuSub>
-          <SidebarMenuSubItem>
-            <SidebarMenuSubButton
-              onClick={() =>
-                router.push("/listings?type=matched", { scroll: false })
-              }
-              className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
-            >
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">Recent Listings</span>
-            </SidebarMenuSubButton>
-          </SidebarMenuSubItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          onClick={() => setIsOpen(!isOpen)}
+          className="group/menu-item text-accent-700 font-semibold"
+        >
+          <Cable className="w-5 h-5" />
+          <span>Matched Listings</span>
+          {isOpen ? (
+            <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
+          ) : (
+            <ChevronRight className="ml-auto h-4 w-4 transition-transform" />
+          )}
+        </SidebarMenuButton>
 
-          <SidebarMenuSubItem>
-            <div
-              className="max-h-32 overflow-y-auto space-y-1 px-2"
-              onScroll={handleScroll}
-            >
-              {getMockMatchedListings().slice(0, visibleListings).map((listing) => (
-                <div
-                  key={listing.id}
-                  onClick={() => handleListingClick(listing.id)}
-                  className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
-                >
-                  <div className="truncate font-medium">{listing.title}</div>
-                  <div className="flex justify-between text-[10px] text-accent-400">
-                    <span>{listing.price || listing.budget}</span>
-                    <span>{listing.timestamp}</span>
-                  </div>
-                </div>
-              ))}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-out ${
+            isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <SidebarMenuSub>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                onClick={() =>
+                  router.push("/listings?type=matched", { scroll: false })
+                }
+                className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">Recent Listings</span>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
 
-              {loading && (
-                <div className="flex justify-center py-2">
-                  <div className="text-xs text-accent-400">Loading...</div>
-                </div>
-              )}
-
-              {visibleListings >= getMockMatchedListings().length &&
-                getMockMatchedListings().length > 5 && (
-                  <div className="flex justify-center py-2">
-                    <div className="text-xs text-accent-400">
-                      No more listings
+            <SidebarMenuSubItem>
+              <div
+                className="max-h-32 overflow-y-auto space-y-1 px-2"
+                onScroll={handleScroll}
+              >
+                {getMockMatchedListings().slice(0, visibleListings).map((listing) => (
+                  <div
+                    key={listing.id}
+                    onClick={() => setSelectedListing(listing)}
+                    // onClick={() => handleListingClick(listing.id)}
+                    className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+                  >
+                    <div className="truncate font-medium">{listing.title}</div>
+                    <div className="flex justify-between text-[10px] text-accent-400">
+                      <span>{listing.price || listing.budget}</span>
+                      <span>{listing.timestamp}</span>
                     </div>
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="flex justify-center py-2">
+                    <div className="text-xs text-accent-400">Loading...</div>
                   </div>
                 )}
 
-              {visibleListings < getMockMatchedListings().length &&
-                visibleListings >= MAX_LOADED_COUNT && (
-                  <div className="flex justify-center py-2">
-                    <div className="text-xs text-accent-300">
-                      {getMockMatchedListings().length - visibleListings} older listings
-                      hidden
+                {visibleListings >= getMockMatchedListings().length &&
+                  getMockMatchedListings().length > 5 && (
+                    <div className="flex justify-center py-2">
+                      <div className="text-xs text-accent-400">
+                        No more listings
+                      </div>
                     </div>
-                  </div>
-                )}
-            </div>
-          </SidebarMenuSubItem>
-        </SidebarMenuSub>
-      </div>
-    </SidebarMenuItem>
+                  )}
+
+                {visibleListings < getMockMatchedListings().length &&
+                  visibleListings >= MAX_LOADED_COUNT && (
+                    <div className="flex justify-center py-2">
+                      <div className="text-xs text-accent-300">
+                        {getMockMatchedListings().length - visibleListings} older listings
+                        hidden
+                      </div>
+                    </div>
+                  )}
+              </div>
+            </SidebarMenuSubItem>
+          </SidebarMenuSub>
+        </div>
+      </SidebarMenuItem>
+    </>
   );
 }
