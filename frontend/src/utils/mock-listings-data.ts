@@ -50,7 +50,20 @@ export const mockSaleListings: Listing[] = [
     expiresAt: "2025-12-08T15:30:00Z", // 29 days from now
     subscriptionTier: "pro",
     isOwner: false,
-    isMatched: true
+    isMatched: true,
+    seller: "TechDeals_MY",
+    tags: ["Cash Preferred", "Meet-up Available", "Receipt Included"],
+    condition: "like-new",
+    matchScore: 88,
+    matchQuality: "good",
+    matchReasons: [
+      "Price matches your budget range",
+      "Same category: Electronics",
+      "Nearby location (5km away)",
+      "High seller rating (4.8/5.0)"
+    ],
+    distance: "5km away",
+    verified: true
   },
   {
     id: 3,

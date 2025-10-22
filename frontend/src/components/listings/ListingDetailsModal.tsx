@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Package, Cable, X, MapPin, Clock, Eye, Heart } from "lucide-react";
+import { ShoppingCart, Package, Cable, X, MapPin, Clock, Eye, Heart, Tag, BadgeCheck, TrendingUp, User } from "lucide-react";
 import { type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
@@ -60,7 +60,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl"
       >
-        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[85vh] flex flex-col py-0">
+        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[90vh] flex flex-col py-0">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-200 shrink-0 bg-primary-50">
             <div className="flex items-center gap-3">
@@ -86,49 +86,81 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="w-full h-64 bg-primary-100 rounded-xl flex items-center justify-center mb-6">
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="w-full h-48 bg-primary-100 rounded-lg flex items-center justify-center mb-3">
               <span className="text-accent-400 text-sm">Image</span>
             </div>
 
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold text-accent-700 mb-2">
+            <div className="mb-3">
+              <h1 className="text-xl font-bold text-accent-700 mb-1">
                 {listing.title}
               </h1>
-              <span className="text-3xl font-bold text-secondary-600">
+              <span className="text-2xl font-bold text-secondary-600">
                 {type === "sale" ? listing.price : "budget" in listing ? listing.budget : listing.price}
               </span>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="inline-block px-3 py-1.5 text-sm rounded-full bg-primary-200 text-accent-600 font-medium">
                 {listing.category}
               </span>
+              {/* Match Score Badge for Matched Listings */}
+              {type === "matched" && "matchScore" in listing && listing.matchScore !== undefined && (
+                <span className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full font-medium ${
+                  listing.matchScore >= 90 ? 'bg-success-500 text-white' :
+                  listing.matchScore >= 75 ? 'bg-secondary-500 text-accent-700' :
+                  'bg-primary-300 text-accent-700'
+                }`}>
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  {listing.matchScore}% Match
+                </span>
+              )}
+              {/* Verified Badge */}
+              {"seller" in listing && listing.seller && (
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full bg-success-500 text-white font-medium">
+                  <BadgeCheck className="w-3.5 h-3.5" />
+                  Verified
+                </span>
+              )}
             </div>
 
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-accent-700 mb-2 uppercase tracking-wide">
+            {/* Tags Section */}
+            {"tags" in listing && listing.tags && listing.tags.length > 0 && (
+              <div className="mb-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {listing.tags.map((tag, index) => (
+                    <span key={index} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-secondary-100 text-secondary-700 border border-secondary-200">
+                      <Tag className="w-3 h-3" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mb-3">
+              <h3 className="text-xs font-semibold text-accent-700 mb-1 uppercase tracking-wide">
                 Description
               </h3>
-              <p className="text-accent-600 leading-relaxed">
+              <p className="text-sm text-accent-600 leading-relaxed">
                 {listing.description}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                <MapPin className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
+                <MapPin className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <div className="text-xs font-medium text-accent-500 mb-1">Location</div>
-                  <div className="text-sm font-semibold text-accent-700">{listing.location}</div>
+                  <div className="text-[10px] font-medium text-accent-500">Location</div>
+                  <div className="text-xs font-semibold text-accent-700">{listing.location}</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                <Clock className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
+                <Clock className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <div className="text-xs font-medium text-accent-500 mb-1">Posted</div>
-                  <div className="text-sm font-semibold text-accent-700">
+                  <div className="text-[10px] font-medium text-accent-500">Posted</div>
+                  <div className="text-xs font-semibold text-accent-700">
                     {"timestamp" in listing
                       ? listing.timestamp
                       : "timeAgo" in listing
@@ -139,35 +171,66 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
               </div>
 
               {"views" in listing && (
-                <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                  <Eye className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
+                  <Eye className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-xs font-medium text-accent-500 mb-1">Views</div>
-                    <div className="text-sm font-semibold text-accent-700">
-                      {listing.views} views
+                    <div className="text-[10px] font-medium text-accent-500">Views</div>
+                    <div className="text-xs font-semibold text-accent-700">
+                      {listing.views}
                     </div>
                   </div>
                 </div>
               )}
 
               {"likes" in listing && (
-                <div className="flex items-start gap-3 p-3 bg-primary-50 rounded-lg">
-                  <Heart className="w-5 h-5 text-secondary-600 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
+                  <Heart className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-xs font-medium text-accent-500 mb-1">Likes</div>
-                    <div className="text-sm font-semibold text-accent-700">
-                      {listing.likes} likes
+                    <div className="text-[10px] font-medium text-accent-500">Likes</div>
+                    <div className="text-xs font-semibold text-accent-700">
+                      {listing.likes}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Seller Info */}
+              {"seller" in listing && listing.seller && (
+                <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
+                  <User className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-[10px] font-medium text-accent-500">Seller</div>
+                    <div className="text-xs font-semibold text-accent-700">
+                      {listing.seller}
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-neutral-200 pt-4">
-              <h3 className="text-sm font-semibold text-accent-700 mb-3 uppercase tracking-wide">
+            {/* Match Reasons for Matched Listings */}
+            {type === "matched" && "matchReasons" in listing && listing.matchReasons && listing.matchReasons.length > 0 && (
+              <div className="mb-3 p-3 bg-secondary-50 border border-secondary-200 rounded-lg">
+                <h3 className="text-xs font-semibold text-accent-700 mb-2 flex items-center gap-2">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  Why This Match?
+                </h3>
+                <ul className="space-y-1">
+                  {listing.matchReasons.map((reason, index) => (
+                    <li key={index} className="flex items-start gap-1.5 text-xs text-accent-600">
+                      <span className="text-secondary-600 mt-0.5">•</span>
+                      <span>{reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="border-t border-neutral-200 pt-3">
+              <h3 className="text-xs font-semibold text-accent-700 mb-2 uppercase tracking-wide">
                 Additional Information
               </h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-accent-500">Listing ID</span>
                   <span className="font-medium text-accent-700">#{listing.id}</span>
@@ -188,11 +251,31 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                     </span>
                   </div>
                 )}
+                {/* Match Quality */}
+                {type === "matched" && "matchQuality" in listing && listing.matchQuality && (
+                  <div className="flex justify-between">
+                    <span className="text-accent-500">Match Quality</span>
+                    <span className={`font-medium capitalize ${
+                      listing.matchQuality === 'excellent' ? 'text-success-500' :
+                      listing.matchQuality === 'good' ? 'text-secondary-700' :
+                      'text-primary-600'
+                    }`}>
+                      {listing.matchQuality}
+                    </span>
+                  </div>
+                )}
+                {/* Match Score Detail */}
+                {type === "matched" && "matchScore" in listing && listing.matchScore !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-accent-500">Match Score</span>
+                    <span className="font-medium text-accent-700">{listing.matchScore}/100</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-neutral-200 bg-primary-50 shrink-0">
+          <div className="px-4 py-3 border-t border-neutral-200 bg-primary-50 shrink-0">
             {type !== "matched" ? (
               <div className="flex gap-3">
                 <Button className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
