@@ -7,6 +7,7 @@ import { ShoppingCart, Package, Cable, X, MapPin, Clock, Eye, Heart, Tag, BadgeC
 import { type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
 
 interface ListingDetailsModalProps {
@@ -32,23 +33,19 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
     setShowCheckout(false);
   };
 
-  if (showCheckout) {
-    return (
-      <CheckoutModal
-        listing={listing}
-        onClose={onClose}
-        onBack={handleCheckoutBack}
-        onConfirm={handleCheckoutConfirm}
-      />
-    );
-  }
-
-  return (
+  const modalContent = showCheckout ? (
+    <CheckoutModal
+      listing={listing}
+      onClose={onClose}
+      onBack={handleCheckoutBack}
+      onConfirm={handleCheckoutConfirm}
+    />
+  ) : (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
@@ -300,4 +297,11 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
       </motion.div>
     </motion.div>
   );
+
+  // Render modal in a portal to escape stacking context issues
+  if (typeof window !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return null;
 }
