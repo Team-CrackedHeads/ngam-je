@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import {
   X,
   Send,
@@ -38,17 +38,17 @@ type Tab = "chat" | "history";
 type Mode = "reactive" | "proactive";
 
 export type ChatHistoryItem = {
-    id: number;
-    title: string;
-    date: string;
-    path: string;
+  id: number;
+  title: string;
+  date: string;
+  path: string;
 };
 
 type SidebarAIChatProps = {
   isOpen: boolean;
   onClose: () => void;
   // NOTE: chatId is now the unique path/identifier for the chat thread
-  chatId: number | null; 
+  chatId: number | null;
   initialMessages?: Message[];
   // New prop to handle navigation when a history item is clicked
   onHistoryClick?: (chatId: string) => void;
@@ -64,26 +64,126 @@ const WELCOME_MESSAGE: Message = {
 
 // Mock data (renamed from mockHistoryChats for consistency with SearchHistory.tsx)
 const mockHistory: ChatHistoryItem[] = [
-  { "id": 1, "title": "iPhone 14 Pro price comparison", "date": "2 hours ago", "path": "/chat/history?id=1" },
-  { "id": 2, "title": "Gaming PC under RM4000", "date": "5 hours ago", "path": "/chat/history?id=2" },
-  { "id": 3, "title": "Verify Nintendo Switch seller", "date": "1 day ago", "path": "/chat/history?id=3" },
-  { "id": 4, "title": "Gaming PC parts compatibility", "date": "1 day ago", "path": "/chat/history?id=4" },
-  { "id": 5, "title": "Vintage watch authenticity verification", "date": "2 days ago", "path": "/chat/history?id=5" },
-  { "id": 6, "title": "Camera lens condition assessment", "date": "3 days ago", "path": "/chat/history?id=6" },
-  { "id": 7, "title": "Furniture quality vs price analysis", "date": "4 days ago", "path": "/chat/history?id=7" },
-  { "id": 8, "title": "Electric bike safety standards", "date": "5 days ago", "path": "/chat/history?id=8" },
-  { "id": 9, "title": "Designer handbag authentication tips", "date": "1 week ago", "path": "/chat/history?id=9" },
-  { "id": 10, "title": "Motorcycle maintenance costs Honda", "date": "1 week ago", "path": "/chat/history?id=10" },
-  { "id": 11, "title": "Smartphone trade-in value check", "date": "1 week ago", "path": "/chat/history?id=11" },
-  { "id": 12, "title": "Laptop performance benchmarks", "date": "1 week ago", "path": "/chat/history?id=12" },
-  { "id": 13, "title": "Art print value estimation", "date": "2 weeks ago", "path": "/chat/history?id=13" },
-  { "id": 14, "title": "Kitchen appliance energy ratings", "date": "2 weeks ago", "path": "/chat/history?id=14" },
-  { "id": 15, "title": "Exercise equipment durability test", "date": "2 weeks ago", "path": "/chat/history?id=15" },
-  { "id": 16, "title": "Board game condition grading", "date": "3 weeks ago", "path": "/chat/history?id=16" },
-  { "id": 17, "title": "Power tools safety inspection", "date": "3 weeks ago", "path": "/chat/history?id=17" },
-  { "id": 18, "title": "Sneaker authenticity red flags", "date": "3 weeks ago", "path": "/chat/history?id=18" },
-  { "id": 19, "title": "Home theater setup compatibility", "date": "1 month ago", "path": "/chat/history?id=19" },
-  { "id": 20, "title": "Musical instrument condition check", "date": "1 month ago", "path": "/chat/history?id=20" },
+  {
+    id: 1,
+    title: "iPhone 14 Pro price comparison",
+    date: "2 hours ago",
+    path: "/chat/history?id=1",
+  },
+  {
+    id: 2,
+    title: "Gaming PC under RM4000",
+    date: "5 hours ago",
+    path: "/chat/history?id=2",
+  },
+  {
+    id: 3,
+    title: "Verify Nintendo Switch seller",
+    date: "1 day ago",
+    path: "/chat/history?id=3",
+  },
+  {
+    id: 4,
+    title: "Gaming PC parts compatibility",
+    date: "1 day ago",
+    path: "/chat/history?id=4",
+  },
+  {
+    id: 5,
+    title: "Vintage watch authenticity verification",
+    date: "2 days ago",
+    path: "/chat/history?id=5",
+  },
+  {
+    id: 6,
+    title: "Camera lens condition assessment",
+    date: "3 days ago",
+    path: "/chat/history?id=6",
+  },
+  {
+    id: 7,
+    title: "Furniture quality vs price analysis",
+    date: "4 days ago",
+    path: "/chat/history?id=7",
+  },
+  {
+    id: 8,
+    title: "Electric bike safety standards",
+    date: "5 days ago",
+    path: "/chat/history?id=8",
+  },
+  {
+    id: 9,
+    title: "Designer handbag authentication tips",
+    date: "1 week ago",
+    path: "/chat/history?id=9",
+  },
+  {
+    id: 10,
+    title: "Motorcycle maintenance costs Honda",
+    date: "1 week ago",
+    path: "/chat/history?id=10",
+  },
+  {
+    id: 11,
+    title: "Smartphone trade-in value check",
+    date: "1 week ago",
+    path: "/chat/history?id=11",
+  },
+  {
+    id: 12,
+    title: "Laptop performance benchmarks",
+    date: "1 week ago",
+    path: "/chat/history?id=12",
+  },
+  {
+    id: 13,
+    title: "Art print value estimation",
+    date: "2 weeks ago",
+    path: "/chat/history?id=13",
+  },
+  {
+    id: 14,
+    title: "Kitchen appliance energy ratings",
+    date: "2 weeks ago",
+    path: "/chat/history?id=14",
+  },
+  {
+    id: 15,
+    title: "Exercise equipment durability test",
+    date: "2 weeks ago",
+    path: "/chat/history?id=15",
+  },
+  {
+    id: 16,
+    title: "Board game condition grading",
+    date: "3 weeks ago",
+    path: "/chat/history?id=16",
+  },
+  {
+    id: 17,
+    title: "Power tools safety inspection",
+    date: "3 weeks ago",
+    path: "/chat/history?id=17",
+  },
+  {
+    id: 18,
+    title: "Sneaker authenticity red flags",
+    date: "3 weeks ago",
+    path: "/chat/history?id=18",
+  },
+  {
+    id: 19,
+    title: "Home theater setup compatibility",
+    date: "1 month ago",
+    path: "/chat/history?id=19",
+  },
+  {
+    id: 20,
+    title: "Musical instrument condition check",
+    date: "1 month ago",
+    path: "/chat/history?id=20",
+  },
 ];
 
 export default function SidebarAIChat({
@@ -93,7 +193,9 @@ export default function SidebarAIChat({
   initialMessages = [],
 }: SidebarAIChatProps) {
   const router = useRouter(); // Initialize useRouter
-  const [messages, setMessages] = useState<Message[]>(initialMessages.length > 0 ? initialMessages : [WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<Message[]>(
+    initialMessages.length > 0 ? initialMessages : [WELCOME_MESSAGE]
+  );
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
@@ -108,11 +210,11 @@ export default function SidebarAIChat({
     if (chatId === null) {
       setMessages([WELCOME_MESSAGE]);
     } else if (initialMessages.length > 0) {
-        // Load the initial messages if provided (simulating history load)
-        setMessages(initialMessages);
+      // Load the initial messages if provided (simulating history load)
+      setMessages(initialMessages);
     } else {
-        // Fallback or loading state for a new chat
-        setMessages([WELCOME_MESSAGE]);
+      // Fallback or loading state for a new chat
+      setMessages([WELCOME_MESSAGE]);
     }
     setActiveTab("chat");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -353,11 +455,11 @@ export default function SidebarAIChat({
 
   // MODIFIED: This function now uses router.push to navigate to /chat/history
   const handleHistoryClick = (path: string) => {
-      onClose(); // Close the sidebar
-      router.push(path); // Navigate to the specified URL
-      // The original onHistoryClick prop is no longer directly used for navigation here,
-      // but it remains part of the component's interface.
-  }
+    onClose(); // Close the sidebar
+    router.push(path); // Navigate to the specified URL
+    // The original onHistoryClick prop is no longer directly used for navigation here,
+    // but it remains part of the component's interface.
+  };
 
   if (!isOpen) return null;
 
@@ -380,7 +482,9 @@ export default function SidebarAIChat({
               <div>
                 <h2 className="text-lg font-bold text-accent-700">Ngam AI</h2>
                 <p className="text-xs text-accent-500">
-                  {chatId === null ? "New conversation" : `Viewing thread ${chatId}`}
+                  {chatId === null
+                    ? "New conversation"
+                    : `Viewing thread ${chatId}`}
                 </p>
               </div>
             </div>
@@ -506,8 +610,7 @@ export default function SidebarAIChat({
 
                             <span className="text-accent-600 flex-1">
                               {tool.status === "pending" && "Queued"}
-                              {tool.status === "running" &&
-                                "Executing tool..."}
+                              {tool.status === "running" && "Executing tool..."}
                               {tool.status === "completed" && tool.result}
                               {tool.status === "failed" && "Failed"}
                             </span>
@@ -567,10 +670,10 @@ export default function SidebarAIChat({
                     className="w-full p-3 flex justify-between items-center text-left bg-white rounded-lg border border-primary-200 hover:border-secondary-500 hover:shadow-sm transition-all cursor-pointer group"
                   >
                     <div>
-                        <div className="font-medium text-sm text-accent-700 mb-1">
-                          {chat.title}
-                        </div>
-                        <div className="text-xs text-accent-400">{chat.date}</div>
+                      <div className="font-medium text-sm text-accent-700 mb-1">
+                        {chat.title}
+                      </div>
+                      <div className="text-xs text-accent-400">{chat.date}</div>
                     </div>
                     <ExternalLink className="w-4 h-4 text-accent-400 group-hover:text-secondary-600 transition-colors" />
                   </button>

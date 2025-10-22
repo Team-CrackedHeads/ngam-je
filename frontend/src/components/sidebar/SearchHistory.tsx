@@ -1,21 +1,44 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, User, Bell, Shield, MessageSquare, Sparkles, Bookmark, HelpCircle, LifeBuoy, X } from 'lucide-react';
-import { mockSearchSuggestions, SearchSuggestion } from '@/utils/mock-search-history';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Search,
+  User,
+  Bell,
+  Shield,
+  MessageSquare,
+  Sparkles,
+  Bookmark,
+  HelpCircle,
+  LifeBuoy,
+  X,
+} from "lucide-react";
+import {
+  mockSearchSuggestions,
+  SearchSuggestion,
+} from "@/utils/mock-search-history";
 
 // Helper to get Lucide icon component by name
 const getIconComponent = (iconName?: string) => {
   switch (iconName) {
-    case 'User': return User;
-    case 'Bell': return Bell;
-    case 'Shield': return Shield;
-    case 'MessageSquare': return MessageSquare;
-    case 'Sparkles': return Sparkles;
-    case 'Bookmark': return Bookmark;
-    case 'HelpCircle': return HelpCircle;
-    case 'LifeBuoy': return LifeBuoy;
-    default: return Search; // Default icon
+    case "User":
+      return User;
+    case "Bell":
+      return Bell;
+    case "Shield":
+      return Shield;
+    case "MessageSquare":
+      return MessageSquare;
+    case "Sparkles":
+      return Sparkles;
+    case "Bookmark":
+      return Bookmark;
+    case "HelpCircle":
+      return HelpCircle;
+    case "LifeBuoy":
+      return LifeBuoy;
+    default:
+      return Search; // Default icon
   }
 };
 
@@ -23,15 +46,17 @@ type SearchHistoryProps = {
   onSuggestionClick: (path: string, type: string) => void; // New prop
 };
 
-export default function SearchHistory({ onSuggestionClick }: SearchHistoryProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function SearchHistory({
+  onSuggestionClick,
+}: SearchHistoryProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (searchQuery.length > 0) {
-      const filtered = mockSearchSuggestions.filter(suggestion =>
+      const filtered = mockSearchSuggestions.filter((suggestion) =>
         suggestion.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSuggestions(filtered);
@@ -44,25 +69,28 @@ export default function SearchHistory({ onSuggestionClick }: SearchHistoryProps)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const handleSuggestionSelect = (suggestion: SearchSuggestion) => {
-    setSearchQuery(''); // Clear search bar
+    setSearchQuery(""); // Clear search bar
     setIsDropdownOpen(false); // Close dropdown
     onSuggestionClick(suggestion.path, suggestion.type); // Call the prop function
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
+    setSearchQuery("");
     setIsDropdownOpen(false);
   };
 
@@ -101,7 +129,9 @@ export default function SearchHistory({ onSuggestionClick }: SearchHistoryProps)
               >
                 <Icon className="w-4 h-4 text-accent-500" />
                 <span>{suggestion.title}</span>
-                <span className="ml-auto text-xs text-accent-400 capitalize">{suggestion.type.replace('-', ' ')}</span>
+                <span className="ml-auto text-xs text-accent-400 capitalize">
+                  {suggestion.type.replace("-", " ")}
+                </span>
               </button>
             );
           })}

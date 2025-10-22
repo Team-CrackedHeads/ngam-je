@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   mockFullChatHistory,
   ChatHistoryItem,
+  Message,
 } from "@/utils/mock-search-history";
 import ReactMarkdown from "react-markdown";
-import { Clock, User, Sparkles, ArrowLeft, Search } from "lucide-react";
+import { Clock, User, Sparkles, ArrowLeft, Search, Send } from "lucide-react";
 
 type ChatHistoryDisplayProps = {
   initialChatId?: number; // Optional prop for direct access to a specific chat
@@ -22,6 +23,8 @@ export default function ChatHistoryDisplay({
     null
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [inputText, setInputText] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(mockFullChatHistory);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Handle chat selection from URL query param or initialChatId
@@ -30,12 +33,12 @@ export default function ChatHistoryDisplay({
     const chatId = initialChatId || (idFromQuery ? Number(idFromQuery) : null);
 
     if (chatId) {
-      const chat = mockFullChatHistory.find((c) => c.id === chatId);
+      const chat = chatHistory.find((c) => c.id === chatId);
       setSelectedChat(chat || null);
     } else {
       setSelectedChat(null);
     }
-  }, [searchParams, initialChatId]);
+  }, [searchParams, initialChatId, chatHistory]);
 
   // Auto-scroll to bottom when chat changes
   useEffect(() => {
@@ -48,11 +51,36 @@ export default function ChatHistoryDisplay({
   }, [selectedChat?.id]);
 
   // Filter chats based on search
-  const filteredChats = mockFullChatHistory.filter((chat) => {
+  const filteredChats = chatHistory.filter((chat) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return chat.title.toLowerCase().includes(query);
   });
+
+  // Handle sending messages
+  const handleSend = () => {
+    if (!inputText.trim() || !selectedChat) return;
+
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      role: "user",
+      content: inputText.trim(),
+      timestamp: new Date(),
+    };
+
+    setChatHistory((prev) =>
+      prev.map((chat) =>
+        chat.id === selectedChat.id
+          ? {
+              ...chat,
+              messages: [...(chat.messages || []), newMessage],
+            }
+          : chat
+      )
+    );
+
+    setInputText("");
+  };
 
   const handleChatSelect = (chatId: number) => {
     router.push(`/chat/history?id=${chatId}`);
@@ -115,13 +143,6 @@ export default function ChatHistoryDisplay({
                   selectedChat?.id === chat.id ? "bg-secondary-50" : ""
                 }`}
               >
-                {/* Avatar */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-secondary-500 flex items-center justify-center text-accent-700 font-bold">
-                    <Sparkles className="w-6 h-6" />
-                  </div>
-                </div>
-
                 {/* Content */}
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center justify-between mb-1">
@@ -229,6 +250,25 @@ export default function ChatHistoryDisplay({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-neutral-200 flex items-center gap-3">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                className="flex-1 px-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputText.trim()}
+                className="p-3 bg-secondary-500 text-accent-700 rounded-lg hover:bg-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Send className="w-5 h-5" />
+              </button>
             </div>
           </>
         )}

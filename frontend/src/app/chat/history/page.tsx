@@ -1,4 +1,4 @@
-import ChatHistoryDisplay from '@/components/sidebar/ChatHistoryPage';
+import ChatHistoryDisplay from "@/components/sidebar/ChatHistoryPage";
 
 export default function ChatHistoryPage() {
   return (
