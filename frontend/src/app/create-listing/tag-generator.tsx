@@ -147,7 +147,7 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
           ) : (
             <>
               <Sparkles className="w-3 h-3 mr-1" />
-              Generate Tags
+              Generate Tags With AI
             </>
           )}
         </Button>
