@@ -311,9 +311,9 @@ const CategoryPage: React.FC = () => {
       />
       <div className="container mx-auto px-4 py-8">
         {/* Search and Filter Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-4">
           {/* Search Filter Component */}
-          <div className="mb-6">
+          <div className="mb-3">
             <SearchFilter
               onApplyFilters={handleApplyFilters}
               onClearFilters={handleClearFilters}

@@ -262,7 +262,7 @@ function SearchFilter({
   return (
     <>
 <div className="flex items-center gap-2 mb-4"> 
-  <div className="flex-1 flex items-center gap-2 bg-neutral-100 px-3 py-3 rounded-xl border border-neutral-200">
+  <div className="flex-1 flex items-center gap-2 bg-neutral-100 px-3 py-3 rounded-full border border-neutral-200">
     <Search className="w-4 h-4 text-neutral-500" />
     <input
       type="text"
@@ -276,7 +276,7 @@ function SearchFilter({
   {/* Filter Icon Button */}
   <button
     onClick={() => setShowFilterModal(true)}
-    className="p-3 bg-neutral-200 rounded-xl hover:bg-neutral-300 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500"
+    className="p-3 bg-neutral-200 rounded-full hover:bg-neutral-300 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500"
     aria-label="Open filters"
   >
     <FilterIcon className="w-5 h-5 text-neutral-600" />
