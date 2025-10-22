@@ -1,17 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import Image from "next/image";
-import {
-  MessageCircle,
-  HelpCircle,
-  Shield,
-  Eye,
-  MapPin,
-  Clock,
-} from "lucide-react";
-import { UnifiedListingData } from "@/utils/mock-threads-data"; // Updated import
+import { useRouter, useParams } from "next/navigation";
+import { UnifiedListingData } from "@/utils/mock-threads-data";
 import { ImageGalleryModal } from "./ImageGalleryModal";
-import { ActionButtons } from "./ActionButtons";
+import ProductFAQSummary from "./ProductFAQSummary";
+import ProductDetailsTop from "./ProductDetailsTop";
+import ProductDetailsMiddle from "./ProductDetailsMiddle";
+import ProductDetailsBottom from "./ProductDetailsBottom";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -35,6 +30,11 @@ export const ProductDetails = ({
 }: {
   listing: UnifiedListingData;
 }) => {
+  // ADDED: Router and params for navigation
+  const router = useRouter();
+  const params = useParams();
+  const category = params.threadCategory as string;
+
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -67,178 +67,50 @@ export const ProductDetails = ({
     );
   };
 
+  // ADDED: Action button handlers
+  const handleChatClick = () => {
+    console.log("Chat clicked");
+    // TODO: Implement chat functionality
+  };
+
+  const handleFAQClick = () => {
+    router.push(`/threads/${category}/${listing.id}/faq`);
+  };
+
+  const handleBuyNowClick = () => {
+    console.log("Buy Now clicked");
+    // TODO: Implement buy now functionality
+  };
+
   // Set main image source - use gallery first, then imageUrl fallback
-  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl; // Use listing.imageUrl instead of hardcoded fallback
+  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl;
 
   return (
-    <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white">
-      {/* Product Image - Clicking this opens the modal */}
-      <div className="relative w-full">
-        <Image
-          src={mainImageSrc}
-          alt={listing.title}
-          width={1200}
-          height={600}
-          className="w-full h-64 sm:h-[50vh] object-cover sm:rounded-t-lg"
-          onClick={() => hasGalleryImages && openModal(0)}
-          style={{ cursor: hasGalleryImages ? "pointer" : "default" }}
+    <>
+      <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white">
+        <ProductDetailsTop
+          listing={listing}
+          mainImageSrc={mainImageSrc}
+          hasGalleryImages={true}
+          openModal={() => hasGalleryImages && openModal(0)}
         />
-        {/* Updated badge logic */}
-        <span
-          className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold text-accent-700 ${
-            listing.listingType === "sale"
-              ? "bg-secondary-500"
-              : "bg-primary-500"
-          }`}
-        >
-          {listing.listingType === "sale" ? "For Sale" : "Want to Buy"}
-        </span>
-        <div className="absolute top-4 right-4 px-3 py-1 rounded-full flex items-center gap-1 text-xs bg-primary-200 text-accent-500">
-          <Eye className="w-4 h-4" />
-          <span className="font-medium">{listing.views} views</span>
-        </div>
       </div>
 
-      {/* Product Info */}
-      <div className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-accent-500">
-              {listing.title}
-            </h1>
-            {/* Only show subtitle if it exists */}
-            {listing.subtitle && (
-              <p className="text-lg text-accent-700">
-                - {listing.subtitle}
-              </p>
-            )}
-            <p className="text-sm mt-1 text-accent-500">
-              {listing.category} {/* Dynamic category */}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {[Shield, MessageCircle, HelpCircle].map((Icon, i) => (
-              <div
-                key={i}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-gradient-to-br from-secondary-500 to-secondary-600"
-              >
-                <Icon className="w-5 h-5" />
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white p-6">
+        <ProductDetailsMiddle
+          galleryImages={galleryImages}
+          description={listing.description}
+          openModal={openModal}
+        />
+      </div>
 
-        {/* Price of the product */}
-        <div className="mb-6">
-          <p className="text-3xl font-bold text-accent-700">
-            {listing.currency} {listing.price.toFixed(2)}
-          </p>
-          {listing.protected && (
-            <div className="flex items-center gap-2 mt-2">
-              <Shield className="w-4 h-4 text-accent-500" />
-              <span className="text-sm text-accent-500">
-                Protected by Escrow
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Description */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-accent-500">
-            Description
-          </h2>
-          <p className="mt-2 text-accent-700">
-            {listing.description}
-          </p>
-        </div>
-
-        {/* Tags */}
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-accent-500">
-            Tags
-          </h3>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {listing.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 rounded-full text-xs font-medium bg-secondary-500 text-accent-500"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Gallery - Only show if has images */}
-        {hasGalleryImages && (
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-accent-500">
-              Gallery
-            </h3>
-            <div className="flex flex-wrap gap-3 mt-2">
-              {galleryImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="w-24 h-24 rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => openModal(index)}
-                >
-                  <Image
-                    src={image.replace("w=1200", "w=200")}
-                    alt={`Gallery thumbnail ${index + 1}`}
-                    width={200}
-                    height={200}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Seller Info */}
-        <div className="pt-4 border-t border-primary-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-200">
-                <svg
-                  className="w-6 h-6 text-accent-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-semibold text-accent-500">
-                  {listing.seller.name}
-                </p>
-                <div className="flex items-center gap-1 text-sm text-accent-700">
-                  <MapPin className="w-3 h-3" />
-                  <span>{listing.seller.location}</span>
-                </div>
-                <div className="flex items-center gap-1 text-sm text-accent-700">
-                  <Clock className="w-3 h-3" />
-                  <span>{listing.seller.timePosted}</span>
-                </div>
-              </div>
-            </div>
-            {listing.seller.verified && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-secondary-500 text-accent-500">
-                Verified
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <ActionButtons />
+      <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white p-6">
+        <ProductDetailsBottom
+          seller={listing.seller}
+          onChat={handleChatClick}
+          onFAQ={handleFAQClick}
+          onBuyNow={handleBuyNowClick}
+        />
       </div>
 
       {/* render image gallery modal*/}
@@ -251,6 +123,7 @@ export const ProductDetails = ({
           onPrev={goToPrev}
         />
       )}
-    </div>
+      <ProductFAQSummary listingId={listing.id} category={category} />
+    </>
   );
 };
