@@ -24,13 +24,13 @@ export const ActionButtons = ({
       <MessageCircle className="w-5 h-5 text-accent-500" />
       <span>Chat</span>
     </button>
-    <button
+    {/* <button
       className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
       onClick={onFAQ}
     >
       <HelpCircle className="w-5 h-5 text-accent-500" />
       <span>FAQ</span>
-    </button>
+    </button> */}
     <button
       className={`${wideButtonClasses} font-semibold shadow-md outline-solid outline-1 bg-gradient-to-r from-secondary-500 to-secondary-600 text-accent-700 focus:ring-accent-500`}
       onClick={onBuyNow}
