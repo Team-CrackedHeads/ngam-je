@@ -34,9 +34,10 @@ export default function ProductListingScreen() {
   // Find the specific listing by ID
   const listing = getListingById(listingId);
 
-  // Handle back navigation
+  // Handle back navigation - go to category page with appropriate type
   const handleBack = () => {
-    router.push(`/threads/${category}`);
+    const typeParam = listing.listingType === "wanted" ? "wtb" : "wts";
+    router.push(`/threads/${category}?type=${typeParam}`);
   };
 
   // Show error if listing not found

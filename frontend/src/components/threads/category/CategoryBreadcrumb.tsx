@@ -11,8 +11,8 @@ export const CategoryBreadcrumb = ({ category, activeType }: CategoryBreadcrumbP
 
   // FIX: Include logic for 'general' type name
   const typeName = 
-    activeType === "wtb" ? "Want to Buy" : 
-    activeType === "wts" ? "Want to Sell" :
+    activeType === "wtb" ? "Buy Listings" :
+    activeType === "wts" ? "Sell Listings" :
     "General Listings"; // Case for "general"
 
   const breadcrumbs = [

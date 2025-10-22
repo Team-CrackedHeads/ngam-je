@@ -42,7 +42,7 @@ export const ProductHeader = ({ onBack, listingType = "sale", category, listingT
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-bold capitalize text-accent-700">
-            {listingType === "sale" ? "Want to Sell" : "Want to Buy"}
+            {listingType === "sale" ? "Sell Listings" : "Buy Listings"}
           </h1>
         </div>
         <div className="flex gap-2">

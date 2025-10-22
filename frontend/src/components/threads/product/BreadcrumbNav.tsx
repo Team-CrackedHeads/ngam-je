@@ -16,7 +16,7 @@ export const BreadcrumbNav = ({
 
   // Determine the type parameter for going back to category
   const typeParam = listingType === "wanted" ? "wtb" : "wts";
-  const typeName = listingType === "wanted" ? "Want to Buy" : "Want to Sell";
+  const typeName = listingType === "wanted" ? "Buy Listings" : "Sell Listings";
 
   const breadcrumbs = [
     {
