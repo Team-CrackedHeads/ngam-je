@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
+import { useRouter } from "next/navigation";
 /* TierBadge Component */
 function TierBadge({ tierLevel }: { tierLevel: number }) {
   const tierLabels = ["Tier 0", "Tier 1", "Tier 2", "Tier 3"];
@@ -19,7 +19,9 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
 
   const style = tierStyles[tierLevel];
   return (
-    <Badge className={`${style.bg} ${style.text} text-xs font-medium px-3 py-1`}>
+    <Badge
+      className={`${style.bg} ${style.text} text-xs font-medium px-3 py-1`}
+    >
       {tierLabels[tierLevel]}
     </Badge>
   );
@@ -31,6 +33,7 @@ type CreateThreadModalProps = {
 };
 
 function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
+  const router = useRouter();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [tierLevel] = useState(0);
   const [title, setTitle] = useState("");
@@ -94,7 +97,10 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
         <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-800">Preview Thread</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition"
+            >
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -102,7 +108,11 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
           <div className="p-6 space-y-4">
             {imagePreview && (
               <div className="w-full h-48 rounded-lg overflow-hidden">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
 
@@ -111,7 +121,9 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">{title || "Untitled Thread"}</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {title || "Untitled Thread"}
+              </h3>
             </div>
 
             <p className="text-gray-600 text-sm whitespace-pre-wrap">
@@ -133,10 +145,7 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
           </div>
 
           <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-            <Button
-              variant="outline"
-              onClick={() => setIsPreviewMode(false)}
-            >
+            <Button variant="outline" onClick={() => setIsPreviewMode(false)}>
               Back to Edit
             </Button>
             <Button
@@ -158,7 +167,10 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-800">Create New Thread</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -167,15 +179,21 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
         <div className="p-6">
           {/* Image Upload */}
           <div className="mb-6">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">Thread Image</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-2 block">
+              Thread Image
+            </Label>
             {!imagePreview ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer bg-gray-50 flex flex-col items-center justify-center"
               >
                 <Upload className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">Click or drag to upload image</p>
-                <p className="text-xs text-gray-400 mt-1">Recommended: 800x400px</p>
+                <p className="text-sm text-gray-500">
+                  Click or drag to upload image
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Recommended: 800x400px
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -186,7 +204,11 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               </div>
             ) : (
               <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
                 <Button
                   size="icon"
                   variant="ghost"
@@ -211,17 +233,28 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               </Label>
             </div>
             <p className="text-xs text-gray-500 mt-3">
-              Your thread starts at <strong>Tier 0</strong>. Unlock higher tiers and exclusive benefits by exploring the{" "}
-              <span className="text-[var(--color-secondary-500)] font-medium cursor-pointer hover:underline">
+              Your thread starts at <strong>Tier 0</strong>. Unlock higher tiers
+              and exclusive benefits by exploring the{" "}
+              <button
+                onClick={() => {
+                  console.log("Navigating to Pricing page");
+                  onClose();
+                  setTimeout(() => router.push("/threads/pricing"), 200);
+                }}
+                className="text-[var(--color-secondary-500)] font-medium hover:underline bg-transparent border-none p-0 m-0 inline cursor-pointer"
+              >
                 Pricing
-              </span>{" "}
+              </button>{" "}
               page.
             </p>
           </div>
 
           {/* Title */}
           <div className="mb-6">
-            <Label htmlFor="title" className="text-sm font-medium text-gray-700 mb-2 block">
+            <Label
+              htmlFor="title"
+              className="text-sm font-medium text-gray-700 mb-2 block"
+            >
               Thread Title
             </Label>
             <Input
@@ -233,12 +266,17 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               className="w-full text-base"
               maxLength={50}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/50 characters</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">
+              {title.length}/50 characters
+            </p>
           </div>
 
           {/* Description */}
           <div className="mb-6">
-            <Label htmlFor="description" className="text-sm font-medium text-gray-700 mb-2 block">
+            <Label
+              htmlFor="description"
+              className="text-sm font-medium text-gray-700 mb-2 block"
+            >
               Description
             </Label>
             <Textarea
@@ -249,12 +287,17 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               className="w-full text-sm min-h-24"
               maxLength={100}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/100 characters</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">
+              {description.length}/100 characters
+            </p>
           </div>
 
           {/* Tags */}
           <div className="mb-6">
-            <Label htmlFor="tags" className="text-sm font-medium text-gray-700 mb-2 block">
+            <Label
+              htmlFor="tags"
+              className="text-sm font-medium text-gray-700 mb-2 block"
+            >
               Tags
             </Label>
             <div className="flex gap-2 mb-3">
@@ -267,7 +310,12 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
                 placeholder="press Enter to add tags"
                 className="flex-1 text-sm"
               />
-              <Button type="button" onClick={handleAddTag} variant="outline" size="icon">
+              <Button
+                type="button"
+                onClick={handleAddTag}
+                variant="outline"
+                size="icon"
+              >
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
