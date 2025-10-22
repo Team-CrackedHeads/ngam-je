@@ -504,27 +504,29 @@ function ListingsPageContent() {
         </div>
 
         {/* Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 font-medium">Sort By:</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 p-2 sm:p-3 bg-white rounded-xl shadow-sm border border-gray-200 mb-3 sm:mb-4">
+          {/* Left Section */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <span className="text-gray-600 font-medium">Sort By:</span>
               <CategoryDropdown
                 categories={categories}
                 selectedCategory={selectedCategory}
                 categoryAction={setSelectedCategory}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 font-medium">View:</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <span className="text-gray-600 font-medium">View:</span>
               <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
             </div>
           </div>
 
+          {/* Right Section */}
           <button
             onClick={() => {}}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary-500 text-accent-700 font-semibold rounded-lg sm:rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Create Listing
           </button>
         </div>
