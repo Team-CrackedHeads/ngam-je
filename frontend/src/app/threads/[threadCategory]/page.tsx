@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ListingCard from "@/components/threads/category/ListingCard";
-import { CategoryBreadcrumb } from "@/components/threads/category/CategoryBreadcrumb";
+import { CategoryHeader } from "@/components/threads/category/CategoryHeader";
 import {UNIFIED_LISTINGS, UnifiedListingData, getListingsByCategory} from "@/utils/mock-threads-data";
 import SearchFilter, {type FilterOptions} from "@/components/threads/category/SearchFilter";
 import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads/category/Sorting";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus } from "lucide-react";
 import UnifiedListingModal from "@/components/create-listing/UnifiedListingModal";
 
 type ListingType = "wtb" | "wts" | "general";
@@ -32,6 +32,7 @@ const CategoryPage: React.FC = () => {
   );
 
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Updated state for SearchFilter to include new fields
   const [appliedFilters, setAppliedFilters] = useState<FilterOptions>({
@@ -66,16 +67,23 @@ const CategoryPage: React.FC = () => {
     console.log("Sorting filters applied:", filters);
   }, []);
 
-  // Handle scroll for floating button
+  // Handle scroll for floating button and header collapse
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const scrollPosition = target.scrollTop;
       const showButtonThreshold = 300; // Show floating button after scrolling 300px
       setShowFloatingButton(scrollPosition > showButtonThreshold);
+      const scrolled = scrollPosition > 10;
+      setIsScrolled(scrolled);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    // Find the main scrollable container
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.addEventListener("scroll", handleScroll);
+      return () => mainElement.removeEventListener("scroll", handleScroll);
+    }
   }, []);
   // Handle filter application from SearchFilter
   const handleApplyFilters = (filters: FilterOptions) => {
@@ -295,25 +303,13 @@ const CategoryPage: React.FC = () => {
   const filteredListings = getFilteredListings();
   return (
     <div className="min-h-screen bg-primary-50">
+      <CategoryHeader
+        onBack={() => router.push('/threads#ngam-overview')}
+        category={category}
+        activeType={activeType}
+        isScrolled={isScrolled}
+      />
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb - No Card */}
-        <div className="mb-6">
-          <CategoryBreadcrumb category={category} activeType={activeType} />
-        </div>
-
-        {/* Category Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-neutral-700" />
-            </button>
-          <h1 className="text-2xl font-bold capitalize text-accent-700">
-            {category} Marketplace
-          </h1>
-        </div>
-
         {/* Search and Filter Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
           {/* Search Filter Component */}

@@ -1,5 +1,5 @@
-import { Heart, Share2, MoreVertical, ArrowLeft } from "lucide-react";
-import { BreadcrumbNav } from "./BreadcrumbNav";
+import { UserPlus, Share2, MoreVertical, ArrowLeft } from "lucide-react";
+import { CategoryBreadcrumb } from "./CategoryBreadcrumb";
 
 const buttonClasses = `
   p-2 rounded-full transition-all
@@ -9,22 +9,17 @@ const buttonClasses = `
 
 const glowStyle = "text-accent-500 focus:ring-accent-500";
 
-interface ProductHeaderProps {
+interface CategoryHeaderProps {
   onBack?: () => void;
-  listingType?: "sale" | "want";
   category: string;
-  listingTitle: string;
+  activeType: "wtb" | "wts" | "general";
 }
 
-export const ProductHeader = ({ onBack, listingType = "sale", category, listingTitle }: ProductHeaderProps) => (
+export const CategoryHeader = ({ onBack, category, activeType }: CategoryHeaderProps) => (
   <div className="sticky top-0 z-[5] bg-white shadow-sm">
     {/* Breadcrumb */}
     <div className="px-6 pt-2">
-      <BreadcrumbNav
-        category={category}
-        listingTitle={listingTitle}
-        listingType={listingType}
-      />
+      <CategoryBreadcrumb category={category} activeType={activeType} />
     </div>
 
     {/* Header bar */}
@@ -38,11 +33,11 @@ export const ProductHeader = ({ onBack, listingType = "sale", category, listingT
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-lg font-bold capitalize text-accent-700">
-          {listingType === "sale" ? "Want to Sell" : "Want to Buy"}
+          {category} Marketplace
         </h1>
       </div>
       <div className="flex gap-2">
-        {[Heart, Share2, MoreVertical].map((Icon, i) => (
+        {[UserPlus, Share2, MoreVertical].map((Icon, i) => (
           <button key={i} className={`${buttonClasses} ${glowStyle}`}>
             <Icon className="w-5 h-5" />
           </button>
