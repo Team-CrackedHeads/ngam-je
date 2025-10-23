@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tag, X, Plus, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -76,6 +76,18 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
   const [newTagInput, setNewTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const suggestionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Scroll selected suggestion into view
+  useEffect(() => {
+    if (selectedSuggestionIndex >= 0 && suggestionRefs.current[selectedSuggestionIndex]) {
+      suggestionRefs.current[selectedSuggestionIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      });
+    }
+  }, [selectedSuggestionIndex]);
 
   const generateTagsFromContent = async () => {
     setIsGeneratingTags(true);
@@ -106,9 +118,46 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
       );
       setFilteredTagSuggestions(filtered);
       setShowTagSuggestions(filtered.length > 0);
+      setSelectedSuggestionIndex(-1); // Reset selection when suggestions change
     } else {
       setShowTagSuggestions(false);
       setFilteredTagSuggestions([]);
+      setSelectedSuggestionIndex(-1);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showTagSuggestions || filteredTagSuggestions.length === 0) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addTag();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev < filteredTagSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < filteredTagSuggestions.length) {
+          addTag(filteredTagSuggestions[selectedSuggestionIndex]);
+        } else {
+          addTag();
+        }
+        break;
+      case 'Escape':
+        setShowTagSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
     }
   };
 
@@ -159,12 +208,7 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
           <Input
             value={newTagInput}
             onChange={(e) => handleTagInputChange(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addTag();
-              }
-            }}
+            onKeyDown={handleKeyDown}
             onFocus={() => {
               if (newTagInput.trim() && filteredTagSuggestions.length > 0) {
                 setShowTagSuggestions(true);
@@ -172,7 +216,10 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
             }}
             onBlur={() => {
               // Delay to allow clicking on suggestions
-              setTimeout(() => setShowTagSuggestions(false), 200);
+              setTimeout(() => {
+                setShowTagSuggestions(false);
+                setSelectedSuggestionIndex(-1);
+              }, 200);
             }}
             placeholder="Add new tags..."
             className="text-sm border-[var(--color-primary-200)]"
@@ -184,11 +231,19 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
               {filteredTagSuggestions.map((tag, index) => (
                 <button
                   key={index}
+                  ref={(el) => {
+                    suggestionRefs.current[index] = el;
+                  }}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     addTag(tag);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-[var(--color-secondary-100)] transition-colors flex items-center gap-2 text-sm"
+                  onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                  className={`w-full text-left px-3 py-2 transition-colors flex items-center gap-2 text-sm ${
+                    index === selectedSuggestionIndex
+                      ? 'bg-[var(--color-secondary-200)]'
+                      : 'hover:bg-[var(--color-secondary-100)]'
+                  }`}
                 >
                   <Tag className="w-3 h-3 text-[var(--color-secondary-500)]" />
                   <span className="text-[var(--color-accent-700)]">{tag}</span>
