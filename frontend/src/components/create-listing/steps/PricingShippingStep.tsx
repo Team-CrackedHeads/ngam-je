@@ -1,13 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { DollarSign, MapPin, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { DollarSign, MapPin, ChevronDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShippingPreferences } from '@/components/create-listing/shipping-options';
-import { MOCK_LOCATION } from '@/utils/mock-location-data';
 import { HistoricalPriceTrend } from '@/components/create-listing/price-chart';
 import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
+import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import dynamic from 'next/dynamic';
+
+const GoogleLocationMap = dynamic(() => import('@/components/create-listing/GoogleLocationMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[400px] rounded-lg border-2 border-[var(--color-primary-200)] bg-[var(--color-primary-50)] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-[var(--color-secondary-600)]" />
+    </div>
+  ),
+});
 
 interface PricingShippingStepProps {
   listingType: 'buy' | 'sell';
@@ -28,7 +38,7 @@ interface PricingShippingStepProps {
   setSelectedCurrencyIndex: (index: number) => void;
 }
 
-export default function PricingShippingStep({
+function PricingShippingContent({
   listingType,
   formData,
   setFormData,
@@ -48,6 +58,16 @@ export default function PricingShippingStep({
 }: PricingShippingStepProps) {
   const currencies = ['MYR', 'USD', 'SGD'];
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [mapCoordinates, setMapCoordinates] = useState<{ lat: number; lng: number }>({
+    lat: 3.139,
+    lng: 101.6869,
+  });
+  const [placePredictions, setPlacePredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const placesLibrary = useMapsLibrary('places');
 
   const updatePriceRange = (minValue: number, maxValue: number) => {
     if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) return;
@@ -75,6 +95,81 @@ export default function PricingShippingStep({
       const lowerBound = average || min;
       updatePriceRange(lowerBound, max);
     }
+  };
+
+  const handleLocationSelectFromMap = (locationName: string, coordinates: { lat: number; lng: number }) => {
+    setFormData({ ...formData, location: locationName });
+    setMapCoordinates(coordinates);
+  };
+
+  // Initialize Google Places services when library loads
+  useEffect(() => {
+    if (!placesLibrary) return;
+
+    autocompleteService.current = new placesLibrary.AutocompleteService();
+    const mapDiv = document.createElement('div');
+    placesService.current = new placesLibrary.PlacesService(mapDiv);
+  }, [placesLibrary]);
+
+  // Handle location search with Google Places Autocomplete
+  const handleLocationSearch = (query: string) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!query || query.trim().length === 0) {
+      setPlacePredictions([]);
+      setShowLocationDropdown(false);
+      return;
+    }
+
+    setIsSearchingPlaces(true);
+    setShowLocationDropdown(true);
+
+    searchTimeoutRef.current = setTimeout(() => {
+      if (!autocompleteService.current) {
+        setIsSearchingPlaces(false);
+        setPlacePredictions([]);
+        return;
+      }
+
+      const request = {
+        input: query,
+      };
+
+      autocompleteService.current.getPlacePredictions(
+        request,
+        (predictions, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setPlacePredictions(predictions);
+          } else {
+            setPlacePredictions([]);
+          }
+          setIsSearchingPlaces(false);
+        }
+      );
+    }, 300);
+  };
+
+  // Handle selection from search dropdown
+  const handlePlaceSelect = async (placeId: string, description: string) => {
+    if (!placesService.current) return;
+
+    setFormData({ ...formData, location: description });
+    setShowLocationDropdown(false);
+    setSelectedLocationIndex(-1);
+
+    // Get place details to extract coordinates
+    placesService.current.getDetails(
+      { placeId },
+      (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          setMapCoordinates({ lat, lng });
+        }
+      }
+    );
   };
 
   return (
@@ -290,81 +385,102 @@ export default function PricingShippingStep({
             <Label htmlFor="locationInput" className="text-xs sm:text-sm text-[var(--color-primary-900)] mb-2 block">
               Select your location
             </Label>
-            <Input
-              id="locationInput"
-              type="text"
-              value={formData.location}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({...formData, location: value});
-                const filtered = MOCK_LOCATION.filter(loc =>
-                  loc.toLowerCase().includes(value.toLowerCase())
-                );
-                setFilteredLocations(filtered);
-                setShowLocationDropdown(true);
-                setSelectedLocationIndex(-1);
-              }}
-              onKeyDown={(e) => {
-                if (!showLocationDropdown || filteredLocations.length === 0) return;
+            <div className="relative">
+              <Input
+                id="locationInput"
+                type="text"
+                value={formData.location}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({...formData, location: value});
+                  handleLocationSearch(value);
+                  setSelectedLocationIndex(-1);
+                }}
+                onKeyDown={(e) => {
+                  if (!showLocationDropdown || placePredictions.length === 0) return;
 
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const nextIndex = selectedLocationIndex < filteredLocations.length - 1 ? selectedLocationIndex + 1 : selectedLocationIndex;
-                  setSelectedLocationIndex(nextIndex);
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  const nextIndex = selectedLocationIndex > 0 ? selectedLocationIndex - 1 : -1;
-                  setSelectedLocationIndex(nextIndex);
-                } else if (e.key === 'Enter') {
-                  e.preventDefault();
-                  if (selectedLocationIndex >= 0 && selectedLocationIndex < filteredLocations.length) {
-                    setFormData({...formData, location: filteredLocations[selectedLocationIndex]});
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const nextIndex = selectedLocationIndex < placePredictions.length - 1 ? selectedLocationIndex + 1 : selectedLocationIndex;
+                    setSelectedLocationIndex(nextIndex);
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const nextIndex = selectedLocationIndex > 0 ? selectedLocationIndex - 1 : -1;
+                    setSelectedLocationIndex(nextIndex);
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedLocationIndex >= 0 && selectedLocationIndex < placePredictions.length) {
+                      const prediction = placePredictions[selectedLocationIndex];
+                      handlePlaceSelect(prediction.place_id, prediction.description);
+                    }
+                  } else if (e.key === 'Escape') {
                     setShowLocationDropdown(false);
                     setSelectedLocationIndex(-1);
                   }
-                } else if (e.key === 'Escape') {
-                  setShowLocationDropdown(false);
-                  setSelectedLocationIndex(-1);
-                }
-              }}
-              onFocus={() => {
-                setShowLocationDropdown(true);
-                setFilteredLocations(MOCK_LOCATION);
-                setSelectedLocationIndex(-1);
-              }}
-              onBlur={() => {
-                setTimeout(() => {
-                  setShowLocationDropdown(false);
-                  setSelectedLocationIndex(-1);
-                }, 200);
-              }}
-              placeholder="Select a location"
-              className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
-            />
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    setShowLocationDropdown(false);
+                    setSelectedLocationIndex(-1);
+                  }, 200);
+                }}
+                placeholder="Search for a city, address, or region..."
+                className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)] pr-10"
+              />
+              {isSearchingPlaces && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[var(--color-secondary-600)]" />
+                </div>
+              )}
+            </div>
 
-            {/* Location Dropdown */}
-            {showLocationDropdown && filteredLocations.length > 0 && (
+            {/* Location Dropdown - Google Places Predictions */}
+            {showLocationDropdown && placePredictions.length > 0 && (
               <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
-                {filteredLocations.map((location, index) => (
+                {placePredictions.map((prediction, index) => (
                   <div
-                    key={location}
-                    onClick={() => {
-                      setFormData({...formData, location});
-                      setShowLocationDropdown(false);
-                      setSelectedLocationIndex(-1);
-                    }}
+                    key={prediction.place_id}
+                    onClick={() => handlePlaceSelect(prediction.place_id, prediction.description)}
                     onMouseEnter={() => setSelectedLocationIndex(index)}
-                    className={`px-3 py-2 cursor-pointer text-sm sm:text-base text-[var(--color-accent-700)] transition-colors ${
+                    className={`px-3 py-2 cursor-pointer text-sm sm:text-base transition-colors ${
                       selectedLocationIndex === index
                         ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
                         : 'hover:bg-[var(--color-primary-100)]'
                     }`}
                   >
-                    {location}
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-secondary-600)]" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-[var(--color-accent-700)]">
+                          {prediction.structured_formatting.main_text}
+                        </p>
+                        <p className="text-xs text-[var(--color-primary-700)] truncate">
+                          {prediction.structured_formatting.secondary_text}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
+
+            {showLocationDropdown && !isSearchingPlaces && placePredictions.length === 0 && formData.location && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg px-3 py-4 text-center">
+                <p className="text-sm text-[var(--color-primary-700)]">No locations found. Try a different search term.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Google Map */}
+          <div className="mt-4">
+            <Label className="text-xs sm:text-sm text-[var(--color-primary-900)] mb-2 block">
+              Or click on the map to select
+            </Label>
+            <GoogleLocationMap
+              location={formData.location}
+              onLocationSelect={handleLocationSelectFromMap}
+              initialCoordinates={mapCoordinates}
+            />
           </div>
         </div>
 
@@ -378,5 +494,15 @@ export default function PricingShippingStep({
         />
       </div>
     </div>
+  );
+}
+
+export default function PricingShippingStep(props: PricingShippingStepProps) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+  return (
+    <APIProvider apiKey={apiKey}>
+      <PricingShippingContent {...props} />
+    </APIProvider>
   );
 }
