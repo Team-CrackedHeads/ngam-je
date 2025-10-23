@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, Sparkles, Edit3, DollarSign, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Image as ImageIcon, Trash2, Tag, MessageCircle, MapPin } from 'lucide-react';
+import { Upload, Sparkles, Edit3, DollarSign, Truck, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Image as ImageIcon, Trash2, Tag, MessageCircle, MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -647,7 +647,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                               setTitleSuggestion('');
                             }
                           }}
-                          placeholder="Enter listing title"
+                          placeholder="Enter product title"
                           className="text-sm sm:text-base border-[var(--color-primary-200)] relative z-10"
                           style={{
                             fontSize: '1rem',
@@ -1160,27 +1160,30 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
                         {/* Description */}
                         <div>
-                          <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-[var(--color-accent-700)]">Description</h3>
-                          <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base text-[var(--color-primary-900)]">
-                            {formData.generatedDescription}
-                          </p>
+                          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                            <Edit3 className="w-5 h-5 text-[var(--color-secondary-500)]" />
+                            Description
+                          </h3>
+                          <div className="rounded-lg p-4 border bg-white border-[var(--color-primary-200)]">
+                            <p className="whitespace-pre-wrap leading-relaxed text-[var(--color-primary-900)]">{formData.generatedDescription}</p>
+                          </div>
                         </div>
 
                         {/* Tags */}
                         {formData.tags.length > 0 && (
                           <div>
-                            <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
-                              <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-secondary-500)]" />
+                            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                              <Tag className="w-5 h-5 text-[var(--color-secondary-500)]" />
                               Category Tags
                             </h3>
                             <div className="flex flex-wrap gap-2">
                               {formData.tags.map((tag, index) => (
                                 <div
                                   key={index}
-                                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] border-2 border-[var(--color-secondary-600)]"
+                                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] border-2 border-[var(--color-secondary-600)]"
                                 >
                                   <Tag className="w-3 h-3" />
-                                  <span className="text-xs sm:text-sm font-medium">{tag}</span>
+                                  <span className="text-sm font-medium">{tag}</span>
                                 </div>
                               ))}
                             </div>
@@ -1188,49 +1191,61 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         )}
 
                         {/* Price Range */}
-                        <div className="border rounded-lg p-3 sm:p-4 bg-[var(--color-primary-100)] border-[var(--color-secondary-500)]">
-                          <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-[var(--color-accent-700)]">Price Range</h3>
-                          <div className="flex items-center gap-2 sm:gap-4">
-                            <div className="flex-1">
-                              <p className="text-xs sm:text-sm mb-1 text-[var(--color-primary-900)]">Minimum</p>
-                              <p className="text-lg sm:text-2xl font-bold text-[var(--color-accent-700)]">
-                                {formData.currency} {formData.minPrice}
-                              </p>
-                            </div>
-                            <div className="text-lg sm:text-2xl flex-shrink-0 text-[var(--color-secondary-500)]">→</div>
-                            <div className="flex-1">
-                              <p className="text-xs sm:text-sm mb-1 text-[var(--color-primary-900)]">Maximum</p>
-                              <p className="text-lg sm:text-2xl font-bold text-[var(--color-accent-700)]">
-                                {formData.currency} {formData.maxPrice}
-                              </p>
+                        <div className="rounded-lg p-5 border-2 bg-[var(--color-secondary-400)] border-[var(--color-secondary-500)]">
+                          <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-[var(--color-accent-700)]">
+                            <DollarSign className="w-5 h-5 text-[var(--color-secondary-500)]" />
+                            Price Range
+                          </h3>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                              <div className="flex-1 text-center">
+                                <p className="text-xs font-medium mb-2 uppercase tracking-wide text-[var(--color-primary-900)]">Min per Unit</p>
+                                <div className="bg-white rounded-lg p-3 border border-[var(--color-secondary-500)]">
+                                  <p className="text-xl font-bold text-[var(--color-accent-700)]">{formData.currency} {formData.minPrice}</p>
+                                </div>
+                              </div>
+                              <div className="text-2xl font-bold text-[var(--color-secondary-500)]">→</div>
+                              <div className="flex-1 text-center">
+                                <p className="text-xs font-medium mb-2 uppercase tracking-wide text-[var(--color-primary-900)]">Max per Unit</p>
+                                <div className="bg-white rounded-lg p-3 border border-[var(--color-secondary-500)]">
+                                  <p className="text-xl font-bold text-[var(--color-accent-700)]">{formData.currency} {formData.maxPrice}</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
 
                         {/* Location */}
                         {formData.location && (
-                          <div className="border rounded-lg p-3 sm:p-4 bg-[var(--color-secondary-50)] border-[var(--color-secondary-500)]">
-                            <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
-                              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-secondary-500)]" />
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                              <MapPin className="w-5 h-5 text-[var(--color-secondary-500)]" />
                               Location
                             </h3>
-                            <p className="text-base sm:text-lg font-semibold text-[var(--color-accent-700)]">
-                              {formData.location}
-                            </p>
+                            <div className="flex flex-wrap gap-3">
+                              <div
+                                className="px-4 py-2 rounded-lg text-sm font-medium border-2 shadow-sm bg-white border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                              >
+                                {formData.location}
+                              </div>
+                            </div>
                           </div>
                         )}
 
                         {/* Shipping Options */}
                         <div>
-                          <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-[var(--color-accent-700)]">Available Shipping Methods</h3>
-                          <div className="flex flex-wrap gap-2">
+                          <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                            <Truck className="w-5 h-5 text-[var(--color-secondary-500)]" />
+                            Available Shipping Methods
+                          </h3>
+                          <div className="flex flex-wrap gap-3">
                             {formData.shippingOptions.map((option) => (
-                              <span
+                              <div
                                 key={option}
-                                className="px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-[var(--color-secondary-400)] text-[var(--color-accent-700)]"
+                                className="px-4 py-2 rounded-lg text-sm font-medium border-2 shadow-sm bg-white border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
                               >
                                 {option}
-                              </span>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -1252,9 +1267,9 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
                         {/* FAQs */}
                         {formData.faqs.length > 0 && (
-                          <div className="pt-4 border-t-2 border-[var(--color-primary-300)]">
-                            <h3 className="font-semibold text-base sm:text-lg mb-4 flex items-center gap-2 text-[var(--color-accent-700)]">
-                              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-secondary-500)]" />
+                          <div>
+                            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-[var(--color-accent-700)]">
+                              <MessageCircle className="w-5 h-5 text-[var(--color-secondary-500)]" />
                               Frequently Asked Questions
                             </h3>
                             <div className="space-y-3">

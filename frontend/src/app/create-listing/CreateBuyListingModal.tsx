@@ -549,7 +549,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                               setTitleSuggestion('');
                             }
                           }}
-                          placeholder="Enter listing title"
+                          placeholder="Enter product title"
                           className="border-[var(--color-primary-200)] relative z-10"
                           style={{
                             fontSize: '1rem',
