@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Filter as FilterIcon, X, Search } from "lucide-react";
+import { AVAILABLE_TAGS, SEARCH_SORT_OPTIONS, LISTING_TYPE_OPTIONS } from "@/utils/mock-all-data-used";
 
 export interface FilterOptions {
   search: string;
@@ -154,35 +155,10 @@ function SearchFilter({
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Updated tags to match your data structure
-  const tags = [
-    "gaming",
-    "rtx-4070",
-    "complete-setup",
-    "vintage",
-    "like-new",
-    "rare",
-    "collector",
-    "handmade",
-    "original",
-    "designer",
-    "eco-friendly",
-  ];
-
-  // Updated sort options to match UnifiedListingData structure
-  const sortOptions = [
-    "Newest",
-    "Price: Low to High",
-    "Price: High to Low",
-    "Most Views", // NEW: Based on views field
-    "Distance",
-  ];
-
-  // NEW: Listing type options
-  const listingTypeOptions = [
-    { value: "all", label: "All Listings" },
-    { value: "sale", label: "For Sale" },
-    { value: "wanted", label: "Want to Buy" },
-  ];
+  // Use centralized tags and options
+  const tags = AVAILABLE_TAGS;
+  const sortOptions = SEARCH_SORT_OPTIONS;
+  const listingTypeOptions = LISTING_TYPE_OPTIONS;
 
   // Helper to format price for display
   const formatPrice = (price: number) => price.toLocaleString();

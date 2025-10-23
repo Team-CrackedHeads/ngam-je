@@ -12,6 +12,7 @@ import {
   PlusCircle,
   MinusCircle,
 } from "lucide-react";
+import { PRIMARY_FILTER_BUTTONS, QUICK_FILTER_OPTIONS, QUICK_SORT_OPTIONS } from "@/utils/mock-all-data-used";
 
 // --- Constants ---
 const ICON_SIZE = 16;
@@ -91,52 +92,26 @@ const Sorting: React.FC<SortingProps> = ({
     setActiveQuickSort((current) => (current === sort ? null : sort));
   };
 
-  // --- Primary Buttons ---
-  const primaryButtons = [
-    {
-      label: "Verified",
-      filter: "Verified Sellers" as PrimaryFilter,
-      icon: <ShieldCheck size={ICON_SIZE} />,
-    },
-    {
-      label: "Nearby",
-      filter: "Nearby" as PrimaryFilter,
-      icon: <MapPin size={ICON_SIZE}/>,
-    },
-  ];
+  // Updated primary buttons to match UnifiedListingData features
+  // Use centralized filter/sort configuration with proper typing
+  const primaryButtons = PRIMARY_FILTER_BUTTONS.map(btn => ({
+    ...btn,
+    filter: btn.filter as PrimaryFilter
+  }));
 
-  // --- Quick Filters ---
-  const quickFilterOptions = [
-    {
-      label: "Protected Listings",
-      filter: "Protected Listings" as QuickFilter,
-      icon: <Lock size={ICON_SIZE} />,
-    },
-    {
-      label: "Posted Today",
-      filter: "Posted Today" as QuickFilter,
-      icon: <Clock size={ICON_SIZE} />,
-    },
-    {
-      label: "High Views",
-      filter: "High Views" as QuickFilter,
-      icon: <Eye size={ICON_SIZE} />,
-    },
-    {
-      label: "Has Gallery",
-      filter: "Has Gallery" as QuickFilter,
-      icon: <Image size={ICON_SIZE} />,
-    },
-  ];
+  const quickFilterOptions: {
+    label: string;
+    filter: QuickFilter;
+    icon: string;
+  }[] = QUICK_FILTER_OPTIONS.map(opt => ({
+    ...opt,
+    filter: opt.filter as QuickFilter
+  }));
 
-  // --- Quick Sort ---
-  const quickSortOptions = [
-    { label: "Nearest First", sort: "Nearest First" as QuickSort, icon: <MapPin size={ICON_SIZE} /> },
-    { label: "Newest First", sort: "Newest First" as QuickSort, icon: <Sparkles size={ICON_SIZE} /> },
-    { label: "Lowest Price", sort: "Lowest Price" as QuickSort, icon: <ArrowDown size={ICON_SIZE} /> },
-    { label: "Highest Price", sort: "Highest Price" as QuickSort, icon: <ArrowUp size={ICON_SIZE} /> },
-    { label: "Most Views", sort: "Most Views" as QuickSort, icon: <Eye size={ICON_SIZE} /> },
-  ];
+  const quickSortOptions: { label: string; sort: QuickSort; icon: string }[] = QUICK_SORT_OPTIONS.map(opt => ({
+    ...opt,
+    sort: opt.sort as QuickSort
+  }));
 
   // --- Styles ---
   const getPrimaryButtonClasses = (filter: PrimaryFilter) => {

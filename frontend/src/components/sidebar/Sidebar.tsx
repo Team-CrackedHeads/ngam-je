@@ -18,7 +18,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { MOCK_THREADS } from "@/utils/mock-all-data-used";
+import { MOCK_THREADS, SIDEBAR_CHAT_HISTORY } from "@/utils/mock-all-data-used";
 import SidebarAIChat from "@/components/sidebar/SidebarAIChat";
 import {
   Sidebar,
@@ -41,8 +41,6 @@ import SearchHistory from "@/components/sidebar/SearchHistory";
 import BuyListingsMenuItem from "@/components/sidebar/menu-items/BuyListingsMenuItem";
 import SellListingsMenuItem from "@/components/sidebar/menu-items/SellListingsMenuItem";
 import MatchedListingsMenuItem from "@/components/sidebar/menu-items/MatchedListingsMenuItem";
-import { MOCK_CHAT_HISTORY } from "@/utils/mock-chat-history-data";
-
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
   { href: "/messages", label: "Messages", icon: MessageCircle },
@@ -50,7 +48,9 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-const mockChatHistory = MOCK_CHAT_HISTORY;
+// Mock chat history data - 2nd hand marketplace purchase decisions
+// Use centralized chat history data
+const mockChatHistory = SIDEBAR_CHAT_HISTORY;
 
 
 function FollowingMenuItem() {
