@@ -41,16 +41,20 @@ export function ShippingPreferences({ shippingOptions, onShippingOptionsChange }
         return (
           <Card
             key={option.value}
-            className={`cursor-pointer transition-all hover:shadow-md border-2 ${
+            className={`cursor-pointer transition-all hover:shadow-md border-2 flex flex-col gap-0 rounded-xl py-0 ${
               shippingOptions.includes(option.value)
                 ? 'border-[var(--color-secondary-500)] bg-[var(--color-secondary-400)]'
                 : 'border-gray-200 bg-white'
             }`}
             onClick={() => toggleShippingOption(option.value)}
           >
-            <CardContent className="flex items-start gap-4 p-4">
-              <Checkbox checked={shippingOptions.includes(option.value)} className="mt-1" />
-              <div className="flex items-start gap-3 flex-1">
+            <CardContent className="flex items-center gap-0 px-4 py-0">
+              <Checkbox
+                checked={shippingOptions.includes(option.value)}
+                className="mr-4"
+                onClick={(event) => event.stopPropagation()}
+              />
+              <div className="flex items-center gap-3 flex-1 py-4">
                 <IconComponent className="w-8 h-8 text-[var(--color-secondary-600)]" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-base mb-1 text-[var(--color-accent-700)]">{option.label}</h3>

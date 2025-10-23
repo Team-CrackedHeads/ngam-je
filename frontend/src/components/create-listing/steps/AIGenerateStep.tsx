@@ -35,7 +35,7 @@ interface AIGenerateStepProps {
   ownershipProofImage?: string | null;
   isVerifyingOwnership?: boolean;
   ownershipVerified?: boolean | null;
-  tagGeneratorRef: React.RefObject<TagGeneratorRef>;
+  tagGeneratorRef: React.RefObject<TagGeneratorRef | null>;
 }
 
 export default function AIGenerateStep({

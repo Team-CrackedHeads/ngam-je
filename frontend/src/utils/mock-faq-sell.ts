@@ -1,4 +1,4 @@
-import { FAQ } from '@/app/create-listing/faq-generator';
+import { FAQ } from '@/components/create-listing/faq-generator';
 
 export const MOCK_FAQ_SELL: FAQ[] = [
     {

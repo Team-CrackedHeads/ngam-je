@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import FAQGenerator, { FAQ } from '@/app/create-listing/faq-generator';
+import FAQGenerator, { FAQ } from '@/components/create-listing/faq-generator';
 
 interface FAQsStepProps {
   listingType: 'buy' | 'sell';

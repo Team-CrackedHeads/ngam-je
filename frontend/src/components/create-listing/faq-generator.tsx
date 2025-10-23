@@ -71,9 +71,12 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
         ) : (
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <Card key={faq.id} className="border-2 border-[var(--color-primary-300)]">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+              <Card
+                key={faq.id}
+                className="border-2 border-[var(--color-primary-300)] rounded-xl flex flex-col gap-0 py-0"
+              >
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-[var(--color-secondary-500)] text-white flex items-center justify-center font-bold text-sm">
                         {index + 1}
@@ -92,7 +95,7 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
                     </Button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-4 px-6 pb-6">
                     <div>
                       <Label htmlFor={`question-${faq.id}`} className="text-sm text-[var(--color-primary-900)] mb-2 block">
                         Question
@@ -135,19 +138,19 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
             Add FAQ Manually
           </Button>
           <Button
-            variant="outline"
-            className="flex-1 border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+            size="sm"
+            className="flex-1 text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
             onClick={generateFAQsWithAI}
             disabled={isGenerating || !hasAnyInput}
           >
             {isGenerating ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--color-secondary-900)]" />
                 Generating...
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Sparkles className="w-4 h-4 mr-2 text-[var(--color-secondary-900)]" />
                 Generate FAQs with AI
               </>
             )}

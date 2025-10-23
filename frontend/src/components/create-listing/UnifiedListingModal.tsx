@@ -1,18 +1,17 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Search, Upload, Sparkles, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus } from 'lucide-react';
+import { Sparkles, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
-import { FAQ } from '@/app/create-listing/faq-generator';
+import { FAQ } from '@/components/create-listing/faq-generator';
 import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
 import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
 import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
 import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
-import { TagGeneratorRef } from '@/app/create-listing/tag-generator';
-import { MOCK_RECOMMENDED_PRICE_RANGE } from '@/utils/mock-price-rec-data';
+import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
+import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
 import { MOCK_LOCATION } from '@/utils/mock-location-data';
-import { verifyOwnershipProofWithAI } from '@/app/create-listing/ai-photo';
+import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
 import AIGenerateStep from './steps/AIGenerateStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
@@ -71,7 +70,7 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
   const [descriptionSuggestion, setDescriptionSuggestion] = useState('');
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const tagGeneratorRef = useRef<TagGeneratorRef>(null);
+  const tagGeneratorRef = useRef<TagGeneratorRef | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState<string[]>(MOCK_LOCATION);
   const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
@@ -205,9 +204,7 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
     await generatePhotosWithAI();
     await generateTitleWithAI();
     await generateDescriptionWithAI();
-    if (tagGeneratorRef.current) {
-      await tagGeneratorRef.current.generateTags();
-    }
+    await tagGeneratorRef.current?.generateTags();
     setIsGeneratingAll(false);
   };
 
@@ -327,8 +324,26 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
   };
 
   const fetchPriceRecommendation = async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setRecommendedPriceRange(MOCK_RECOMMENDED_PRICE_RANGE);
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const prices = MOCK_PRICE_HISTORY.map((point) => point.price);
+    if (!prices.length) {
+      setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
+      return;
+    }
+
+    const averagePrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+    const lowestPrice = Math.min(...prices);
+    const highestPrice = Math.max(...prices);
+    const padding = Math.max(averagePrice * 0.1, 5);
+
+    const derivedRange = {
+      min: Number(Math.max(0, Math.min(lowestPrice, averagePrice - padding)).toFixed(2)),
+      average: Number(averagePrice.toFixed(2)),
+      max: Number(Math.max(highestPrice, averagePrice + padding).toFixed(2)),
+    };
+
+    setRecommendedPriceRange(derivedRange);
   };
 
   const handleNext = () => {
@@ -447,7 +462,7 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
 
           {/* Progress Steps - Only show after listing type is selected */}
           {listingType !== null && (
-            <div className="px-4 pb-4 overflow-x-auto">
+            <div className="hidden sm:block px-4 pb-4 overflow-x-auto">
               <div className="flex items-center justify-between min-w-max py-2">
                 {steps.map((step, index) => {
                 const Icon = step.icon;
