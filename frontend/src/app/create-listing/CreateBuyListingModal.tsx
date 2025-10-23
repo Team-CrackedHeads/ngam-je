@@ -306,10 +306,10 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-opacity-50 p-4 overflow-y-auto">
-      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-opacity-50 p-4">
+      <div className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-10 border-b shadow-sm rounded-t-lg bg-[var(--color-primary-200)]">
+        <div className="flex-shrink-0 border-b shadow-sm rounded-t-lg bg-[var(--color-primary-200)]">
           <div className="px-4 py-4 flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={handleBack} disabled={currentStep === 1}>
               <ChevronLeft className="w-5 h-5 text-[var(--color-accent-700)]" />
@@ -368,7 +368,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="flex-1 overflow-y-auto p-8">
           {currentStep === 1 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8 relative">
