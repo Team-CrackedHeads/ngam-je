@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Search, Sparkles, Edit3, DollarSign, Truck, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Upload, Image as ImageIcon, Trash2, MessageCircle, Tag } from 'lucide-react';
+import { Search, Sparkles, Edit3, DollarSign, Truck, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Upload, Image as ImageIcon, Trash2, MessageCircle, Tag, MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
 import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
 import TagGenerator from './tag-generator';
 import { MOCK_RECOMMENDED_PRICE_RANGE } from '@/utils/mock-price-rec-data';
+import { MOCK_LOCATION } from '@/utils/mock-location-data';
 
 interface FormData {
   generatedTitle: string;
@@ -25,6 +26,7 @@ interface FormData {
   minPrice: string;
   maxPrice: string;
   currency: string;
+  location: string;
   quantity: string;
   shippingOptions: string[];
   faqs: FAQ[];
@@ -49,6 +51,12 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [filteredLocations, setFilteredLocations] = useState<string[]>(MOCK_LOCATION);
+  const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [filteredCurrencies, setFilteredCurrencies] = useState<string[]>(['MYR', 'USD', 'SGD']);
+  const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
 
   const [formData, setFormData] = useState<FormData>({
     generatedTitle: '',
@@ -57,6 +65,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
     minPrice: '',
     maxPrice: '',
     currency: 'MYR',
+    location: '',
     quantity: '1',
     shippingOptions: [],
     faqs: [],
@@ -248,6 +257,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
       minPrice: '',
       maxPrice: '',
       currency: 'MYR',
+      location: '',
       quantity: '1',
       shippingOptions: [],
       faqs: [],
@@ -264,7 +274,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
   const isStepValid = () => {
     switch(currentStep) {
       case 1: return formData.generatedTitle.length >= 3 && formData.generatedDescription.length >= 10 && formData.generatedImages.length > 0;
-      case 2: return formData.minPrice && formData.maxPrice && formData.quantity && parseInt(formData.quantity) > 0 && parseFloat(formData.minPrice) < parseFloat(formData.maxPrice) && formData.shippingOptions.length > 0;
+      case 2: return formData.minPrice && formData.maxPrice && formData.quantity && parseInt(formData.quantity) > 0 && parseFloat(formData.minPrice) < parseFloat(formData.maxPrice) && formData.location.length > 0 && formData.shippingOptions.length > 0;
       case 3: return true; // FAQs are optional
       case 4: return true;
       default: return false;
@@ -639,15 +649,84 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                         <div>
                           <Label htmlFor="minPrice" className="text-sm text-[var(--color-primary-900)]">Minimum Price (per unit)</Label>
                           <div className="flex gap-2 mt-2">
-                            <select
-                              value={formData.currency}
-                              onChange={(e) => setFormData({...formData, currency: e.target.value})}
-                              className="px-3 py-0 border border-gray-300 rounded-lg text-[var(--color-accent-700)]"
-                            >
-                              <option value="MYR">MYR</option>
-                              <option value="USD">USD</option>
-                              <option value="SGD">SGD</option>
-                            </select>
+                            <div className="relative">
+                              <Input
+                                type="text"
+                                value={formData.currency}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setFormData({...formData, currency: value});
+                                  // Filter currencies based on input
+                                  const filtered = ['MYR', 'USD', 'SGD'].filter(curr =>
+                                    curr.toLowerCase().includes(value.toLowerCase())
+                                  );
+                                  setFilteredCurrencies(filtered);
+                                  setShowCurrencyDropdown(true);
+                                  setSelectedCurrencyIndex(-1);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (!showCurrencyDropdown || filteredCurrencies.length === 0) return;
+
+                                  if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setSelectedCurrencyIndex(prev =>
+                                      prev < filteredCurrencies.length - 1 ? prev + 1 : prev
+                                    );
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setSelectedCurrencyIndex(prev => prev > 0 ? prev - 1 : -1);
+                                  } else if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (selectedCurrencyIndex >= 0 && selectedCurrencyIndex < filteredCurrencies.length) {
+                                      setFormData({...formData, currency: filteredCurrencies[selectedCurrencyIndex]});
+                                      setShowCurrencyDropdown(false);
+                                      setSelectedCurrencyIndex(-1);
+                                    }
+                                  } else if (e.key === 'Escape') {
+                                    setShowCurrencyDropdown(false);
+                                    setSelectedCurrencyIndex(-1);
+                                  }
+                                }}
+                                onFocus={() => {
+                                  setShowCurrencyDropdown(true);
+                                  setFilteredCurrencies(['MYR', 'USD', 'SGD']);
+                                  setSelectedCurrencyIndex(-1);
+                                }}
+                                onBlur={() => {
+                                  // Delay to allow click on dropdown item
+                                  setTimeout(() => {
+                                    setShowCurrencyDropdown(false);
+                                    setSelectedCurrencyIndex(-1);
+                                  }, 200);
+                                }}
+                                placeholder="Select currency"
+                                className="w-20 sm:w-24 text-sm border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
+                              />
+
+                              {/* Custom Dropdown */}
+                              {showCurrencyDropdown && filteredCurrencies.length > 0 && (
+                                <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
+                                  {filteredCurrencies.map((currency, index) => (
+                                    <div
+                                      key={currency}
+                                      onClick={() => {
+                                        setFormData({...formData, currency});
+                                        setShowCurrencyDropdown(false);
+                                        setSelectedCurrencyIndex(-1);
+                                      }}
+                                      onMouseEnter={() => setSelectedCurrencyIndex(index)}
+                                      className={`px-3 py-2 cursor-pointer text-sm text-[var(--color-accent-700)] transition-colors ${
+                                        selectedCurrencyIndex === index
+                                          ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
+                                          : 'hover:bg-[var(--color-primary-100)]'
+                                      }`}
+                                    >
+                                      {currency}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                             <Input
                               id="minPrice"
                               type="number"
@@ -714,7 +793,98 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                       )}
                     </div>
 
+                    {/* Location Section */}
+                    <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--color-secondary-500)]" />
+                        <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
+                          Location
+                        </Label>
+                      </div>
 
+                      <div className="relative">
+                        <Label htmlFor="locationInput" className="text-xs sm:text-sm text-[var(--color-primary-900)] mb-2 block">
+                          Select your location
+                        </Label>
+                        <Input
+                          id="locationInput"
+                          type="text"
+                          value={formData.location}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({...formData, location: value});
+                            // Filter locations based on input
+                            const filtered = MOCK_LOCATION.filter(loc =>
+                              loc.toLowerCase().includes(value.toLowerCase())
+                            );
+                            setFilteredLocations(filtered);
+                            setShowLocationDropdown(true);
+                            setSelectedLocationIndex(-1);
+                          }}
+                          onKeyDown={(e) => {
+                            if (!showLocationDropdown || filteredLocations.length === 0) return;
+
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              setSelectedLocationIndex(prev =>
+                                prev < filteredLocations.length - 1 ? prev + 1 : prev
+                              );
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              setSelectedLocationIndex(prev => prev > 0 ? prev - 1 : -1);
+                            } else if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (selectedLocationIndex >= 0 && selectedLocationIndex < filteredLocations.length) {
+                                setFormData({...formData, location: filteredLocations[selectedLocationIndex]});
+                                setShowLocationDropdown(false);
+                                setSelectedLocationIndex(-1);
+                              }
+                            } else if (e.key === 'Escape') {
+                              setShowLocationDropdown(false);
+                              setSelectedLocationIndex(-1);
+                            }
+                          }}
+                          onFocus={() => {
+                            setShowLocationDropdown(true);
+                            setFilteredLocations(MOCK_LOCATION);
+                            setSelectedLocationIndex(-1);
+                          }}
+                          onBlur={() => {
+                            // Delay to allow click on dropdown item
+                            setTimeout(() => {
+                              setShowLocationDropdown(false);
+                              setSelectedLocationIndex(-1);
+                            }, 200);
+                          }}
+                          placeholder="Select a location"
+                          className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
+                        />
+
+                        {/* Custom Dropdown */}
+                        {showLocationDropdown && filteredLocations.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
+                            {filteredLocations.map((location, index) => (
+                              <div
+                                key={location}
+                                onClick={() => {
+                                  setFormData({...formData, location});
+                                  setShowLocationDropdown(false);
+                                  setSelectedLocationIndex(-1);
+                                }}
+                                onMouseEnter={() => setSelectedLocationIndex(index)}
+                                className={`px-3 py-2 cursor-pointer text-sm sm:text-base text-[var(--color-accent-700)] transition-colors ${
+                                  selectedLocationIndex === index
+                                    ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
+                                    : 'hover:bg-[var(--color-primary-100)]'
+                                }`}
+                              >
+                                {location}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Shipping Section */}
                     <ShippingPreferences
@@ -843,6 +1013,19 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                             </div>
                           </div>
                         </div>
+
+                        {/* Location */}
+                        {formData.location && (
+                          <div className="border rounded-lg p-3 sm:p-4 bg-[var(--color-secondary-50)] border-[var(--color-secondary-500)]">
+                            <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-secondary-500)]" />
+                              Location
+                            </h3>
+                            <p className="text-base sm:text-lg font-semibold text-[var(--color-accent-700)]">
+                              {formData.location}
+                            </p>
+                          </div>
+                        )}
 
                         <div>
                           <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">

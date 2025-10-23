@@ -58,8 +58,10 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
   const [ownershipVerified, setOwnershipVerified] = useState<boolean | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState<string[]>(MOCK_LOCATION);
+  const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [filteredCurrencies, setFilteredCurrencies] = useState<string[]>(['MYR', 'USD', 'SGD']);
+  const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
   const [formData, setFormData] = useState<FormData>({
     uploadedImages: [],
     ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
@@ -787,14 +789,42 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                                   );
                                   setFilteredCurrencies(filtered);
                                   setShowCurrencyDropdown(true);
+                                  setSelectedCurrencyIndex(-1);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (!showCurrencyDropdown || filteredCurrencies.length === 0) return;
+
+                                  if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setSelectedCurrencyIndex(prev =>
+                                      prev < filteredCurrencies.length - 1 ? prev + 1 : prev
+                                    );
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setSelectedCurrencyIndex(prev => prev > 0 ? prev - 1 : -1);
+                                  } else if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (selectedCurrencyIndex >= 0 && selectedCurrencyIndex < filteredCurrencies.length) {
+                                      setFormData({...formData, currency: filteredCurrencies[selectedCurrencyIndex]});
+                                      setShowCurrencyDropdown(false);
+                                      setSelectedCurrencyIndex(-1);
+                                    }
+                                  } else if (e.key === 'Escape') {
+                                    setShowCurrencyDropdown(false);
+                                    setSelectedCurrencyIndex(-1);
+                                  }
                                 }}
                                 onFocus={() => {
                                   setShowCurrencyDropdown(true);
                                   setFilteredCurrencies(['MYR', 'USD', 'SGD']);
+                                  setSelectedCurrencyIndex(-1);
                                 }}
                                 onBlur={() => {
                                   // Delay to allow click on dropdown item
-                                  setTimeout(() => setShowCurrencyDropdown(false), 200);
+                                  setTimeout(() => {
+                                    setShowCurrencyDropdown(false);
+                                    setSelectedCurrencyIndex(-1);
+                                  }, 200);
                                 }}
                                 placeholder="Select currency"
                                 className="w-20 sm:w-24 text-sm border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
@@ -803,14 +833,20 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                               {/* Custom Dropdown */}
                               {showCurrencyDropdown && filteredCurrencies.length > 0 && (
                                 <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
-                                  {filteredCurrencies.map((currency) => (
+                                  {filteredCurrencies.map((currency, index) => (
                                     <div
                                       key={currency}
                                       onClick={() => {
                                         setFormData({...formData, currency});
                                         setShowCurrencyDropdown(false);
+                                        setSelectedCurrencyIndex(-1);
                                       }}
-                                      className="px-3 py-2 cursor-pointer hover:bg-[var(--color-primary-100)] text-sm text-[var(--color-accent-700)] transition-colors"
+                                      onMouseEnter={() => setSelectedCurrencyIndex(index)}
+                                      className={`px-3 py-2 cursor-pointer text-sm text-[var(--color-accent-700)] transition-colors ${
+                                        selectedCurrencyIndex === index
+                                          ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
+                                          : 'hover:bg-[var(--color-primary-100)]'
+                                      }`}
                                     >
                                       {currency}
                                     </div>
@@ -909,14 +945,42 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                             );
                             setFilteredLocations(filtered);
                             setShowLocationDropdown(true);
+                            setSelectedLocationIndex(-1);
+                          }}
+                          onKeyDown={(e) => {
+                            if (!showLocationDropdown || filteredLocations.length === 0) return;
+
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              setSelectedLocationIndex(prev =>
+                                prev < filteredLocations.length - 1 ? prev + 1 : prev
+                              );
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              setSelectedLocationIndex(prev => prev > 0 ? prev - 1 : -1);
+                            } else if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (selectedLocationIndex >= 0 && selectedLocationIndex < filteredLocations.length) {
+                                setFormData({...formData, location: filteredLocations[selectedLocationIndex]});
+                                setShowLocationDropdown(false);
+                                setSelectedLocationIndex(-1);
+                              }
+                            } else if (e.key === 'Escape') {
+                              setShowLocationDropdown(false);
+                              setSelectedLocationIndex(-1);
+                            }
                           }}
                           onFocus={() => {
                             setShowLocationDropdown(true);
                             setFilteredLocations(MOCK_LOCATION);
+                            setSelectedLocationIndex(-1);
                           }}
                           onBlur={() => {
                             // Delay to allow click on dropdown item
-                            setTimeout(() => setShowLocationDropdown(false), 200);
+                            setTimeout(() => {
+                              setShowLocationDropdown(false);
+                              setSelectedLocationIndex(-1);
+                            }, 200);
                           }}
                           placeholder="Select a location"
                           className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
@@ -925,14 +989,20 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         {/* Custom Dropdown */}
                         {showLocationDropdown && filteredLocations.length > 0 && (
                           <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
-                            {filteredLocations.map((location) => (
+                            {filteredLocations.map((location, index) => (
                               <div
                                 key={location}
                                 onClick={() => {
                                   setFormData({...formData, location});
                                   setShowLocationDropdown(false);
+                                  setSelectedLocationIndex(-1);
                                 }}
-                                className="px-3 py-2 cursor-pointer hover:bg-[var(--color-primary-100)] text-sm sm:text-base text-[var(--color-accent-700)] transition-colors"
+                                onMouseEnter={() => setSelectedLocationIndex(index)}
+                                className={`px-3 py-2 cursor-pointer text-sm sm:text-base text-[var(--color-accent-700)] transition-colors ${
+                                  selectedLocationIndex === index
+                                    ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
+                                    : 'hover:bg-[var(--color-primary-100)]'
+                                }`}
                               >
                                 {location}
                               </div>
