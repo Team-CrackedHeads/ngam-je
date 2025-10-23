@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import TagGenerator, { TagGeneratorRef } from '@/app/create-listing/tag-generator';
+import TagGenerator, { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 
 interface AIGenerateStepProps {
   listingType: 'buy' | 'sell';
@@ -74,49 +74,54 @@ export default function AIGenerateStep({
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8 relative">
-        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
-        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
-        {isAIModeEnabled && (
-          <p className="text-sm text-[var(--color-secondary-600)] mt-2 italic">
-            Upload photo or type in title and/or description to start using AI generate
-          </p>
-        )}
-        <div className="absolute top-0 right-0 flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              AI Mode
-            </Label>
-            <Switch
-              id="ai-mode"
-              checked={isAIModeEnabled}
-              onCheckedChange={setIsAIModeEnabled}
-              className="data-[state=checked]:bg-[var(--color-secondary-500)]"
-            />
+      {/* AI Action Bar */}
+      <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="ai-mode"
+                checked={isAIModeEnabled}
+                onCheckedChange={setIsAIModeEnabled}
+                className="data-[state=checked]:bg-[var(--color-secondary-500)]"
+              />
+              <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[var(--color-secondary-600)]" />
+                AI Mode
+              </Label>
+            </div>
+            {isAIModeEnabled && (
+              <p className="text-xs text-[var(--color-primary-900)] italic hidden sm:block">
+                Upload photo or type to enable AI generation
+              </p>
+            )}
           </div>
           {isAIModeEnabled && (
             <Button
-              variant="outline"
               size="sm"
-              className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+              className="text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
               onClick={onGenerateAll}
               disabled={isGeneratingAll || !hasAnyInput}
             >
               {isGeneratingAll ? (
                 <>
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Generate all with AI
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate All
                 </>
               )}
             </Button>
           )}
         </div>
+      </div>
+
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
+        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
@@ -128,9 +133,8 @@ export default function AIGenerateStep({
             </Label>
             {isAIModeEnabled && (
               <Button
-                variant="outline"
                 size="sm"
-                className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
                 onClick={onGeneratePhotos}
                 disabled={isGeneratingPhotos || !hasAnyInput}
               >
@@ -142,7 +146,7 @@ export default function AIGenerateStep({
                 ) : (
                   <>
                     <Sparkles className="w-3 h-3 mr-1" />
-                    {listingType === 'buy' ? 'Generate Photos with AI' : 'Enhance Photos with AI'}
+                    {listingType === 'buy' ? 'Generate Photos' : 'Enhance Photos'}
                   </>
                 )}
               </Button>
@@ -285,9 +289,8 @@ export default function AIGenerateStep({
             </Label>
             {isAIModeEnabled && (
               <Button
-                variant="outline"
                 size="sm"
-                className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
                 onClick={onGenerateTitle}
                 disabled={isGeneratingTitle || !hasAnyInput}
               >
@@ -299,7 +302,7 @@ export default function AIGenerateStep({
                 ) : (
                   <>
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Generate Title with AI
+                    Generate Title
                   </>
                 )}
               </Button>
@@ -362,11 +365,10 @@ export default function AIGenerateStep({
             </Label>
             {isAIModeEnabled && (
               <Button
-                variant="outline"
                 size="sm"
                 onClick={onGenerateDescription}
                 disabled={isGeneratingDescription || !hasAnyInput}
-                className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
               >
                 {isGeneratingDescription ? (
                   <>
@@ -376,7 +378,7 @@ export default function AIGenerateStep({
                 ) : (
                   <>
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Generate Description with AI
+                    Generate Description
                   </>
                 )}
               </Button>

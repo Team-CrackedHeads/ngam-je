@@ -191,11 +191,10 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
           Product Category Tags
         </Label>
         <Button
-          variant="outline"
           size="sm"
           onClick={generateTagsFromContent}
           disabled={isGeneratingTags}
-          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+          className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
         >
           {isGeneratingTags ? (
             <>
@@ -205,7 +204,7 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
           ) : (
             <>
               <Sparkles className="w-3 h-3 mr-1" />
-              Generate Tags With AI
+              Generate Tags
             </>
           )}
         </Button>

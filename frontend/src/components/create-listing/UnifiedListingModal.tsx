@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Search, Upload, Sparkles, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle } from 'lucide-react';
+import { Search, Upload, Sparkles, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
 import { FAQ } from '@/app/create-listing/faq-generator';
@@ -128,10 +128,10 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
   }, [sellFormData.ownershipProofImage, ownershipVerified]);
 
   const steps = listingType === null
-    ? [{ number: 1, label: 'Choose Type', icon: Search }]
+    ? [{ number: 1, label: 'Choose Type', icon: ListPlus }]
     : [
-        { number: 1, label: 'Choose Type', icon: Search },
-        { number: 2, label: 'AI Generate', icon: Sparkles },
+        { number: 1, label: 'Choose Type', icon: ListPlus },
+        { number: 2, label: 'Details', icon: Sparkles },
         { number: 3, label: 'Pricing & Shipping', icon: DollarSign },
         { number: 4, label: 'FAQs', icon: MessageCircle },
         { number: 5, label: 'Preview', icon: Eye }
@@ -446,10 +446,11 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
             </Button>
           </div>
 
-          {/* Progress Steps */}
-          <div className="px-4 pb-4 overflow-x-auto">
-            <div className="flex items-center justify-between min-w-max py-2">
-              {steps.map((step, index) => {
+          {/* Progress Steps - Only show after listing type is selected */}
+          {listingType !== null && (
+            <div className="px-4 pb-4 overflow-x-auto">
+              <div className="flex items-center justify-between min-w-max py-2">
+                {steps.map((step, index) => {
                 const Icon = step.icon;
                 return (
                   <React.Fragment key={step.number}>
@@ -489,69 +490,67 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
               })}
             </div>
           </div>
+          )}
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8">
-          {/* Step 1: Choose Buy or Sell */}
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6 shadow-lg bg-primary-gradient">
-                  <Search className="w-8 h-8 text-white" />
+          <div className="max-w-3xl mx-auto">
+            {/* Step 1: Choose Buy or Sell */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center mb-4">
+                  <img src="/Forms-cuate.svg" alt="Create Listing" className="w-32 h-32" />
                 </div>
-                <h2 className="text-4xl font-bold mb-4 text-accent-700">
+                <h2 className="text-3xl font-bold mb-2 text-accent-700">
                   Create Your Listing
                 </h2>
-                <p className="text-lg max-w-2xl mx-auto leading-relaxed text-accent-500">
-                  Join thousands of users buying and selling with AI-powered matching
+                <p className="text-base max-w-2xl mx-auto text-accent-500">
+                  Choose whether you want to buy or sell
                 </p>
               </div>
 
-              <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Buy Option */}
                   <div
                     onClick={handleBuySelect}
                     className="group relative cursor-pointer"
                   >
-                    <div className="absolute inset-0 bg-primary-gradient rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
-                    <div className="relative bg-neutral-white rounded-2xl p-6 shadow-xl border-2 border-primary-200 group-hover:shadow-2xl hover:border-secondary-400 transition-all duration-300 flex flex-col justify-between">
+                    <div className="absolute inset-0 bg-primary-gradient rounded-lg opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
+                    <div className="relative bg-neutral-white rounded-lg p-5 shadow-xl border-2 border-primary-200 group-hover:shadow-2xl hover:border-secondary-400 transition-all duration-300 flex flex-col justify-between h-full">
                       <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-secondary-100 group-hover:scale-110 transition-transform duration-300">
-                          <Search className="w-8 h-8 text-primary-600" />
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 bg-secondary-100 group-hover:scale-110 transition-transform duration-300">
+                          <Package className="w-6 h-6 text-primary-600" />
                         </div>
-                        <h2 className="text-2xl font-bold mb-3 text-accent-700">
+                        <h2 className="text-xl font-bold mb-2 text-accent-700">
                           I&apos;m Looking to Buy
                         </h2>
-                        <p className="text-base leading-relaxed mb-4 text-accent-500">
-                          Set your budget and let sellers compete to fulfill your needs
+                        <p className="text-sm leading-relaxed mb-3 text-accent-500">
+                          Set your budget and let sellers compete
                         </p>
 
-                        <div className="space-y-2 text-left mb-6">
+                        <div className="space-y-1.5 text-left mb-4 px-4">
                           <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full mr-2.5 bg-primary-500 flex-shrink-0"></div>
                             <span className="text-sm">Describe what you&apos;re looking for</span>
                           </div>
                           <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full mr-2.5 bg-primary-500 flex-shrink-0"></div>
                             <span className="text-sm">Set your budget range</span>
                           </div>
                           <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full mr-2.5 bg-primary-500 flex-shrink-0"></div>
                             <span className="text-sm">Get matched with sellers</span>
-                          </div>
-                          <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
-                            <span className="text-sm">Secure escrow protection</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="text-center">
-                        <div className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-accent-700 font-semibold text-base bg-secondary-500 hover:bg-secondary-600 group-hover:scale-105 transition-all duration-300 shadow-lg">
+                        <div className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-accent-700 font-semibold text-sm bg-secondary-500 hover:bg-secondary-600 group-hover:scale-105 transition-all duration-300 shadow-lg">
                           Start Buying
-                          <Search className="w-5 h-5 ml-2" />
+                          <Package className="w-4 h-4 ml-2" />
                         </div>
                       </div>
                     </div>
@@ -562,43 +561,39 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
                     onClick={handleSellSelect}
                     className="group relative cursor-pointer"
                   >
-                    <div className="absolute inset-0 bg-primary-gradient-reverse rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
-                    <div className="relative bg-neutral-white rounded-2xl p-6 shadow-xl border-2 border-primary-200 group-hover:shadow-2xl hover:border-secondary-400 transition-all duration-300 flex flex-col justify-between">
+                    <div className="absolute inset-0 bg-primary-gradient-reverse rounded-lg opacity-0 group-hover:opacity-15 transition-opacity duration-300"></div>
+                    <div className="relative bg-neutral-white rounded-lg p-5 shadow-xl border-2 border-primary-200 group-hover:shadow-2xl hover:border-secondary-400 transition-all duration-300 flex flex-col justify-between h-full">
                       <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-secondary-100 group-hover:scale-110 transition-transform duration-300">
-                          <Upload className="w-8 h-8 text-primary-600" />
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 bg-secondary-100 group-hover:scale-110 transition-transform duration-300">
+                          <ShoppingCart className="w-6 h-6 text-primary-600" />
                         </div>
-                        <h2 className="text-2xl font-bold mb-3 text-accent-700">
+                        <h2 className="text-xl font-bold mb-2 text-accent-700">
                           I Want to Sell
                         </h2>
-                        <p className="text-base leading-relaxed mb-4 text-accent-500">
-                          List your items and connect with interested buyers automatically
+                        <p className="text-sm leading-relaxed mb-3 text-accent-500">
+                          List items and connect with buyers
                         </p>
 
-                        <div className="space-y-2 text-left mb-6">
+                        <div className="space-y-1.5 text-left mb-4 px-4">
                           <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full mr-2.5 bg-primary-500 flex-shrink-0"></div>
                             <span className="text-sm">Upload photos of your item</span>
                           </div>
                           <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full mr-2.5 bg-primary-500 flex-shrink-0"></div>
                             <span className="text-sm">AI optimizes your listing</span>
                           </div>
                           <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full mr-2.5 bg-primary-500 flex-shrink-0"></div>
                             <span className="text-sm">Get intelligent price suggestions</span>
-                          </div>
-                          <div className="flex items-center text-accent-500">
-                            <div className="w-2 h-2 rounded-full mr-3 bg-primary-500"></div>
-                            <span className="text-sm">Connect with verified buyers</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="text-center">
-                        <div className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-accent-700 font-semibold text-base bg-primary-500 hover:bg-primary-600 group-hover:scale-105 transition-all duration-300 shadow-lg">
+                        <div className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-accent-700 font-semibold text-sm bg-primary-500 hover:bg-primary-600 group-hover:scale-105 transition-all duration-300 shadow-lg">
                           Start Selling
-                          <Upload className="w-5 h-5 ml-2" />
+                          <ShoppingCart className="w-4 h-4 ml-2" />
                         </div>
                       </div>
                     </div>
@@ -606,20 +601,20 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
                 </div>
 
                 {/* Bottom Feature Highlight */}
-                <div className="text-center mt-8 pb-8">
-                  <div className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-accent-600/20 bg-primary-100/80 shadow-lg backdrop-blur-sm">
-                    <Sparkles className="w-5 h-5 mr-2 text-accent-600" />
-                    <span className="font-medium text-base text-accent-700">
+                <div className="text-center mt-6">
+                  <div className="inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-accent-600/20 bg-primary-100/80 shadow-lg backdrop-blur-sm">
+                    <Sparkles className="w-4 h-4 mr-2 text-accent-600" />
+                    <span className="font-medium text-sm text-accent-700">
                       AI-powered matching ensures fair deals for everyone
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+            )}
 
-          {/* Step 2: AI Generate */}
-          {currentStep === 2 && listingType && (
+            {/* Step 2: AI Generate */}
+            {currentStep === 2 && listingType && (
             <AIGenerateStep
               listingType={listingType}
               formData={formData}
@@ -695,36 +690,39 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
             />
           )}
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className="px-6"
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
+          {/* Navigation Buttons - Hide on Step 1 (selection page) */}
+          {currentStep !== 1 && (
+            <div className="flex justify-between items-center mt-8 pt-6 border-t">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                className="px-6"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
 
-            {currentStep < 5 ? (
-              <Button
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                className="px-6 text-white hover:opacity-90 bg-[var(--color-secondary-500)]"
-              >
-                Continue
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!isStepValid()}
-                className="px-8 bg-green-600 hover:bg-green-700 text-lg font-semibold text-white"
-              >
-                <Check className="w-5 h-5 mr-2" />
-                Publish {listingType === 'buy' ? 'Buy' : 'Sell'} Listing
-              </Button>
+              {currentStep < 5 ? (
+                <Button
+                  onClick={handleNext}
+                  disabled={!isStepValid()}
+                  className="px-6 text-white hover:opacity-90 bg-[var(--color-secondary-500)]"
+                >
+                  Continue
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!isStepValid()}
+                  className="px-8 bg-green-600 hover:bg-green-700 text-lg font-semibold text-white"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  Publish {listingType === 'buy' ? 'Buy' : 'Sell'} Listing
+                </Button>
+              )}
+            </div>
             )}
           </div>
         </div>
