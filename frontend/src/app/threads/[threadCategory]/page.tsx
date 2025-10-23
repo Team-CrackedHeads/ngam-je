@@ -10,6 +10,7 @@ import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
 import { Plus, ArrowLeft } from "lucide-react";
+import UnifiedListingModal from "@/components/create-listing/UnifiedListingModal";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -53,6 +54,9 @@ const CategoryPage: React.FC = () => {
 
   // State for floating button
   const [showFloatingButton, setShowFloatingButton] = useState(false);
+
+  // State for create listing modal
+  const [isCreateListingModalOpen, setIsCreateListingModalOpen] = useState(false);
 
   /**
    * Stable callback to prevent infinite loops in Sorting component
@@ -128,9 +132,9 @@ const CategoryPage: React.FC = () => {
     // You can add FAQ functionality here
   };
 
-  // Handle create listing navigation
+  // Handle create listing modal
   const handleCreateListing = () => {
-    router.push(`/create-listing/`);
+    setIsCreateListingModalOpen(true);
   };
   // Filter listings based on all active filters - UPDATED for UnifiedListingData
   const getFilteredListings = useCallback((): UnifiedListingData[] => {
@@ -494,6 +498,12 @@ const CategoryPage: React.FC = () => {
           </button>
         )}
       </div>
+
+      {/* Create Listing Modal */}
+      <UnifiedListingModal
+        isOpen={isCreateListingModalOpen}
+        onClose={() => setIsCreateListingModalOpen(false)}
+      />
     </div>
   );
 };
