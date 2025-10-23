@@ -312,7 +312,10 @@ export default function AIGenerateStep({
             <Input
               id="title"
               value={formData.generatedTitle}
-              onChange={(e) => onTitleChange(e.target.value)}
+              onChange={(e) => {
+                setFormData((prev: any) => ({ ...prev, generatedTitle: e.target.value }));
+                onTitleChange(e.target.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Tab' && titleSuggestion) {
                   e.preventDefault();
@@ -388,7 +391,10 @@ export default function AIGenerateStep({
             <Textarea
               id="description"
               value={formData.generatedDescription}
-              onChange={(e) => onDescriptionChange(e.target.value)}
+              onChange={(e) => {
+                setFormData((prev: any) => ({ ...prev, generatedDescription: e.target.value }));
+                onDescriptionChange(e.target.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Tab' && descriptionSuggestion) {
                   e.preventDefault();
