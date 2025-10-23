@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, Sparkles, Edit3, DollarSign, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Image as ImageIcon, Trash2, Tag, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,8 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isVerifyingOwnership, setIsVerifyingOwnership] = useState(false);
+  const [ownershipVerified, setOwnershipVerified] = useState<boolean | null>(null);
   const [formData, setFormData] = useState<FormData>({
     uploadedImages: [],
     ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
@@ -78,6 +80,13 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     { number: 4, label: 'Preview', icon: Eye }
   ];
 
+  // Initialize ownership verification for mock data
+  useEffect(() => {
+    if (formData.ownershipProofImage === MOCK_OWNERSHIP_PROOF_IMAGE_SELL && ownershipVerified === null) {
+      setOwnershipVerified(true); // Mock data is pre-verified
+    }
+  }, [formData.ownershipProofImage, ownershipVerified]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -91,6 +100,21 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     }
   };
 
+  const verifyOwnershipProofWithAI = async (imageUrl: string) => {
+    setIsVerifyingOwnership(true);
+    setOwnershipVerified(null);
+
+    // Simulate AI verification (2 second delay)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Mock AI decision - randomly verify or reject for demo
+    // In production, this would call an actual AI API to analyze the image
+    const isVerified = Math.random() > 0.3; // 70% chance of verification
+
+    setOwnershipVerified(isVerified);
+    setIsVerifyingOwnership(false);
+  };
+
   const handleOwnershipProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -99,6 +123,8 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
         ...prev,
         ownershipProofImage: imageUrl
       }));
+      // Trigger AI verification
+      verifyOwnershipProofWithAI(imageUrl);
     }
   };
 
@@ -261,6 +287,8 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     setIsAIModeEnabled(false);
     setTitleSuggestion('');
     setDescriptionSuggestion('');
+    setOwnershipVerified(true); // Reset to verified for mock data
+    setIsVerifyingOwnership(false);
     onClose();
   };
 
@@ -468,14 +496,28 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                               className="w-full h-full object-cover"
                             />
                             <button
-                              onClick={() => setFormData(prev => ({ ...prev, ownershipProofImage: null }))}
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, ownershipProofImage: null }));
+                                setOwnershipVerified(null);
+                              }}
                               className="absolute top-1 right-1 sm:top-2 sm:right-2 p-1 sm:p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                             >
                               <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
-                            <div className="absolute bottom-2 left-2 px-2 sm:px-3 py-1 rounded bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] text-xs sm:text-sm font-medium">
-                              Ownership Verified
-                            </div>
+                            {isVerifyingOwnership ? (
+                              <div className="absolute bottom-2 left-2 px-2 sm:px-3 py-1 rounded bg-gray-500 text-white text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Verifying...
+                              </div>
+                            ) : ownershipVerified !== null ? (
+                              <div className={`absolute bottom-2 left-2 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium ${
+                                ownershipVerified
+                                  ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)]'
+                                  : 'bg-red-500 text-white'
+                              }`}>
+                                {ownershipVerified ? 'Ownership Verified' : 'Ownership Not Verified by AI'}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       ) : (
@@ -879,12 +921,20 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                                 alt="Ownership Proof"
                                 className="w-full object-cover"
                               />
-                              <div className="absolute bottom-2 left-2 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-medium">
-                                Ownership Verified
-                              </div>
+                              {ownershipVerified !== null && (
+                                <div className={`absolute bottom-2 left-2 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded font-medium ${
+                                  ownershipVerified
+                                    ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)]'
+                                    : 'bg-red-500 text-white'
+                                }`}>
+                                  {ownershipVerified ? 'Ownership Verified' : 'Ownership Not Verified by AI'}
+                                </div>
+                              )}
                             </div>
                             <p className="text-xs sm:text-sm text-[var(--color-primary-700)] mt-2">
-                              This photo verifies the seller's ownership of the item.
+                              {ownershipVerified
+                                ? 'This photo verifies the seller\'s ownership of the item.'
+                                : 'AI could not verify ownership from this photo, but you can still proceed with the listing.'}
                             </p>
                           </div>
                         )}
