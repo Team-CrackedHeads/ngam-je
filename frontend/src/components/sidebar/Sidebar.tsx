@@ -18,7 +18,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { MOCK_THREADS } from "@/utils/mock-threads-data";
+import { MOCK_THREADS } from "@/utils/mock-all-data-used";
 import SidebarAIChat from "@/components/sidebar/SidebarAIChat";
 import {
   Sidebar,

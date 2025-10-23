@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ThreadData } from "@/utils/mock-threads-data";
+import { ThreadData } from "@/utils/mock-all-data-used";
 import { motion } from "framer-motion";
 import TierBadge from "@/components/threads/TierBadge";
 

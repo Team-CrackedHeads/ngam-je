@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CheckCircle, ShoppingCart, Tag, OctagonAlert } from "lucide-react";
-import { placeholderActivities } from "@/utils/mock-activity-data";
+import { placeholderActivities } from "@/utils/mock-all-data-used";
 import { useState } from "react";
 import {
   Pagination,

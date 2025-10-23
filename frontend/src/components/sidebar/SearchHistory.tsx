@@ -16,7 +16,7 @@ import {
 import {
   mockSearchSuggestions,
   SearchSuggestion,
-} from "@/utils/mock-search-history";
+} from "@/utils/mock-all-data-used";
 
 // Helper to get Lucide icon component by name
 const getIconComponent = (iconName?: string) => {

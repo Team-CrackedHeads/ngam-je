@@ -2,7 +2,7 @@
 // New file
 import React from "react";
 import ThreadCard from "./ThreadCard";
-import { ThreadData } from "@/utils/mock-threads-data";
+import { ThreadData } from "@/utils/mock-all-data-used";
 
 type ThreadsGridProps = {
   threads: ThreadData[];

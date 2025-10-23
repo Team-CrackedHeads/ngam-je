@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake, X } from "lucide-react";
-import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake, X, Cable } from "lucide-react";
+import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
-import { generateMatchesForListing } from "@/utils/mock-match-data";
-import { AnimatePresence } from "motion/react";
+import { generateMatchesForListing } from "@/utils/mock-all-data-used";
+import { motion, AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Breadcrumb,
