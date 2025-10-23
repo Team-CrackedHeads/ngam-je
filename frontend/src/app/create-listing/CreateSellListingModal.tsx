@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, Sparkles, Edit3, DollarSign, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Image as ImageIcon, Trash2, Tag, MessageCircle } from 'lucide-react';
+import { Upload, Sparkles, Edit3, DollarSign, Eye, Check, ChevronLeft, ChevronRight, Loader2, X, Image as ImageIcon, Trash2, Tag, MessageCircle, MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
 import TagGenerator from './tag-generator';
 import { MOCK_RECOMMENDED_PRICE_RANGE } from '@/utils/mock-price-rec-data';
 import { verifyOwnershipProofWithAI } from './ai-photo';
+import { MOCK_LOCATION } from '@/utils/mock-location-data';
 
 interface FormData {
   uploadedImages: string[];
@@ -27,6 +28,7 @@ interface FormData {
   minPrice: string;
   maxPrice: string;
   currency: string;
+  location: string;
   shippingOptions: string[];
   inventoryQuantity: string;
   tags: string[];
@@ -54,6 +56,10 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isVerifyingOwnership, setIsVerifyingOwnership] = useState(false);
   const [ownershipVerified, setOwnershipVerified] = useState<boolean | null>(null);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [filteredLocations, setFilteredLocations] = useState<string[]>(MOCK_LOCATION);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [filteredCurrencies, setFilteredCurrencies] = useState<string[]>(['MYR', 'USD', 'SGD']);
   const [formData, setFormData] = useState<FormData>({
     uploadedImages: [],
     ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
@@ -62,6 +68,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     minPrice: '',
     maxPrice: '',
     currency: 'MYR',
+    location: '',
     shippingOptions: [],
     inventoryQuantity: '',
     tags: [],
@@ -273,6 +280,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
       minPrice: '',
       maxPrice: '',
       currency: 'MYR',
+      location: '',
       shippingOptions: [],
       inventoryQuantity: '',
       tags: [],
@@ -291,7 +299,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
   const isStepValid = () => {
     switch(currentStep) {
       case 1: return formData.generatedTitle.length >= 3 && formData.generatedDescription.length >= 10 && formData.uploadedImages.length > 0 && formData.ownershipProofImage !== null;
-      case 2: return formData.minPrice && formData.maxPrice && parseFloat(formData.minPrice) < parseFloat(formData.maxPrice) && formData.shippingOptions.length > 0 && formData.inventoryQuantity && parseInt(formData.inventoryQuantity) > 0;
+      case 2: return formData.minPrice && formData.maxPrice && parseFloat(formData.minPrice) < parseFloat(formData.maxPrice) && formData.location.length > 0 && formData.shippingOptions.length > 0 && formData.inventoryQuantity && parseInt(formData.inventoryQuantity) > 0;
       case 3: return true; // FAQs are optional
       case 4: return true;
       default: return false;
@@ -766,15 +774,50 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                         <div>
                           <Label htmlFor="minPrice" className="text-xs sm:text-sm text-[var(--color-primary-900)]">Minimum Price (per unit)</Label>
                           <div className="flex gap-2 mt-2">
-                            <select
-                              value={formData.currency}
-                              onChange={(e) => setFormData({...formData, currency: e.target.value})}
-                              className="px-2 sm:px-3 py-2 border rounded-lg text-sm border-[var(--color-primary-200)]"
-                            >
-                              <option value="MYR">MYR</option>
-                              <option value="USD">USD</option>
-                              <option value="SGD">SGD</option>
-                            </select>
+                            <div className="relative">
+                              <Input
+                                type="text"
+                                value={formData.currency}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setFormData({...formData, currency: value});
+                                  // Filter currencies based on input
+                                  const filtered = ['MYR', 'USD', 'SGD'].filter(curr =>
+                                    curr.toLowerCase().includes(value.toLowerCase())
+                                  );
+                                  setFilteredCurrencies(filtered);
+                                  setShowCurrencyDropdown(true);
+                                }}
+                                onFocus={() => {
+                                  setShowCurrencyDropdown(true);
+                                  setFilteredCurrencies(['MYR', 'USD', 'SGD']);
+                                }}
+                                onBlur={() => {
+                                  // Delay to allow click on dropdown item
+                                  setTimeout(() => setShowCurrencyDropdown(false), 200);
+                                }}
+                                placeholder="Select currency"
+                                className="w-20 sm:w-24 text-sm border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
+                              />
+
+                              {/* Custom Dropdown */}
+                              {showCurrencyDropdown && filteredCurrencies.length > 0 && (
+                                <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
+                                  {filteredCurrencies.map((currency) => (
+                                    <div
+                                      key={currency}
+                                      onClick={() => {
+                                        setFormData({...formData, currency});
+                                        setShowCurrencyDropdown(false);
+                                      }}
+                                      className="px-3 py-2 cursor-pointer hover:bg-[var(--color-primary-100)] text-sm text-[var(--color-accent-700)] transition-colors"
+                                    >
+                                      {currency}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                             <Input
                               id="minPrice"
                               type="number"
@@ -837,6 +880,65 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                           min="1"
                           step="1"
                         />
+                      </div>
+                    </div>
+
+                    {/* Location Section */}
+                    <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--color-secondary-500)]" />
+                        <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
+                          Location
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <Label htmlFor="locationInput" className="text-xs sm:text-sm text-[var(--color-primary-900)] mb-2 block">
+                          Select your location
+                        </Label>
+                        <Input
+                          id="locationInput"
+                          type="text"
+                          value={formData.location}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({...formData, location: value});
+                            // Filter locations based on input
+                            const filtered = MOCK_LOCATION.filter(loc =>
+                              loc.toLowerCase().includes(value.toLowerCase())
+                            );
+                            setFilteredLocations(filtered);
+                            setShowLocationDropdown(true);
+                          }}
+                          onFocus={() => {
+                            setShowLocationDropdown(true);
+                            setFilteredLocations(MOCK_LOCATION);
+                          }}
+                          onBlur={() => {
+                            // Delay to allow click on dropdown item
+                            setTimeout(() => setShowLocationDropdown(false), 200);
+                          }}
+                          placeholder="Select a location"
+                          className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)]"
+                        />
+
+                        {/* Custom Dropdown */}
+                        {showLocationDropdown && filteredLocations.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
+                            {filteredLocations.map((location) => (
+                              <div
+                                key={location}
+                                onClick={() => {
+                                  setFormData({...formData, location});
+                                  setShowLocationDropdown(false);
+                                }}
+                                className="px-3 py-2 cursor-pointer hover:bg-[var(--color-primary-100)] text-sm sm:text-base text-[var(--color-accent-700)] transition-colors"
+                              >
+                                {location}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -984,12 +1086,25 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                           </div>
                         </div>
 
+                        {/* Location */}
+                        {formData.location && (
+                          <div className="border rounded-lg p-3 sm:p-4 bg-[var(--color-secondary-50)] border-[var(--color-secondary-500)]">
+                            <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-secondary-500)]" />
+                              Location
+                            </h3>
+                            <p className="text-base sm:text-lg font-semibold text-[var(--color-accent-700)]">
+                              {formData.location}
+                            </p>
+                          </div>
+                        )}
+
                         {/* Shipping Options */}
                         <div>
                           <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-[var(--color-accent-700)]">Available Shipping Methods</h3>
                           <div className="flex flex-wrap gap-2">
                             {formData.shippingOptions.map((option) => (
-                              <span 
+                              <span
                                 key={option}
                                 className="px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-[var(--color-secondary-400)] text-[var(--color-accent-700)]"
                               >
