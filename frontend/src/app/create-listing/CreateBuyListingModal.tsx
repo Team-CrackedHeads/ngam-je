@@ -15,7 +15,7 @@ import { ShippingPreferences } from './shipping-options';
 import FAQGenerator, { FAQ } from './faq-generator';
 import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
 import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
-import TagGenerator from './tag-generator';
+import TagGenerator, { TagGeneratorRef } from './tag-generator';
 import { MOCK_RECOMMENDED_PRICE_RANGE } from '@/utils/mock-price-rec-data';
 import { MOCK_LOCATION } from '@/utils/mock-location-data';
 
@@ -46,11 +46,13 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
   const [isGeneratingPhotos, setIsGeneratingPhotos] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [titleSuggestion, setTitleSuggestion] = useState('');
   const [descriptionSuggestion, setDescriptionSuggestion] = useState('');
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tagGeneratorRef = useRef<TagGeneratorRef>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState<string[]>(MOCK_LOCATION);
   const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
@@ -125,6 +127,26 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
     }));
 
     setIsGeneratingPhotos(false);
+  };
+
+  const generateAllWithAI = async () => {
+    setIsGeneratingAll(true);
+
+    // Generate photos first
+    await generatePhotosWithAI();
+
+    // Generate title
+    await generateTitleWithAI();
+
+    // Generate description
+    await generateDescriptionWithAI();
+
+    // Generate tags
+    if (tagGeneratorRef.current) {
+      await tagGeneratorRef.current.generateTags();
+    }
+
+    setIsGeneratingAll(false);
   };
 
   const generateTitleSuggestion = useCallback((currentText: string) => {
@@ -352,17 +374,40 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                   <div className="text-center mb-8 relative">
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
                     <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
-                    <div className="absolute top-0 right-0 flex items-center gap-2">
-                      <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        AI Mode
-                      </Label>
-                      <Switch
-                        id="ai-mode"
-                        checked={isAIModeEnabled}
-                        onCheckedChange={setIsAIModeEnabled}
-                        className="data-[state=checked]:bg-[var(--color-secondary-500)]"
-                      />
+                    <div className="absolute top-0 right-0 flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          AI Mode
+                        </Label>
+                        <Switch
+                          id="ai-mode"
+                          checked={isAIModeEnabled}
+                          onCheckedChange={setIsAIModeEnabled}
+                          className="data-[state=checked]:bg-[var(--color-secondary-500)]"
+                        />
+                      </div>
+                      {isAIModeEnabled && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs sm:text-sm border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                          onClick={generateAllWithAI}
+                          disabled={isGeneratingAll || !hasAnyInput()}
+                        >
+                          {isGeneratingAll ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              Generate all with AI
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -620,8 +665,9 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
 
                     {/* Tags Section - Shows after content is filled */}
                     <TagGenerator
+                      ref={tagGeneratorRef}
                       tags={formData.tags}
-                      onTagsChange={(tags) => setFormData({ ...formData, tags })}
+                      onTagsChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
                       hasContent={!!(formData.generatedTitle || formData.generatedDescription || formData.generatedImages.length > 0)}
                     />
                   </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Tag, X, Plus, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -71,7 +71,11 @@ interface TagGeneratorProps {
   hasContent?: boolean;
 }
 
-export default function TagGenerator({ tags, onTagsChange, hasContent = true }: TagGeneratorProps) {
+export interface TagGeneratorRef {
+  generateTags: () => Promise<void>;
+}
+
+const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onTagsChange, hasContent = true }, ref) => {
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
@@ -97,6 +101,11 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
 
     setIsGeneratingTags(false);
   };
+
+  // Expose generateTagsFromContent to parent via ref
+  useImperativeHandle(ref, () => ({
+    generateTags: generateTagsFromContent
+  }));
 
   const addTag = (tag?: string) => {
     const tagToAdd = tag || newTagInput.trim();
@@ -278,4 +287,8 @@ export default function TagGenerator({ tags, onTagsChange, hasContent = true }: 
 
     </div>
   );
-}
+});
+
+TagGenerator.displayName = 'TagGenerator';
+
+export default TagGenerator;
