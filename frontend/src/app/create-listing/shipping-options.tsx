@@ -29,7 +29,7 @@ export function ShippingPreferences({ shippingOptions, onShippingOptionsChange }
   };
 
   return (
-    <div className="space-y-4 pt-4 border-t-2 border-[var(--color-primary-300)]">
+    <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
         <Truck className="w-6 h-6 text-[var(--color-secondary-500)]" />
         <Label className="text-base font-medium text-[var(--color-accent-700)]">

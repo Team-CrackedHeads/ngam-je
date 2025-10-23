@@ -951,7 +951,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
 
 
                     {/* Inventory Quantity */}
-                    <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
+                    <div className="space-y-3 sm:space-y-4 mb-6">
                       <div>
                         <Label htmlFor="inventoryQuantity" className="text-sm font-medium mb-1 sm:mb-2 block text-[var(--color-accent-700)]">
                           Units Available
@@ -962,7 +962,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                           type="number"
                           value={formData.inventoryQuantity}
                           onChange={(e) => setFormData({...formData, inventoryQuantity: e.target.value})}
-                          placeholder="Enter quantity"
+                          placeholder="Enter quantity of a minimum 1 unit"
                           className="text-sm sm:text-base border-[var(--color-primary-200)]"
                           min="1"
                           step="1"
@@ -971,7 +971,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
                     </div>
 
                     {/* Location Section */}
-                    <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
+                    <div className="space-y-3 sm:space-y-4 mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--color-secondary-500)]" />
                         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">

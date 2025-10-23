@@ -845,7 +845,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                     </div>
 
                     {/* Location Section */}
-                    <div className="space-y-3 sm:space-y-4 mb-6 pt-4 border-t-2 border-[var(--color-primary-300)]">
+                    <div className="space-y-3 sm:space-y-4 mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--color-secondary-500)]" />
                         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
