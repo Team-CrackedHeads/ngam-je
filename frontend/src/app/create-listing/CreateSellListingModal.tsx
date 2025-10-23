@@ -17,6 +17,7 @@ import FAQGenerator, { FAQ } from './faq-generator';
 import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
 import TagGenerator from './tag-generator';
 import { MOCK_RECOMMENDED_PRICE_RANGE } from '@/utils/mock-price-rec-data';
+import { verifyOwnershipProofWithAI } from './ai-photo';
 
 interface FormData {
   uploadedImages: string[];
@@ -100,16 +101,11 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
     }
   };
 
-  const verifyOwnershipProofWithAI = async (imageUrl: string) => {
+  const handleVerifyOwnershipProof = async (imageUrl: string) => {
     setIsVerifyingOwnership(true);
     setOwnershipVerified(null);
 
-    // Simulate AI verification (2 second delay)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mock AI decision - randomly verify or reject for demo
-    // In production, this would call an actual AI API to analyze the image
-    const isVerified = Math.random() > 0.3; // 70% chance of verification
+    const isVerified = await verifyOwnershipProofWithAI(imageUrl);
 
     setOwnershipVerified(isVerified);
     setIsVerifyingOwnership(false);
@@ -124,7 +120,7 @@ export default function CreateSellListingModal({ isOpen, onClose, onSubmit }: Cr
         ownershipProofImage: imageUrl
       }));
       // Trigger AI verification
-      verifyOwnershipProofWithAI(imageUrl);
+      handleVerifyOwnershipProof(imageUrl);
     }
   };
 
