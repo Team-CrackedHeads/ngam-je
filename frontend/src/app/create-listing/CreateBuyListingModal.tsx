@@ -374,6 +374,11 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                   <div className="text-center mb-8 relative">
                     <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
                     <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
+                    {isAIModeEnabled && (
+                      <p className="text-sm text-[var(--color-secondary-600)] mt-2 italic">
+                        Upload photo or type in title and/or description to start using AI generate
+                      </p>
+                    )}
                     <div className="absolute top-0 right-0 flex flex-col items-end gap-2">
                       <div className="flex items-center gap-2">
                         <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-2">
