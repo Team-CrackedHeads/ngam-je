@@ -333,12 +333,11 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
 
   const handleNext = () => {
     if (currentStep < 5) {
-      if (currentStep === 3) {
-        if (!recommendedPriceRange.average) {
-          fetchPriceRecommendation();
-        }
+      const nextStep = currentStep + 1;
+      if (nextStep === 3 && !recommendedPriceRange.average) {
+        fetchPriceRecommendation();
       }
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(nextStep);
     }
   };
 

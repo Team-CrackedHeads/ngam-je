@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
 import { HistoricalPriceTrend } from './price-chart';
 import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
-import { ShippingPreferences } from './shipping-options';
+import { ShippingPreferences } from '@/components/create-listing/shipping-options';
 import FAQGenerator, { FAQ } from './faq-generator';
 import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
 import TagGenerator, { TagGeneratorRef } from './tag-generator';

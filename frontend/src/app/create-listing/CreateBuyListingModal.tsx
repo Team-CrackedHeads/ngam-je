@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { HistoricalPriceTrend } from './price-chart';
 import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
-import { ShippingPreferences } from './shipping-options';
+import { ShippingPreferences } from '@/components/create-listing/shipping-options';
 import FAQGenerator, { FAQ } from './faq-generator';
 import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
 import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
