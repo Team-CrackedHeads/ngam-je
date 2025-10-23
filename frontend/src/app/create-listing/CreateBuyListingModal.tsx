@@ -1067,14 +1067,18 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
 
                         {/* Location */}
                         {formData.location && (
-                          <div className="border rounded-lg p-3 sm:p-4 bg-[var(--color-secondary-50)] border-[var(--color-secondary-500)]">
-                            <h3 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
-                              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-secondary-500)]" />
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-[var(--color-accent-700)]">
+                              <MapPin className="w-5 h-5 text-[var(--color-secondary-500)]" />
                               Location
                             </h3>
-                            <p className="text-base sm:text-lg font-semibold text-[var(--color-accent-700)]">
-                              {formData.location}
-                            </p>
+                            <div className="flex flex-wrap gap-3">
+                              <div
+                                className="px-4 py-2 rounded-lg text-sm font-medium border-2 shadow-sm bg-white border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                              >
+                                {formData.location}
+                              </div>
+                            </div>
                           </div>
                         )}
 
@@ -1096,7 +1100,7 @@ export default function CreateBuyListingModal({ isOpen, onClose, onSubmit }: Cre
                         </div>
 
                         {formData.faqs.length > 0 && (
-                          <div className="pt-4 border-t-2 border-[var(--color-primary-300)]">
+                          <div>
                             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-[var(--color-accent-700)]">
                               <MessageCircle className="w-5 h-5 text-[var(--color-secondary-500)]" />
                               Frequently Asked Questions
