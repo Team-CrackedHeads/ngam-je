@@ -105,12 +105,12 @@ export default function AIGenerateStep({
             >
               {isGeneratingAll ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--color-secondary-900)]" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-2 text-[var(--color-secondary-900)]" />
                   Generate All
                 </>
               )}
@@ -140,12 +140,12 @@ export default function AIGenerateStep({
               >
                 {isGeneratingPhotos ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1" />
+                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
                     {listingType === 'buy' ? 'Generate Photos' : 'Enhance Photos'}
                   </>
                 )}
@@ -296,12 +296,12 @@ export default function AIGenerateStep({
               >
                 {isGeneratingTitle ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1" />
+                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
                     Generate Title
                   </>
                 )}
@@ -375,12 +375,12 @@ export default function AIGenerateStep({
               >
                 {isGeneratingDescription ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1" />
+                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
                     Generate Description
                   </>
                 )}

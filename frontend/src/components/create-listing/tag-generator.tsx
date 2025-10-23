@@ -198,12 +198,12 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
         >
           {isGeneratingTags ? (
             <>
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
               Generating...
             </>
           ) : (
             <>
-              <Sparkles className="w-3 h-3 mr-1" />
+              <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
               Generate Tags
             </>
           )}
