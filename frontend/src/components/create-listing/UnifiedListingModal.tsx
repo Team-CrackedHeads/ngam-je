@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sparkles, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FAQ } from '@/components/create-listing/faq-generator';
@@ -12,6 +13,7 @@ import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
 import { MOCK_LOCATION } from '@/utils/mock-location-data';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
+import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
 import AIGenerateStep from './steps/AIGenerateStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
@@ -51,11 +53,13 @@ interface UnifiedListingModalProps {
   onClose: () => void;
   onSubmitBuy?: (data: BuyFormData) => void;
   onSubmitSell?: (data: SellFormData) => void;
+  category?: string; // Thread category where listing is being created
 }
 
 type ListingType = null | 'buy' | 'sell';
 
-export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSubmitSell }: UnifiedListingModalProps) {
+export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSubmitSell, category }: UnifiedListingModalProps) {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [listingType, setListingType] = useState<ListingType>(null);
 
@@ -363,14 +367,32 @@ export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSu
   };
 
   const handleSubmit = async () => {
+    if (!listingType) return;
+
+    const formData = listingType === 'buy' ? buyFormData : sellFormData;
+
+    // Convert form data to listing format, passing the thread category
+    const listingData = convertFormToListing(formData, listingType, category);
+
+    // Generate ID and add to storage
+    const listingId = generateListingId(listingData.category);
+    const completeListing = { ...listingData, id: listingId };
+    addNewListing(completeListing);
+
+    // Call original callbacks if provided
     if (listingType === 'buy' && onSubmitBuy) {
       onSubmitBuy(buyFormData);
     } else if (listingType === 'sell' && onSubmitSell) {
       onSubmitSell(sellFormData);
     }
-    console.log(`${listingType} listing submitted:`, listingType === 'buy' ? buyFormData : sellFormData);
-    alert(`${listingType === 'buy' ? 'Buy' : 'Sell'} listing created successfully!`);
+
+    console.log(`${listingType} listing created:`, completeListing);
+
+    // Close modal
     handleClose();
+
+    // Navigate to the new listing
+    router.push(`/threads/${listingData.category}/${listingId}`);
   };
 
   const handleClose = () => {

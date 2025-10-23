@@ -1797,7 +1797,14 @@ export function getListingsByCategory(
   category: string,
   listingType?: "sale" | "wanted"
 ): UnifiedListingData[] {
-  let filtered = UNIFIED_LISTINGS.filter(
+  // Get newly created listings
+  const { getNewListings } = require('./listing-storage');
+  const newListings = getNewListings();
+
+  // Combine new listings with mock data
+  const allListings = [...newListings, ...UNIFIED_LISTINGS];
+
+  let filtered = allListings.filter(
     (listing) => listing.category === category
   );
 
@@ -1812,5 +1819,12 @@ export function getListingsByCategory(
 
 // Additional helper function for getting individual listing by ID
 export function getListingById(id: string): UnifiedListingData | undefined {
+  // Check newly created listings first
+  const { getNewListings } = require('./listing-storage');
+  const newListings = getNewListings();
+  const newListing = newListings.find((listing: UnifiedListingData) => listing.id === id);
+  if (newListing) return newListing;
+
+  // Fall back to mock data
   return UNIFIED_LISTINGS.find((listing) => listing.id === id);
 }
