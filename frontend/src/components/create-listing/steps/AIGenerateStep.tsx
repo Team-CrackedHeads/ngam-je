@@ -1,0 +1,452 @@
+'use client';
+
+import React, { useRef } from 'react';
+import { Sparkles, Loader2, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import TagGenerator, { TagGeneratorRef } from '@/components/create-listing/tag-generator';
+
+interface AIGenerateStepProps {
+  listingType: 'buy' | 'sell';
+  formData: any;
+  setFormData: (data: any) => void;
+  isAIModeEnabled: boolean;
+  setIsAIModeEnabled: (enabled: boolean) => void;
+  isGeneratingTitle: boolean;
+  isGeneratingDescription: boolean;
+  isGeneratingPhotos: boolean;
+  isGeneratingAll: boolean;
+  titleSuggestion: string;
+  descriptionSuggestion: string;
+  selectedImageIndex: number;
+  setSelectedImageIndex: (index: number) => void;
+  onGenerateTitle: () => void;
+  onGenerateDescription: () => void;
+  onGeneratePhotos: () => void;
+  onGenerateAll: () => void;
+  onTitleChange: (text: string) => void;
+  onDescriptionChange: (text: string) => void;
+  onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveImage: (index: number) => void;
+  onOwnershipProofUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  ownershipProofImage?: string | null;
+  isVerifyingOwnership?: boolean;
+  ownershipVerified?: boolean | null;
+  tagGeneratorRef: React.RefObject<TagGeneratorRef | null>;
+}
+
+export default function AIGenerateStep({
+  listingType,
+  formData,
+  setFormData,
+  isAIModeEnabled,
+  setIsAIModeEnabled,
+  isGeneratingTitle,
+  isGeneratingDescription,
+  isGeneratingPhotos,
+  isGeneratingAll,
+  titleSuggestion,
+  descriptionSuggestion,
+  selectedImageIndex,
+  setSelectedImageIndex,
+  onGenerateTitle,
+  onGenerateDescription,
+  onGeneratePhotos,
+  onGenerateAll,
+  onTitleChange,
+  onDescriptionChange,
+  onImageUpload,
+  onRemoveImage,
+  onOwnershipProofUpload,
+  ownershipProofImage,
+  isVerifyingOwnership,
+  ownershipVerified,
+  tagGeneratorRef
+}: AIGenerateStepProps) {
+  const hasAnyInput = formData.generatedTitle?.length > 0 ||
+                      formData.generatedDescription?.length > 0 ||
+                      (listingType === 'buy' ? formData.generatedImages?.length : formData.uploadedImages?.length) > 0;
+
+  const images = listingType === 'buy' ? formData.generatedImages : formData.uploadedImages;
+
+  return (
+    <div className="space-y-6">
+      {/* AI Action Bar */}
+      <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="ai-mode"
+                checked={isAIModeEnabled}
+                onCheckedChange={setIsAIModeEnabled}
+                className="data-[state=checked]:bg-[var(--color-secondary-500)]"
+              />
+              <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[var(--color-secondary-600)]" />
+                AI Mode
+              </Label>
+            </div>
+            {isAIModeEnabled && (
+              <p className="text-xs text-[var(--color-primary-900)] italic hidden sm:block">
+                Upload photo or type to enable AI generation
+              </p>
+            )}
+          </div>
+          {isAIModeEnabled && (
+            <Button
+              size="sm"
+              className="text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+              onClick={onGenerateAll}
+              disabled={isGeneratingAll || !hasAnyInput}
+            >
+              {isGeneratingAll ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--color-secondary-900)]" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2 text-[var(--color-secondary-900)]" />
+                  Generate All
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
+        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
+      </div>
+
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Images Section */}
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <Label className="text-base font-medium text-[var(--color-accent-700)]">
+              Product Images
+            </Label>
+            {isAIModeEnabled && (
+              <Button
+                size="sm"
+                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+                onClick={onGeneratePhotos}
+                disabled={isGeneratingPhotos || !hasAnyInput}
+              >
+                {isGeneratingPhotos ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
+                    {listingType === 'buy' ? 'Generate Photos' : 'Enhance Photos'}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+
+          {images?.length > 0 ? (
+            <div className="space-y-3">
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)]">
+                <img
+                  src={images[selectedImageIndex]}
+                  alt={`Product ${selectedImageIndex + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => onRemoveImage(selectedImageIndex)}
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {images.map((img: string, idx: number) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === idx
+                        ? 'border-[var(--color-secondary-500)] shadow-md'
+                        : 'border-gray-200'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)]">
+              <ImageIcon className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)]" />
+              <p className="text-[var(--color-primary-900)] mb-2">No images yet</p>
+              <p className="text-sm text-[var(--color-primary-700)]">Upload photos or generate with AI</p>
+            </div>
+          )}
+
+          <div className="mt-3">
+            <input
+              type="file"
+              id="imageUpload"
+              multiple
+              accept="image/*"
+              onChange={onImageUpload}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              className="w-full border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
+              onClick={() => document.getElementById('imageUpload')?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Photos
+            </Button>
+          </div>
+        </div>
+
+        {/* Ownership Proof Section (Sell only) */}
+        {listingType === 'sell' && (
+          <div className="pt-6 border-t-2 border-[var(--color-primary-300)]">
+            <Label className="text-base font-medium mb-3 block text-[var(--color-accent-700)]">
+              Proof of Ownership
+            </Label>
+
+            {ownershipProofImage ? (
+              <div className="space-y-3">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-secondary-500)]">
+                  <img
+                    src={ownershipProofImage}
+                    alt="Ownership Proof"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => {
+                      setFormData((prev: any) => ({ ...prev, ownershipProofImage: null }));
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  {isVerifyingOwnership ? (
+                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded bg-gray-500 text-white text-sm font-medium flex items-center gap-2">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Verifying...
+                    </div>
+                  ) : ownershipVerified !== null ? (
+                    <div className={`absolute bottom-2 left-2 px-3 py-1 rounded text-sm font-medium ${
+                      ownershipVerified
+                        ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)]'
+                        : 'bg-red-500 text-white'
+                    }`}>
+                      {ownershipVerified ? 'Ownership Verified' : 'Ownership Not Verified by AI'}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-[var(--color-secondary-400)] rounded-lg p-8 text-center bg-[var(--color-secondary-50)]">
+                <ImageIcon className="w-12 h-12 mx-auto mb-3 text-[var(--color-secondary-500)]" />
+                <p className="text-base text-[var(--color-accent-700)] mb-1 font-medium">No ownership proof uploaded</p>
+                <p className="text-sm text-[var(--color-primary-700)] mb-1">Please upload a photo showing the item with a handwritten note containing your name and date of writing.</p>
+                <p className="text-xs text-[var(--color-primary-600)]">This verifies you own the item.</p>
+              </div>
+            )}
+
+            <div className="mt-3">
+              <input
+                type="file"
+                id="ownershipProofUpload"
+                accept="image/*"
+                onChange={onOwnershipProofUpload}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                className="w-full border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+                onClick={() => document.getElementById('ownershipProofUpload')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {ownershipProofImage ? 'Change Ownership Proof' : 'Upload Ownership Proof'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Title Section */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <Label htmlFor="title" className="text-base font-medium text-[var(--color-accent-700)]">
+              Title
+            </Label>
+            {isAIModeEnabled && (
+              <Button
+                size="sm"
+                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+                onClick={onGenerateTitle}
+                disabled={isGeneratingTitle || !hasAnyInput}
+              >
+                {isGeneratingTitle ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
+                    Generate Title
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+          <div className="relative">
+            <Input
+              id="title"
+              value={formData.generatedTitle}
+              onChange={(e) => {
+                setFormData((prev: any) => ({ ...prev, generatedTitle: e.target.value }));
+                onTitleChange(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab' && titleSuggestion) {
+                  e.preventDefault();
+                  setFormData((prev: any) => ({ ...prev, generatedTitle: prev.generatedTitle + titleSuggestion }));
+                }
+              }}
+              placeholder="Enter product title"
+              className="border-[var(--color-primary-200)] relative z-10"
+              style={{
+                fontSize: '1rem',
+                lineHeight: '1.5rem',
+                fontFamily: 'inherit',
+                fontWeight: 'inherit',
+                letterSpacing: 'inherit',
+                background: 'transparent'
+              }}
+              maxLength={100}
+            />
+            <div
+              className="absolute top-0 left-0 right-0 bottom-0 h-9 flex items-center px-3 py-1 pointer-events-none overflow-hidden border border-transparent rounded-md z-0"
+              style={{
+                fontSize: '1rem',
+                lineHeight: '1.5rem',
+                fontFamily: 'inherit',
+                fontWeight: 'inherit',
+                letterSpacing: 'inherit'
+              }}
+            >
+              <span style={{ color: 'transparent' }}>
+                {formData.generatedTitle}
+              </span>
+              <span className="text-gray-400">
+                {titleSuggestion}
+              </span>
+            </div>
+          </div>
+          <p className="text-sm text-[var(--color-primary-900)] mt-2">
+            {formData.generatedTitle?.length || 0}/100 characters
+            {titleSuggestion && (
+              <span className="ml-2 text-[var(--color-secondary-500)]">• Press Tab to accept suggestion</span>
+            )}
+          </p>
+        </div>
+
+        {/* Description Section */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <Label htmlFor="description" className="text-base font-medium text-[var(--color-accent-700)]">
+              Description
+            </Label>
+            {isAIModeEnabled && (
+              <Button
+                size="sm"
+                onClick={onGenerateDescription}
+                disabled={isGeneratingDescription || !hasAnyInput}
+                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+              >
+                {isGeneratingDescription ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
+                    Generate Description
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+          <div className="relative">
+            <Textarea
+              id="description"
+              value={formData.generatedDescription}
+              onChange={(e) => {
+                setFormData((prev: any) => ({ ...prev, generatedDescription: e.target.value }));
+                onDescriptionChange(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab' && descriptionSuggestion) {
+                  e.preventDefault();
+                  setFormData((prev: any) => ({ ...prev, generatedDescription: prev.generatedDescription + descriptionSuggestion }));
+                }
+              }}
+              placeholder={listingType === 'buy' ? "Describe what you're looking for..." : "Describe your product..."}
+              className="min-h-[250px] border-[var(--color-primary-200)] relative z-10"
+              style={{
+                fontSize: '1rem',
+                lineHeight: '1.5rem',
+                fontFamily: 'inherit',
+                fontWeight: 'inherit',
+                letterSpacing: 'inherit',
+                background: 'transparent'
+              }}
+              maxLength={1000}
+            />
+            <div
+              className="absolute top-0 left-0 right-0 bottom-0 px-3 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words border border-transparent rounded-md z-0"
+              style={{
+                fontSize: '1rem',
+                lineHeight: '1.5rem',
+                fontFamily: 'inherit',
+                fontWeight: 'inherit',
+                letterSpacing: 'inherit'
+              }}
+            >
+              <span style={{ color: 'transparent' }}>
+                {formData.generatedDescription}
+              </span>
+              <span className="text-gray-400">
+                {descriptionSuggestion}
+              </span>
+            </div>
+          </div>
+          <p className="text-sm text-[var(--color-primary-900)] mt-2">
+            {formData.generatedDescription?.length || 0}/1000 characters
+            {descriptionSuggestion && (
+              <span className="ml-2 text-[var(--color-secondary-500)]">• Press Tab to accept suggestion</span>
+            )}
+          </p>
+        </div>
+
+        {/* Tags Section */}
+        <TagGenerator
+          ref={tagGeneratorRef}
+          tags={formData.tags}
+          onTagsChange={(tags) => setFormData((prev: any) => ({ ...prev, tags }))}
+          hasContent={!!(formData.generatedTitle || formData.generatedDescription || images?.length > 0)}
+        />
+      </div>
+    </div>
+  );
+}

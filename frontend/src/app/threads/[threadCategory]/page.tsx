@@ -4,12 +4,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ListingCard from "@/components/threads/category/ListingCard";
 import { CategoryBreadcrumb } from "@/components/threads/category/CategoryBreadcrumb";
-import {UNIFIED_LISTINGS, UnifiedListingData} from "@/utils/mock-threads-data";
+import {UNIFIED_LISTINGS, UnifiedListingData, getListingsByCategory} from "@/utils/mock-threads-data";
 import SearchFilter, {type FilterOptions} from "@/components/threads/category/SearchFilter";
 import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads/category/Sorting";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
 import { Plus, ArrowLeft } from "lucide-react";
+import UnifiedListingModal from "@/components/create-listing/UnifiedListingModal";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -53,6 +54,9 @@ const CategoryPage: React.FC = () => {
 
   // State for floating button
   const [showFloatingButton, setShowFloatingButton] = useState(false);
+
+  // State for create listing modal
+  const [isCreateListingModalOpen, setIsCreateListingModalOpen] = useState(false);
 
   /**
    * Stable callback to prevent infinite loops in Sorting component
@@ -128,15 +132,14 @@ const CategoryPage: React.FC = () => {
     // You can add FAQ functionality here
   };
 
-  // Handle create listing navigation
+  // Handle create listing modal
   const handleCreateListing = () => {
-    router.push(`/create-listing/`);
+    setIsCreateListingModalOpen(true);
   };
   // Filter listings based on all active filters - UPDATED for UnifiedListingData
   const getFilteredListings = useCallback((): UnifiedListingData[] => {
-    let categoryListings = UNIFIED_LISTINGS.filter(
-      (listing) => listing.category === category
-    );
+    // Use getListingsByCategory to include newly created listings
+    let categoryListings = getListingsByCategory(category);
 
     // Filter by listing type (WTB/WTS/General)
     if (activeType === "wtb") {
@@ -367,24 +370,22 @@ const CategoryPage: React.FC = () => {
             : ""} listings in{" "}
           {category}
           {filteredListings.length !==
-          UNIFIED_LISTINGS.filter(
+          getListingsByCategory(category).filter(
             (l) => {
               if (activeType === "general") {
-                return l.category === category;
+                return true;
               }
-              return l.category === category &&
-                l.listingType ===
+              return l.listingType ===
                   (activeType === "wtb" ? "wanted" : "sale");
             }
           ).length
             ? ` (filtered from ${
-                UNIFIED_LISTINGS.filter(
+                getListingsByCategory(category).filter(
                   (l) => {
                     if (activeType === "general") {
-                      return l.category === category;
+                      return true;
                     }
-                    return l.category === category &&
-                      l.listingType ===
+                    return l.listingType ===
                         (activeType === "wtb" ? "wanted" : "sale");
                   }
                 ).length
@@ -494,6 +495,13 @@ const CategoryPage: React.FC = () => {
           </button>
         )}
       </div>
+
+      {/* Create Listing Modal */}
+      <UnifiedListingModal
+        isOpen={isCreateListingModalOpen}
+        onClose={() => setIsCreateListingModalOpen(false)}
+        category={category}
+      />
     </div>
   );
 };
