@@ -385,89 +385,111 @@ function PricingShippingContent({
             <Label htmlFor="locationInput" className="text-xs sm:text-sm text-[var(--color-primary-900)] mb-2 block">
               Select your location
             </Label>
-            <div className="relative">
-              <Input
-                id="locationInput"
-                type="text"
-                value={formData.location}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData({...formData, location: value});
-                  handleLocationSearch(value);
-                  setSelectedLocationIndex(-1);
-                }}
-                onKeyDown={(e) => {
-                  if (!showLocationDropdown || placePredictions.length === 0) return;
 
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    const nextIndex = selectedLocationIndex < placePredictions.length - 1 ? selectedLocationIndex + 1 : selectedLocationIndex;
-                    setSelectedLocationIndex(nextIndex);
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    const nextIndex = selectedLocationIndex > 0 ? selectedLocationIndex - 1 : -1;
-                    setSelectedLocationIndex(nextIndex);
-                  } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (selectedLocationIndex >= 0 && selectedLocationIndex < placePredictions.length) {
-                      const prediction = placePredictions[selectedLocationIndex];
-                      handlePlaceSelect(prediction.place_id, prediction.description);
-                    }
-                  } else if (e.key === 'Escape') {
-                    setShowLocationDropdown(false);
-                    setSelectedLocationIndex(-1);
-                  }
+            {/* Show selected location or search input */}
+            {formData.location && !showLocationDropdown ? (
+              <div
+                className="p-3 bg-white rounded-lg border-2 border-[var(--color-primary-300)] cursor-pointer hover:border-[var(--color-secondary-500)] transition-colors"
+                onClick={() => {
+                  setFormData({ ...formData, location: '' });
+                  setMapCoordinates({ lat: 3.139, lng: 101.6869 });
                 }}
-                onBlur={() => {
-                  setTimeout(() => {
-                    setShowLocationDropdown(false);
-                    setSelectedLocationIndex(-1);
-                  }, 200);
-                }}
-                placeholder="Search for a city, address, or region..."
-                className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)] pr-10"
-              />
-              {isSearchingPlaces && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-4 h-4 animate-spin text-[var(--color-secondary-600)]" />
-                </div>
-              )}
-            </div>
+              >
+                <p className="text-xs text-[var(--color-primary-700)] mb-1">Selected Location:</p>
+                <p className="text-sm font-medium text-[var(--color-accent-700)] flex items-start gap-2">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-secondary-600)]" />
+                  <span>{formData.location}</span>
+                </p>
+                <p className="text-xs text-[var(--color-secondary-600)] mt-2">Click to change location</p>
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  <Input
+                    id="locationInput"
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({...formData, location: value});
+                      handleLocationSearch(value);
+                      setSelectedLocationIndex(-1);
+                    }}
+                    onKeyDown={(e) => {
+                      if (!showLocationDropdown || placePredictions.length === 0) return;
 
-            {/* Location Dropdown - Google Places Predictions */}
-            {showLocationDropdown && placePredictions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
-                {placePredictions.map((prediction, index) => (
-                  <div
-                    key={prediction.place_id}
-                    onClick={() => handlePlaceSelect(prediction.place_id, prediction.description)}
-                    onMouseEnter={() => setSelectedLocationIndex(index)}
-                    className={`px-3 py-2 cursor-pointer text-sm sm:text-base transition-colors ${
-                      selectedLocationIndex === index
-                        ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
-                        : 'hover:bg-[var(--color-primary-100)]'
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-secondary-600)]" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[var(--color-accent-700)]">
-                          {prediction.structured_formatting.main_text}
-                        </p>
-                        <p className="text-xs text-[var(--color-primary-700)] truncate">
-                          {prediction.structured_formatting.secondary_text}
-                        </p>
-                      </div>
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const nextIndex = selectedLocationIndex < placePredictions.length - 1 ? selectedLocationIndex + 1 : selectedLocationIndex;
+                        setSelectedLocationIndex(nextIndex);
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const nextIndex = selectedLocationIndex > 0 ? selectedLocationIndex - 1 : -1;
+                        setSelectedLocationIndex(nextIndex);
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (selectedLocationIndex >= 0 && selectedLocationIndex < placePredictions.length) {
+                          const prediction = placePredictions[selectedLocationIndex];
+                          handlePlaceSelect(prediction.place_id, prediction.description);
+                        }
+                      } else if (e.key === 'Escape') {
+                        setShowLocationDropdown(false);
+                        setSelectedLocationIndex(-1);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => {
+                        setShowLocationDropdown(false);
+                        setSelectedLocationIndex(-1);
+                      }, 200);
+                    }}
+                    placeholder="Search for a city, address, or region..."
+                    className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)] pr-10"
+                    autoFocus
+                  />
+                  {isSearchingPlaces && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="w-4 h-4 animate-spin text-[var(--color-secondary-600)]" />
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )}
+                </div>
 
-            {showLocationDropdown && !isSearchingPlaces && placePredictions.length === 0 && formData.location && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg px-3 py-4 text-center">
-                <p className="text-sm text-[var(--color-primary-700)]">No locations found. Try a different search term.</p>
-              </div>
+                {/* Location Dropdown - Google Places Predictions */}
+                {showLocationDropdown && placePredictions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
+                    {placePredictions.map((prediction, index) => (
+                      <div
+                        key={prediction.place_id}
+                        onClick={() => handlePlaceSelect(prediction.place_id, prediction.description)}
+                        onMouseEnter={() => setSelectedLocationIndex(index)}
+                        className={`px-3 py-2 cursor-pointer text-sm sm:text-base transition-colors ${
+                          selectedLocationIndex === index
+                            ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] font-semibold'
+                            : 'hover:bg-[var(--color-primary-100)]'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-secondary-600)]" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-[var(--color-accent-700)]">
+                              {prediction.structured_formatting.main_text}
+                            </p>
+                            <p className="text-xs text-[var(--color-primary-700)] truncate">
+                              {prediction.structured_formatting.secondary_text}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {showLocationDropdown && !isSearchingPlaces && placePredictions.length === 0 && formData.location && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg px-3 py-4 text-center">
+                    <p className="text-sm text-[var(--color-primary-700)]">No locations found. Try a different search term.</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
