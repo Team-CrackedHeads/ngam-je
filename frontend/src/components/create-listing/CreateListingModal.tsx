@@ -48,7 +48,7 @@ interface SellFormData {
   faqs: FAQ[];
 }
 
-interface UnifiedListingModalProps {
+interface CreateListingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmitBuy?: (data: BuyFormData) => void;
@@ -58,7 +58,7 @@ interface UnifiedListingModalProps {
 
 type ListingType = null | 'buy' | 'sell';
 
-export default function UnifiedListingModal({ isOpen, onClose, onSubmitBuy, onSubmitSell, category }: UnifiedListingModalProps) {
+export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSubmitSell, category }: CreateListingModalProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [listingType, setListingType] = useState<ListingType>(null);

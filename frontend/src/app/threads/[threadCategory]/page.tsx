@@ -10,7 +10,7 @@ import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
 import { Plus } from "lucide-react";
-import UnifiedListingModal from "@/components/create-listing/UnifiedListingModal";
+import CreateListingModal from "@/components/create-listing/CreateListingModal";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -493,7 +493,7 @@ const CategoryPage: React.FC = () => {
       </div>
 
       {/* Create Listing Modal */}
-      <UnifiedListingModal
+      <CreateListingModal
         isOpen={isCreateListingModalOpen}
         onClose={() => setIsCreateListingModalOpen(false)}
         category={category}
