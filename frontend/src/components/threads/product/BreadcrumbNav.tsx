@@ -16,7 +16,7 @@ export const BreadcrumbNav = ({
 
   // Determine the type parameter for going back to category
   const typeParam = listingType === "wanted" ? "wtb" : "wts";
-  const typeName = listingType === "wanted" ? "Want to Buy" : "Want to Sell";
+  const typeName = listingType === "wanted" ? "Buy Listings" : "Sell Listings";
 
   const breadcrumbs = [
     {
@@ -38,21 +38,21 @@ export const BreadcrumbNav = ({
   ];
 
   return (
-    <nav className="flex items-center space-x-2 mb-6 p-4 bg-neutral-white rounded-lg">
+    <nav className="flex items-center space-x-2 py-3">
       {breadcrumbs.map((item, index) => (
-        <div key={index} className="flex items-center space-x-2 min-w-0">
+        <div key={index} className="flex items-center space-x-2">
           {index > 0 && (
             <ChevronRight className="w-4 h-4 text-accent-400 flex-shrink-0" />
           )}
           {item.onClick ? (
             <button
               onClick={item.onClick}
-              className="text-sm font-medium text-accent-500 hover:text-accent-700 transition-colors flex-shrink-0"
+              className="text-sm font-medium text-accent-500 hover:text-accent-700 transition-colors"
             >
               {item.label}
             </button>
           ) : (
-            <span className="text-sm font-medium text-accent-700 truncate min-w-0">
+            <span className="text-sm font-medium text-accent-700">
               {item.label}
             </span>
           )}

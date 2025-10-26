@@ -181,6 +181,14 @@ function FollowingMenuItem() {
     (a, b) => b.views - a.views
   ).slice(0, 5);
 
+  useEffect(() => {
+    const ids = MOCK_THREADS.map(t => t.id);
+    const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
+    if (duplicates.length > 0) {
+      console.warn("Duplicate thread IDs found:", duplicates);
+    }
+  }, []);
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton

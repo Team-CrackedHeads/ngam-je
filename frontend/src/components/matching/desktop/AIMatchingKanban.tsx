@@ -342,9 +342,9 @@ export function AIMatchingKanban({
                           setExpandedPopupColumn(null);
                           setShowCompareModal(true);
                         }}
-                        disabled={selectedForCompare.length < 1 || selectedForCompare.length > 4}
+                        disabled={selectedForCompare.length < 1 || selectedForCompare.length > 5}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          selectedForCompare.length >= 1 && selectedForCompare.length <= 4
+                          selectedForCompare.length >= 1 && selectedForCompare.length <= 5
                             ? 'bg-secondary-500 text-accent-700 hover:bg-secondary-600'
                             : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                         }`}
@@ -452,7 +452,7 @@ export function AIMatchingKanban({
                               // Select mode - toggle selection
                               if (isSelected) {
                                 setSelectedForCompare(prev => prev.filter(id => id !== listingId));
-                              } else if (selectedForCompare.length < 4) {
+                              } else {
                                 setSelectedForCompare(prev => [...prev, listingId]);
                               }
                             } else {
@@ -700,16 +700,24 @@ export function AIMatchingKanban({
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-accent-700">
                   {selectedForCompare.length} selected
+                  {selectedForCompare.length > 5 && <span className="text-red-600 ml-1">(max 5)</span>}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {selectedForCompare.length >= 1 && selectedForCompare.length <= 4 && (
+                {selectedForCompare.length >= 1 && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowCompareModal(true);
+                      if (selectedForCompare.length <= 5) {
+                        setShowCompareModal(true);
+                      }
                     }}
-                    className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-sm font-medium transition-colors relative z-10 cursor-pointer"
+                    disabled={selectedForCompare.length > 5}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors relative z-10 ${
+                      selectedForCompare.length > 5
+                        ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                        : 'bg-secondary-500 hover:bg-secondary-600 text-accent-700 cursor-pointer'
+                    }`}
                   >
                     Compare {selectedForCompare.length} {selectedForCompare.length === 1 ? 'Item' : 'Items'}
                   </button>
@@ -889,7 +897,7 @@ export function AIMatchingKanban({
                               e.stopPropagation();
                               if (isSelected) {
                                 setSelectedForCompare(prev => prev.filter(id => id !== topCardId));
-                              } else if (selectedForCompare.length < 4) {
+                              } else {
                                 setSelectedForCompare(prev => [...prev, topCardId]);
                               }
                             } else {
@@ -909,7 +917,7 @@ export function AIMatchingKanban({
                           }}
                         >
                           <div className={`bg-white rounded-xl shadow-xl border overflow-hidden ${
-                            isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
+                            isSelected && isTopCard ? 'border-4 border-secondary-500' : 'border border-neutral-300'
                           }`}>
                             {/* Card Image */}
                             <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">

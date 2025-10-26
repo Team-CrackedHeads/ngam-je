@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Cable, Search } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
-import { mockSaleListings, mockWantedListings, type Listing } from "@/utils/mock-listings-data";
+import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ViewDropdown from "@/components/threads/ViewDropdown";
@@ -60,10 +60,11 @@ function getExtensionPrice(subscriptionTier: string): string {
 const tabs = [
   { label: "Sale Listings", value: "sale", icon: ShoppingCart },
   { label: "Want Listings", value: "wanted", icon: Package },
+  { label: "Matched Listings", value: "matched", icon: Cable },
 ];
 
 // Mobile-specific compact card component
-function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; isHighlighted?: boolean }) {
+function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
@@ -180,7 +181,7 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing;
   );
 }
 
-function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
@@ -448,16 +449,17 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
 function ListingsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"sale" | "wanted">("sale");
+  const [activeTab, setActiveTab] = useState<"sale" | "wanted" | "matched">("sale");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const type = searchParams.get("type") as "sale" | "wanted";
+    const type = searchParams.get("type") as "sale" | "wanted" | "matched";
     const highlight = searchParams.get("highlight");
 
-    if (type && (type === "sale" || type === "wanted")) {
+    if (type && (type === "sale" || type === "wanted" || type === "matched")) {
       setActiveTab(type);
     }
 
@@ -470,11 +472,23 @@ function ListingsPageContent() {
   }, [searchParams]);
 
   // Filter to show only the user's own listings
-  const allListings = activeTab === "sale" ? mockSaleListings : mockWantedListings;
+  const allListings = activeTab === "sale" ? mockSaleListings : activeTab === "wanted" ? mockWantedListings : getMockMatchedListings();
   const userListings = allListings.filter(listing => listing.isOwner === true);
   const categories = [...new Set(userListings.map(listing => listing.category))];
-  const currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
-  const ActiveIcon = activeTab === "sale" ? ShoppingCart : Package;
+
+  // Apply category and search filters
+  let currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
+
+  // Apply search filter
+  if (searchQuery.trim()) {
+    currentListings = currentListings.filter(listing =>
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  const ActiveIcon = activeTab === "sale" ? ShoppingCart : activeTab === "wanted" ? Package : Cable;
 
   return (
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
@@ -503,29 +517,44 @@ function ListingsPageContent() {
         </div>
 
         {/* Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 font-medium">Sort By:</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 p-2 sm:p-3 bg-white rounded-xl shadow-sm border border-gray-200 mb-3 sm:mb-4">
+          {/* Left Section */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <span className="text-gray-600 font-medium">Sort By:</span>
               <CategoryDropdown
                 categories={categories}
                 selectedCategory={selectedCategory}
                 categoryAction={setSelectedCategory}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 font-medium">View:</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <span className="text-gray-600 font-medium">View:</span>
               <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
             </div>
           </div>
 
-          <button
-            onClick={() => {}}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600"
-          >
-            <Plus className="w-4 h-4" />
-            Create Listing
-          </button>
+          {/* Right Section */}
+          {activeTab === "matched" ? (
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search matched listings..."
+                className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-neutral-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+              />
+            </div>
+          ) : (
+            <button
+              onClick={() => {}}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary-500 text-accent-700 font-semibold rounded-lg sm:rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
+            >
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              Create Listing
+            </button>
+          )}
         </div>
 
         {/* Listings Grid */}
@@ -546,14 +575,18 @@ function ListingsPageContent() {
           <div className="text-center py-12">
             <ActiveIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-accent-600 mb-2">
-              No {activeTab === "sale" ? "items for sale" : "wanted items"} yet
+              No {activeTab === "sale" ? "items for sale" : activeTab === "wanted" ? "wanted items" : "matched items"} yet
             </h3>
-            <p className="text-accent-400 mb-4">
-              Be the first to post a {activeTab === "sale" ? "sale listing" : "wanted request"}!
-            </p>
-            <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-              Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
-            </button>
+            {activeTab !== "matched" && (
+              <>
+                <p className="text-accent-400 mb-4">
+                  Be the first to post a {activeTab === "sale" ? "sale listing" : activeTab === "wanted" ? "wanted request" : "matched request"}!
+                </p>
+                <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
+                  Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { BreadcrumbNav } from "@/components/threads/product/BreadcrumbNav";
+import { useState, useEffect } from "react";
+import { ProductHeader } from "@/components/threads/product/ProductHeader";
 import { ProductDetails } from "@/components/threads/product/ProductDetails";
 // Import unified data instead
 import { getListingById } from "@/utils/mock-threads-data";
@@ -9,6 +10,22 @@ import { getListingById } from "@/utils/mock-threads-data";
 export default function ProductListingScreen() {
   const params = useParams();
   const router = useRouter();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const scrolled = target.scrollTop > 10;
+      setIsScrolled(scrolled);
+    };
+
+    // Find the main scrollable container
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.addEventListener("scroll", handleScroll);
+      return () => mainElement.removeEventListener("scroll", handleScroll);
+    }
+  }, []);
 
   // Get the listing ID from URL params
   const listingId = params.listingId as string;
@@ -17,9 +34,10 @@ export default function ProductListingScreen() {
   // Find the specific listing by ID
   const listing = getListingById(listingId);
 
-  // Handle back navigation
+  // Handle back navigation - go to category page with appropriate type
   const handleBack = () => {
-    router.push(`/threads/${category}`);
+    const typeParam = listing.listingType === "wanted" ? "wtb" : "wts";
+    router.push(`/threads/${category}?type=${typeParam}`);
   };
 
   // Show error if listing not found
@@ -46,12 +64,14 @@ export default function ProductListingScreen() {
 
   return (
     <div className="min-h-screen w-full pb-32 bg-primary-50">
+      <ProductHeader
+        onBack={handleBack}
+        listingType={listing.listingType}
+        category={category}
+        listingTitle={listing.title}
+        isScrolled={isScrolled}
+      />
       <div className="container mx-auto px-4 py-6">
-        <BreadcrumbNav
-          category={category}
-          listingTitle={listing.title}
-          listingType={listing.listingType}
-        />
         {/* Pass the dynamic listing data */}
         <ProductDetails listing={listing} />
       </div>

@@ -17,7 +17,6 @@ import NgamOverview from "@/components/threads/NgamOverview";
 import FilterButton, { FilterType } from "@/components/threads/FilterButton";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
-import BreadcrumbNav from "./BreadcrumbNav"; // ✅ Added import
 import { MockAIResponse } from "@/utils/mock-ai-data";
 
 type ViewType = "grid" | "list";
@@ -217,10 +216,7 @@ function ThreadsPage() {
 
         {/* SECTION 2: Threads */}
         <section id="ngam-overview" ref={threadsSectionRef} className="snap-start bg-gray-50">
-          <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
-
-            {/* ✅ Breadcrumb Navigation */}
-            <BreadcrumbNav />
+          <div className="container mx-auto px-4 md:px-8 py-6 pb-32 md:pb-40">
 
             {/* Page Header */}
             <div ref={headerRef}>

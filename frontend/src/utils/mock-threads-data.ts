@@ -443,6 +443,7 @@ export type UnifiedListingData = {
   tags: string[];
   views: number;
   protected: boolean;
+  faqs?: { id: string; question: string; answer: string }[];
 };
 
 export const UNIFIED_LISTINGS: UnifiedListingData[] = [
@@ -1215,6 +1216,23 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     tags: ["vintage", "leather", "jacket", "wtb"],
     views: 45,
     protected: false,
+    faqs: [
+      {
+        id: "faq-1",
+        question: "What is the condition of the jacket?",
+        answer: ""
+      },
+      {
+        id: "faq-2",
+        question: "Do you have any brand preferences?",
+        answer: ""
+      },
+      {
+        id: "faq-3",
+        question: "Are you open to negotiate on the price?",
+        answer: ""
+      }
+    ],
   },
   {
     id: "fash-003",
