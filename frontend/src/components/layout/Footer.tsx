@@ -11,6 +11,13 @@ const Footer = () => {
   const pathname = usePathname();
   const { openMobile } = useSidebar();
 
+  const hideOnRoutes = ["/messages", "/chat/history"];
+  const shouldHide = hideOnRoutes.some((route) => pathname.startsWith(route));
+
+  if (shouldHide) {
+    return null;
+  }
+
   const links = [
     { href: "/threads", label: "Threads", icon: House },
     { href: "/messages", label: "Messages", icon: MessageSquare },
