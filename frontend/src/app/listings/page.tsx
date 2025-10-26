@@ -58,9 +58,9 @@ function getExtensionPrice(subscriptionTier: string): string {
 
 // Tabs configuration
 const tabs = [
-  { label: "Sale Listings", value: "sale", icon: ShoppingCart },
-  { label: "Want Listings", value: "wanted", icon: Package },
-  { label: "Matched Listings", value: "matched", icon: Cable },
+  { label: "Sale", value: "sale", icon: ShoppingCart },
+  { label: "Want", value: "wanted", icon: Package },
+  { label: "Matched", value: "matched", icon: Cable },
 ];
 
 // Mobile-specific compact card component
@@ -517,18 +517,18 @@ function ListingsPageContent() {
         </div>
 
         {/* Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-2 sm:p-3 bg-white rounded-xl shadow-sm border border-gray-200 mb-3 sm:mb-4">
+        <div className="hidden md:flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
           {/* Left Section */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-              <span className="text-gray-600 font-medium">Sort By:</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600 font-medium">Category:</span>
               <CategoryDropdown
                 categories={categories}
                 selectedCategory={selectedCategory}
                 categoryAction={setSelectedCategory}
               />
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+            <div className="flex items-center gap-2 text-sm">
               <span className="text-gray-600 font-medium">View:</span>
               <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
             </div>
@@ -536,24 +536,57 @@ function ListingsPageContent() {
 
           {/* Right Section */}
           {activeTab === "matched" ? (
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search matched listings..."
-                className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-neutral-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
               />
             </div>
           ) : (
             <button
               onClick={() => {}}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-secondary-500 text-accent-700 font-semibold rounded-lg sm:rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Plus className="w-4 h-4" />
               Create Listing
             </button>
+          )}
+        </div>
+
+        <div className="md:hidden mb-4 space-y-2">
+          <div className="flex items-center gap-2 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+            <CategoryDropdown
+              categories={categories}
+              selectedCategory={selectedCategory}
+              categoryAction={setSelectedCategory}
+            />
+            <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
+            {activeTab !== "matched" && (
+              <button
+                onClick={() => {}}
+                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
+                aria-label="Create new listing"
+              >
+                <Plus className="w-4 h-4" />
+                New
+              </button>
+            )}
+          </div>
+          {activeTab === "matched" && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search matched listings..."
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white rounded-xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+              />
+            </div>
           )}
         </div>
 
