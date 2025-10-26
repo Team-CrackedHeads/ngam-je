@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   MessageCircle,
@@ -275,26 +275,31 @@ function NgamJeAssistantMenuItem({
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true);
   const { state } = useSidebar();
+  const pathname = usePathname();
   const isCollapsed = state === "collapsed";
 
   if (isCollapsed) {
     return (
       <>
-        {navItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
-            >
-              <Link
-                href={item.href}
-                className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          return (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive}
               >
-                <item.icon />
-                <span>{item.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+                <Link
+                  href={item.href}
+                  className={isActive ? "bg-primary-200 text-accent-700 font-semibold" : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
       </>
     );
   }
@@ -320,21 +325,25 @@ function NavigationMenuItem() {
         }`}
       >
         <SidebarMenuSub>
-          {navItems.map((item) => (
-            <SidebarMenuSubItem key={item.href}>
-              <SidebarMenuSubButton
-                asChild
-              >
-                <Link
-                  href={item.href}
-                  className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <SidebarMenuSubItem key={item.href}>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={isActive}
                 >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          ))}
+                  <Link
+                    href={item.href}
+                    className={isActive ? "bg-primary-200 text-accent-700 font-semibold" : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"}
+                  >
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            );
+          })}
         </SidebarMenuSub>
       </div>
     </SidebarMenuItem>
