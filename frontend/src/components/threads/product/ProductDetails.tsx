@@ -7,6 +7,7 @@ import ProductFAQSummary from "./ProductFAQSummary";
 import ProductDetailsTop from "./ProductDetailsTop";
 import ProductDetailsMiddle from "./ProductDetailsMiddle";
 import ProductDetailsBottom from "./ProductDetailsBottom";
+import MakeOfferModal from "@/components/create-listing/MakeOfferModal";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -38,6 +39,9 @@ export const ProductDetails = ({
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // State for Make Offer modal
+  const [isMakeOfferModalOpen, setIsMakeOfferModalOpen] = useState(false);
 
   // Check if gallery has images
   const galleryImages = listing.gallery || [];
@@ -77,9 +81,8 @@ export const ProductDetails = ({
     router.push(`/threads/${category}/${listing.id}/faq`);
   };
 
-  const handleBuyNowClick = () => {
-    console.log("Buy Now clicked");
-    // TODO: Implement buy now functionality
+  const handleMakeOfferClick = () => {
+    setIsMakeOfferModalOpen(true);
   };
 
   // Set main image source - use gallery first, then imageUrl fallback
@@ -109,7 +112,7 @@ export const ProductDetails = ({
           seller={listing.seller}
           onChat={handleChatClick}
           onFAQ={handleFAQClick}
-          onBuyNow={handleBuyNowClick}
+          onBuyNow={handleMakeOfferClick}
         />
       </div>
 
@@ -123,6 +126,18 @@ export const ProductDetails = ({
           onPrev={goToPrev}
         />
       )}
+
+      {/* Make Offer Modal */}
+      <MakeOfferModal
+        isOpen={isMakeOfferModalOpen}
+        onClose={() => setIsMakeOfferModalOpen(false)}
+        sourceListingId={listing.id}
+        sourceTitle={listing.title}
+        sourcePrice={listing.price}
+        sourceListingType={listing.listingType}
+        category={category}
+      />
+
       <ProductFAQSummary listingId={listing.id} category={category} />
     </>
   );
