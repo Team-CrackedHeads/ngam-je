@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/Sidebar";
+import { AppSidebar } from "@/components/sidebar/Sidebar";
 import { MockAuthProvider } from "@/lib/auth";
 import { AuthRoleToggle } from "@/components/dev/AuthRoleToggle";
 
