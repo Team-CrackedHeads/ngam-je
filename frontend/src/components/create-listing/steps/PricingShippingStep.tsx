@@ -62,10 +62,8 @@ function PricingShippingContent({
     lat: 3.139,
     lng: 101.6869,
   });
-  const [placePredictions, setPlacePredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [placePredictions, setPlacePredictions] = useState<google.maps.places.PlacePrediction[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const placesLibrary = useMapsLibrary('places');
 
@@ -102,14 +100,6 @@ function PricingShippingContent({
     setMapCoordinates(coordinates);
   };
 
-  // Initialize Google Places services when library loads
-  useEffect(() => {
-    if (!placesLibrary) return;
-
-    autocompleteService.current = new placesLibrary.AutocompleteService();
-    const mapDiv = document.createElement('div');
-    placesService.current = new placesLibrary.PlacesService(mapDiv);
-  }, [placesLibrary]);
 
   // Handle location search with Google Places Autocomplete
   const handleLocationSearch = (query: string) => {
@@ -126,50 +116,59 @@ function PricingShippingContent({
     setIsSearchingPlaces(true);
     setShowLocationDropdown(true);
 
-    searchTimeoutRef.current = setTimeout(() => {
-      if (!autocompleteService.current) {
+    searchTimeoutRef.current = setTimeout(async () => {
+      if (!placesLibrary) {
         setIsSearchingPlaces(false);
         setPlacePredictions([]);
         return;
       }
 
-      const request = {
-        input: query,
-      };
+      try {
+        const { AutocompleteSuggestion } = placesLibrary;
+        const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: query,
+        });
 
-      autocompleteService.current.getPlacePredictions(
-        request,
-        (predictions, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-            setPlacePredictions(predictions);
-          } else {
-            setPlacePredictions([]);
-          }
-          setIsSearchingPlaces(false);
-        }
-      );
+        const predictions = suggestions
+          .map(suggestion => suggestion.placePrediction)
+          .filter((prediction): prediction is google.maps.places.PlacePrediction => prediction !== null);
+
+        setPlacePredictions(predictions);
+      } catch (error) {
+        console.error('Error fetching autocomplete suggestions:', error);
+        setPlacePredictions([]);
+      }
+      setIsSearchingPlaces(false);
     }, 300);
   };
 
   // Handle selection from search dropdown
   const handlePlaceSelect = async (placeId: string, description: string) => {
-    if (!placesService.current) return;
+    if (!placesLibrary) return;
 
     setFormData({ ...formData, location: description });
     setShowLocationDropdown(false);
     setSelectedLocationIndex(-1);
 
-    // Get place details to extract coordinates
-    placesService.current.getDetails(
-      { placeId },
-      (place, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
-          setMapCoordinates({ lat, lng });
-        }
+    // Get place details using new Place class
+    try {
+      const { Place } = placesLibrary;
+      const place = new Place({
+        id: placeId,
+      });
+
+      await place.fetchFields({
+        fields: ['location'],
+      });
+
+      if (place.location) {
+        const lat = place.location.lat();
+        const lng = place.location.lng();
+        setMapCoordinates({ lat, lng });
       }
-    );
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+    }
   };
 
   return (
@@ -430,7 +429,7 @@ function PricingShippingContent({
                         e.preventDefault();
                         if (selectedLocationIndex >= 0 && selectedLocationIndex < placePredictions.length) {
                           const prediction = placePredictions[selectedLocationIndex];
-                          handlePlaceSelect(prediction.place_id, prediction.description);
+                          handlePlaceSelect(prediction.placeId, prediction.text.text);
                         }
                       } else if (e.key === 'Escape') {
                         setShowLocationDropdown(false);
@@ -458,8 +457,8 @@ function PricingShippingContent({
                   <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-[var(--color-primary-200)] rounded-lg shadow-lg">
                     {placePredictions.map((prediction, index) => (
                       <div
-                        key={prediction.place_id}
-                        onClick={() => handlePlaceSelect(prediction.place_id, prediction.description)}
+                        key={prediction.placeId}
+                        onClick={() => handlePlaceSelect(prediction.placeId, prediction.text.text)}
                         onMouseEnter={() => setSelectedLocationIndex(index)}
                         className={`px-3 py-2 cursor-pointer text-sm sm:text-base transition-colors ${
                           selectedLocationIndex === index
@@ -471,10 +470,10 @@ function PricingShippingContent({
                           <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-secondary-600)]" />
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-[var(--color-accent-700)]">
-                              {prediction.structured_formatting.main_text}
+                              {prediction.mainText?.text || prediction.text.text}
                             </p>
                             <p className="text-xs text-[var(--color-primary-700)] truncate">
-                              {prediction.structured_formatting.secondary_text}
+                              {prediction.secondaryText?.text}
                             </p>
                           </div>
                         </div>

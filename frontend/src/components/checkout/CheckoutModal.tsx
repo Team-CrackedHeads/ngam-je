@@ -80,24 +80,13 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
   const [meetupTime, setMeetupTime] = useState("");
   const [meetupSearchQuery, setMeetupSearchQuery] = useState("");
 
-  const [placePredictions, setPlacePredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [placePredictions, setPlacePredictions] = useState<google.maps.places.PlacePrediction[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
 
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const placesLibrary = useMapsLibrary('places');
-
-  // Initialize Google Places services when library loads
-  useEffect(() => {
-    if (!placesLibrary) return;
-
-    autocompleteService.current = new placesLibrary.AutocompleteService();
-    const mapDiv = document.createElement('div');
-    placesService.current = new placesLibrary.PlacesService(mapDiv);
-  }, [placesLibrary]);
 
   // Handle location search with Google Places Autocomplete
   const handleLocationSearch = (query: string, isDelivery: boolean = true) => {
@@ -114,30 +103,35 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
     setIsSearchingPlaces(true);
     setShowLocationDropdown(true);
 
-    searchTimeoutRef.current = setTimeout(() => {
-      if (!autocompleteService.current) {
+    searchTimeoutRef.current = setTimeout(async () => {
+      if (!placesLibrary) {
         setIsSearchingPlaces(false);
         setPlacePredictions([]);
         return;
       }
 
-      autocompleteService.current.getPlacePredictions(
-        { input: query },
-        (predictions, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-            setPlacePredictions(predictions);
-          } else {
-            setPlacePredictions([]);
-          }
-          setIsSearchingPlaces(false);
-        }
-      );
+      try {
+        const { AutocompleteSuggestion } = placesLibrary;
+        const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: query,
+        });
+
+        const predictions = suggestions
+          .map(suggestion => suggestion.placePrediction)
+          .filter((prediction): prediction is google.maps.places.PlacePrediction => prediction !== null);
+
+        setPlacePredictions(predictions);
+      } catch (error) {
+        console.error('Error fetching autocomplete suggestions:', error);
+        setPlacePredictions([]);
+      }
+      setIsSearchingPlaces(false);
     }, 300);
   };
 
   // Handle selection from search dropdown
   const handlePlaceSelect = async (placeId: string, description: string, isDelivery: boolean = true) => {
-    if (!placesService.current) return;
+    if (!placesLibrary) return;
 
     if (isDelivery) {
       setDeliveryAddress(description);
@@ -147,21 +141,29 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
     setShowLocationDropdown(false);
     setSelectedLocationIndex(-1);
 
-    // Get place details to extract coordinates
-    placesService.current.getDetails(
-      { placeId },
-      (place, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
-          if (isDelivery) {
-            setDeliveryCoordinates({ lat, lng });
-          } else {
-            setMeetupCoordinates({ lat, lng });
-          }
+    // Get place details using new Place class
+    try {
+      const { Place } = placesLibrary;
+      const place = new Place({
+        id: placeId,
+      });
+
+      await place.fetchFields({
+        fields: ['location'],
+      });
+
+      if (place.location) {
+        const lat = place.location.lat();
+        const lng = place.location.lng();
+        if (isDelivery) {
+          setDeliveryCoordinates({ lat, lng });
+        } else {
+          setMeetupCoordinates({ lat, lng });
         }
       }
-    );
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+    }
   };
 
   const handleNext = () => {
@@ -430,7 +432,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                           } else if (e.key === 'Enter' && selectedLocationIndex >= 0) {
                             e.preventDefault();
                             const prediction = placePredictions[selectedLocationIndex];
-                            handlePlaceSelect(prediction.place_id, prediction.description, true);
+                            handlePlaceSelect(prediction.placeId, prediction.text.text, true);
                           } else if (e.key === 'Escape') {
                             setShowLocationDropdown(false);
                             setSelectedLocationIndex(-1);
@@ -457,8 +459,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                         <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-neutral-300 rounded-lg shadow-lg">
                           {placePredictions.map((prediction, index) => (
                             <div
-                              key={prediction.place_id}
-                              onClick={() => handlePlaceSelect(prediction.place_id, prediction.description, true)}
+                              key={prediction.placeId}
+                              onClick={() => handlePlaceSelect(prediction.placeId, prediction.text.text, true)}
                               onMouseEnter={() => setSelectedLocationIndex(index)}
                               className={`px-3 py-2 cursor-pointer text-sm transition-colors ${
                                 selectedLocationIndex === index
@@ -470,10 +472,10 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary-600" />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-accent-700">
-                                    {prediction.structured_formatting.main_text}
+                                    {prediction.mainText?.text || prediction.text.text}
                                   </p>
                                   <p className="text-xs text-primary-700 truncate">
-                                    {prediction.structured_formatting.secondary_text}
+                                    {prediction.secondaryText?.text}
                                   </p>
                                 </div>
                               </div>
@@ -550,7 +552,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                           } else if (e.key === 'Enter' && selectedLocationIndex >= 0) {
                             e.preventDefault();
                             const prediction = placePredictions[selectedLocationIndex];
-                            handlePlaceSelect(prediction.place_id, prediction.description, true);
+                            handlePlaceSelect(prediction.placeId, prediction.text.text, true);
                           } else if (e.key === 'Escape') {
                             setShowLocationDropdown(false);
                             setSelectedLocationIndex(-1);
@@ -577,8 +579,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                         <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-neutral-300 rounded-lg shadow-lg">
                           {placePredictions.map((prediction, index) => (
                             <div
-                              key={prediction.place_id}
-                              onClick={() => handlePlaceSelect(prediction.place_id, prediction.description, true)}
+                              key={prediction.placeId}
+                              onClick={() => handlePlaceSelect(prediction.placeId, prediction.text.text, true)}
                               onMouseEnter={() => setSelectedLocationIndex(index)}
                               className={`px-3 py-2 cursor-pointer text-sm transition-colors ${
                                 selectedLocationIndex === index
@@ -590,10 +592,10 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary-600" />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-accent-700">
-                                    {prediction.structured_formatting.main_text}
+                                    {prediction.mainText?.text || prediction.text.text}
                                   </p>
                                   <p className="text-xs text-primary-700 truncate">
-                                    {prediction.structured_formatting.secondary_text}
+                                    {prediction.secondaryText?.text}
                                   </p>
                                 </div>
                               </div>
@@ -676,7 +678,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                           } else if (e.key === 'Enter' && selectedLocationIndex >= 0) {
                             e.preventDefault();
                             const prediction = placePredictions[selectedLocationIndex];
-                            handlePlaceSelect(prediction.place_id, prediction.description, true);
+                            handlePlaceSelect(prediction.placeId, prediction.text.text, true);
                           } else if (e.key === 'Escape') {
                             setShowLocationDropdown(false);
                             setSelectedLocationIndex(-1);
@@ -703,8 +705,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                         <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-neutral-300 rounded-lg shadow-lg">
                           {placePredictions.map((prediction, index) => (
                             <div
-                              key={prediction.place_id}
-                              onClick={() => handlePlaceSelect(prediction.place_id, prediction.description, true)}
+                              key={prediction.placeId}
+                              onClick={() => handlePlaceSelect(prediction.placeId, prediction.text.text, true)}
                               onMouseEnter={() => setSelectedLocationIndex(index)}
                               className={`px-3 py-2 cursor-pointer text-sm transition-colors ${
                                 selectedLocationIndex === index
@@ -716,10 +718,10 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary-600" />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-accent-700">
-                                    {prediction.structured_formatting.main_text}
+                                    {prediction.mainText?.text || prediction.text.text}
                                   </p>
                                   <p className="text-xs text-primary-700 truncate">
-                                    {prediction.structured_formatting.secondary_text}
+                                    {prediction.secondaryText?.text}
                                   </p>
                                 </div>
                               </div>
@@ -839,8 +841,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                               } else if (e.key === 'Enter' && selectedLocationIndex >= 0) {
                                 e.preventDefault();
                                 const prediction = placePredictions[selectedLocationIndex];
-                                handlePlaceSelect(prediction.place_id, prediction.description, false);
-                                setMeetupSearchQuery(prediction.description);
+                                handlePlaceSelect(prediction.placeId, prediction.text.text, false);
+                                setMeetupSearchQuery(prediction.text.text);
                               } else if (e.key === 'Escape') {
                                 setShowLocationDropdown(false);
                                 setSelectedLocationIndex(-1);
@@ -866,10 +868,10 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                             <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-white border border-neutral-300 rounded-lg shadow-lg">
                               {placePredictions.map((prediction, index) => (
                                 <div
-                                  key={prediction.place_id}
+                                  key={prediction.placeId}
                                   onClick={() => {
-                                    handlePlaceSelect(prediction.place_id, prediction.description, false);
-                                    setMeetupSearchQuery(prediction.description);
+                                    handlePlaceSelect(prediction.placeId, prediction.text.text, false);
+                                    setMeetupSearchQuery(prediction.text.text);
                                   }}
                                   onMouseEnter={() => setSelectedLocationIndex(index)}
                                   className={`px-3 py-2 cursor-pointer text-sm transition-colors ${

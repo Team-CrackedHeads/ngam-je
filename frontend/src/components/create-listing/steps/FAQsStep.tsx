@@ -14,7 +14,7 @@ interface FAQsStepProps {
 }
 
 export default function FAQsStep({ faqs, onFAQsChange, mockFAQData, hasAnyInput, answerOnlyMode = false, questionOnlyMode = false }: FAQsStepProps) {
-  console.log('FAQsStep received:', { answerOnlyMode, questionOnlyMode });
+  // console.log('FAQsStep received:', { answerOnlyMode, questionOnlyMode });
 
   return (
     <FAQGenerator
