@@ -18,7 +18,7 @@ interface CategoryHeaderProps {
 
 export const CategoryHeader = ({ onBack, category, activeType, isScrolled = false }: CategoryHeaderProps) => {
   return (
-    <div className="sticky top-0 z-[5] bg-white shadow-sm transition-all duration-300">
+    <div className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-300">
       {/* Breadcrumb - Hide when scrolled */}
       {!isScrolled && (
         <div className="px-6 pt-2">
