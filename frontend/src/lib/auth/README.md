@@ -54,15 +54,8 @@ function FAQPage() {
 
 Currently using `MockAuthProvider` for development:
 - Stores user in localStorage
-- Provides role switching via `AuthRoleToggle` component (bottom-right in dev mode)
+- Allows roles to be switched programmatically during development
 - No backend required
-
-### Dev Role Switching
-
-In development, you'll see a role toggle in the bottom-right:
-- **Poster**: Owner of listings, can edit/moderate
-- **Visitor**: Guest user, can browse and ask questions
-- **Moderator**: Community moderator with elevated permissions
 
 ## Replacing with Real Auth
 

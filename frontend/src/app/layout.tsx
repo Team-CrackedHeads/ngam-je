@@ -6,7 +6,6 @@ import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/Sidebar";
 import { MockAuthProvider } from "@/lib/auth";
-import { AuthRoleToggle } from "@/components/dev/AuthRoleToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,8 +45,6 @@ export default function RootLayout({
             <Footer />
           </SidebarProvider>
 
-          {/* Dev-only: Role toggle in bottom-right corner */}
-          <AuthRoleToggle />
         </MockAuthProvider>
       </body>
     </html>
