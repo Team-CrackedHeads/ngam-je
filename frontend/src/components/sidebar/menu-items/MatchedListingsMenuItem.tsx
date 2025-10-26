@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronRight, Clock, Cable } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, Handshake } from "lucide-react";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
@@ -80,7 +80,7 @@ export default function BuyListingsMenuItem() {
           onClick={() => setIsOpen(!isOpen)}
           className="group/menu-item text-accent-700 font-semibold"
         >
-          <Cable className="w-5 h-5" />
+          <Handshake className="w-5 h-5" />
           <span>Matched Listings</span>
           {isOpen ? (
             <ChevronDown className="ml-auto h-4 w-4 transition-transform" />

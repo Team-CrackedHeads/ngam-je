@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Cable, X } from "lucide-react";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake, X } from "lucide-react";
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-match-data";
@@ -186,7 +186,7 @@ export default function ListingMatchesPage() {
                 ) : listingType === "wanted" ? (
                   <Package className="w-6 h-6 text-secondary-600" />
                 ) : (
-                  <Cable className="w-6 h-6 text-secondary-600" />
+                  <Handshake className="w-6 h-6 text-secondary-600" />
                 )}
                 <h2 className="text-2xl font-bold text-accent-700">
                   Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing
@@ -217,7 +217,7 @@ export default function ListingMatchesPage() {
                 ) : listingType === "wanted" ? (
                   <Package className="w-6 h-6 text-secondary-600" />
                 ) : (
-                  <Cable className="w-6 h-6 text-secondary-600" />
+                  <Handshake className="w-6 h-6 text-secondary-600" />
                 )}
                 <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing</span>
               </div>

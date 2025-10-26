@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Cable, Search } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { getMatchCount } from "@/utils/mock-match-data";
@@ -60,7 +60,7 @@ function getExtensionPrice(subscriptionTier: string): string {
 const tabs = [
   { label: "Sale", value: "sale", icon: ShoppingCart },
   { label: "Want", value: "wanted", icon: Package },
-  { label: "Matched", value: "matched", icon: Cable },
+  { label: "Matched", value: "matched", icon: Handshake },
 ];
 
 // Mobile-specific compact card component
@@ -488,7 +488,7 @@ function ListingsPageContent() {
     );
   }
 
-  const ActiveIcon = activeTab === "sale" ? ShoppingCart : activeTab === "wanted" ? Package : Cable;
+  const ActiveIcon = activeTab === "sale" ? ShoppingCart : activeTab === "wanted" ? Package : Handshake;
 
   return (
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
