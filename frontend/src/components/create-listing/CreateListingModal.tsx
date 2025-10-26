@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus } from 'lucide-react';
+import { Info, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FAQ } from '@/components/create-listing/faq-generator';
 import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
@@ -14,7 +14,7 @@ import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
 import { MOCK_LOCATION } from '@/utils/mock-location-data';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
-import AIGenerateStep from './steps/AIGenerateStep';
+import ProductDetailsStep from './steps/ProductDetailsStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
@@ -104,7 +104,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
   // Sell form data
   const [sellFormData, setSellFormData] = useState<SellFormData>({
     uploadedImages: [],
-    ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
+    ownershipProofImage: null,
     generatedTitle: '',
     generatedDescription: '',
     minPrice: '',
@@ -123,18 +123,12 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
     average: 0
   });
 
-  // Initialize ownership verification for sell mock data
-  useEffect(() => {
-    if (sellFormData.ownershipProofImage === MOCK_OWNERSHIP_PROOF_IMAGE_SELL && ownershipVerified === null) {
-      setOwnershipVerified(true);
-    }
-  }, [sellFormData.ownershipProofImage, ownershipVerified]);
 
   const steps = listingType === null
     ? [{ number: 1, label: 'Choose Type', icon: ListPlus }]
     : [
         { number: 1, label: 'Choose Type', icon: ListPlus },
-        { number: 2, label: 'Details', icon: Sparkles },
+        { number: 2, label: 'Product Details', icon: Info },
         { number: 3, label: 'Pricing & Shipping', icon: DollarSign },
         { number: 4, label: 'FAQs', icon: MessageCircle },
         { number: 5, label: 'Preview', icon: Eye }
@@ -413,7 +407,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
     });
     setSellFormData({
       uploadedImages: [],
-      ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
+      ownershipProofImage: null,
       generatedTitle: '',
       generatedDescription: '',
       minPrice: '',
@@ -649,9 +643,9 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
             </div>
             )}
 
-            {/* Step 2: AI Generate */}
+            {/* Step 2: Product Details */}
             {currentStep === 2 && listingType && (
-            <AIGenerateStep
+            <ProductDetailsStep
               listingType={listingType}
               formData={formData}
               setFormData={setFormData}

@@ -7,7 +7,8 @@ import ProductFAQSummary from "./ProductFAQSummary";
 import ProductDetailsTop from "./ProductDetailsTop";
 import ProductDetailsMiddle from "./ProductDetailsMiddle";
 import ProductDetailsBottom from "./ProductDetailsBottom";
-import MakeOfferModal from "@/components/create-listing/MakeOfferModal";
+import MakeOfferBuy from "@/components/create-listing/MakeOfferBuy";
+import MakeOfferSell from "@/components/create-listing/MakeOfferSell";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -127,17 +128,32 @@ export const ProductDetails = ({
         />
       )}
 
-      {/* Make Offer Modal */}
-      <MakeOfferModal
-        isOpen={isMakeOfferModalOpen}
-        onClose={() => setIsMakeOfferModalOpen(false)}
-        sourceListingId={listing.id}
-        sourceTitle={listing.title}
-        sourcePrice={listing.price}
-        sourceListingType={listing.listingType}
-        category={category}
-        sourceFAQs={listing.faqs || []}
-      />
+      {/* Make Offer Modal - conditionally render based on listing type */}
+      {listing.listingType === "sale" ? (
+        <MakeOfferBuy
+          isOpen={isMakeOfferModalOpen}
+          onClose={() => setIsMakeOfferModalOpen(false)}
+          sourceListingId={listing.id}
+          sourceTitle={listing.title}
+          sourceDescription={listing.description}
+          sourceImages={listing.gallery || [listing.imageUrl]}
+          sourceOwnershipProof={null}
+          sourceTags={listing.tags}
+          sourcePrice={listing.price}
+          category={category}
+          sourceFAQs={listing.faqs || []}
+        />
+      ) : (
+        <MakeOfferSell
+          isOpen={isMakeOfferModalOpen}
+          onClose={() => setIsMakeOfferModalOpen(false)}
+          sourceListingId={listing.id}
+          sourceTitle={listing.title}
+          sourcePrice={listing.price}
+          category={category}
+          sourceFAQs={listing.faqs || []}
+        />
+      )}
 
       <ProductFAQSummary listingId={listing.id} category={category} />
     </>

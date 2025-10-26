@@ -27,6 +27,8 @@ interface FAQGeneratorProps {
 export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, mockFAQData = [], answerOnlyMode = false, questionOnlyMode = false }: FAQGeneratorProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
 
+  console.log('FAQGenerator modes:', { answerOnlyMode, questionOnlyMode });
+
   const addFAQ = () => {
     const newFAQ: FAQ = {
       id: Date.now().toString(),
