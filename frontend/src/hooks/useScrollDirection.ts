@@ -20,12 +20,12 @@ function findScrollContainer(): HTMLElement | null {
     const el = element as HTMLElement;
     // Check if element has scrollable height
     if (el.scrollHeight > el.clientHeight) {
-      console.log('✅ Found scroll container:', el.tagName, el.className);
+      // console.log('✅ Found scroll container:', el.tagName, el.className);
       return el;
     }
   }
 
-  console.warn('⚠️ No scroll container found, defaulting to main');
+  // console.warn('⚠️ No scroll container found, defaulting to main');
   return document.querySelector('main') as HTMLElement;
 }
 
@@ -34,7 +34,7 @@ export function useScrollDirection(threshold: number = 10) {
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log('🔄 Route changed to:', pathname, '- Re-detecting scroll container...');
+    // console.log('🔄 Route changed to:', pathname, '- Re-detecting scroll container...');
 
     let scrollContainer: HTMLElement | null = null;
     let onScroll: (() => void) | null = null;
@@ -44,7 +44,7 @@ export function useScrollDirection(threshold: number = 10) {
       scrollContainer = findScrollContainer();
 
       if (!scrollContainer) {
-        console.error('No scroll container found!');
+        // console.error('No scroll container found!');
         return;
       }
 
@@ -62,7 +62,7 @@ export function useScrollDirection(threshold: number = 10) {
         }
 
         const newDirection = scrollY > lastScrollY ? "down" : "up";
-        console.log('📍 Scroll direction:', newDirection, { scrollY, lastScrollY });
+        // console.log('📍 Scroll direction:', newDirection, { scrollY, lastScrollY });
         setScrollDirection(newDirection);
         lastScrollY = scrollY > 0 ? scrollY : 0;
         ticking = false;
@@ -75,7 +75,7 @@ export function useScrollDirection(threshold: number = 10) {
         }
       };
 
-      console.log('Adding scroll listener to:', scrollContainer.tagName);
+      // console.log('Adding scroll listener to:', scrollContainer.tagName);
       scrollContainer.addEventListener("scroll", onScroll, { passive: true });
     }, 100); // 100ms delay to ensure DOM is ready
 
