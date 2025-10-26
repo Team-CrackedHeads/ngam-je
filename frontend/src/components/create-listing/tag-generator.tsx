@@ -69,13 +69,14 @@ interface TagGeneratorProps {
   tags: string[];
   onTagsChange: (tags: string[]) => void;
   hasContent?: boolean;
+  isAIModeEnabled?: boolean;
 }
 
 export interface TagGeneratorRef {
   generateTags: () => Promise<void>;
 }
 
-const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onTagsChange, hasContent = true }, ref) => {
+const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onTagsChange, hasContent = true, isAIModeEnabled = false }, ref) => {
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
@@ -180,38 +181,36 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
     }
   };
 
-  if (!hasContent) {
-    return null;
-  }
-
   return (
     <div className="pt-4 sm:pt-6 border-t-2 border-[var(--color-primary-300)]">
       <div className="flex items-center justify-between mb-3">
         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
           Product Category Tags
         </Label>
-        <Button
-          size="sm"
-          onClick={generateTagsFromContent}
-          disabled={isGeneratingTags}
-          className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
-        >
-          {isGeneratingTags ? (
-            <>
-              <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-              Generate Tags
-            </>
-          )}
-        </Button>
+        {isAIModeEnabled && (
+          <Button
+            size="sm"
+            onClick={generateTagsFromContent}
+            disabled={isGeneratingTags}
+            className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+          >
+            {isGeneratingTags ? (
+              <>
+                <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
+                Generate Tags
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Add new tag input - always visible */}
-      <div className="flex gap-2 relative mb-3">
+      <div className="flex items-stretch gap-2 relative mb-3">
         <div className="flex-1 relative">
           <Input
             value={newTagInput}
@@ -262,10 +261,9 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
         </div>
         <Button
           variant="outline"
-          size="sm"
           onClick={() => addTag()}
           disabled={!newTagInput.trim()}
-          className="border-[var(--color-primary-300)]"
+          className="border-[var(--color-primary-300)] aspect-square p-0 flex items-center justify-center"
         >
           <Plus className="w-4 h-4" />
         </Button>

@@ -3,6 +3,27 @@ import { Question } from "@/components/threads/product-faq/types";
 
 // Structure: { [listingId: string]: Question[] }
 export const mockListingFAQs: Record<string, Question[]> = {
+  // Vintage Leather Jacket WTB FAQs
+  "fash-002": [
+    {
+      id: "q1",
+      question: "What is the condition of the jacket?",
+      description: "",
+      answers: [],
+    },
+    {
+      id: "q2",
+      question: "Do you have any brand preferences?",
+      description: "",
+      answers: [],
+    },
+    {
+      id: "q3",
+      question: "Are you open to negotiate on the price?",
+      description: "",
+      answers: [],
+    },
+  ],
   // Nike Kobe 5 Protro FAQs
   "fash-001": [
     {

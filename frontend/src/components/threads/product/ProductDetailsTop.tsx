@@ -35,7 +35,7 @@ const ProductDetailsTop: React.FC<ProductCardDetailsProps> = ({
               : "bg-primary-500"
           }`}
         >
-          {listing.listingType === "for-sale" ? "For Sale" : "Want to Buy"}
+          {listing.listingType === "sale" ? "For Sale" : "Want to Buy"}
         </span>
         <div className="absolute top-4 right-4 px-3 py-1 rounded-full flex items-center gap-1 text-xs bg-primary-200 text-accent-500">
           <Eye className="w-4 h-4" />

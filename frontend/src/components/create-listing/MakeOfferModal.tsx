@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, Sparkles } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, Sparkles, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
 import AIGenerateStep from './steps/AIGenerateStep';
 import PricingShippingStep from './steps/PricingShippingStep';
+import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
 import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 import { MOCK_LOCATION } from '@/utils/mock-location-data';
@@ -14,6 +15,8 @@ import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
 import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
 import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
+import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
+import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
 
 interface MakeOfferModalProps {
   isOpen: boolean;
@@ -23,6 +26,7 @@ interface MakeOfferModalProps {
   sourcePrice: number;
   sourceListingType: "sale" | "wanted";
   category: string;
+  sourceFAQs?: { id: string; question: string; answer: string }[];
 }
 
 export default function MakeOfferModal({
@@ -32,7 +36,8 @@ export default function MakeOfferModal({
   sourceTitle,
   sourcePrice,
   sourceListingType,
-  category
+  category,
+  sourceFAQs = []
 }: MakeOfferModalProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -71,6 +76,14 @@ export default function MakeOfferModal({
   const [ownershipVerified, setOwnershipVerified] = useState<boolean | null>(null);
 
   // Form data - using the same structure as CreateListingModal
+  // Pre-fill FAQs if source listing has questions (regardless of WTB or WTS)
+  // The offer maker needs to answer the original poster's questions
+  const initialFAQs = sourceFAQs.map(faq => ({
+    id: faq.id,
+    question: faq.question,
+    answer: '' // Empty answer for the offer maker to fill
+  }));
+
   const [formData, setFormData] = useState<any>(
     listingType === 'buy'
       ? {
@@ -83,7 +96,7 @@ export default function MakeOfferModal({
           location: '',
           quantity: '1',
           shippingOptions: [],
-          faqs: [],
+          faqs: initialFAQs,
           tags: []
         }
       : {
@@ -98,15 +111,31 @@ export default function MakeOfferModal({
           shippingOptions: [],
           inventoryQuantity: '1',
           tags: [],
-          faqs: []
+          faqs: initialFAQs
         }
   );
 
   const steps = [
     { number: 1, label: 'Details', icon: Sparkles },
-    { number: 2, label: 'Pricing', icon: DollarSign },
-    { number: 3, label: 'Preview', icon: Eye }
+    { number: 2, label: 'Pricing & Shipping', icon: DollarSign },
+    { number: 3, label: 'FAQs', icon: MessageCircle },
+    { number: 4, label: 'Preview', icon: Eye }
   ];
+
+  // Update FAQs when modal opens or source FAQs change
+  useEffect(() => {
+    if (isOpen && sourceFAQs.length > 0) {
+      const prefilledFAQs = sourceFAQs.map(faq => ({
+        id: faq.id,
+        question: faq.question,
+        answer: '' // Empty answer for the offer maker to fill
+      }));
+      setFormData((prev: any) => ({
+        ...prev,
+        faqs: prefilledFAQs
+      }));
+    }
+  }, [isOpen, sourceFAQs]);
 
   // AI Generation functions (same as CreateListingModal)
   const generateTitleWithAI = async () => {
@@ -271,7 +300,7 @@ export default function MakeOfferModal({
   };
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       const nextStep = currentStep + 1;
       if (nextStep === 2 && !recommendedPriceRange.average) {
         fetchPriceRecommendation();
@@ -322,6 +351,18 @@ export default function MakeOfferModal({
     onClose();
   };
 
+  const hasAnyInput = () => {
+    if (listingType === 'buy') {
+      return formData.generatedTitle.length > 0 ||
+             formData.generatedDescription.length > 0 ||
+             formData.generatedImages.length > 0;
+    } else {
+      return formData.generatedTitle.length > 0 ||
+             formData.generatedDescription.length > 0 ||
+             formData.uploadedImages.length > 0;
+    }
+  };
+
   const isStepValid = () => {
     const images = listingType === 'buy' ? formData.generatedImages : formData.uploadedImages;
     switch(currentStep) {
@@ -339,6 +380,8 @@ export default function MakeOfferModal({
                (listingType === 'buy' ? formData.quantity : formData.inventoryQuantity) &&
                parseInt(listingType === 'buy' ? formData.quantity : formData.inventoryQuantity) > 0;
       case 3:
+        return true;
+      case 4:
         return true;
       default:
         return false;
@@ -412,17 +455,10 @@ export default function MakeOfferModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div key={currentStep} className="flex-1 overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto">
             {/* Step 1: AI Generate (Details) */}
             {currentStep === 1 && (
-              <>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-blue-900">
-                    You're responding to a <strong>{sourceListingType === 'wanted' ? 'WTB (Want to Buy)' : 'WTS (Want to Sell)'}</strong> listing.
-                    Fill in the details to create your {listingType === 'sell' ? 'sell' : 'buy'} offer.
-                  </p>
-                </div>
                 <AIGenerateStep
                   listingType={listingType}
                   formData={formData}
@@ -451,7 +487,6 @@ export default function MakeOfferModal({
                   ownershipVerified={listingType === 'sell' ? ownershipVerified : undefined}
                   tagGeneratorRef={tagGeneratorRef}
                 />
-              </>
             )}
 
             {/* Step 2: Pricing & Shipping */}
@@ -476,14 +511,20 @@ export default function MakeOfferModal({
               />
             )}
 
-            {/* Step 3: Preview */}
+            {/* Step 3: FAQs */}
             {currentStep === 3 && (
-              <>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-green-900">
-                    ✅ Your offer will be automatically matched with the original listing!
-                  </p>
-                </div>
+              <FAQsStep
+                listingType={listingType}
+                faqs={formData.faqs}
+                onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
+                mockFAQData={listingType === 'buy' ? MOCK_FAQ_BUY : MOCK_FAQ_SELL}
+                hasAnyInput={hasAnyInput()}
+                answerOnlyMode={sourceFAQs.length > 0}
+              />
+            )}
+
+            {/* Step 4: Preview */}
+            {currentStep === 4 && (
                 <PreviewStep
                   listingType={listingType}
                   formData={formData}
@@ -492,7 +533,6 @@ export default function MakeOfferModal({
                   onEditStep={setCurrentStep}
                   ownershipVerified={listingType === 'sell' ? ownershipVerified : undefined}
                 />
-              </>
             )}
 
             {/* Navigation Buttons */}
@@ -507,7 +547,7 @@ export default function MakeOfferModal({
                 Back
               </Button>
 
-              {currentStep < 3 ? (
+              {currentStep < 4 ? (
                 <Button
                   onClick={handleNext}
                   disabled={!isStepValid()}
@@ -523,7 +563,7 @@ export default function MakeOfferModal({
                   className="px-8 bg-green-600 hover:bg-green-700 text-white font-semibold"
                 >
                   <Check className="w-5 h-5 mr-2" />
-                  Submit Offer
+                  Publish {listingType === 'buy' ? 'Buy' : 'Sell'} Listing
                 </Button>
               )}
             </div>

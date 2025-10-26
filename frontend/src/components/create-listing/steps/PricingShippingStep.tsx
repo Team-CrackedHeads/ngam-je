@@ -445,7 +445,6 @@ function PricingShippingContent({
                     }}
                     placeholder="Search for a city, address, or region..."
                     className="w-full text-sm sm:text-base border-[var(--color-primary-200)] bg-white text-[var(--color-accent-700)] pr-10"
-                    autoFocus
                   />
                   {isSearchingPlaces && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">

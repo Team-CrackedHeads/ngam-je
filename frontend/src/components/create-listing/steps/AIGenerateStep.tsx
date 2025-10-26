@@ -74,6 +74,11 @@ export default function AIGenerateStep({
 
   return (
     <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
+        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
+      </div>
+
       {/* AI Action Bar */}
       <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -119,11 +124,6 @@ export default function AIGenerateStep({
         </div>
       </div>
 
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
-        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
-      </div>
-
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Images Section */}
         <div>
@@ -153,17 +153,35 @@ export default function AIGenerateStep({
             )}
           </div>
 
+          <input
+            type="file"
+            id="imageUpload"
+            multiple
+            accept="image/*"
+            onChange={onImageUpload}
+            className="hidden"
+          />
+
           {images?.length > 0 ? (
             <div className="space-y-3">
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)]">
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
+                   onClick={() => document.getElementById('imageUpload')?.click()}>
                 <img
                   src={images[selectedImageIndex]}
                   alt={`Product ${selectedImageIndex + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all group-hover:blur-sm"
                 />
+                {/* Upload Overlay on Hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                  <Upload className="w-12 h-12 text-white mb-2" />
+                  <p className="text-white font-medium">Upload More Photos</p>
+                </div>
                 <button
-                  onClick={() => onRemoveImage(selectedImageIndex)}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveImage(selectedImageIndex);
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -186,31 +204,15 @@ export default function AIGenerateStep({
               </div>
             </div>
           ) : (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)]">
-              <ImageIcon className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)]" />
-              <p className="text-[var(--color-primary-900)] mb-2">No images yet</p>
-              <p className="text-sm text-[var(--color-primary-700)]">Upload photos or generate with AI</p>
-            </div>
-          )}
-
-          <div className="mt-3">
-            <input
-              type="file"
-              id="imageUpload"
-              multiple
-              accept="image/*"
-              onChange={onImageUpload}
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              className="w-full border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
               onClick={() => document.getElementById('imageUpload')?.click()}
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Photos
-            </Button>
-          </div>
+              <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+              <p className="text-[var(--color-primary-900)] mb-2 font-medium">Click to Upload Photos</p>
+              <p className="text-sm text-[var(--color-primary-700)]">or generate with AI</p>
+            </div>
+          )}
         </div>
 
         {/* Ownership Proof Section (Sell only) */}
@@ -445,6 +447,7 @@ export default function AIGenerateStep({
           tags={formData.tags}
           onTagsChange={(tags) => setFormData((prev: any) => ({ ...prev, tags }))}
           hasContent={!!(formData.generatedTitle || formData.generatedDescription || images?.length > 0)}
+          isAIModeEnabled={isAIModeEnabled}
         />
       </div>
     </div>

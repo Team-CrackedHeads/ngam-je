@@ -20,9 +20,11 @@ interface FAQGeneratorProps {
   onFAQsChange: (faqs: FAQ[]) => void;
   hasAnyInput?: boolean;
   mockFAQData?: FAQ[];
+  answerOnlyMode?: boolean;
+  questionOnlyMode?: boolean; // For Create Listing - only add questions
 }
 
-export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, mockFAQData = [] }: FAQGeneratorProps) {
+export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, mockFAQData = [], answerOnlyMode = false, questionOnlyMode = false }: FAQGeneratorProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
 
   const addFAQ = () => {
@@ -57,16 +59,30 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Frequently Asked Questions</h2>
-        <p className="text-lg text-[var(--color-primary-900)]">Help sellers understand your requirements better</p>
+        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">
+          {answerOnlyMode ? 'Answer Questions' : questionOnlyMode ? 'Add Questions' : 'Frequently Asked Questions'}
+        </h2>
+        <p className="text-lg text-[var(--color-primary-900)]">
+          {answerOnlyMode
+            ? 'Please answer the questions from the original poster'
+            : questionOnlyMode
+            ? 'Add questions you want potential offers to answer'
+            : 'Help sellers understand your requirements better'}
+        </p>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
         {faqs.length === 0 ? (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)]">
             <HelpCircle className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)]" />
-            <p className="text-[var(--color-primary-900)] mb-2 font-medium">No FAQs added yet</p>
-            <p className="text-sm text-[var(--color-primary-700)] mb-4">Add common questions sellers might have about your requirements</p>
+            <p className="text-[var(--color-primary-900)] mb-2 font-medium">
+              {questionOnlyMode ? 'No questions added yet' : 'No FAQs added yet'}
+            </p>
+            <p className="text-sm text-[var(--color-primary-700)] mb-4">
+              {questionOnlyMode
+                ? 'Add questions you want potential offers to answer'
+                : 'Add common questions sellers might have about your requirements'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -82,17 +98,29 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
                         {index + 1}
                       </div>
                       <Label className="text-base font-medium text-[var(--color-accent-700)]">
-                        Question & Answer
+                        {answerOnlyMode || questionOnlyMode ? 'Question' : 'Question & Answer'}
                       </Label>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFAQ(faq.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {!answerOnlyMode && !questionOnlyMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFAQ(faq.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {questionOnlyMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFAQ(faq.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
 
                   <div className="space-y-4 px-6 pb-6">
@@ -100,27 +128,35 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
                       <Label htmlFor={`question-${faq.id}`} className="text-sm text-[var(--color-primary-900)] mb-2 block">
                         Question
                       </Label>
-                      <Input
-                        id={`question-${faq.id}`}
-                        value={faq.question}
-                        onChange={(e) => updateFAQ(faq.id, 'question', e.target.value)}
-                        placeholder="e.g., What condition are you looking for?"
-                        className="text-base border-[var(--color-primary-200)]"
-                      />
+                      {answerOnlyMode ? (
+                        <div className="text-base p-3 bg-[var(--color-primary-100)] rounded-lg border border-[var(--color-primary-200)] text-[var(--color-accent-700)]">
+                          {faq.question}
+                        </div>
+                      ) : (
+                        <Input
+                          id={`question-${faq.id}`}
+                          value={faq.question}
+                          onChange={(e) => updateFAQ(faq.id, 'question', e.target.value)}
+                          placeholder="e.g., What condition are you looking for?"
+                          className="text-base border-[var(--color-primary-200)]"
+                        />
+                      )}
                     </div>
 
-                    <div>
-                      <Label htmlFor={`answer-${faq.id}`} className="text-sm text-[var(--color-primary-900)] mb-2 block">
-                        Answer
-                      </Label>
-                      <Textarea
-                        id={`answer-${faq.id}`}
-                        value={faq.answer}
-                        onChange={(e) => updateFAQ(faq.id, 'answer', e.target.value)}
-                        placeholder="Provide a detailed answer..."
-                        className="text-base min-h-[100px] border-[var(--color-primary-200)]"
-                      />
-                    </div>
+                    {!questionOnlyMode && (
+                      <div>
+                        <Label htmlFor={`answer-${faq.id}`} className="text-sm text-[var(--color-primary-900)] mb-2 block">
+                          Answer
+                        </Label>
+                        <Textarea
+                          id={`answer-${faq.id}`}
+                          value={faq.answer}
+                          onChange={(e) => updateFAQ(faq.id, 'answer', e.target.value)}
+                          placeholder="Provide a detailed answer..."
+                          className="text-base min-h-[100px] border-[var(--color-primary-200)]"
+                        />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -128,20 +164,21 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
           </div>
         )}
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
-            onClick={addFAQ}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add FAQ Manually
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
-            onClick={generateFAQsWithAI}
-            disabled={isGenerating || !hasAnyInput}
+        {!answerOnlyMode && (
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
+              onClick={addFAQ}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {questionOnlyMode ? 'Add Question Manually' : 'Add FAQ Manually'}
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+              onClick={generateFAQsWithAI}
+              disabled={isGenerating || !hasAnyInput}
           >
             {isGenerating ? (
               <>
@@ -151,11 +188,12 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
             ) : (
               <>
                 <Sparkles className="w-4 h-4 mr-2 text-[var(--color-secondary-900)]" />
-                Generate FAQs with AI
+                {questionOnlyMode ? 'Generate Questions with AI' : 'Generate FAQs with AI'}
               </>
             )}
           </Button>
-        </div>
+          </div>
+        )}
 
       </div>
     </div>

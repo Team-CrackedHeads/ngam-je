@@ -530,7 +530,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div key={currentStep} className="flex-1 overflow-y-auto p-8">
           <div className="max-w-3xl mx-auto">
             {/* Step 1: Choose Buy or Sell */}
             {currentStep === 1 && (
@@ -711,6 +711,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
               onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
               mockFAQData={listingType === 'buy' ? MOCK_FAQ_BUY : MOCK_FAQ_SELL}
               hasAnyInput={hasAnyInput()}
+              questionOnlyMode={true}
             />
           )}
 

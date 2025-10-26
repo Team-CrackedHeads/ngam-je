@@ -136,6 +136,7 @@ export const ProductDetails = ({
         sourcePrice={listing.price}
         sourceListingType={listing.listingType}
         category={category}
+        sourceFAQs={listing.faqs || []}
       />
 
       <ProductFAQSummary listingId={listing.id} category={category} />
