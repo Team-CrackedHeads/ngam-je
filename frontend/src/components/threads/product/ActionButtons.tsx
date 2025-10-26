@@ -1,5 +1,5 @@
 // src/components/threads/product/ActionButtons.tsx
-import { MessageCircle, HelpCircle, ShoppingCart } from "lucide-react";
+import { MessageCircle, HelpCircle, ShoppingCart, HandCoins } from "lucide-react";
 // Import shared styles from the ProductDetails file
 import { wideButtonClasses } from "./ProductDetails";
 
@@ -9,13 +9,17 @@ interface ActionButtonsProps {
   onChat?: () => void;
   onFAQ?: () => void;
   onBuyNow?: () => void;
+  listingType?: "sale" | "want";
 }
 
 export const ActionButtons = ({
   onChat,
   onFAQ,
   onBuyNow,
-}: ActionButtonsProps) => (
+  listingType = "sale",
+}: ActionButtonsProps) => {
+
+  return (
   <div className="flex flex-col sm:flex-row gap-3 mt-6">
     <button
       className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
@@ -35,8 +39,9 @@ export const ActionButtons = ({
       className={`${wideButtonClasses} font-semibold shadow-md outline-solid outline-1 bg-gradient-to-r from-secondary-500 to-secondary-600 text-accent-700 focus:ring-accent-500`}
       onClick={onBuyNow}
     >
-      <ShoppingCart className="w-5 h-5" />
-      <span>Buy Now</span>
+      <HandCoins className="w-5 h-5" />
+      <span>Make Offer</span>
     </button>
   </div>
-);
+  );
+};

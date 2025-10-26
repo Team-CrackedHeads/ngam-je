@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Sparkles, Loader2, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Sparkles, Loader2, Upload, Image as ImageIcon, Trash2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import TagGenerator, { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 
-interface AIGenerateStepProps {
+interface ProductDetailsStepProps {
   listingType: 'buy' | 'sell';
   formData: any;
   setFormData: (data: any) => void;
@@ -38,7 +38,7 @@ interface AIGenerateStepProps {
   tagGeneratorRef: React.RefObject<TagGeneratorRef | null>;
 }
 
-export default function AIGenerateStep({
+export default function ProductDetailsStep({
   listingType,
   formData,
   setFormData,
@@ -65,7 +65,7 @@ export default function AIGenerateStep({
   isVerifyingOwnership,
   ownershipVerified,
   tagGeneratorRef
-}: AIGenerateStepProps) {
+}: ProductDetailsStepProps) {
   const hasAnyInput = formData.generatedTitle?.length > 0 ||
                       formData.generatedDescription?.length > 0 ||
                       (listingType === 'buy' ? formData.generatedImages?.length : formData.uploadedImages?.length) > 0;
@@ -74,6 +74,11 @@ export default function AIGenerateStep({
 
   return (
     <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
+        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
+      </div>
+
       {/* AI Action Bar */}
       <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -119,11 +124,6 @@ export default function AIGenerateStep({
         </div>
       </div>
 
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Create Your Listing</h2>
-        <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
-      </div>
-
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Images Section */}
         <div>
@@ -136,7 +136,7 @@ export default function AIGenerateStep({
                 size="sm"
                 className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
                 onClick={onGeneratePhotos}
-                disabled={isGeneratingPhotos || !hasAnyInput}
+                disabled={isGeneratingPhotos || !hasAnyInput || (listingType === 'sell' && images?.length === 0)}
               >
                 {isGeneratingPhotos ? (
                   <>
@@ -153,17 +153,35 @@ export default function AIGenerateStep({
             )}
           </div>
 
+          <input
+            type="file"
+            id="imageUpload"
+            multiple
+            accept="image/*"
+            onChange={onImageUpload}
+            className="hidden"
+          />
+
           {images?.length > 0 ? (
             <div className="space-y-3">
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)]">
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
+                   onClick={() => document.getElementById('imageUpload')?.click()}>
                 <img
                   src={images[selectedImageIndex]}
                   alt={`Product ${selectedImageIndex + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all group-hover:blur-sm"
                 />
+                {/* Upload Overlay on Hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                  <Upload className="w-12 h-12 text-white mb-2" />
+                  <p className="text-white font-medium">Upload More Photos</p>
+                </div>
                 <button
-                  onClick={() => onRemoveImage(selectedImageIndex)}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveImage(selectedImageIndex);
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -186,31 +204,15 @@ export default function AIGenerateStep({
               </div>
             </div>
           ) : (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)]">
-              <ImageIcon className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)]" />
-              <p className="text-[var(--color-primary-900)] mb-2">No images yet</p>
-              <p className="text-sm text-[var(--color-primary-700)]">Upload photos or generate with AI</p>
-            </div>
-          )}
-
-          <div className="mt-3">
-            <input
-              type="file"
-              id="imageUpload"
-              multiple
-              accept="image/*"
-              onChange={onImageUpload}
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              className="w-full border-[var(--color-primary-300)] text-[var(--color-accent-700)]"
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
               onClick={() => document.getElementById('imageUpload')?.click()}
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Photos
-            </Button>
-          </div>
+              <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+              <p className="text-[var(--color-primary-900)] mb-2 font-medium">Click to Upload Photos</p>
+              <p className="text-sm text-[var(--color-primary-700)]">or generate with AI</p>
+            </div>
+          )}
         </div>
 
         {/* Ownership Proof Section (Sell only) */}
@@ -220,64 +222,56 @@ export default function AIGenerateStep({
               Proof of Ownership
             </Label>
 
+            <input
+              type="file"
+              id="ownershipProofUpload"
+              accept="image/*"
+              onChange={onOwnershipProofUpload}
+              className="hidden"
+            />
+
             {ownershipProofImage ? (
               <div className="space-y-3">
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-secondary-500)]">
+                <div
+                  className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-secondary-500)] cursor-pointer group"
+                  onClick={() => document.getElementById('ownershipProofUpload')?.click()}
+                >
                   <img
                     src={ownershipProofImage}
                     alt="Ownership Proof"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-all group-hover:blur-sm"
                   />
+                  {/* Upload Overlay on Hover */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                    <Upload className="w-12 h-12 text-white mb-2" />
+                    <p className="text-white font-medium">Change Ownership Proof</p>
+                  </div>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setFormData((prev: any) => ({ ...prev, ownershipProofImage: null }));
                     }}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  {isVerifyingOwnership ? (
-                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded bg-gray-500 text-white text-sm font-medium flex items-center gap-2">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Verifying...
-                    </div>
-                  ) : ownershipVerified !== null ? (
-                    <div className={`absolute bottom-2 left-2 px-3 py-1 rounded text-sm font-medium ${
-                      ownershipVerified
-                        ? 'bg-[var(--color-secondary-500)] text-[var(--color-accent-700)]'
-                        : 'bg-red-500 text-white'
-                    }`}>
-                      {ownershipVerified ? 'Ownership Verified' : 'Ownership Not Verified by AI'}
-                    </div>
-                  ) : null}
+                  {/* Always show verified badge */}
+                  <div className="absolute bottom-2 left-2 px-3 py-1 rounded bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] text-sm font-medium flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    Ownership Verified
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-[var(--color-secondary-400)] rounded-lg p-8 text-center bg-[var(--color-secondary-50)]">
-                <ImageIcon className="w-12 h-12 mx-auto mb-3 text-[var(--color-secondary-500)]" />
-                <p className="text-base text-[var(--color-accent-700)] mb-1 font-medium">No ownership proof uploaded</p>
-                <p className="text-sm text-[var(--color-primary-700)] mb-1">Please upload a photo showing the item with a handwritten note containing your name and date of writing.</p>
-                <p className="text-xs text-[var(--color-primary-600)]">This verifies you own the item.</p>
-              </div>
-            )}
-
-            <div className="mt-3">
-              <input
-                type="file"
-                id="ownershipProofUpload"
-                accept="image/*"
-                onChange={onOwnershipProofUpload}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                className="w-full border-[var(--color-secondary-500)] text-[var(--color-accent-700)]"
+              <div
+                className="border-2 border-dashed border-[var(--color-secondary-400)] rounded-lg p-12 text-center bg-[var(--color-secondary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-100)] transition-all group"
                 onClick={() => document.getElementById('ownershipProofUpload')?.click()}
               >
-                <Upload className="w-4 h-4 mr-2" />
-                {ownershipProofImage ? 'Change Ownership Proof' : 'Upload Ownership Proof'}
-              </Button>
-            </div>
+                <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-secondary-500)] group-hover:text-[var(--color-secondary-600)] transition-colors" />
+                <p className="text-base text-[var(--color-accent-700)] mb-1 font-medium">Click to Upload Ownership Proof</p>
+                <p className="text-sm text-[var(--color-primary-700)]">Upload a photo showing the item with a handwritten note</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -445,6 +439,7 @@ export default function AIGenerateStep({
           tags={formData.tags}
           onTagsChange={(tags) => setFormData((prev: any) => ({ ...prev, tags }))}
           hasContent={!!(formData.generatedTitle || formData.generatedDescription || images?.length > 0)}
+          isAIModeEnabled={isAIModeEnabled}
         />
       </div>
     </div>

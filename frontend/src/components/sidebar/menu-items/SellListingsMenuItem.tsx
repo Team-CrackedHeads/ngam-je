@@ -83,7 +83,7 @@ export default function SellListingsMenuItem() {
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
               onClick={() =>
-                router.push("/listings?type=sale", { scroll: false })
+                router.push("/listings?type=wanted", { scroll: false })
               }
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
             >
