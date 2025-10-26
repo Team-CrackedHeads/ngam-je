@@ -354,46 +354,51 @@ export default function MakeOfferSell({
             </div>
 
             {/* Progress Bar */}
-            <div className="flex items-center px-6 pb-2">
-              {steps.map((step, index) => (
-                <React.Fragment key={step.number}>
-                  <div className="flex flex-col items-center min-w-0">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                        currentStep === step.number
-                          ? 'bg-[var(--color-secondary-500)] text-white shadow-lg scale-110'
-                          : currentStep > step.number
-                          ? 'bg-[var(--color-secondary-500)] text-white'
-                          : 'bg-gray-200 text-gray-500'
-                      }`}
-                    >
-                      {currentStep > step.number ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <step.icon className="w-5 h-5" />
+            <div className="px-4 pb-2">
+              <div className="flex items-center justify-between">
+                {steps.map((step, index) => {
+                  const Icon = step.icon;
+                  return (
+                    <React.Fragment key={step.number}>
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                            currentStep > step.number
+                              ? 'bg-[var(--color-secondary-500)] text-white'
+                              : currentStep === step.number
+                              ? 'bg-[var(--color-secondary-500)] text-white scale-110 shadow-lg'
+                              : 'bg-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {currentStep > step.number ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <Icon className="w-5 h-5" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs mt-2 font-medium whitespace-nowrap ${
+                            currentStep === step.number
+                              ? 'text-[var(--color-accent-700)]'
+                              : 'text-[var(--color-primary-700)]'
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                      {index < steps.length - 1 && (
+                        <div
+                          className={`flex-1 h-1 mx-3 rounded transition-all ${
+                            currentStep > step.number
+                              ? 'bg-[var(--color-secondary-500)]'
+                              : 'bg-gray-200'
+                          }`}
+                        />
                       )}
-                    </div>
-                    <span
-                      className={`text-xs mt-2 font-medium hidden sm:block text-center whitespace-nowrap ${
-                        currentStep === step.number
-                          ? 'text-[var(--color-accent-700)]'
-                          : 'text-[var(--color-primary-700)]'
-                      }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`h-1 flex-1 mx-3 rounded transition-all ${
-                        currentStep > step.number
-                          ? 'bg-[var(--color-secondary-500)]'
-                          : 'bg-gray-200'
-                      }`}
-                    />
-                  )}
-                </React.Fragment>
-              ))}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

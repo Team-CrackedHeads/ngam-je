@@ -397,6 +397,12 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
   };
 
   const handleClose = () => {
+    // Clear draft FAQs from sessionStorage
+    if (typeof window !== 'undefined') {
+      const storageKey = `faq-generator-question-only-drafts-v1:${window.location.pathname}`;
+      sessionStorage.removeItem(storageKey);
+    }
+
     setCurrentStep(1);
     setListingType(null);
     setBuyFormData({
