@@ -225,7 +225,7 @@ function ThreadsPage() {
               <PageHeader />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mt-4">
+            <div className="hidden md:flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mt-4">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600 font-medium">Sort By:</span>
@@ -245,6 +245,22 @@ function ThreadsPage() {
                 <Plus className="w-4 h-4" />
                 Create Thread
               </button>
+            </div>
+
+            <div className="md:hidden mt-4">
+              <div className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+                <FilterButton activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+                <ViewDropdown activeView={viewType} viewAction={setViewType} />
+                <button
+                  ref={inlineCreateBtnRef}
+                  onClick={() => setIsCreateOpen(true)}
+                  className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
+                  aria-label="Create new thread"
+                >
+                  <Plus className="w-4 h-4" />
+                  New
+                </button>
+              </div>
             </div>
 
             {hasOverview && (

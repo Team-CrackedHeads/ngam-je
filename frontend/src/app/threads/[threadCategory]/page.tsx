@@ -342,7 +342,7 @@ const CategoryPage: React.FC = () => {
         </div>
 
         {/* Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4">
+        <div className="hidden md:flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">Sort By:</span>
@@ -361,6 +361,21 @@ const CategoryPage: React.FC = () => {
             <Plus className="w-4 h-4" />
             Create Listing
           </button>
+        </div>
+
+        <div className="md:hidden mb-4">
+          <div className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+            <ListingTypeDropdown activeType={activeType} onTypeChange={handleTypeChange} />
+            <ViewDropdown activeView={viewType} viewAction={setViewType} />
+            <button
+              onClick={handleCreateListing}
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
+              aria-label="Create new listing"
+            >
+              <Plus className="w-4 h-4" />
+              New
+            </button>
+          </div>
         </div>
 
         {/* Results count */}
