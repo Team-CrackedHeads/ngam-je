@@ -1,14 +1,19 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Upload, ChevronRight, Check, DollarSign, Eye, Sparkles, MessageCircle } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
+import AIGenerateStep from './steps/AIGenerateStep';
+import PricingShippingStep from './steps/PricingShippingStep';
+import PreviewStep from './steps/PreviewStep';
+import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
+import { MOCK_LOCATION } from '@/utils/mock-location-data';
+import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
+import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
+import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
+import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
 
 interface MakeOfferModalProps {
   isOpen: boolean;
@@ -31,21 +36,71 @@ export default function MakeOfferModal({
 }: MakeOfferModalProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const tagGeneratorRef = useRef<TagGeneratorRef | null>(null);
 
   // Determine the offer type (opposite of source)
-  const offerType = sourceListingType === "wanted" ? "sell" : "buy";
+  const listingType = sourceListingType === "wanted" ? "sell" : "buy";
 
-  // Form data
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [title, setTitle] = useState(sourceTitle);
-  const [description, setDescription] = useState('');
-  const [minPrice, setMinPrice] = useState(sourcePrice.toString());
-  const [maxPrice, setMaxPrice] = useState(sourcePrice.toString());
-  const [location, setLocation] = useState('');
-  const [shippingOptions, setShippingOptions] = useState<string[]>([]);
-  const [quantity, setQuantity] = useState('1');
-  const [tags, setTags] = useState<string[]>([]);
+  // AI generation states
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isGeneratingPhotos, setIsGeneratingPhotos] = useState(false);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
+  const [titleSuggestion, setTitleSuggestion] = useState('');
+  const [descriptionSuggestion, setDescriptionSuggestion] = useState('');
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Pricing states
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [filteredLocations, setFilteredLocations] = useState<string[]>(MOCK_LOCATION);
+  const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [filteredCurrencies, setFilteredCurrencies] = useState<string[]>(['MYR', 'USD', 'SGD']);
+  const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
+  const [recommendedPriceRange, setRecommendedPriceRange] = useState({
+    min: 0,
+    max: 0,
+    average: 0
+  });
+
+  // Sell-specific states
+  const [isVerifyingOwnership, setIsVerifyingOwnership] = useState(false);
+  const [ownershipVerified, setOwnershipVerified] = useState<boolean | null>(null);
+
+  // Form data - using the same structure as CreateListingModal
+  const [formData, setFormData] = useState<any>(
+    listingType === 'buy'
+      ? {
+          generatedTitle: sourceTitle,
+          generatedDescription: '',
+          generatedImages: [],
+          minPrice: sourcePrice.toString(),
+          maxPrice: sourcePrice.toString(),
+          currency: 'MYR',
+          location: '',
+          quantity: '1',
+          shippingOptions: [],
+          faqs: [],
+          tags: []
+        }
+      : {
+          uploadedImages: [],
+          ownershipProofImage: MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
+          generatedTitle: sourceTitle,
+          generatedDescription: '',
+          minPrice: sourcePrice.toString(),
+          maxPrice: sourcePrice.toString(),
+          currency: 'MYR',
+          location: '',
+          shippingOptions: [],
+          inventoryQuantity: '1',
+          tags: [],
+          faqs: []
+        }
+  );
 
   const steps = [
     { number: 1, label: 'Details', icon: Sparkles },
@@ -53,31 +108,175 @@ export default function MakeOfferModal({
     { number: 3, label: 'Preview', icon: Eye }
   ];
 
+  // AI Generation functions (same as CreateListingModal)
+  const generateTitleWithAI = async () => {
+    setIsGeneratingTitle(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setFormData((prev: any) => ({
+      ...prev,
+      generatedTitle: listingType === 'buy' ? MOCK_GENERATED_TITLE_BUY : MOCK_GENERATED_TITLE_SELL
+    }));
+    setIsGeneratingTitle(false);
+  };
+
+  const generateDescriptionWithAI = async () => {
+    setIsGeneratingDescription(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setFormData((prev: any) => ({
+      ...prev,
+      generatedDescription: listingType === 'buy' ? MOCK_GENERATED_DESCRIPTION_BUY : MOCK_GENERATED_DESCRIPTION_SELL
+    }));
+    setIsGeneratingDescription(false);
+  };
+
+  const generatePhotosWithAI = async () => {
+    setIsGeneratingPhotos(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    const images = listingType === 'buy' ? MOCK_GENERATED_IMAGES_BUY : MOCK_GENERATED_IMAGES_SELL;
+    setFormData((prev: any) => ({
+      ...prev,
+      [listingType === 'buy' ? 'generatedImages' : 'uploadedImages']: [
+        ...(prev[listingType === 'buy' ? 'generatedImages' : 'uploadedImages'] || []),
+        ...images
+      ]
+    }));
+    setIsGeneratingPhotos(false);
+  };
+
+  const generateAllWithAI = async () => {
+    setIsGeneratingAll(true);
+    await generatePhotosWithAI();
+    await generateTitleWithAI();
+    await generateDescriptionWithAI();
+    await tagGeneratorRef.current?.generateTags();
+    setIsGeneratingAll(false);
+  };
+
+  const generateTitleSuggestion = useCallback((currentText: string) => {
+    if (titleTimeoutRef.current) {
+      clearTimeout(titleTimeoutRef.current);
+    }
+    if (!isAIModeEnabled || currentText.length < 3) {
+      setTitleSuggestion('');
+      return;
+    }
+    titleTimeoutRef.current = setTimeout(() => {
+      const fullSuggestion = listingType === 'buy' ? MOCK_GENERATED_TITLE_BUY : MOCK_GENERATED_TITLE_SELL;
+      const lowerCurrent = currentText.toLowerCase();
+      const lowerSuggestion = fullSuggestion.toLowerCase();
+      if (lowerSuggestion.startsWith(lowerCurrent)) {
+        setTitleSuggestion(fullSuggestion.slice(currentText.length));
+      } else {
+        setTitleSuggestion('');
+      }
+    }, 300);
+  }, [isAIModeEnabled, listingType]);
+
+  const generateDescriptionSuggestion = useCallback((currentText: string) => {
+    if (descriptionTimeoutRef.current) {
+      clearTimeout(descriptionTimeoutRef.current);
+    }
+    if (!isAIModeEnabled || currentText.length < 3) {
+      setDescriptionSuggestion('');
+      return;
+    }
+    descriptionTimeoutRef.current = setTimeout(() => {
+      const fullSuggestion = listingType === 'buy' ? MOCK_GENERATED_DESCRIPTION_BUY : MOCK_GENERATED_DESCRIPTION_SELL;
+      const lowerCurrent = currentText.toLowerCase();
+      const lowerSuggestion = fullSuggestion.toLowerCase();
+      if (lowerSuggestion.startsWith(lowerCurrent)) {
+        setDescriptionSuggestion(fullSuggestion.slice(currentText.length));
+      } else {
+        setDescriptionSuggestion('');
+      }
+    }, 300);
+  }, [isAIModeEnabled, listingType]);
+
+  // Image handling
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).slice(0, 5 - uploadedImages.length).map((file) => {
-        return URL.createObjectURL(file);
-      });
-      setUploadedImages([...uploadedImages, ...newImages]);
+      if (listingType === 'buy') {
+        const newImages: string[] = [];
+        Array.from(files).forEach(file => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            newImages.push(reader.result as string);
+            if (newImages.length === files.length) {
+              setFormData((prev: any) => ({
+                ...prev,
+                generatedImages: [...prev.generatedImages, ...newImages]
+              }));
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      } else {
+        const newImages = Array.from(files).slice(0, 5 - formData.uploadedImages.length).map((file) => {
+          return URL.createObjectURL(file);
+        });
+        setFormData((prev: any) => ({
+          ...prev,
+          uploadedImages: [...prev.uploadedImages, ...newImages]
+        }));
+      }
     }
   };
 
   const removeImage = (index: number) => {
-    setUploadedImages(uploadedImages.filter((_, i) => i !== index));
+    const imageKey = listingType === 'buy' ? 'generatedImages' : 'uploadedImages';
+    setFormData((prev: any) => ({
+      ...prev,
+      [imageKey]: prev[imageKey].filter((_: any, i: number) => i !== index)
+    }));
+    if (selectedImageIndex >= formData[imageKey].length - 1) {
+      setSelectedImageIndex(Math.max(0, formData[imageKey].length - 2));
+    }
   };
 
-  const handleShippingToggle = (option: string) => {
-    setShippingOptions(prev =>
-      prev.includes(option)
-        ? prev.filter(o => o !== option)
-        : [...prev, option]
-    );
+  // Ownership proof handling (sell only)
+  const handleVerifyOwnershipProof = async (imageUrl: string) => {
+    setIsVerifyingOwnership(true);
+    setOwnershipVerified(null);
+    const isVerified = await verifyOwnershipProofWithAI(imageUrl);
+    setOwnershipVerified(isVerified);
+    setIsVerifyingOwnership(false);
+  };
+
+  const handleOwnershipProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setFormData((prev: any) => ({ ...prev, ownershipProofImage: imageUrl }));
+      handleVerifyOwnershipProof(imageUrl);
+    }
+  };
+
+  const fetchPriceRecommendation = async () => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const prices = MOCK_PRICE_HISTORY.map((point) => point.price);
+    if (!prices.length) {
+      setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
+      return;
+    }
+    const averagePrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+    const lowestPrice = Math.min(...prices);
+    const highestPrice = Math.max(...prices);
+    const padding = Math.max(averagePrice * 0.1, 5);
+    setRecommendedPriceRange({
+      min: Number(Math.max(0, Math.min(lowestPrice, averagePrice - padding)).toFixed(2)),
+      average: Number(averagePrice.toFixed(2)),
+      max: Number(Math.max(highestPrice, averagePrice + padding).toFixed(2)),
+    });
   };
 
   const handleNext = () => {
     if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      if (nextStep === 2 && !recommendedPriceRange.average) {
+        fetchPriceRecommendation();
+      }
+      setCurrentStep(nextStep);
     }
   };
 
@@ -88,26 +287,8 @@ export default function MakeOfferModal({
   };
 
   const handleSubmit = async () => {
-    // Create the listing data
-    const listingData = {
-      generatedTitle: title,
-      generatedDescription: description,
-      uploadedImages: offerType === 'sell' ? uploadedImages : [],
-      generatedImages: offerType === 'buy' ? uploadedImages : [],
-      minPrice,
-      maxPrice,
-      currency: 'MYR',
-      location,
-      shippingOptions,
-      inventoryQuantity: offerType === 'sell' ? quantity : undefined,
-      quantity: offerType === 'buy' ? quantity : '1',
-      tags,
-      faqs: [],
-      ownershipProofImage: null
-    };
-
-    // Convert to listing format
-    const listing = convertFormToListing(listingData, offerType, category);
+    // Convert form data to listing format
+    const listing = convertFormToListing(formData, listingType, category);
     const listingId = generateListingId(listing.category);
     const completeListing = { ...listing, id: listingId };
 
@@ -133,24 +314,34 @@ export default function MakeOfferModal({
 
   const handleClose = () => {
     setCurrentStep(1);
-    setUploadedImages([]);
-    setTitle(sourceTitle);
-    setDescription('');
-    setMinPrice(sourcePrice.toString());
-    setMaxPrice(sourcePrice.toString());
-    setLocation('');
-    setShippingOptions([]);
-    setQuantity('1');
-    setTags([]);
+    setIsAIModeEnabled(false);
+    setTitleSuggestion('');
+    setDescriptionSuggestion('');
+    setSelectedImageIndex(0);
+    setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
     onClose();
   };
 
   const isStepValid = () => {
+    const images = listingType === 'buy' ? formData.generatedImages : formData.uploadedImages;
     switch(currentStep) {
-      case 1: return title.length >= 3 && description.length >= 10 && uploadedImages.length > 0;
-      case 2: return minPrice && maxPrice && parseFloat(minPrice) <= parseFloat(maxPrice) && location.length > 0 && shippingOptions.length > 0;
-      case 3: return true;
-      default: return false;
+      case 1:
+        return formData.generatedTitle.length >= 3 &&
+               formData.generatedDescription.length >= 10 &&
+               images.length > 0 &&
+               (listingType === 'buy' || formData.ownershipProofImage !== null);
+      case 2:
+        return formData.minPrice &&
+               formData.maxPrice &&
+               parseFloat(formData.minPrice) <= parseFloat(formData.maxPrice) &&
+               formData.location.length > 0 &&
+               formData.shippingOptions.length > 0 &&
+               (listingType === 'buy' ? formData.quantity : formData.inventoryQuantity) &&
+               parseInt(listingType === 'buy' ? formData.quantity : formData.inventoryQuantity) > 0;
+      case 3:
+        return true;
+      default:
+        return false;
     }
   };
 
@@ -158,21 +349,21 @@ export default function MakeOfferModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col border border-neutral-200">
+      <div className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col border border-neutral-200">
         {/* Header */}
-        <div className="flex-shrink-0 border-b shadow-sm rounded-t-lg bg-primary-200">
+        <div className="flex-shrink-0 border-b shadow-sm rounded-t-lg bg-[var(--color-primary-200)]">
           <div className="px-4 py-4">
             <div className="flex items-center justify-between mb-4">
               <div className="text-center flex-1">
-                <h1 className="font-semibold text-lg text-accent-700">
+                <h1 className="font-semibold text-lg text-[var(--color-accent-700)]">
                   Make an Offer
                 </h1>
-                <p className="text-sm text-primary-900">
-                  {offerType === 'sell' ? 'Creating a sell listing' : 'Creating a buy listing'}
+                <p className="text-sm text-[var(--color-primary-900)]">
+                  {listingType === 'sell' ? 'Creating a sell listing' : 'Creating a buy listing'}
                 </p>
               </div>
               <Button variant="ghost" size="icon" onClick={handleClose}>
-                <X className="w-5 h-5 text-accent-700" />
+                <X className="w-5 h-5 text-[var(--color-accent-700)]" />
               </Button>
             </div>
 
@@ -186,9 +377,9 @@ export default function MakeOfferModal({
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
                           currentStep > step.number
-                            ? 'bg-secondary-500 text-white'
+                            ? 'bg-[var(--color-secondary-500)] text-white'
                             : currentStep === step.number
-                            ? 'bg-secondary-500 text-white scale-110 shadow-md'
+                            ? 'bg-[var(--color-secondary-500)] text-white scale-110 shadow-md'
                             : 'bg-gray-200 text-gray-500'
                         }`}
                       >
@@ -197,8 +388,8 @@ export default function MakeOfferModal({
                       <span
                         className={`text-xs mt-2 font-medium ${
                           currentStep === step.number
-                            ? 'text-accent-700'
-                            : 'text-primary-900'
+                            ? 'text-[var(--color-accent-700)]'
+                            : 'text-[var(--color-primary-900)]'
                         }`}
                       >
                         {step.label}
@@ -208,7 +399,7 @@ export default function MakeOfferModal({
                       <div
                         className={`flex-1 h-1 mx-3 rounded transition-all ${
                           currentStep > step.number
-                            ? 'bg-secondary-500'
+                            ? 'bg-[var(--color-secondary-500)]'
                             : 'bg-gray-200'
                         }`}
                       />
@@ -222,201 +413,86 @@ export default function MakeOfferModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl mx-auto">
-            {/* Step 1: Details */}
+          <div className="max-w-3xl mx-auto">
+            {/* Step 1: AI Generate (Details) */}
             {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-blue-900">
                     You're responding to a <strong>{sourceListingType === 'wanted' ? 'WTB (Want to Buy)' : 'WTS (Want to Sell)'}</strong> listing.
-                    Fill in the details to create your {offerType === 'sell' ? 'sell' : 'buy'} offer.
+                    Fill in the details to create your {listingType === 'sell' ? 'sell' : 'buy'} offer.
                   </p>
                 </div>
-
-                {/* Images */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    {offerType === 'sell' ? 'Product Images' : 'Reference Images'}
-                  </Label>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    {uploadedImages.map((img, idx) => (
-                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
-                        <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => removeImage(idx)}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                    {uploadedImages.length < 5 && (
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors flex flex-col items-center justify-center bg-gray-50"
-                      >
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Upload</span>
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </div>
-
-                {/* Title */}
-                <div>
-                  <Label htmlFor="title" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Title
-                  </Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="What are you offering?"
-                    className="w-full"
-                    maxLength={100}
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <Label htmlFor="description" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe your offer in detail..."
-                    className="w-full min-h-24"
-                    maxLength={500}
-                  />
-                </div>
-              </div>
+                <AIGenerateStep
+                  listingType={listingType}
+                  formData={formData}
+                  setFormData={setFormData}
+                  isAIModeEnabled={isAIModeEnabled}
+                  setIsAIModeEnabled={setIsAIModeEnabled}
+                  isGeneratingTitle={isGeneratingTitle}
+                  isGeneratingDescription={isGeneratingDescription}
+                  isGeneratingPhotos={isGeneratingPhotos}
+                  isGeneratingAll={isGeneratingAll}
+                  titleSuggestion={titleSuggestion}
+                  descriptionSuggestion={descriptionSuggestion}
+                  selectedImageIndex={selectedImageIndex}
+                  setSelectedImageIndex={setSelectedImageIndex}
+                  onGenerateTitle={generateTitleWithAI}
+                  onGenerateDescription={generateDescriptionWithAI}
+                  onGeneratePhotos={generatePhotosWithAI}
+                  onGenerateAll={generateAllWithAI}
+                  onTitleChange={generateTitleSuggestion}
+                  onDescriptionChange={generateDescriptionSuggestion}
+                  onImageUpload={handleImageUpload}
+                  onRemoveImage={removeImage}
+                  onOwnershipProofUpload={listingType === 'sell' ? handleOwnershipProofUpload : undefined}
+                  ownershipProofImage={listingType === 'sell' ? formData.ownershipProofImage : undefined}
+                  isVerifyingOwnership={listingType === 'sell' ? isVerifyingOwnership : undefined}
+                  ownershipVerified={listingType === 'sell' ? ownershipVerified : undefined}
+                  tagGeneratorRef={tagGeneratorRef}
+                />
+              </>
             )}
 
-            {/* Step 2: Pricing */}
+            {/* Step 2: Pricing & Shipping */}
             {currentStep === 2 && (
-              <div className="space-y-6">
-                {/* Price Range */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="minPrice" className="text-sm font-medium text-gray-700 mb-2 block">
-                      {offerType === 'sell' ? 'Min Price (RM)' : 'Min Budget (RM)'}
-                    </Label>
-                    <Input
-                      id="minPrice"
-                      type="number"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="maxPrice" className="text-sm font-medium text-gray-700 mb-2 block">
-                      {offerType === 'sell' ? 'Max Price (RM)' : 'Max Budget (RM)'}
-                    </Label>
-                    <Input
-                      id="maxPrice"
-                      type="number"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-
-                {/* Location */}
-                <div>
-                  <Label htmlFor="location" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Location
-                  </Label>
-                  <Input
-                    id="location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g., Kuala Lumpur"
-                  />
-                </div>
-
-                {/* Shipping Options */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Shipping Options
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Meetup', 'Delivery', 'Shipping'].map((option) => (
-                      <Badge
-                        key={option}
-                        onClick={() => handleShippingToggle(option)}
-                        className={`cursor-pointer ${
-                          shippingOptions.includes(option)
-                            ? 'bg-secondary-500 text-accent-700'
-                            : 'bg-gray-200 text-gray-700'
-                        }`}
-                      >
-                        {option}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quantity */}
-                <div>
-                  <Label htmlFor="quantity" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Quantity
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    min="1"
-                  />
-                </div>
-              </div>
+              <PricingShippingStep
+                listingType={listingType}
+                formData={formData}
+                setFormData={setFormData}
+                recommendedPriceRange={recommendedPriceRange}
+                showLocationDropdown={showLocationDropdown}
+                setShowLocationDropdown={setShowLocationDropdown}
+                filteredLocations={filteredLocations}
+                setFilteredLocations={setFilteredLocations}
+                selectedLocationIndex={selectedLocationIndex}
+                setSelectedLocationIndex={setSelectedLocationIndex}
+                showCurrencyDropdown={showCurrencyDropdown}
+                setShowCurrencyDropdown={setShowCurrencyDropdown}
+                filteredCurrencies={filteredCurrencies}
+                setFilteredCurrencies={setFilteredCurrencies}
+                selectedCurrencyIndex={selectedCurrencyIndex}
+                setSelectedCurrencyIndex={setSelectedCurrencyIndex}
+              />
             )}
 
             {/* Step 3: Preview */}
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-green-900">
                     ✅ Your offer will be automatically matched with the original listing!
                   </p>
                 </div>
-
-                <div className="border rounded-lg p-4 space-y-4">
-                  {uploadedImages.length > 0 && (
-                    <img src={uploadedImages[0]} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
-                  )}
-                  <div>
-                    <h3 className="text-lg font-bold text-accent-700">{title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{description}</p>
-                  </div>
-                  <div className="flex items-center justify-between pt-3 border-t">
-                    <span className="text-xl font-bold text-accent-600">
-                      RM {minPrice} - RM {maxPrice}
-                    </span>
-                    <Badge className="bg-blue-100 text-blue-800">
-                      {offerType === 'sell' ? 'For Sale' : 'Want to Buy'}
-                    </Badge>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <p>📍 {location}</p>
-                    <p>🚚 {shippingOptions.join(', ')}</p>
-                  </div>
-                </div>
-              </div>
+                <PreviewStep
+                  listingType={listingType}
+                  formData={formData}
+                  selectedImageIndex={selectedImageIndex}
+                  setSelectedImageIndex={setSelectedImageIndex}
+                  onEditStep={setCurrentStep}
+                  ownershipVerified={listingType === 'sell' ? ownershipVerified : undefined}
+                />
+              </>
             )}
 
             {/* Navigation Buttons */}
@@ -427,6 +503,7 @@ export default function MakeOfferModal({
                 disabled={currentStep === 1}
                 className="px-6"
               >
+                <ChevronLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
 
@@ -434,7 +511,7 @@ export default function MakeOfferModal({
                 <Button
                   onClick={handleNext}
                   disabled={!isStepValid()}
-                  className="px-6 text-white bg-secondary-500 hover:bg-secondary-600"
+                  className="px-6 text-white bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)]"
                 >
                   Continue
                   <ChevronRight className="w-4 h-4 ml-2" />
