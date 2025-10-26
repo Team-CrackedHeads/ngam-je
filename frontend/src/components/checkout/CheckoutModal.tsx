@@ -219,7 +219,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-3xl"
       >
-        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[90vh] flex flex-col py-0">
+        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[90vh] flex flex-col p-0 gap-0">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 shrink-0 bg-primary-50">
             <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto px-4 pt-4">
             {/* Listing Summary */}
             <div className="mb-4 space-y-3">
               <h4 className="font-semibold text-sm text-accent-700 flex items-center gap-2">
