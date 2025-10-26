@@ -488,7 +488,7 @@ const CategoryPage: React.FC = () => {
         </div>
 
         {/* Floating Create Listing Button */}
-        {showFloatingButton && (
+        {showFloatingButton && !isMobile && (
           <button
             onClick={handleCreateListing}
             className="fixed bottom-6 right-6 bg-accent-700 hover:bg-accent-800 text-secondary-500 w-14 h-14 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 z-50 flex items-center justify-center"

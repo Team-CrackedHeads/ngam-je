@@ -18,6 +18,7 @@ import FilterButton, { FilterType } from "@/components/threads/FilterButton";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
 import { MockAIResponse } from "@/utils/mock-ai-data";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type ViewType = "grid" | "list";
 
@@ -49,6 +50,7 @@ function ThreadsPage() {
   const [inSearchView, setInSearchView] = useState(false);
   const [inOverviewView, setInOverviewView] = useState(false);
   const [isMetaInView, setIsMetaInView] = useState(false);
+  const isMobile = useIsMobile();
 
   // Derived query keywords
   const queryKeywords = useMemo(() => {
@@ -199,7 +201,7 @@ function ThreadsPage() {
     ctaState.targetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const shouldShowCTA = !ctaState.targetVisible;
+  const shouldShowCTA = !ctaState.targetVisible && !isMobile;
 
   return (
     <>
