@@ -516,7 +516,6 @@ export function AppSidebar() {
 
   const handleManualToggle = () => {
     const newState = !isManuallyToggled;
-    // console.log(isManuallyToggled);
     setIsManuallyToggled(newState);
     setOpen(newState);
   };
@@ -568,25 +567,11 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <div className="fixed top-22 left-4 md:hidden">
-        <button
-          onClick={handleManualToggle}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-50 text-accent-700 border-2 border-accent-700 shadow-md hover:bg-primary-200 transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-      </div>
-
-      {" "}
-       <Sidebar
+      <Sidebar
         variant="sidebar"
         collapsible="icon"
-        // className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
-        className={`fixed md:!relative z-40 md:z-0 top-0 left-0 h-full flex-col bg-white shadow-lg transition-transform duration-300 ${
-            isManuallyToggled ? "translate-x-0" : "-translate-x-full"
-          } md:relative md:translate-x-0 md:flex`}
-        >
+        className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
+      >
         <SidebarHeader className="relative p-2">
           <CustomSidebarTrigger onManualToggle={handleManualToggle} />
 
@@ -736,16 +721,6 @@ export function AppSidebar() {
           </div>
         </SidebarFooter>
       </Sidebar>
-      
-      {/* Backdrop (click to close) */}
-      {isManuallyToggled && (
-        <div
-          onClick={handleManualToggle}
-          className="fixed inset-0 z-30 md:hidden bg-black/40"
-          aria-hidden
-        />
-      )}
-
       <SidebarAIChat
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
