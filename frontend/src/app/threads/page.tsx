@@ -218,7 +218,7 @@ function ThreadsPage() {
 
         {/* SECTION 2: Threads */}
         <section id="ngam-overview" ref={threadsSectionRef} className="snap-start bg-gray-50">
-          <div className="container mx-auto px-4 md:px-8 py-6 pb-32 md:pb-40">
+          <div className="container mx-auto px-4 md:px-8 py-6 pb-32 md:pb-16">
 
             {/* Page Header */}
             <div ref={headerRef}>
