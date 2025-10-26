@@ -6,12 +6,14 @@ import { House, MessageSquare, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 
 const Footer = () => {
   const pathname = usePathname();
   const { openMobile } = useSidebar();
+  const scrollDirection = useScrollDirection();
 
-  const hideOnRoutes = ["/messages", "/chat/history"];
+  const hideOnRoutes = ["/messages"];
   const shouldHide = hideOnRoutes.some((route) => pathname.startsWith(route));
 
   if (shouldHide) return null;
@@ -26,8 +28,9 @@ const Footer = () => {
   return (
     <footer
       className={cn(
-        "fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] md:hidden bg-white z-[200]",
-        openMobile ? "hidden" : "block"
+        "fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] md:hidden bg-white z-[200] transition-transform duration-300",
+        openMobile ? "hidden" : "block",
+        scrollDirection === "down" ? "translate-y-full" : "translate-y-0"
       )}
     >
       <div className="flex justify-around items-stretch relative h-16">
