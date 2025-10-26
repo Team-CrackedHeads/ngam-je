@@ -362,7 +362,7 @@ export function AppSidebar() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { state, setOpen } = useSidebar();
+  const { state, setOpen, isMobile } = useSidebar();
   const [isManuallyToggled, setIsManuallyToggled] = useState(
     state === "expanded"
   );
@@ -376,10 +376,11 @@ export function AppSidebar() {
   }, []);
 
   useEffect(() => {
+    if (isMobile) return;
     if (!isManuallyToggled) {
       setOpen(isHovered);
     }
-  }, [isHovered, isManuallyToggled, setOpen]);
+  }, [isHovered, isManuallyToggled, setOpen, isMobile]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -390,6 +391,7 @@ export function AppSidebar() {
   };
 
   const handleManualToggle = () => {
+    if (isMobile) return;
     const newState = !isManuallyToggled;
     setIsManuallyToggled(newState);
     setOpen(newState);
@@ -428,10 +430,12 @@ export function AppSidebar() {
       <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
+        className="!relative md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
       >
         <SidebarHeader className="relative p-2">
-          <CustomSidebarTrigger onManualToggle={handleManualToggle} />
+          {!isMobile && (
+            <CustomSidebarTrigger onManualToggle={handleManualToggle} />
+          )}
 
           <div className="mt-2">
             {/* Integrate SearchHistory component here */}

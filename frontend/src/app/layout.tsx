@@ -35,16 +35,16 @@ export default function RootLayout({
         style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
       >
         <MockAuthProvider>
-          <Header username="User" notifications={3} />
-          <div className="flex-1 flex min-h-0">
-            <SidebarProvider>
+          <SidebarProvider className="flex-col">
+            <Header username="User" notifications={3} />
+            <div className="flex-1 flex min-h-0 w-full">
               <AppSidebar />
               <main className="flex-1 min-h-0 overflow-auto">
                 {children}
               </main>
-            </SidebarProvider>
-          </div>
-          <Footer />
+            </div>
+            <Footer />
+          </SidebarProvider>
 
           {/* Dev-only: Role toggle in bottom-right corner */}
           <AuthRoleToggle />

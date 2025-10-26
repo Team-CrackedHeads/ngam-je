@@ -4,9 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { House, MessageSquare, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 const Footer = () => {
   const pathname = usePathname();
+  const { openMobile } = useSidebar();
 
   const links = [
     { href: "/threads", label: "Threads", icon: House },
@@ -16,7 +19,12 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] block md:hidden bg-primary-100 z-[200]">
+    <footer
+      className={cn(
+        "fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] md:hidden bg-primary-100 z-[200]",
+        openMobile ? "hidden" : "block"
+      )}
+    >
       <div className="flex justify-around items-stretch relative h-16">
         {links.map((link, index) => {
           const Icon = link.icon;
