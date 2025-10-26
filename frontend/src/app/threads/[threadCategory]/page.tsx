@@ -4,13 +4,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ListingCard from "@/components/threads/category/ListingCard";
 import { CategoryHeader } from "@/components/threads/category/CategoryHeader";
-import {UNIFIED_LISTINGS, UnifiedListingData, getListingsByCategory} from "@/utils/mock-threads-data";
-import SearchFilter, {type FilterOptions} from "@/components/threads/category/SearchFilter";
-import Sorting, {PrimaryFilter,QuickFilter,QuickSort} from "@/components/threads/category/Sorting";
+import { UNIFIED_LISTINGS, UnifiedListingData, getListingsByCategory } from "@/utils/mock-threads-data";
+import SearchFilter, { type FilterOptions } from "@/components/threads/category/SearchFilter";
+import Sorting, { PrimaryFilter, QuickFilter, QuickSort } from "@/components/threads/category/Sorting";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdown";
 import { Plus } from "lucide-react";
 import CreateListingModal from "@/components/create-listing/CreateListingModal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -58,6 +59,7 @@ const CategoryPage: React.FC = () => {
 
   // State for create listing modal
   const [isCreateListingModalOpen, setIsCreateListingModalOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   /**
    * Stable callback to prevent infinite loops in Sorting component
@@ -69,22 +71,27 @@ const CategoryPage: React.FC = () => {
 
   // Handle scroll for floating button and header collapse
   useEffect(() => {
+    if (isMobile) {
+      setIsScrolled(false);
+    }
+
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement;
       const scrollPosition = target.scrollTop;
       const showButtonThreshold = 300; // Show floating button after scrolling 300px
       setShowFloatingButton(scrollPosition > showButtonThreshold);
-      const scrolled = scrollPosition > 10;
-      setIsScrolled(scrolled);
+      if (!isMobile) {
+        const scrolled = scrollPosition > 10;
+        setIsScrolled(scrolled);
+      }
     };
 
-    // Find the main scrollable container
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      mainElement.addEventListener("scroll", handleScroll);
-      return () => mainElement.removeEventListener("scroll", handleScroll);
-    }
-  }, []);
+    const mainElement = document.querySelector("main");
+    if (!mainElement) return;
+
+    mainElement.addEventListener("scroll", handleScroll);
+    return () => mainElement.removeEventListener("scroll", handleScroll);
+  }, [isMobile]);
   // Handle filter application from SearchFilter
   const handleApplyFilters = (filters: FilterOptions) => {
     setAppliedFilters(filters);

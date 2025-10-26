@@ -15,7 +15,7 @@ export default function BreadcrumbNav() {
   const segments = pathname.split("/").filter(Boolean); // removes empty strings
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="hidden md:block">
       <BreadcrumbList className="flex items-center space-x-1 py-3">
         {/*  Always show Home --- */}
         <BreadcrumbItem>

@@ -145,7 +145,7 @@ export default function ListingMatchesPage() {
       <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
         <div className="max-w-6xl mx-auto">
         {/* Breadcrumb Navigation */}
-        <div className="mb-6">
+        <div className="mb-6 hidden md:block">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>

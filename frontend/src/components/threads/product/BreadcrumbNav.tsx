@@ -38,7 +38,7 @@ export const BreadcrumbNav = ({
   ];
 
   return (
-    <nav className="flex items-center space-x-2 py-3">
+    <nav className="hidden md:flex items-center space-x-2 py-3">
       {breadcrumbs.map((item, index) => (
         <div key={index} className="flex items-center space-x-2">
           {index > 0 && (
