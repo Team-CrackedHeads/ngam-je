@@ -2297,6 +2297,10 @@ function convertToLegacyListing(
   numericId: number
 ): Listing {
   const priceStr = `RM ${unified.price.toLocaleString()}`;
+
+  // Mark some listings as matched for testing checkout (listings from other user)
+  const isMatchedListing = unified.userId === "user-2" && (numericId === 2 || numericId === 4 || numericId === 6);
+
   return {
     id: numericId,
     title: unified.title,
@@ -2313,7 +2317,7 @@ function convertToLegacyListing(
     subscriptionTier: "basic",
     userId: unified.userId,
     isOwner: unified.userId === "user-1", // Current user is Fitri (user-1)
-    isMatched: false,
+    isMatched: isMatchedListing, // Matched listings from Sani for Fitri to see
   };
 }
 
