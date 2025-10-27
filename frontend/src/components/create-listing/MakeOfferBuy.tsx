@@ -204,10 +204,10 @@ export default function MakeOfferBuy({
             </div>
 
             {/* Progress Bar */}
-            <div className="flex items-center justify-between px-4">
+            <div className="flex items-center px-6 pb-2">
               {steps.map((step, index) => (
-                <div key={step.number} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
+                <React.Fragment key={step.number}>
+                  <div className="flex flex-col items-center min-w-0">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                         currentStep === step.number
@@ -224,7 +224,7 @@ export default function MakeOfferBuy({
                       )}
                     </div>
                     <span
-                      className={`text-xs mt-2 font-medium hidden sm:block ${
+                      className={`text-xs mt-2 font-medium hidden sm:block text-center whitespace-nowrap ${
                         currentStep === step.number
                           ? 'text-[var(--color-accent-700)]'
                           : 'text-[var(--color-primary-700)]'
@@ -235,14 +235,14 @@ export default function MakeOfferBuy({
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`h-1 flex-1 mx-2 rounded transition-all ${
+                      className={`h-1 flex-1 mx-3 rounded transition-all ${
                         currentStep > step.number
                           ? 'bg-[var(--color-secondary-500)]'
                           : 'bg-gray-200'
                       }`}
                     />
                   )}
-                </div>
+                </React.Fragment>
               ))}
             </div>
           </div>
@@ -292,8 +292,8 @@ export default function MakeOfferBuy({
                 onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
                 mockFAQData={MOCK_FAQ_BUY}
                 hasAnyInput={hasAnyInput()}
-                answerOnlyMode={sourceFAQs.length > 0}
-                questionOnlyMode={sourceFAQs.length === 0}
+                answerOnlyMode={true}
+                questionOnlyMode={false}
               />
             )}
 

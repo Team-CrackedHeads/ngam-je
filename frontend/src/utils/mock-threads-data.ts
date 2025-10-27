@@ -1191,6 +1191,38 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
     tags: ["nike", "air-max", "sneakers", "new"],
     views: 152,
     protected: false,
+    faqs: [
+      {
+        id: "q1",
+        question: "What's the exact condition of the shoes?",
+        answer: "",
+      },
+      {
+        id: "q2",
+        question: "Is this colorway authentic or custom?",
+        answer: "",
+      },
+      {
+        id: "q3",
+        question: "Does it fit true to size?",
+        answer: "",
+      },
+      {
+        id: "q4",
+        question: "Can you ship to Penang?",
+        answer: "",
+      },
+      {
+        id: "q5",
+        question: "Are the original insoles included?",
+        answer: "",
+      },
+      {
+        id: "q6",
+        question: "Price negotiable?",
+        answer: "",
+      },
+    ],
   },
   {
     id: "fash-002",

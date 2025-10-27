@@ -93,7 +93,7 @@ export default function MakeOfferSell({
   const steps = [
     { number: 1, label: 'Product Details', icon: Info },
     { number: 2, label: 'Pricing & Shipping', icon: DollarSign },
-    { number: 3, label: 'Answer Questions', icon: MessageCircle },
+    { number: 3, label: 'Create Questions', icon: MessageCircle },
     { number: 4, label: 'Preview', icon: Eye }
   ];
 
@@ -343,10 +343,10 @@ export default function MakeOfferSell({
             </div>
 
             {/* Progress Bar */}
-            <div className="flex items-center justify-between px-4">
+            <div className="flex items-center px-6 pb-2">
               {steps.map((step, index) => (
-                <div key={step.number} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
+                <React.Fragment key={step.number}>
+                  <div className="flex flex-col items-center min-w-0">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                         currentStep === step.number
@@ -363,7 +363,7 @@ export default function MakeOfferSell({
                       )}
                     </div>
                     <span
-                      className={`text-xs mt-2 font-medium hidden sm:block ${
+                      className={`text-xs mt-2 font-medium hidden sm:block text-center whitespace-nowrap ${
                         currentStep === step.number
                           ? 'text-[var(--color-accent-700)]'
                           : 'text-[var(--color-primary-700)]'
@@ -374,14 +374,14 @@ export default function MakeOfferSell({
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`h-1 flex-1 mx-2 rounded transition-all ${
+                      className={`h-1 flex-1 mx-3 rounded transition-all ${
                         currentStep > step.number
                           ? 'bg-[var(--color-secondary-500)]'
                           : 'bg-gray-200'
                       }`}
                     />
                   )}
-                </div>
+                </React.Fragment>
               ))}
             </div>
           </div>
@@ -452,8 +452,8 @@ export default function MakeOfferSell({
                 onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
                 mockFAQData={MOCK_FAQ_SELL}
                 hasAnyInput={hasAnyInput()}
-                answerOnlyMode={sourceFAQs.length > 0}
-                questionOnlyMode={sourceFAQs.length === 0}
+                answerOnlyMode={false}
+                questionOnlyMode={true}
               />
             )}
 
