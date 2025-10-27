@@ -5,14 +5,21 @@ import { ProductHeader } from "@/components/threads/product/ProductHeader";
 import { ProductDetails } from "@/components/threads/product/ProductDetails";
 // Import unified data instead
 import { getListingById } from "@/utils/mock-threads-data";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Main Product Listing Screen
 export default function ProductListingScreen() {
   const params = useParams();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (isMobile) {
+      setIsScrolled(false);
+      return;
+    }
+
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement;
       const scrolled = target.scrollTop > 10;
@@ -20,12 +27,12 @@ export default function ProductListingScreen() {
     };
 
     // Find the main scrollable container
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      mainElement.addEventListener("scroll", handleScroll);
-      return () => mainElement.removeEventListener("scroll", handleScroll);
-    }
-  }, []);
+    const mainElement = document.querySelector("main");
+    if (!mainElement) return;
+
+    mainElement.addEventListener("scroll", handleScroll);
+    return () => mainElement.removeEventListener("scroll", handleScroll);
+  }, [isMobile]);
 
   // Get the listing ID from URL params
   const listingId = params.listingId as string;

@@ -3,7 +3,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { MoveRight } from "lucide-react";
 import { getListingFAQs } from "@/utils/mock-threads-faq-data";
-import { Answer } from "../threads-product-faq/types"
+import { Answer } from "../product-faq/types"
 
 // Helper function to determine the best answer based on the specified criteria
 const getBestAnswer = (answers: Answer[]): Answer | undefined => {

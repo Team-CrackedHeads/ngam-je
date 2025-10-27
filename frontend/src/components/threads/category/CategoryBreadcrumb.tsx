@@ -10,7 +10,7 @@ export const CategoryBreadcrumb = ({ category, activeType }: CategoryBreadcrumbP
   const router = useRouter();
 
   // FIX: Include logic for 'general' type name
-  const typeName = 
+  const typeName =
     activeType === "wtb" ? "Buy Listings" :
     activeType === "wts" ? "Sell Listings" :
     "General Listings"; // Case for "general"
@@ -31,7 +31,7 @@ export const CategoryBreadcrumb = ({ category, activeType }: CategoryBreadcrumbP
   ];
 
   return (
-    <nav className="flex items-center space-x-2 py-3">
+    <nav className="hidden md:flex items-center space-x-2 py-3">
       {breadcrumbs.map((item, index) => (
         <div key={index} className="flex items-center space-x-2">
           {index > 0 && (

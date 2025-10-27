@@ -705,7 +705,6 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
               onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
               mockFAQData={listingType === 'buy' ? MOCK_FAQ_BUY : MOCK_FAQ_SELL}
               hasAnyInput={hasAnyInput()}
-              questionOnlyMode={true}
             />
           )}
 

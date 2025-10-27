@@ -3,9 +3,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Search, Send } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { messagesData, conversationsData, ConversationData } from "@/utils/mock-messages";
 
 export default function MessagesPage() {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationData[]>(conversationsData);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,7 +103,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex h-full bg-neutral-white overflow-hidden px-5">
+    <div className="flex h-full bg-neutral-white overflow-hidden">
       {/* Sidebar - Conversations List */}
       <div
         className={`${selectedId ? "hidden lg:flex" : "flex"
@@ -111,7 +113,7 @@ export default function MessagesPage() {
         <div className="p-4 border-b border-neutral-200">
           <div className="flex items-center gap-3 mb-4">
             <button
-              onClick={() => window.history.back()}
+              onClick={() => router.push('/threads')}
               className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-neutral-700" />
