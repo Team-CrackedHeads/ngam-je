@@ -37,6 +37,7 @@ export default function MakeOfferSell({
 }: MakeOfferSellProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const tagGeneratorRef = useRef<TagGeneratorRef | null>(null);
 
   // AI generation states
@@ -268,6 +269,12 @@ export default function MakeOfferSell({
 
     console.log('🎯 Auto-matching sell offer with source listing:', sourceListingId);
 
+    // Show success dialog
+    setShowSuccessDialog(true);
+  };
+
+  const handleSuccessClose = () => {
+    // Reset form and close
     setFormData({
       uploadedImages: [],
       ownershipProofImage: null,
@@ -283,9 +290,8 @@ export default function MakeOfferSell({
       faqs: initialFAQs
     });
     setCurrentStep(1);
+    setShowSuccessDialog(false);
     onClose();
-
-    router.push(`/listings/${listingId}?type=sale`);
   };
 
   const hasAnyInput = () => {
@@ -504,6 +510,27 @@ export default function MakeOfferSell({
           </div>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      {showSuccessDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <Check className="w-10 h-10 text-green-600" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Success!</h2>
+            <p className="text-gray-600 mb-6">Your Sell Listing has been created!</p>
+            <Button
+              onClick={handleSuccessClose}
+              className="w-full bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
