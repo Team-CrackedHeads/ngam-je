@@ -1,4 +1,4 @@
-import { UnifiedListingData } from './mock-threads-data';
+import { UnifiedListingData } from './mock-all-data-used';
 
 // In-memory storage for new listings (in a real app, this would be a database/API call)
 let newListings: UnifiedListingData[] = [];

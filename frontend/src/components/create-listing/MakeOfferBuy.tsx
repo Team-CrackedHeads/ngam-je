@@ -9,9 +9,7 @@ import SourceListingInfoStep from './steps/SourceListingInfoStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
-import { MOCK_LOCATION } from '@/utils/mock-location-data';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
-import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
+import { MOCK_LOCATION, MOCK_PRICE_HISTORY, MOCK_FAQ_BUY } from '@/utils/mock-all-data-used';
 
 interface MakeOfferBuyProps {
   isOpen: boolean;

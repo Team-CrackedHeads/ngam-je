@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShippingPreferences } from '@/components/create-listing/shipping-options';
 import { HistoricalPriceTrend } from '@/components/create-listing/price-chart';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
+import { MOCK_PRICE_HISTORY } from '@/utils/mock-all-data-used';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import dynamic from 'next/dynamic';
 
