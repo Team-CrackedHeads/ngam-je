@@ -954,7 +954,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://plus.unsplash.com/premium_photo-1676638972162-99c667d08938?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fExhcmdlJTIwT3V0ZG9vciUyMFBhdGlvJTIwVW1icmVsbGF8ZW58MHwwfDR8fHww",
     gallery: [
       "https://plus.unsplash.com/premium_photo-1676638972162-99c667d08938?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fExhcmdlJTIwT3V0ZG9vciUyMFBhdGlvJTIwVW1icmVsbGF8ZW58MHwwfDR8fHww",
-      "https://example.com/gallery/furn-008-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=furn-008-2.jpg",
     ],
     category: "furniture",
     listingType: "sale",
@@ -1131,7 +1131,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1650178284536-2d6dff47f903?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YmlvZ3JhcGh5JTIwZWxvbnxlbnwwfDB8NHx8fDA%3D",
     gallery: [
       "https://images.unsplash.com/photo-1650178284536-2d6dff47f903?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YmlvZ3JhcGh5JTIwZWxvbnwwfDB8NHx8fDA%3D",
-      "https://example.com/gallery/book-007-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=book-007-2.jpg",
     ],
     category: "books",
     listingType: "sale",
@@ -1157,7 +1157,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1469013078550-305e63b7c8f7?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2hpbGRyZW4lMjBib29rc3xlbnwwfDB8NHx8fDA%3D",
     gallery: [
       "https://images.unsplash.com/photo-1469013078550-305e63b7c8f7?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2hpbGRyZW4lMjBib29rc3xlbnwwfDB8NHx8fDA%3D",
-      "https://example.com/gallery/book-008-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=book-008-2.jpg",
     ],
     category: "books",
     listingType: "sale",
@@ -1184,13 +1184,45 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1562613521-6b5293e5b0ea?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1562613521-6b5293e5b0ea?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/fash-001-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=fash-001-2.jpg",
     ],
     category: "fashion",
     listingType: "sale",
     tags: ["nike", "air-max", "sneakers", "new"],
     views: 152,
     protected: false,
+    faqs: [
+      {
+        id: "q1",
+        question: "What's the exact condition of the shoes?",
+        answer: "",
+      },
+      {
+        id: "q2",
+        question: "Is this colorway authentic or custom?",
+        answer: "",
+      },
+      {
+        id: "q3",
+        question: "Does it fit true to size?",
+        answer: "",
+      },
+      {
+        id: "q4",
+        question: "Can you ship to Penang?",
+        answer: "",
+      },
+      {
+        id: "q5",
+        question: "Are the original insoles included?",
+        answer: "",
+      },
+      {
+        id: "q6",
+        question: "Price negotiable?",
+        answer: "",
+      },
+    ],
   },
   {
     id: "fash-002",
@@ -1252,7 +1284,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1727716919539-3cd4aaf7af99?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1727716919539-3cd4aaf7af99?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/fash-003-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=fash-003-2.jpg",
     ],
     category: "fashion",
     listingType: "sale",
@@ -1278,7 +1310,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://plus.unsplash.com/premium_photo-1750218296007-f73edb01d1ba?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://plus.unsplash.com/premium_photo-1750218296007-f73edb01d1ba?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/fash-004-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=fash-004-2.jpg",
     ],
     category: "fashion",
     listingType: "sale",
@@ -1304,7 +1336,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1530432999454-016a47c78af3?q=80&w=1336&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1530432999454-016a47c78af3?q=80&w=1336&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/fash-005-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=fash-005-2.jpg",
     ],
     category: "fashion",
     listingType: "sale",
@@ -1330,7 +1362,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://plus.unsplash.com/premium_photo-1661432699720-b50b2abd5c0a?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://plus.unsplash.com/premium_photo-1661432699720-b50b2abd5c0a?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/fash-006-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=fash-006-2.jpg",
     ],
     category: "fashion",
     listingType: "sale",
@@ -1381,7 +1413,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1624522955553-a5240288ce21?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://images.unsplash.com/photo-1624522955553-a5240288ce21?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://example.com/gallery/fash-008-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=fash-008-2.jpg",
     ],
     category: "fashion",
     listingType: "sale",
@@ -1407,7 +1439,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1680007966627-d49ae18dbbae?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     gallery: [
       "https://unsplash.com/photos/a-nintendo-wii-game-controller-sitting-on-top-of-a-table-xNUXE7iUBo8",
-      "https://example.com/gallery/game-001-2.jpg",
+      "https://placehold.co/800x600/e5e7eb/6b7280?text=game-001-2.jpg",
     ],
     category: "gaming",
     listingType: "sale",

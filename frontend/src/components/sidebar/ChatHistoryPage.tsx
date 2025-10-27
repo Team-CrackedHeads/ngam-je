@@ -107,7 +107,7 @@ export default function ChatHistoryDisplay({
         <div className="p-4 border-b border-neutral-200">
           <div className="flex items-center gap-3 mb-4">
             <button
-              onClick={() => window.history.back()}
+              onClick={() => router.push('/threads')}
               className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-neutral-700" />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Puzzle, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 type HeaderProps = {
   username?: string;
@@ -16,7 +17,8 @@ const Header = ({ username, notifications = 0 }: HeaderProps) => {
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
       {/* Left Logo / App Name + Nav (desktop only) */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 sm:gap-6">
+        <SidebarTrigger className="md:hidden text-accent-700 hover:bg-primary-200" />
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl bg-secondary-500">

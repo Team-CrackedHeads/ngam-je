@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Package, Cable, X, MapPin, Clock, Eye, Heart, Tag, BadgeCheck, TrendingUp, User } from "lucide-react";
+import { ShoppingCart, Package, Handshake, X, MapPin, Clock, Eye, Heart, Tag, BadgeCheck, TrendingUp, User } from "lucide-react";
 import { type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
@@ -66,7 +66,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
               ) : type === "wanted" ? (
                 <Package className="w-5 h-5 text-secondary-600" />
               ) : (
-                <Cable className="w-5 h-5 text-secondary-600" />
+                <Handshake className="w-5 h-5 text-secondary-600" />
               )}
               <h2 className="text-xl font-bold text-accent-700">
                 Listing Details

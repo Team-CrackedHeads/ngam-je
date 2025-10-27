@@ -59,14 +59,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
           e.stopPropagation();
           setLiked(!liked);
         }}
-        className="absolute top-8 right-6 bg-white p-2 rounded-full shadow-md z-10 hover:shadow-lg transition-shadow"
+        className="absolute top-8 right-6 bg-white p-2 rounded-full shadow-md z-[1] hover:shadow-lg transition-shadow"
       >
         <Heart
-          className={`w-5 h-5 transition-colors ${
-            liked
-              ? "text-red-500 fill-red-500"
-              : "text-gray-400 hover:text-red-400"
-          }`}
+          className={`w-5 h-5 transition-colors ${liked
+            ? "text-red-500 fill-red-500"
+            : "text-gray-400 hover:text-red-400"
+            }`}
         />
       </button>
 
@@ -85,9 +84,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
         />
         {/* For Sale - badge */}
         <span
-          className={`absolute top-2 left-2 text-accent-700 text-xs px-3 py-1 rounded-full font-medium shadow-md ${
-            listingType === "sale" ? "bg-secondary-500" : "bg-primary-500"
-          }`}
+          className={`absolute top-2 left-2 text-accent-700 text-xs px-3 py-1 rounded-full font-medium shadow-md ${listingType === "sale" ? "bg-secondary-500" : "bg-primary-500"
+            }`}
         >
           {listingType === "sale" ? "For Sale" : "Want to Buy"}
         </span>
@@ -127,7 +125,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
         {/* Price - Now with currency */}
         <div className="font-bold text-xl mt-3 text-accent-700">
-            {currency} {price.toFixed(2)}
+          {currency} {price.toFixed(2)}
         </div>
 
         {/* Subtitle (if exists) */}
@@ -143,7 +141,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <span
               key={tag}
               className="text-xs px-3 py-1 rounded-full font-medium transition-colors hover:opacity-90 bg-secondary-100 text-accent-600"
-              style = {{
+              style={{
                 backgroundColor: "var(--color-secondary-500)"
               }}
             >
@@ -158,7 +156,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         </div>
       </div>
 
-      
+
     </div>
   );
 };

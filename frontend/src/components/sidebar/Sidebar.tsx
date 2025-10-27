@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   MessageCircle,
@@ -41,6 +41,7 @@ import SearchHistory from "@/components/sidebar/SearchHistory";
 import BuyListingsMenuItem from "@/components/sidebar/menu-items/BuyListingsMenuItem";
 import SellListingsMenuItem from "@/components/sidebar/menu-items/SellListingsMenuItem";
 import MatchedListingsMenuItem from "@/components/sidebar/menu-items/MatchedListingsMenuItem";
+import { MOCK_CHAT_HISTORY } from "@/utils/mock-chat-history-data";
 
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
@@ -49,129 +50,7 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-// Mock chat history data - 2nd hand marketplace purchase decisions
-const mockChatHistory = [
-  {
-    "id": 1,
-    "title": "iPhone 14 Pro price comparison",
-    "timestamp": "2 hours ago",
-    "created_at": "2025-10-03T14:00:00Z"
-  },
-  {
-    "id": 2,
-    "title": "Gaming PC under RM4000",
-    "timestamp": "5 hours ago",
-    "created_at": "2025-10-03T11:00:00Z"
-  },
-  {
-    "id": 3,
-    "title": "Verify Nintendo Switch seller",
-    "timestamp": "1 day ago",
-    "created_at": "2025-10-02T16:00:00Z"
-  },
-  {
-    "id": 4,
-    "title": "Gaming PC parts compatibility",
-    "timestamp": "1 day ago",
-    "created_at": "2025-10-02T13:30:00Z"
-  },
-  {
-    "id": 5,
-    "title": "Vintage watch authenticity verification",
-    "timestamp": "2 days ago",
-    "created_at": "2025-10-01T19:45:00Z"
-  },
-  {
-    "id": 6,
-    "title": "Camera lens condition assessment",
-    "timestamp": "3 days ago",
-    "created_at": "2025-09-30T10:30:00Z"
-  },
-  {
-    "id": 7,
-    "title": "Furniture quality vs price analysis",
-    "timestamp": "4 days ago",
-    "created_at": "2025-09-29T14:20:00Z"
-  },
-  {
-    "id": 8,
-    "title": "Electric bike safety standards",
-    "timestamp": "5 days ago",
-    "created_at": "2025-09-28T08:15:00Z"
-  },
-  {
-    "id": 9,
-    "title": "Designer handbag authentication tips",
-    "timestamp": "1 week ago",
-    "created_at": "2025-09-26T16:40:00Z"
-  },
-  {
-    "id": 10,
-    "title": "Motorcycle maintenance costs Honda",
-    "timestamp": "1 week ago",
-    "created_at": "2025-09-26T09:15:00Z"
-  },
-  {
-    "id": 11,
-    "title": "Smartphone trade-in value check",
-    "timestamp": "1 week ago",
-    "created_at": "2025-09-25T12:30:00Z"
-  },
-  {
-    "id": 12,
-    "title": "Laptop performance benchmarks",
-    "timestamp": "1 week ago",
-    "created_at": "2025-09-24T15:45:00Z"
-  },
-  {
-    "id": 13,
-    "title": "Art print value estimation",
-    "timestamp": "2 weeks ago",
-    "created_at": "2025-09-19T14:45:00Z"
-  },
-  {
-    "id": 14,
-    "title": "Kitchen appliance energy ratings",
-    "timestamp": "2 weeks ago",
-    "created_at": "2025-09-18T11:20:00Z"
-  },
-  {
-    "id": 15,
-    "title": "Exercise equipment durability test",
-    "timestamp": "2 weeks ago",
-    "created_at": "2025-09-17T18:30:00Z"
-  },
-  {
-    "id": 16,
-    "title": "Board game condition grading",
-    "timestamp": "3 weeks ago",
-    "created_at": "2025-09-12T15:30:00Z"
-  },
-  {
-    "id": 17,
-    "title": "Power tools safety inspection",
-    "timestamp": "3 weeks ago",
-    "created_at": "2025-09-11T08:45:00Z"
-  },
-  {
-    "id": 18,
-    "title": "Sneaker authenticity red flags",
-    "timestamp": "3 weeks ago",
-    "created_at": "2025-09-10T20:15:00Z"
-  },
-  {
-    "id": 19,
-    "title": "Home theater setup compatibility",
-    "timestamp": "1 month ago",
-    "created_at": "2025-09-03T13:20:00Z"
-  },
-  {
-    "id": 20,
-    "title": "Musical instrument condition check",
-    "timestamp": "1 month ago",
-    "created_at": "2025-08-28T16:10:00Z"
-  },
-];
+const mockChatHistory = MOCK_CHAT_HISTORY;
 
 
 function FollowingMenuItem() {
@@ -250,10 +129,8 @@ function FollowingMenuItem() {
 
 function NgamJeAssistantMenuItem({
   onNewChat,
-  // onOpenChat,
 }: {
   onNewChat: () => void;
-  // onOpenChat: (chatId: number) => void;
 }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -398,26 +275,31 @@ function NgamJeAssistantMenuItem({
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true);
   const { state } = useSidebar();
+  const pathname = usePathname();
   const isCollapsed = state === "collapsed";
 
   if (isCollapsed) {
     return (
       <>
-        {navItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
-            >
-              <Link
-                href={item.href}
-                className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          return (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive}
               >
-                <item.icon />
-                <span>{item.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+                <Link
+                  href={item.href}
+                  className={isActive ? "bg-primary-200 text-accent-700 font-semibold" : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
       </>
     );
   }
@@ -443,21 +325,25 @@ function NavigationMenuItem() {
         }`}
       >
         <SidebarMenuSub>
-          {navItems.map((item) => (
-            <SidebarMenuSubItem key={item.href}>
-              <SidebarMenuSubButton
-                asChild
-              >
-                <Link
-                  href={item.href}
-                  className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <SidebarMenuSubItem key={item.href}>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={isActive}
                 >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          ))}
+                  <Link
+                    href={item.href}
+                    className={isActive ? "bg-primary-200 text-accent-700 font-semibold" : "text-accent-500 hover:bg-primary-200 hover:text-accent-700"}
+                  >
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            );
+          })}
         </SidebarMenuSub>
       </div>
     </SidebarMenuItem>
@@ -485,12 +371,10 @@ export function AppSidebar() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { state, setOpen } = useSidebar();
+  const { state, setOpen, isMobile } = useSidebar();
   const [isManuallyToggled, setIsManuallyToggled] = useState(
     state === "expanded"
   );
-  // const [searchQuery, setSearchQuery] = useState("");
-  // const [isSearching, setIsSearching] = useState(false);
 
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -501,10 +385,11 @@ export function AppSidebar() {
   }, []);
 
   useEffect(() => {
+    if (isMobile) return;
     if (!isManuallyToggled) {
       setOpen(isHovered);
     }
-  }, [isHovered, isManuallyToggled, setOpen]);
+  }, [isHovered, isManuallyToggled, setOpen, isMobile]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -515,27 +400,11 @@ export function AppSidebar() {
   };
 
   const handleManualToggle = () => {
+    if (isMobile) return;
     const newState = !isManuallyToggled;
     setIsManuallyToggled(newState);
     setOpen(newState);
   };
-
-  // const handleSearch = async (query: string) => {
-  //   if (!query.trim()) return;
-
-  //   setIsSearching(true);
-  //   console.log("AI searching for best tool based on:", query);
-
-  //   setTimeout(() => {
-  //     console.log("AI found best tool for:", query);
-  //     setIsSearching(false);
-  //   }, 1000);
-  // };
-
-  // const handleSearchSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   handleSearch(searchQuery);
-  // };
 
   const handleNewChat = () => {
     setCurrentChatId(null);
@@ -554,7 +423,7 @@ export function AppSidebar() {
         handleOpenExistingChat(chatId);
       } else {
         // Handle case where AI chat path is not a simple ID, e.g., a new AI interaction
-        handleNewChat(); // Or a more specific AI interaction
+        handleNewChat();
       }
     } else {
       router.push(suggestionPath);
@@ -567,14 +436,15 @@ export function AppSidebar() {
 
   return (
     <>
-      {" "}
-       <Sidebar
+      <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
+        className="!relative md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
       >
         <SidebarHeader className="relative p-2">
-          <CustomSidebarTrigger onManualToggle={handleManualToggle} />
+          {!isMobile && (
+            <CustomSidebarTrigger onManualToggle={handleManualToggle} />
+          )}
 
           <div className="mt-2">
             {/* Integrate SearchHistory component here */}
@@ -590,45 +460,6 @@ export function AppSidebar() {
               </div>
             </div>
           </div>
-      {/* This is the main fragment that wraps everything */}
-      {/* <Sidebar
-        variant="sidebar"
-        collapsible="icon"
-        className="!relative hidden md:flex flex-col h-full group-data-[state=collapsing]:opacity-0 group-data-[state=expanding]:opacity-0 transition-opacity duration-300 min-h-0"
-      >
-        <SidebarHeader className="relative p-2">
-          <CustomSidebarTrigger onManualToggle={handleManualToggle} />
-
-          <div className="mt-2">
-            <form
-              onSubmit={handleSearchSubmit}
-              className="group-data-[collapsible=icon]:hidden"
-            >
-              <div className="relative max-w-48 mx-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-accent-500" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search settings..."
-                  className="w-full pl-10 pr-3 py-2 text-xs bg-neutral-100 border border-neutral-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent placeholder-neutral-500"
-                  disabled={isSearching}
-                />
-                {isSearching && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-secondary-500"></div>
-                  </div>
-                )}
-              </div>
-            </form>
-            <div className="group-data-[collapsible=icon]:block hidden">
-              <div className="relative max-w-48 mx-auto">
-                <div className="w-full pl-10 pr-3 py-2 text-xs opacity-0 pointer-events-none">
-                  placeholder
-                </div>
-              </div>
-            </div>
-          </div> */}
         </SidebarHeader>
         <SidebarContent
           className="pt-1.5 flex-1"
@@ -644,7 +475,6 @@ export function AppSidebar() {
               <SidebarMenu>
                 <NgamJeAssistantMenuItem
                   onNewChat={handleNewChat}
-                  // onOpenChat={handleOpenExistingChat}
                 />
               </SidebarMenu>
             </SidebarGroupContent>

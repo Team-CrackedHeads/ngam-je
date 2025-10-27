@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Cable, X } from "lucide-react";
+import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake, X } from "lucide-react";
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
 import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-match-data";
@@ -32,8 +32,8 @@ export default function ListingMatchesPage() {
   // Get the current listing
   const yourListing: Listing | undefined =
     listingType === "sale" ? mockSaleListings.find(l => l.id === listingId) :
-    listingType === "wanted" ? mockWantedListings.find(l => l.id === listingId) :
-    getMockMatchedListings().find(l => l.id === listingId);
+      listingType === "wanted" ? mockWantedListings.find(l => l.id === listingId) :
+        getMockMatchedListings().find(l => l.id === listingId);
 
   // Get matches for this listing
   const matches = yourListing && listingType !== "matched" ? generateMatchesForListing(listingId, listingType) : [];
@@ -132,8 +132,8 @@ export default function ListingMatchesPage() {
             type={
               selectedListing.id === yourListing.id
                 ? listingType : listingType === "sale"
-                ? "wanted" : listingType === "wanted"
-                ? "sale" : "matched"
+                  ? "wanted" : listingType === "wanted"
+                    ? "sale" : "matched"
             }
             onClose={() => setSelectedListing(null)}
           />
@@ -142,127 +142,127 @@ export default function ListingMatchesPage() {
 
 
 
-      <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500">
+      <div className="min-h-screen px-4 py-6 bg-primary-100 text-accent-500">
         <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  onClick={() => router.push('/')}
-                  className="flex items-center gap-1 cursor-pointer hover:text-accent-700"
-                >
-                  <Home className="w-4 h-4" />
-                  Home
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  onClick={() => router.push(`/listings?type=${listingType}`)}
-                  className="cursor-pointer hover:text-accent-700"
-                >
-                  {listingType === "sale" ? "My Sale Listings" : listingType === "wanted" ? "My Want Listings" : "My Matched Listings"}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="text-accent-700 font-medium">
-                  Matches
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
+          {/* Breadcrumb Navigation */}
+          <div className="mb-6 hidden md:block">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    onClick={() => router.push('/')}
+                    className="flex items-center gap-1 cursor-pointer hover:text-accent-700"
+                  >
+                    <Home className="w-4 h-4" />
+                    Home
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    onClick={() => router.push(`/listings?type=${listingType}`)}
+                    className="cursor-pointer hover:text-accent-700"
+                  >
+                    {listingType === "sale" ? "My Sale Listings" : listingType === "wanted" ? "My Want Listings" : "My Matched Listings"}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="text-accent-700 font-medium">
+                    Matches
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
 
-        {/* Your Listing Section - Desktop Only */}
-        {!isMobile && (
-          <>
-            {/* Your Listing Header */}
-            <div className="flex items-center gap-3 mb-4">
-              {listingType === "sale" ? (
-                <ShoppingCart className="w-6 h-6 text-secondary-600" />
-              ) : listingType === "wanted" ? (
-                <Package className="w-6 h-6 text-secondary-600" />
-              ) : (
-                <Cable className="w-6 h-6 text-secondary-600" />
-              )}
-              <h2 className="text-2xl font-bold text-accent-700">
-                Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing
-              </h2>
-            </div>
+          {/* Your Listing Section - Desktop Only */}
+          {!isMobile && (
+            <>
+              {/* Your Listing Header */}
+              <div className="flex items-center gap-3 mb-4">
+                {listingType === "sale" ? (
+                  <ShoppingCart className="w-6 h-6 text-secondary-600" />
+                ) : listingType === "wanted" ? (
+                  <Package className="w-6 h-6 text-secondary-600" />
+                ) : (
+                  <Handshake className="w-6 h-6 text-secondary-600" />
+                )}
+                <h2 className="text-2xl font-bold text-accent-700">
+                  Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing
+                </h2>
+              </div>
 
-            {/* Your Listing Card */}
+              {/* Your Listing Card */}
+              <div
+                onClick={() => setSelectedListing(yourListing)}
+                className="cursor-pointer hover:ring-2 hover:ring-secondary-400 rounded-2xl transition-all"
+              >
+                <ListingCard />
+              </div>
+              <div className="mb-6" />
+            </>
+          )}
+
+          {/* Mobile: Compact Your Listing Banner */}
+          {isMobile && (
             <div
               onClick={() => setSelectedListing(yourListing)}
-              className="cursor-pointer hover:ring-2 hover:ring-secondary-400 rounded-2xl transition-all"
+              className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
             >
-              <ListingCard />
-            </div>
-            <div className="mb-6" />
-          </>
-        )}
-
-        {/* Mobile: Compact Your Listing Banner */}
-        {isMobile && (
-          <div
-            onClick={() => setSelectedListing(yourListing)}
-            className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
-          >
-            {/* Header with icon and label */}
-            <div className="flex items-center gap-2 mb-3">
-              {listingType === "sale" ? (
-                <ShoppingCart className="w-6 h-6 text-secondary-600" />
-              ) : listingType === "wanted" ? (
-                <Package className="w-6 h-6 text-secondary-600" />
-              ) : (
-                <Cable className="w-6 h-6 text-secondary-600" />
-              )}
-              <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Small Image */}
-              <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
-                <span className="text-accent-400 text-xs">Image</span>
+              {/* Header with icon and label */}
+              <div className="flex items-center gap-2 mb-3">
+                {listingType === "sale" ? (
+                  <ShoppingCart className="w-6 h-6 text-secondary-600" />
+                ) : listingType === "wanted" ? (
+                  <Package className="w-6 h-6 text-secondary-600" />
+                ) : (
+                  <Handshake className="w-6 h-6 text-secondary-600" />
+                )}
+                <span className="text-xs font-medium text-accent-500">Your {listingType === "sale" ? "Sale" : listingType === "wanted" ? "Wanted" : "Matched"} Listing</span>
               </div>
 
-              {/* Listing Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
-                  {yourListing.title}
-                </h3>
-                <span className="text-lg font-bold text-secondary-600">
-                  {listingType === "sale" ? yourListing.price : yourListing.budget}
-                </span>
+              <div className="flex items-center gap-3">
+                {/* Small Image */}
+                <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <span className="text-accent-400 text-xs">Image</span>
+                </div>
+
+                {/* Listing Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm text-accent-700 line-clamp-1 mb-1">
+                    {yourListing.title}
+                  </h3>
+                  <span className="text-lg font-bold text-secondary-600">
+                    {listingType === "sale" ? yourListing.price : yourListing.budget}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {listingType !== "matched" && (
-          <>
-            {/* Matches Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="w-6 h-6 text-secondary-600" />
-              <h2 className="text-2xl font-bold text-accent-700">
-                Your Matches
-              </h2>
-            </div>
+          {listingType !== "matched" && (
+            <>
+              {/* Matches Header */}
+              <div className="flex items-center gap-3 mb-6">
+                <Sparkles className="w-6 h-6 text-secondary-600" />
+                <h2 className="text-2xl font-bold text-accent-700">
+                  Your Matches
+                </h2>
+              </div>
 
-            {/* AI Matching Component */}
-            <AIMatchingContainer
-              userMode={listingType === "sale" ? "seller" : "buyer"}
-              userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
-              availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
-              onMatch={() => {}}
-              onMessage={() => {}}
-              onViewDetails={(listing) => setSelectedListing(listing)}
-              onClose={() => {}}
-            />
-          </>
-        )}
+              {/* AI Matching Component */}
+              <AIMatchingContainer
+                userMode={listingType === "sale" ? "seller" : "buyer"}
+                userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
+                availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
+                onMatch={() => { }}
+                onMessage={() => { }}
+                onViewDetails={(listing) => setSelectedListing(listing)}
+                onClose={() => { }}
+              />
+            </>
+          )}
         </div>
       </div>
     </>
