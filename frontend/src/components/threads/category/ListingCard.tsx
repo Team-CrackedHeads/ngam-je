@@ -59,7 +59,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
           e.stopPropagation();
           setLiked(!liked);
         }}
-        className="absolute top-8 right-6 bg-white p-2 rounded-full shadow-md z-10 hover:shadow-lg transition-shadow"
+        className="absolute top-8 right-6 bg-white p-2 rounded-full shadow-md z-[1] hover:shadow-lg transition-shadow"
       >
         <Heart
           className={`w-5 h-5 transition-colors ${liked
