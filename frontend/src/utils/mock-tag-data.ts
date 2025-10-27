@@ -1,12 +1,28 @@
-export const databaseTags = ['Sandals', 'Red', 'Blue', 'Green', 'Shoes', 'Sneakers', 'Basketball', 'Running', 'Vintage', 'New', 'Limited Edition'];
+export const databaseTags = [
+  "Sandals",
+  "Red",
+  "Blue",
+  "Green",
+  "Shoes",
+  "Sneakers",
+  "Basketball",
+  "Running",
+  "Vintage",
+  "New",
+  "Limited Edition",
+];
 
 export const suggestedTags = [
-  'Sneakers',
-  'Air Jordan',
-  'Nike',
-  'Basketball Shoes',
-  'Chicago',
-  'Retro',
-  'Streetwear',
-  'Collectible'
+  "MacBook",
+  "Apple",
+  "Laptop",
+  "M2",
+  "MacBook Air",
+  "Computer",
+  "Electronics",
+  "Ultrabook",
+  "Portable",
+  "Like New",
+  "Tech",
+  "Productivity",
 ];
