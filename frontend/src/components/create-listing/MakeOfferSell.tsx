@@ -347,7 +347,7 @@ export default function MakeOfferSell({
               </div>
               <button
                 onClick={onClose}
-                className="text-[var(--color-primary-700)] hover:text-[var(--color-primary-900)] transition-colors p-1"
+                className="absolute right-5 top-4 text-[var(--color-primary-700)] hover:text-[var(--color-primary-900)] transition-colors p-1"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -496,7 +496,7 @@ export default function MakeOfferSell({
                 <Button
                   onClick={handleNext}
                   disabled={!isStepValid()}
-                  className="px-6 text-white bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)]"
+                  className="px-6 text-black bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)]"
                 >
                   Continue
                   <ChevronRight className="w-4 h-4 ml-2" />

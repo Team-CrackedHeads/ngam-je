@@ -469,16 +469,13 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
         {/* Header */}
         <div className="flex-shrink-0 border-b shadow-sm rounded-t-lg bg-[var(--color-primary-200)]">
           <div className="px-4 py-4 flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={handleBack} disabled={currentStep === 1}>
-              <ChevronLeft className="w-5 h-5 text-[var(--color-accent-700)]" />
-            </Button>
-            <div className="text-center">
+            <div className="text-center flex-1">
               <h1 className="font-semibold text-lg text-[var(--color-accent-700)]">
                 {listingType === null ? 'Create Listing' : listingType === 'buy' ? 'Create Buy Listing' : 'Create Sell Listing'}
               </h1>
               <p className="text-sm text-[var(--color-primary-900)]">Step {currentStep} of {steps.length}</p>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
+            <Button variant="ghost" size="icon" onClick={handleClose} className='absolute right-5 top-5 '>
               <X className="w-5 h-5 text-[var(--color-accent-700)]" />
             </Button>
           </div>
