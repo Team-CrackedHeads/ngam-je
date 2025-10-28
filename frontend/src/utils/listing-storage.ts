@@ -39,6 +39,7 @@ export function convertFormToListing(
       : 'general');
 
   return {
+    userId: 'user-1', // TODO: Get from auth context when authentication is implemented
     title: formData.generatedTitle || 'Untitled Listing',
     subtitle: isBuy ? `Budget ${formData.currency} ${formData.minPrice} - ${formData.maxPrice}` : undefined,
     description: formData.generatedDescription || '',

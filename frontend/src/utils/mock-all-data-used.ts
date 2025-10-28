@@ -448,7 +448,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "2 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "electronics",
     listingType: "sale",
     tags: ["Electronics"],
@@ -468,7 +468,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "4 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "electronics",
     listingType: "sale",
     tags: ["Electronics"],
@@ -489,7 +489,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "6 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "audio",
     listingType: "sale",
     tags: ["Audio"],
@@ -509,7 +509,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "8 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "computing",
     listingType: "sale",
     tags: ["Computing"],
@@ -529,7 +529,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "1 day ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "photography",
     listingType: "sale",
     tags: ["Photography"],
@@ -549,7 +549,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "1 day ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "electronics",
     listingType: "sale",
     tags: ["Electronics"],
@@ -569,7 +569,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "2 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "home-appliances",
     listingType: "sale",
     tags: ["Home Appliances"],
@@ -589,7 +589,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "2 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "gaming",
     listingType: "sale",
     tags: ["Gaming"],
@@ -609,7 +609,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "3 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "computing",
     listingType: "sale",
     tags: ["Computing"],
@@ -629,7 +629,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "3 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "computing",
     listingType: "sale",
     tags: ["Computing"],
@@ -650,7 +650,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "1 hour ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "electronics",
     listingType: "wanted",
     tags: ["Electronics"],
@@ -671,7 +671,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "3 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "transportation",
     listingType: "wanted",
     tags: ["Transportation"],
@@ -692,7 +692,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "5 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "photography",
     listingType: "wanted",
     tags: ["Photography"],
@@ -713,7 +713,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "7 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "furniture",
     listingType: "wanted",
     tags: ["Furniture"],
@@ -733,7 +733,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "12 hours ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "electronics",
     listingType: "wanted",
     tags: ["Electronics"],
@@ -753,7 +753,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "1 day ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "computing",
     listingType: "wanted",
     tags: ["Computing"],
@@ -773,7 +773,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "1 day ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "home-appliances",
     listingType: "wanted",
     tags: ["Home Appliances"],
@@ -793,7 +793,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "2 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "electronics",
     listingType: "wanted",
     tags: ["Electronics"],
@@ -813,7 +813,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "2 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "home-appliances",
     listingType: "wanted",
     tags: ["Home Appliances"],
@@ -833,7 +833,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       verified: true,
       timePosted: "3 days ago",
     },
-    imageUrl: "/api/placeholder/300/200",
+    imageUrl: "https://placehold.co/300x200",
     category: "sports",
     listingType: "wanted",
     tags: ["Sports"],
@@ -2299,7 +2299,9 @@ function convertToLegacyListing(
   const priceStr = `RM ${unified.price.toLocaleString()}`;
 
   // Mark some listings as matched for testing checkout (listings from other user)
-  const isMatchedListing = unified.userId === "user-2" && (numericId === 2 || numericId === 4 || numericId === 6);
+  // Sale listings: IDs 1-10, mark 2, 4, 6 as matched
+  // Wanted listings: IDs 11-20, mark 12, 14, 16 as matched
+  const isMatchedListing = unified.userId === "user-2" && (numericId === 2 || numericId === 4 || numericId === 6 || numericId === 12 || numericId === 14 || numericId === 16);
 
   return {
     id: numericId,
@@ -2331,7 +2333,7 @@ export const mockWantedListings: Listing[] = UNIFIED_LISTINGS.filter(
   (l) => l.listingType === "wanted"
 )
   .slice(0, 10) // Take first 10 for backwards compatibility
-  .map((l, idx) => convertToLegacyListing(l, idx + 1));
+  .map((l, idx) => convertToLegacyListing(l, idx + 11)); // Offset by 10 to avoid ID collision with sale listings
 
 // Function to get matched listings (filters listings where isMatched is true)
 export function getMockMatchedListings(): Listing[] {
@@ -2343,7 +2345,7 @@ export function getMockMatchedListings(): Listing[] {
   );
   // For now, return empty array since we don't have isMatched set on any listings
   // TODO: Add matching logic once matching system is implemented
-  return [...matchedSales];
+  return [...matchedSales, ...matchedWanted];
 }
 
 // Shared mock data for listings used across sidebar and listings page
