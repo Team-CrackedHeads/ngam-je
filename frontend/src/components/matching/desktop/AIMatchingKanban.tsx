@@ -287,7 +287,7 @@ export function AIMatchingKanban({
                             : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
                         }`}
                       >
-                        {selectMode ? 'Done' : 'Select'}
+                        {selectMode ? 'Done' : 'Edit'}
                       </button>
                     )}
                     <Button
@@ -637,9 +637,9 @@ export function AIMatchingKanban({
                   ? 'bg-secondary-500 text-accent-700'
                   : 'bg-primary-100 text-accent-700 hover:bg-primary-200'
               }`}
-              title="Select Mode"
+              title="Edit Mode"
             >
-              {selectMode ? 'Done' : 'Select'}
+              {selectMode ? 'Done' : 'Edit'}
             </button>
           </div>
         </div>
