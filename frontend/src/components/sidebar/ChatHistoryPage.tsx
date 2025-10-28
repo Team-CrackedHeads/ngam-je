@@ -6,7 +6,7 @@ import {
   mockFullChatHistory,
   ChatHistoryItem,
   Message,
-} from "@/utils/mock-search-history";
+} from "@/utils/mock-all-data-used";
 import ReactMarkdown from "react-markdown";
 import { Clock, User, Sparkles, ArrowLeft, Search, Send } from "lucide-react";
 

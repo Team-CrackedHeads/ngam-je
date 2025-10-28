@@ -35,7 +35,7 @@ export default function RootLayout({
       >
         <MockAuthProvider>
           <SidebarProvider className="flex-col">
-            <Header username="User" notifications={3} />
+            <Header notifications={3} />
             <div className="flex-1 flex min-h-0 w-full">
               <AppSidebar />
               <main className="flex-1 min-h-0 overflow-auto">

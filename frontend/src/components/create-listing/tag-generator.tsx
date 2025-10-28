@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { databaseTags, suggestedTags } from '@/utils/mock-tag-data';
+import { databaseTags, suggestedTags } from '@/utils/mock-all-data-used';
 
 // Editable Tag Component
 function EditableTag({ tag, onRemove, onEdit }: { tag: string; onRemove: (tag: string) => void; onEdit: (oldTag: string, newTag: string) => void }) {

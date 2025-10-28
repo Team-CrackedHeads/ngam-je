@@ -3,8 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
-import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-listings-data";
-import { getMatchCount } from "@/utils/mock-match-data";
+import { mockSaleListings, mockWantedListings, getMockMatchedListings, getMatchCount, LISTINGS_TABS, type Listing } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import CategoryDropdown from "@/components/ui/CategoryDropdown";
@@ -56,12 +55,11 @@ function getExtensionPrice(subscriptionTier: string): string {
 }
 
 
-// Tabs configuration
-const tabs = [
-  { label: "Sale", value: "sale", icon: ShoppingCart },
-  { label: "Want", value: "wanted", icon: Package },
-  { label: "Matched", value: "matched", icon: Handshake },
-];
+// Use centralized tabs configuration and add icons
+const tabs = LISTINGS_TABS.map(tab => ({
+  ...tab,
+  icon: tab.iconName === "ShoppingCart" ? ShoppingCart : tab.iconName === "Package" ? Package : Handshake
+}));
 
 // Mobile-specific compact card component
 function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {

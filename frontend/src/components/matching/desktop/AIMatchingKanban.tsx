@@ -8,39 +8,15 @@ import { ListingComparisonModal } from "@/components/matching/ListingComparisonM
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCompare } from "@/components/matching/contexts/CompareContext";
-import { mockAIMatchings, userAIListing } from "@/utils/mock-ai-matching-data";
+import { mockAIMatchings, userAIListing, KANBAN_COLUMNS } from "@/utils/mock-all-data-used";
 
-interface ColumnData {
-  id: ColumnType;
-  title: string;
-  icon: React.ReactNode;
-  color: string;
-  bgColor: string;
-}
-
-const columns: ColumnData[] = [
-  {
-    id: "passed",
-    title: "Passed",
-    icon: <Ban size={18} />,
-    color: "text-red-600",
-    bgColor: "bg-red-50",
-  },
-  {
-    id: "queue",
-    title: "For You",
-    icon: <Sparkles size={18} />,
-    color: "text-secondary-600",
-    bgColor: "bg-secondary-100",
-  },
-  {
-    id: "liked",
-    title: "Liked",
-    icon: <Heart size={18} />,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-  },
-];
+// Use centralized column configuration and add icons
+const columns = KANBAN_COLUMNS.map(col => ({
+  ...col,
+  icon: col.iconName === "Ban" ? <Ban size={18} /> :
+        col.iconName === "Sparkles" ? <Sparkles size={18} /> :
+        col.iconName === "Heart" ? <Heart size={18} /> : null
+}));
 
 export function AIMatchingKanban({
   onMessage,

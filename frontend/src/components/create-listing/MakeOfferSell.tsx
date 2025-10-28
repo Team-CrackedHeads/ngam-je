@@ -10,11 +10,16 @@ import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
 import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
-import { MOCK_LOCATION } from '@/utils/mock-location-data';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
-import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
+import {
+  MOCK_LOCATION,
+  MOCK_PRICE_HISTORY,
+  MOCK_GENERATED_TITLE_SELL,
+  MOCK_GENERATED_DESCRIPTION_SELL,
+  MOCK_GENERATED_IMAGES_SELL,
+  MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
+  MOCK_FAQ_SELL
+} from '@/utils/mock-all-data-used';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
-import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
 
 interface MakeOfferSellProps {
   isOpen: boolean;

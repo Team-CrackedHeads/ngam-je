@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { UnifiedListingData } from "@/utils/mock-threads-data";
+import { UnifiedListingData } from "@/utils/mock-all-data-used";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import ProductFAQSummary from "./ProductFAQSummary";
 import ProductDetailsTop from "./ProductDetailsTop";

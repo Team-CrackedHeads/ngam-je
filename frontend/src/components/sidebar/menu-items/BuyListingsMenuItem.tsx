@@ -10,7 +10,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { mockSaleListings } from "@/utils/mock-listings-data";
+import { mockSaleListings } from "@/utils/mock-all-data-used";
 
 export default function BuyListingsMenuItem() {
   const router = useRouter();

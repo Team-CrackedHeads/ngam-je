@@ -2,56 +2,7 @@
 import React, { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
-import { MOCK_THREADS } from "@/utils/mock-threads-data";
-
-// tier features data
-const tierFeatures = [
-  {
-    category: "Listing Creation",
-    tiers: [
-      { free: "1/month, 3 days", premium: "3/month, 7 days" },
-      { free: "2/month, 7 days", premium: "5/month, 14 days" },
-      { free: "5/month, 14 days", premium: "15/month, 30 days" },
-      { free: "10/month, 30 days", premium: "Unlimited, 60 days" },
-    ],
-  },
-  {
-    category: "AI Search",
-    tiers: [
-      { free: "3/month", premium: "15/month" },
-      { free: "Unlimited", premium: "Unlimited (faster)" },
-      { free: "Unlimited", premium: "Unlimited (priority)" },
-      { free: "Unlimited", premium: "Unlimited (priority queue)" },
-    ],
-  },
-  {
-    category: "AI Tools Access",
-    tiers: [
-      { free: false, premium: false },
-      { free: false, premium: "1 AI-assist/day" },
-      { free: "3 AI-assists/day", premium: "Unlimited" },
-      { free: "10 AI-assists/day", premium: "Unlimited" },
-    ],
-  },
-  {
-    category: "AI FAQ Bot",
-    tiers: [
-      { free: false, premium: "Basic (5 min)" },
-      { free: "Basic (15 min)", premium: "Standard (instant)" },
-      { free: "Standard (instant)", premium: "Advanced (context)" },
-      { free: "Advanced (context)", premium: "Premium+ (predictive)" },
-    ],
-  },
-  {
-    category: "Smart Matching",
-    tiers: [
-      { free: "Random order only", premium: "Basic sorting" },
-      { free: "Basic sorting", premium: "AI compatibility scores" },
-      { free: "AI compatibility", premium: "Advanced AI + probability" },
-      { free: "Advanced AI", premium: "Premium+ (negotiation)" },
-    ],
-  },
-];
+import { MOCK_THREADS, TIER_FEATURES } from "@/utils/mock-all-data-used";
 
 // component for feature value display
 function FeatureValue({ value }: { value: string | boolean }) {
@@ -332,7 +283,7 @@ function PricingPage() {
                 </tr>
               </thead>
               <tbody>
-                {tierFeatures.map((feature, idx) => (
+                {TIER_FEATURES.map((feature, idx) => (
                   <React.Fragment key={idx}>
                     <tr className="border-b border-neutral-200 hover:bg-primary-50">
                       <td
