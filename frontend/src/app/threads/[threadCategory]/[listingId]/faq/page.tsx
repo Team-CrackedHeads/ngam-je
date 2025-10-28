@@ -7,8 +7,8 @@ import Image from "next/image";
 import AISummary from "@/components/threads/product-faq/AISummary";
 import Question from "@/components/threads/product-faq/Question";
 import { Question as QuestionType, Answer, VoteType } from "@/components/threads/product-faq/types";
-import { mockAiSummary, getListingFAQs } from "@/utils/mock-threads-faq-data";
-import { getListingById } from "@/utils/mock-threads-data";
+import { mockAiSummary, getListingFAQs } from "@/utils/mock-all-data-used";
+import { getListingById } from "@/utils/mock-all-data-used";
 
 const FAQPage: React.FC = () => {
   // ADD THESE LINES to get listingId from URL

@@ -5,13 +5,20 @@ import { useRouter } from 'next/navigation';
 import { Info, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FAQ } from '@/components/create-listing/faq-generator';
-import { MOCK_FAQ_BUY } from '@/utils/mock-faq-buy';
-import { MOCK_FAQ_SELL } from '@/utils/mock-faq-sell';
-import { MOCK_GENERATED_TITLE_BUY, MOCK_GENERATED_DESCRIPTION_BUY, MOCK_GENERATED_IMAGES_BUY } from '@/utils/mock-buy-listing-data';
-import { MOCK_GENERATED_TITLE_SELL, MOCK_GENERATED_DESCRIPTION_SELL, MOCK_GENERATED_IMAGES_SELL, MOCK_OWNERSHIP_PROOF_IMAGE_SELL } from '@/utils/mock-sell-listing-data';
+import {
+  MOCK_FAQ_BUY,
+  MOCK_FAQ_SELL,
+  MOCK_GENERATED_TITLE_BUY,
+  MOCK_GENERATED_DESCRIPTION_BUY,
+  MOCK_GENERATED_IMAGES_BUY,
+  MOCK_GENERATED_TITLE_SELL,
+  MOCK_GENERATED_DESCRIPTION_SELL,
+  MOCK_GENERATED_IMAGES_SELL,
+  MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
+  MOCK_PRICE_HISTORY,
+  MOCK_LOCATION
+} from '@/utils/mock-all-data-used';
 import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-price-chart-data';
-import { MOCK_LOCATION } from '@/utils/mock-location-data';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
 import ProductDetailsStep from './steps/ProductDetailsStep';

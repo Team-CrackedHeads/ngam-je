@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ProductHeader } from "@/components/threads/product/ProductHeader";
 import { ProductDetails } from "@/components/threads/product/ProductDetails";
 // Import unified data instead
-import { getListingById } from "@/utils/mock-threads-data";
+import { getListingById } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Main Product Listing Screen

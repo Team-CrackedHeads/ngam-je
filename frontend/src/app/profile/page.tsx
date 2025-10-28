@@ -3,15 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Star, CheckCircle, Camera, Lock } from "lucide-react";
-import { mockSaleListings, mockWantedListings } from "@/utils/mock-listings-data";
-import { MOCK_ACHIEVEMENTS, getAchievementStats } from "@/utils/mock-achievements-data";
-import { MOCK_USER } from "@/utils/mock-user-data";
+import { mockSaleListings, mockWantedListings, MOCK_ACHIEVEMENTS, getAchievementStats, MOCK_USER, PROFILE_TABS } from "@/utils/mock-all-data-used";
 
-// Tabs configuration
-const tabs = [
-  { label: "Overview", href: "/profile" },
-  { label: "Activity", href: "/profile/activity" },
-];
+// Use centralized tabs configuration
+const tabs = PROFILE_TABS;
 
 export default function ProfilePage() {
   const userData = MOCK_USER;

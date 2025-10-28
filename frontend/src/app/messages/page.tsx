@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Search, Send } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { messagesData, conversationsData, ConversationData } from "@/utils/mock-messages";
+import { messagesData, conversationsData, ConversationData } from "@/utils/mock-all-data-used";
 
 export default function MessagesPage() {
   const router = useRouter();

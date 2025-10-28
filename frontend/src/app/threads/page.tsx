@@ -9,7 +9,7 @@ import {
   MessageSquarePlus,
 } from "lucide-react";
 import ThreadCard from "@/components/threads/ThreadCard";
-import { MOCK_THREADS, ThreadData } from "@/utils/mock-threads-data";
+import { MOCK_THREADS, ThreadData } from "@/utils/mock-all-data-used";
 
 import CreateThreadsSection from "@/components/threads/CreateThreadsSection";
 import AIAgentSearch from "@/components/threads/AIAgentSearch";
@@ -17,8 +17,9 @@ import NgamOverview from "@/components/threads/NgamOverview";
 import FilterButton, { FilterType } from "@/components/threads/FilterButton";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
-import { MockAIResponse } from "@/utils/mock-ai-data";
+import { MockAIResponse } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
+import BreadcrumbNav from "./BreadcrumbNav";
 
 type ViewType = "grid" | "list";
 

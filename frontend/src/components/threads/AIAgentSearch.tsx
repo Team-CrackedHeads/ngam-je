@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Plus, Sparkles } from "lucide-react";
-import { mockAIResponses, MockAIResponse } from "@/utils/mock-ai-data";
+import { mockAIResponses, MockAIResponse } from "@/utils/mock-all-data-used";
 
 type AIAgentSearchProps = {
   onOpenAI: () => void;

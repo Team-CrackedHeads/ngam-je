@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, Shield } from 'lucide-react';
-import { UnifiedListingData } from "@/utils/mock-threads-data";
+import { UnifiedListingData } from "@/utils/mock-all-data-used";
 
 interface ProductCardDetailsProps {
   listing: UnifiedListingData;

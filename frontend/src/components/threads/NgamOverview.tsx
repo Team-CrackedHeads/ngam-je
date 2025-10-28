@@ -62,17 +62,20 @@ export default function NgamOverview({
   const [isExpanded, setIsExpanded] = useState(false);
   const [askValue, setAskValue] = useState("");
 
+  // Import default suggestions from centralized data
+  const DEFAULT_SUGGESTIONS = [
+    "Show me more details",
+    "Is the price fair right now?",
+    "Common defects to check?",
+    "How to verify authenticity?",
+  ];
+
   // Defaults for suggestion bubbles (expanded mode only)
   const bubbles = useMemo(
     () =>
       suggestions && suggestions.length > 0
         ? suggestions
-        : [
-            "Show me more details",
-            "Is the price fair right now?",
-            "Common defects to check?",
-            "How to verify authenticity?",
-          ],
+        : DEFAULT_SUGGESTIONS,
     [suggestions]
   );
 

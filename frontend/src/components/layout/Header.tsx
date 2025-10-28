@@ -1,17 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Puzzle, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { User } from "@/utils/mock-all-data-used";
 
 type HeaderProps = {
-  username?: string;
   notifications?: number;
 };
 
-const Header = ({ username, notifications = 0 }: HeaderProps) => {
+const Header = ({ notifications = 0 }: HeaderProps) => {
+  const { user: authUser } = useAuth();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Get current platform user from localStorage
+  useEffect(() => {
+    const userStr = localStorage.getItem("currentUser");
+    if (userStr) {
+      setCurrentUser(JSON.parse(userStr));
+    }
+  }, [authUser]); // Re-check when auth user changes
+
+  const displayName = currentUser?.name || authUser?.username || "Guest";
 
 
   return (
@@ -29,7 +43,7 @@ const Header = ({ username, notifications = 0 }: HeaderProps) => {
               Ngam-je
             </span>
             <span className="text-xs sm:text-sm text-accent-500">
-              {username ? `Welcome, ${username}!` : "Welcome!"}
+              Welcome, {displayName}!
             </span>
           </div>
         </div>
