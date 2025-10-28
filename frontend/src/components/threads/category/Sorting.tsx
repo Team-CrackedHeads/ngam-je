@@ -12,7 +12,6 @@ import {
   PlusCircle,
   MinusCircle,
 } from "lucide-react";
-import { PRIMARY_FILTER_BUTTONS, QUICK_FILTER_OPTIONS, QUICK_SORT_OPTIONS } from "@/utils/mock-all-data-used";
 
 // --- Constants ---
 const ICON_SIZE = 16;
@@ -71,7 +70,12 @@ const Sorting: React.FC<SortingProps> = ({
       quickFilters: activeQuickFilters,
       quickSort: activeQuickSort,
     });
-  }, [activePrimaryFilter, activeQuickFilters, activeQuickSort, onFiltersChange]);
+  }, [
+    activePrimaryFilter,
+    activeQuickFilters,
+    activeQuickSort,
+    onFiltersChange,
+  ]);
 
   // --- Handlers ---
   const handlePrimaryFilterClick = (filter: PrimaryFilter) => {
@@ -92,39 +96,93 @@ const Sorting: React.FC<SortingProps> = ({
     setActiveQuickSort((current) => (current === sort ? null : sort));
   };
 
-  // Updated primary buttons to match UnifiedListingData features
-  // Use centralized filter/sort configuration with proper typing
-  const primaryButtons = PRIMARY_FILTER_BUTTONS.map(btn => ({
-    ...btn,
-    filter: btn.filter as PrimaryFilter
-  }));
+  // --- Primary Buttons ---
+  const primaryButtons = [
+    {
+      label: "Verified",
+      filter: "Verified Sellers" as PrimaryFilter,
+      icon: <ShieldCheck size={ICON_SIZE} />,
+    },
+    {
+      label: "Nearby",
+      filter: "Nearby" as PrimaryFilter,
+      icon: <MapPin size={ICON_SIZE} />,
+    },
+  ];
 
-  const quickFilterOptions: {
-    label: string;
-    filter: QuickFilter;
-    icon: string;
-  }[] = QUICK_FILTER_OPTIONS.map(opt => ({
-    ...opt,
-    filter: opt.filter as QuickFilter
-  }));
+  // --- Quick Filters ---
+  const quickFilterOptions = [
+    {
+      label: "Protected Listings",
+      filter: "Protected Listings" as QuickFilter,
+      icon: <Lock size={ICON_SIZE} />,
+    },
+    {
+      label: "Posted Today",
+      filter: "Posted Today" as QuickFilter,
+      icon: <Clock size={ICON_SIZE} />,
+    },
+    {
+      label: "High Views",
+      filter: "High Views" as QuickFilter,
+      icon: <Eye size={ICON_SIZE} />,
+    },
+    {
+      label: "Has Gallery",
+      filter: "Has Gallery" as QuickFilter,
+      icon: <Image size={ICON_SIZE} />,
+    },
+  ];
 
-  const quickSortOptions: { label: string; sort: QuickSort; icon: string }[] = QUICK_SORT_OPTIONS.map(opt => ({
-    ...opt,
-    sort: opt.sort as QuickSort
-  }));
+  // --- Quick Sort ---
+  const quickSortOptions = [
+    {
+      label: "Nearest First",
+      sort: "Nearest First" as QuickSort,
+      icon: <MapPin size={ICON_SIZE} />,
+    },
+    {
+      label: "Newest First",
+      sort: "Newest First" as QuickSort,
+      icon: <Sparkles size={ICON_SIZE} />,
+    },
+    {
+      label: "Lowest Price",
+      sort: "Lowest Price" as QuickSort,
+      icon: <ArrowDown size={ICON_SIZE} />,
+    },
+    {
+      label: "Highest Price",
+      sort: "Highest Price" as QuickSort,
+      icon: <ArrowUp size={ICON_SIZE} />,
+    },
+    {
+      label: "Most Views",
+      sort: "Most Views" as QuickSort,
+      icon: <Eye size={ICON_SIZE} />,
+    },
+  ];
 
   // --- Styles ---
   const getPrimaryButtonClasses = (filter: PrimaryFilter) => {
     const isActive = activePrimaryFilter === filter;
     return `
       flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200
-      ${isActive ? "bg-secondary-500 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}
+      ${
+        isActive
+          ? "bg-secondary-500 text-white"
+          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+      }
     `;
   };
 
   const getChipClasses = (isActive: boolean) => `
       flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer
-      ${isActive ? "bg-accent-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
+      ${
+        isActive
+          ? "bg-accent-700 text-white"
+          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+      }
   `;
 
   // --- Render ---
@@ -147,7 +205,11 @@ const Sorting: React.FC<SortingProps> = ({
         <button
           onClick={handleToggleMore}
           className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200
-            ${isMoreOpen ? "bg-gray-400 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}
+            ${
+              isMoreOpen
+                ? "bg-gray-400 text-white"
+                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+            }`}
         >
           {isMoreOpen ? (
             <MinusCircle size={ICON_SIZE} />
