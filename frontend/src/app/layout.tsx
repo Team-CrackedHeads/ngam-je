@@ -4,8 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/sidebar/Sidebar";
-import { MockAuthProvider } from "@/lib/auth";
+import { AppSidebar } from "@/components/layout/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,19 +32,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-y-auto`}
         style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
       >
-        <MockAuthProvider>
-          <SidebarProvider className="flex-col">
-            <Header notifications={3} />
-            <div className="flex-1 flex min-h-0 w-full">
-              <AppSidebar />
-              <main className="flex-1 min-h-0 overflow-auto">
-                {children}
-              </main>
-            </div>
-            <Footer />
+        <Header username="User" notifications={3} />
+        <div className="flex-1 flex min-h-0">
+          <SidebarProvider>
+            <AppSidebar />
+            <main className="flex-1 min-h-0 overflow-auto">
+              {children}
+            </main>
           </SidebarProvider>
-
-        </MockAuthProvider>
+        </div>
+        <Footer />
       </body>
     </html>
 
