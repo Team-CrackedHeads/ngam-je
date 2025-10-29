@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { User, Puzzle, Bell, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { placeholderActivities } from "@/utils/mock-activity-data";
+import AuthModal from "@/components/auth/AuthModal";
+import { useState } from "react";
 
 type HeaderProps = {
   notifications?: number;
@@ -25,11 +24,18 @@ type HeaderProps = {
 const Header = ({ notifications = 0 }: HeaderProps) => {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalView, setAuthModalView] = useState<"signin" | "signup">("signin");
 
   const handleLogout = async () => {
     await authClient.signOut();
-    router.push("/login");
+    router.push("/"); // Redirect to home after logout
     router.refresh();
+  };
+
+  const openAuthModal = (view: "signin" | "signup") => {
+    setAuthModalView(view);
+    setIsAuthModalOpen(true);
   };
 
   const recentActivities = placeholderActivities.slice(0, 10);
@@ -63,7 +69,7 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
       <div className="flex items-center gap-3 relative">
         {/* Notifications Dropdown */}
         {session && (
-<DropdownMenu modal={false}>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -140,25 +146,27 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               </>
             ) : (
               <>
-                <DropdownMenuItem asChild>
-                  <Link href="/login">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign In
-                  </Link>
+                <DropdownMenuItem onClick={() => openAuthModal("signin")}>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/signup">
-                    <User className="w-4 h-4 mr-2" />
-                    Sign Up
-                  </Link>
+                <DropdownMenuItem onClick={() => openAuthModal("signup")}>
+                  <User className="w-4 h-4 mr-2" />
+                  Sign Up
                 </DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialView={authModalView}
+      />
     </header>
   );
 };
 
 export default Header;
+
