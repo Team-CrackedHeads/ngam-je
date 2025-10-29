@@ -35,10 +35,6 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days in seconds
     updateAge: 60 * 60 * 24, // Update session every 24 hours
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // 5 minutes
-    },
   },
 
   // Security settings
@@ -46,16 +42,6 @@ export const auth = betterAuth({
 
   // Base URL for redirects and callbacks
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-
-  // Advanced options
-  advanced: {
-    database: {
-      generateId: () => {
-        // Generate custom IDs (default uses nanoid)
-        return crypto.randomUUID();
-      },
-    },
-  },
 
   // Social providers (add when ready)
   // socialProviders: {
