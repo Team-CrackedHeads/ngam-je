@@ -49,9 +49,17 @@ export const auth = betterAuth({
 
   // Advanced options
   advanced: {
+<<<<<<< HEAD
     generateId: () => {
       // Generate custom IDs (default uses nanoid)
       return crypto.randomUUID();
+=======
+    database: {
+      generateId: () => {
+        // Generate custom IDs (default uses nanoid)
+        return crypto.randomUUID();
+      },
+>>>>>>> 149a7d8 (feat: implement BetterAuth for real authentication)
     },
   },
 

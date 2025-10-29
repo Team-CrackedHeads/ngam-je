@@ -103,7 +103,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex h-full bg-neutral-white overflow-hidden">
+    <div className="flex h-full bg-neutral-white overflow-hidden px-0">
       {/* Sidebar - Conversations List */}
       <div
         className={`${selectedId ? "hidden lg:flex" : "flex"

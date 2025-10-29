@@ -2,31 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Puzzle, Bell, LogOut } from "lucide-react";
+import { Puzzle, Bell, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { User } from "@/utils/mock-all-data-used";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 type HeaderProps = {
   notifications?: number;
 };
 
 const Header = ({ notifications = 0 }: HeaderProps) => {
-  const { user: authUser } = useAuth();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
 
-  // Get current platform user from localStorage
-  useEffect(() => {
-    const userStr = localStorage.getItem("currentUser");
-    if (userStr) {
-      setCurrentUser(JSON.parse(userStr));
-    }
-  }, [authUser]); // Re-check when auth user changes
-
-  const displayName = currentUser?.name || authUser?.username || "Guest";
-
+  const handleLogout = async () => {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
@@ -43,7 +38,11 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               Ngam-je
             </span>
             <span className="text-xs sm:text-sm text-accent-500">
-              Welcome, {displayName}!
+              {isPending
+                ? "Loading..."
+                : session
+                ? `Welcome, ${session.user.name || session.user.email}!`
+                : "Welcome!"}
             </span>
           </div>
         </div>
@@ -51,37 +50,49 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-
         {/* Notifications Button */}
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="relative text-accent-500"
-        >
-          <Link href="/notifications">
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-            {notifications > 0 && (
-              <Badge
-                className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white"
-              >
-                {notifications}
-              </Badge>
-            )}
-          </Link>
-        </Button>
+        {session && (
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="relative text-accent-500"
+          >
+            <Link href="/notifications">
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+              {notifications > 0 && (
+                <Badge className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white">
+                  {notifications}
+                </Badge>
+              )}
+            </Link>
+          </Button>
+        )}
 
-        {/* Logout Button */}
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="text-accent-500"
-        >
-          <Link href="/logout">
+        {/* Auth Button - Logout or Login */}
+        {session ? (
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            size="icon"
+            className="text-accent-500"
+            title="Logout"
+          >
             <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
-          </Link>
-        </Button>
+          </Button>
+        ) : (
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="text-accent-500"
+            title="Login"
+          >
+            <Link href="/login">
+              <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Link>
+          </Button>
+        )}
       </div>
     </header>
   );
