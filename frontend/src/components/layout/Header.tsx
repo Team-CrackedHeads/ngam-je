@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { placeholderActivities } from "@/utils/mock-activity-data";
 
 type HeaderProps = {
   notifications?: number;
@@ -30,6 +31,8 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
     router.push("/login");
     router.refresh();
   };
+
+  const recentActivities = placeholderActivities.slice(0, 10);
 
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
@@ -58,27 +61,48 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-        {/* Notifications Button */}
+        {/* Notifications Dropdown */}
         {session && (
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="relative text-accent-500"
-          >
-            <Link href="/notifications">
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-              {notifications > 0 && (
-                <Badge className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white">
-                  {notifications}
-                </Badge>
-              )}
-            </Link>
-          </Button>
+<DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-accent-500"
+              >
+                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+                {notifications > 0 && (
+                  <Badge className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white">
+                    {notifications}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel>Recent Activity</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {recentActivities.map((activity, index) => (
+                <DropdownMenuItem key={index}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{activity.message}</span>
+                    <span className="text-xs text-accent-500">
+                      {activity.date}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profile/activity" className="justify-center">
+                  View all activity
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Auth Dropdown */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             {isPending ? (
               <Button variant="ghost" size="icon" className="text-accent-500">
