@@ -2,12 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Puzzle, Bell, LogOut, LogIn } from "lucide-react";
+import { User, Puzzle, Bell, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type HeaderProps = {
   notifications?: number;
@@ -69,30 +77,61 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
           </Button>
         )}
 
-        {/* Auth Button - Logout or Login */}
-        {session ? (
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="icon"
-            className="text-accent-500"
-            title="Logout"
-          >
-            <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
-          </Button>
-        ) : (
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="text-accent-500"
-            title="Login"
-          >
-            <Link href="/login">
-              <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
-            </Link>
-          </Button>
-        )}
+        {/* Auth Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {isPending ? (
+              <Button variant="ghost" size="icon" className="text-accent-500">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent-500"></div>
+              </Button>
+            ) : session ? (
+              <Button variant="ghost" size="icon" className="text-accent-500">
+                <User className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Button>
+            ) : (
+              <Button variant="ghost" className="text-accent-500">
+                <LogIn className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                Login / Sign Up
+              </Button>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {session ? (
+              <>
+                <DropdownMenuLabel>
+                  {session.user.name || session.user.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/login">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/signup">
+                    <User className="w-4 h-4 mr-2" />
+                    Sign Up
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
