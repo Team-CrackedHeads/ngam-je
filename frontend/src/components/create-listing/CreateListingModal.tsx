@@ -741,7 +741,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
                 <Button
                   onClick={handleNext}
                   disabled={!isStepValid()}
-                  className="px-6 text-white hover:opacity-90 bg-[var(--color-secondary-500)]"
+                  className="px-6 text-black  hover:bg-[var(--color-secondary-600)] bg-[var(--color-secondary-500)]"
                 >
                   Continue
                   <ChevronRight className="w-4 h-4 ml-2" />
