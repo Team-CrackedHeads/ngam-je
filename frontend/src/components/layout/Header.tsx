@@ -69,7 +69,7 @@ const Header = () => {
       <div className="flex items-center gap-3 relative">
         {/* Auth Button - Login or User Dropdown */}
         {isAuthenticated ? (
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
