@@ -5,13 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Package, Handshake, Truck, Shield, MapPin, Calendar, ArrowLeft, AlertTriangle, Lightbulb, Loader2, Warehouse, ClipboardCheck } from "lucide-react";
-import { type Listing } from "@/utils/mock-listings-data";
+import { type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { MeetupScheduler } from "@/components/checkout/MeetupScheduler";
+import { StripePayment } from "@/components/checkout/StripePayment";
 
 const GoogleLocationMap = dynamic(() => import("@/components/create-listing/GoogleLocationMap"), {
   ssr: false,
@@ -79,6 +80,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
   const [meetupDate, setMeetupDate] = useState("");
   const [meetupTime, setMeetupTime] = useState("");
   const [meetupSearchQuery, setMeetupSearchQuery] = useState("");
+  const [showPayment, setShowPayment] = useState<boolean>(false);
 
   const [placePredictions, setPlacePredictions] = useState<google.maps.places.PlacePrediction[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
@@ -187,6 +189,12 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
 
   const handleConfirm = () => {
     if (!selectedDealType) return;
+    // Open Stripe payment modal
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    if (!selectedDealType) return;
 
     const dealDetails: DealDetails = {
       dealType: selectedDealType,
@@ -201,7 +209,12 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
       }),
     };
 
+    setShowPayment(false);
     onConfirm(dealDetails);
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
   };
 
   const modalContent = (
@@ -884,10 +897,10 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                                     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary-600" />
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-accent-700">
-                                        {prediction.structured_formatting.main_text}
+                                        {prediction.mainText?.text || prediction.text.text}
                                       </p>
                                       <p className="text-xs text-primary-700 truncate">
-                                        {prediction.structured_formatting.secondary_text}
+                                        {prediction.secondaryText?.text}
                                       </p>
                                     </div>
                                   </div>
@@ -1017,9 +1030,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                       <h3 className="font-semibold text-accent-700 mb-1">{listing.title}</h3>
                       <p className="text-sm text-primary-700 mb-2 line-clamp-2">{listing.description}</p>
                       <div className="flex items-center gap-4 text-xs text-primary-700">
-                        <span>Quantity: {listing.quantity || 1}</span>
                         <span className="text-lg font-bold text-accent-700">
-                          {listing.currency} {listing.minPrice} - {listing.maxPrice}
+                          {("price" in listing ? listing.price : listing.budget) || "N/A"}
                         </span>
                       </div>
                     </div>
@@ -1151,6 +1163,22 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
           </div>
         </Card>
       </motion.div>
+
+      {/* Stripe Payment Modal */}
+      {showPayment && (
+        <StripePayment
+          amount={("price" in listing ? listing.price : listing.budget) || 0}
+          title="Complete Payment"
+          description={`Payment for ${listing.title}`}
+          metadata={{
+            listingId: String(listing.id),
+            listingTitle: listing.title,
+            dealType: selectedDealType || "unknown",
+          }}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+        />
+      )}
     </motion.div>
   );
 

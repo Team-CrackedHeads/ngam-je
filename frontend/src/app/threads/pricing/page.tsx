@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
 import { MOCK_THREADS, TIER_FEATURES } from "@/utils/mock-all-data-used";
+import { StripePayment } from "@/components/checkout/StripePayment";
 
 // component for feature value display
 function FeatureValue({ value }: { value: string | boolean }) {
@@ -88,6 +89,7 @@ function PricingPage() {
   // tier boost requirements
   const boostRequirements = [0, 2, 7, 14];
   const [hoveredTier, setHoveredTier] = useState<number | null>(null);
+  const [showPayment, setShowPayment] = useState<boolean>(false);
 
   // calculate boosts needed for next tier
   const boostsToNextTier =
@@ -95,6 +97,20 @@ function PricingPage() {
 
   const handleBackClick = () => {
     router.push(`/threads`);
+  };
+
+  const handleBoostClick = () => {
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    // TODO: Update thread boost count and tier in backend
+    alert("Payment successful! Thread boosted.");
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
   };
 
   return (
@@ -136,11 +152,11 @@ function PricingPage() {
 
             {/* action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 px-4">
-              <button className="bg-neutral-white text-accent-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-neutral-100 transition-colors text-sm sm:text-base">
+              <button
+                onClick={handleBoostClick}
+                className="bg-neutral-white text-accent-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-neutral-100 transition-colors text-sm sm:text-base"
+              >
                 Boost This Thread
-              </button>
-              <button className="bg-secondary-500 text-accent-500 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-secondary-600 transition-colors text-sm sm:text-base">
-                Get Token with 2 Free Boosts
               </button>
             </div>
 
@@ -328,6 +344,22 @@ function PricingPage() {
           </div>
         </div>
       </div>
+
+      {/* Stripe Payment Modal */}
+      {showPayment && (
+        <StripePayment
+          amount={4.99}
+          title="Boost This Thread"
+          description={`Boost "${threadData.title}" thread`}
+          metadata={{
+            threadId: threadData.id,
+            threadTitle: threadData.title,
+            category: threadData.category,
+          }}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+        />
+      )}
     </div>
   );
 }
