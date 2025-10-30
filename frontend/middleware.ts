@@ -1,57 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 
 /**
  * Middleware for protecting routes with authentication
  *
- * This runs on EVERY request before pages load.
- * It checks if the user is authenticated and redirects accordingly.
+ * NOTE: Currently disabled - authentication is handled by the FastAPI backend.
+ * Route protection is implemented at the component level using ProtectedRoute.
+ *
+ * This middleware can be re-enabled in the future if we need server-side
+ * route protection by checking JWT tokens from localStorage/cookies.
  */
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Public routes that don't require authentication
-  const publicRoutes = [
-    "/",
-    "/login",
-    "/signup",
-    "/threads",
-    "/api",
-  ];
-
-  // Check if the route is public
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname === route || pathname.startsWith(route + "/")
-  );
-
-  // If it's a public route, allow access
-  if (isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  // Protected route - check authentication
-  try {
-    // Get session from BetterAuth
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    // If no session, redirect to login
-    if (!session) {
-      const url = new URL("/login", request.url);
-      url.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(url);
-    }
-
-    // User is authenticated, allow access
-    return NextResponse.next();
-  } catch (error) {
-    // If there's an error checking auth, redirect to login
-    console.error("Auth middleware error:", error);
-    const url = new URL("/login", request.url);
-    return NextResponse.redirect(url);
-  }
+  // Currently just pass through all requests
+  // Auth protection is handled by ProtectedRoute component
+  return NextResponse.next();
 }
 
 /**

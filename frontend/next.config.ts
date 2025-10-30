@@ -48,22 +48,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
-  // Turbopack configuration (for dev with --turbopack)
-  turbopack: {
-    resolveAlias: {
-      'better-auth/react': 'better-auth/react/dist/cjs',
-    },
-  },
-
-  // Webpack configuration (for production builds)
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'better-auth/react': 'better-auth/react/dist/cjs',
-    };
-    return config;
-  },
 };
 
 export default nextConfig;
