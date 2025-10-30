@@ -39,7 +39,7 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               {isLoading
                 ? "Loading..."
                 : isAuthenticated && user
-                ? `Welcome, ${user.name || user.email}!`
+                ? `Welcome, ${user.username || user.email}!`
                 : "Welcome!"}
             </span>
           </div>

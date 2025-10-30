@@ -10,7 +10,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { signup, error: authError, clearError } = useAuth();
 
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +37,7 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      await signup({ email, password, name });
+      await signup({ email, password, username });
       router.push("/"); // Redirect to home on success
     } catch (err) {
       // Error is handled by AuthContext
@@ -62,18 +62,18 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="name"
+              htmlFor="username"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Name
+              Username
             </label>
             <input
-              id="name"
+              id="username"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter your name"
+              placeholder="Choose a username"
               required
               disabled={isLoading}
             />

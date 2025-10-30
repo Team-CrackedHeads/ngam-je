@@ -7,7 +7,7 @@ import { tokenStorage } from '@/lib/auth-token';
 export interface User {
   id: string;
   email: string;
-  name?: string;
+  username?: string;
 }
 
 interface AuthContextType {

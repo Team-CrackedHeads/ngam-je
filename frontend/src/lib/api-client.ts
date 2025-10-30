@@ -15,7 +15,7 @@ export interface LoginCredentials {
 export interface SignupData {
   email: string;
   password: string;
-  name?: string;
+  username: string;
 }
 
 export interface AuthResponse {
@@ -25,7 +25,7 @@ export interface AuthResponse {
   user?: {
     id: string;
     email: string;
-    name?: string;
+    username?: string;
   };
 }
 
@@ -114,7 +114,7 @@ class ApiClient {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>(
-      '/auth/login',
+      '/api/v1/auth/login',
       {
         method: 'POST',
         body: JSON.stringify(credentials),
@@ -136,7 +136,7 @@ class ApiClient {
    */
   async signup(data: SignupData): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>(
-      '/auth/signup',
+      '/api/v1/auth/signup',
       {
         method: 'POST',
         body: JSON.stringify(data),
@@ -158,7 +158,7 @@ class ApiClient {
    */
   async logout(): Promise<void> {
     try {
-      await this.request('/auth/logout', {
+      await this.request('/api/v1/auth/logout', {
         method: 'POST',
       });
     } catch (error) {
@@ -173,7 +173,7 @@ class ApiClient {
    * Get current user info
    */
   async getCurrentUser(): Promise<any> {
-    return this.request('/auth/me', {
+    return this.request('/api/v1/auth/me', {
       method: 'GET',
     });
   }
@@ -188,7 +188,7 @@ class ApiClient {
     }
 
     const response = await this.request<AuthResponse>(
-      '/auth/refresh',
+      '/api/v1/auth/refresh',
       {
         method: 'POST',
         body: JSON.stringify({ refresh_token: refreshToken }),
