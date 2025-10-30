@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
 import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
 import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
+import { mockAIMatchings, userAIListing } from "@/utils/mock-all-data-used";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -31,119 +32,20 @@ export function AIMatchingSwipe({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showGalleryView, setShowGalleryView] = useState(false);
 
-  // Mock user's original listing
-  const getUserListing = (): MatchedListing => ({
-    id: "user-listing",
-    title: "Looking for MacBook Pro M3 for Video Editing",
-    description: "I need a MacBook Pro M3 for professional video editing work. Must be in excellent condition.",
-    price: 8000,
-    originalAsk: 8000,
-    images: ["https://via.placeholder.com/400x300"],
-    tags: ["Electronics", "Laptop", "Wanted", "MacBook"],
-    location: "Kuala Lumpur",
-    timeAgo: "1 day ago",
-    seller: "You",
-    type: "buy" as const,
-    category: "Electronics",
-    matchScore: 0,
-    matchReasons: []
-  });
+  // Get user's original listing from centralized mock data
+  const getUserListing = (): MatchedListing => userAIListing;
 
-  // Mock data for comparison
+  // Get listings for comparison from selected IDs
   const getMockListingsForComparison = (): MatchedListing[] => {
-    return selectedForCompare.map((cardId, idx) => ({
-      id: cardId,
-      title: "MacBook Pro M3 16-inch - Excellent Condition",
-      description: "Need for video editing work. Willing to pay good price for excellent condition.",
-      price: 8500 - (idx * 500),
-      originalAsk: 9000 - (idx * 500),
-      images: ["https://via.placeholder.com/400x300"],
-      tags: ["Electronics", "Laptop", "Apple", "M3"],
-      location: "Kuala Lumpur",
-      timeAgo: "2 hours ago",
-      seller: "John Doe",
-      type: "sell" as const,
-      category: "Electronics",
-      matchScore: [85, 60, 30, 45][idx] || 50,
-      matchReasons: [
-        "Price matches your budget range",
-        "Located in your preferred area",
-        "High seller rating and verified account"
-      ]
-    }));
+    return selectedForCompare
+      .map((listingId) =>
+        mockAIMatchings.find((listing) => listing.id === listingId)
+      )
+      .filter(Boolean) as MatchedListing[];
   };
 
-  // Generate mock listings if none provided
-  const getMockListings = (): MatchedListing[] => {
-    if (availableListings.length > 0) {
-      return availableListings as unknown as MatchedListing[];
-    }
-
-    // Fallback mock data
-    return [
-      {
-        id: "1",
-        title: "MacBook Pro M3 16-inch - Excellent Condition",
-        description: "Professional-grade laptop for video editing. Barely used, comes with original box and accessories.",
-        price: 8500,
-        originalAsk: 9000,
-        images: ["https://via.placeholder.com/400x300"],
-        tags: ["Electronics", "Laptop", "Apple", "M3"],
-        location: "Kuala Lumpur",
-        timeAgo: "2 hours ago",
-        seller: "John Doe",
-        type: "sell" as const,
-        category: "Electronics",
-        matchScore: 85,
-        matchReasons: [
-          "Price matches your budget range",
-          "Located in your preferred area",
-          "High seller rating and verified account"
-        ]
-      },
-      {
-        id: "2",
-        title: "MacBook Pro M3 14-inch - Like New",
-        description: "Lightly used MacBook Pro perfect for creative work. 512GB SSD, 16GB RAM.",
-        price: 7800,
-        originalAsk: 8500,
-        images: ["https://via.placeholder.com/400x300"],
-        tags: ["Electronics", "Laptop", "Apple"],
-        location: "Petaling Jaya",
-        timeAgo: "5 hours ago",
-        seller: "Jane Smith",
-        type: "sell" as const,
-        category: "Electronics",
-        matchScore: 60,
-        matchReasons: [
-          "Similar specifications",
-          "Within budget",
-          "Nearby location"
-        ]
-      },
-      {
-        id: "3",
-        title: "MacBook Pro M2 16-inch",
-        description: "Previous generation but still powerful. Great condition, well maintained.",
-        price: 6500,
-        originalAsk: 7000,
-        images: ["https://via.placeholder.com/400x300"],
-        tags: ["Electronics", "Laptop"],
-        location: "Shah Alam",
-        timeAgo: "1 day ago",
-        seller: "Tech Store",
-        type: "sell" as const,
-        category: "Electronics",
-        matchScore: 45,
-        matchReasons: [
-          "Good value for money",
-          "Trusted seller"
-        ]
-      }
-    ];
-  };
-
-  const allListings = getMockListings();
+  // Use centralized mock data
+  const allListings = mockAIMatchings;
 
   // Mock cards for each tab
   const getCardsForTab = (tab: TabType) => {
@@ -155,7 +57,7 @@ export function AIMatchingSwipe({
 
   const cards = getCardsForTab(activeTab);
 
-  // Swipeable Card Component
+  // Swipeable Card Component - Redesigned with proper sizing
   const SwipeableCard = ({
     listing,
     index,
@@ -168,21 +70,18 @@ export function AIMatchingSwipe({
     onSwipe: (direction: 'left' | 'right') => void;
   }) => {
     const x = useMotionValue(0);
-    const y = useMotionValue(0);
     const rotate = useTransform(x, [-200, 0, 200], [-25, 0, 25]);
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
     const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const threshold = 100;
-      const velocity = info.velocity.x;
-
-      if (Math.abs(velocity) >= 500 || Math.abs(info.offset.x) >= threshold) {
-        const direction = info.offset.x > 0 ? 'right' : 'left';
-        onSwipe(direction);
+      if (Math.abs(info.velocity.x) >= 500 || Math.abs(info.offset.x) >= threshold) {
+        onSwipe(info.offset.x > 0 ? 'right' : 'left');
       }
     };
 
     const isTopCard = index === 0;
+    const isSelected = selectedForCompare.includes(listing.id);
     const matchScore = listing.matchScore || 85;
     const getMatchColor = (score: number) => {
       if (score >= 75) return { bg: 'from-green-100 to-green-200', text: 'text-green-700', border: 'border-green-300' };
@@ -193,11 +92,9 @@ export function AIMatchingSwipe({
 
     return (
       <motion.div
-        className="absolute inset-0"
         style={{
-          x: isTopCard ? x : 0,
-          y: isTopCard ? y : 0,
-          rotate: isTopCard ? rotate : 0,
+          x: isTopCard && !compareMode ? x : 0,
+          rotate: isTopCard && !compareMode ? rotate : 0,
           opacity: isTopCard ? opacity : 1,
           zIndex: totalCards - index,
         }}
@@ -205,63 +102,74 @@ export function AIMatchingSwipe({
           scale: isTopCard ? 1 : 1 - (index * 0.05),
           y: isTopCard ? 0 : index * 10,
         }}
-        exit={{
-          x: 0,
-          opacity: 0,
-          scale: 0.8,
-          transition: { duration: 0.3, ease: "easeOut" }
-        }}
-        drag={isTopCard ? true : false}
+        drag={isTopCard && !compareMode}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={1}
         onDragEnd={handleDragEnd}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="absolute w-full h-full"
       >
-
         <div
           onClick={() => {
-            if (!isTopCard || compareMode) return;
-            onViewDetails(listing);
+            if (compareMode && isTopCard) {
+              if (isSelected) {
+                setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+              } else if (selectedForCompare.length < 4) {
+                setSelectedForCompare(prev => [...prev, listing.id]);
+              }
+            } else if (isTopCard) {
+              onViewDetails(listing);
+            }
           }}
-          className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden flex flex-col ${
-            isTopCard ? 'cursor-pointer' : ''
-          } border-neutral-300`}
+          className={`w-full h-full bg-white rounded-2xl shadow-xl border flex flex-col ${
+            isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
+          } ${isTopCard ? 'cursor-pointer' : ''}`}
         >
-          {/* Card Image */}
-          <div className="relative flex-[3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+          {/* Image Section */}
+          <div className="relative aspect-[4/3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0">
             <span className="text-accent-400">Image</span>
 
             {/* Match Score Badge */}
-            {isTopCard && activeTab === "queue" && (
-              <div className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}>
-                <Sparkles size={14} />
-                <span className="text-sm font-bold">{matchScore}%</span>
+            {isTopCard && activeTab === "queue" && !compareMode && (
+              <div className={`absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}>
+                <Sparkles size={12} />
+                <span className="text-xs font-bold">{matchScore}%</span>
+              </div>
+            )}
+
+            {/* Selection Checkbox for Compare Mode */}
+            {isTopCard && compareMode && (
+              <div className="absolute top-3 left-3">
+                <div className={`w-7 h-7 rounded border-2 flex items-center justify-center ${
+                  isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+                }`}>
+                  {isSelected && (
+                    <svg className="w-4 h-4 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Card Content */}
-          <div className="p-4 flex-[2] flex flex-col overflow-hidden">
-            <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
+          {/* Content Section - Flexible */}
+          <div className="flex-1 p-3 flex flex-col gap-1.5 overflow-hidden">
+            <h3 className="font-bold text-base text-accent-700 line-clamp-2">
               {listing.title}
             </h3>
-            <div className="text-2xl font-bold text-secondary-600 mb-2">
+            <div className="text-lg font-bold text-secondary-600">
               RM {listing.price?.toLocaleString() || '0'}
             </div>
-            <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
-              {listing.category}
-            </span>
-            <div className="flex items-center gap-3 text-xs text-accent-500 mb-2">
-              <div className="flex items-center gap-1">
-                <MapPin size={12} />
-                <span>{listing.location}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock size={12} />
-                <span>{listing.timeAgo}</span>
+            <div className="flex items-center gap-2">
+              <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary-200 text-accent-600 font-medium">
+                {listing.category}
+              </span>
+              <div className="flex items-center gap-1 text-xs text-accent-500">
+                <MapPin size={11} />
+                <span className="line-clamp-1">{listing.location}</span>
               </div>
             </div>
-            <p className="text-sm text-accent-500 line-clamp-2">
+            <p className="text-xs text-accent-500 line-clamp-2">
               {listing.description}
             </p>
           </div>
@@ -438,142 +346,150 @@ export function AIMatchingSwipe({
         }}
       />
 
-      <div className={`${compareMode ? "mb-32" : "mb-24"} overflow-hidden`}>
-      <div className="flex flex-col bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden h-full relative">
-        {/* Toolbar */}
-        <div className="flex flex-col border-b border-neutral-200 shrink-0">
-          {/* Top Row - Main Controls */}
-          <div className="flex items-center justify-between p-3 border-b border-neutral-200">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-accent-600">
-                {cards.length} {activeTab === "queue" ? "remaining" : "items"}
-              </span>
-              {compareMode && selectedForCompare.length > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 font-medium">
-                  {selectedForCompare.length} selected
-                </span>
-              )}
-            </div>
+      {/* Line Separator with Compare Icon */}
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex-1 flex items-center justify-center px-3">
+          <div className="h-0.5 bg-neutral-400 w-full rounded-full"></div>
+        </div>
+        <div className="flex items-center justify-center bg-white border-2 border-neutral-400 rounded-full p-1.5">
+          <GitCompare size={16} className="text-neutral-600" />
+        </div>
+        <div className="flex-1 flex items-center justify-center px-3">
+          <div className="h-0.5 bg-neutral-400 w-full rounded-full"></div>
+        </div>
+      </div>
 
-            <div className="flex items-center gap-2">
-              {/* Search Toggle */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-lg transition-colors ${
-                  showFilters ? "bg-secondary-500 text-white" : "hover:bg-primary-100"
-                }`}
-                title="Search & Filters"
-              >
-                <Search size={18} className={showFilters ? "text-white" : "text-accent-600"} />
-              </button>
-
-              {/* Compare Mode Toggle */}
-              <button
-                onClick={() => {
-                  setCompareMode(!compareMode);
-                  setSelectedForCompare([]);
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  compareMode ? "bg-secondary-500 text-accent-700" : "hover:bg-primary-100"
-                }`}
-                title="Compare Mode"
-              >
-                <GitCompare size={18} className={compareMode ? "text-accent-700" : "text-accent-600"} />
-              </button>
-
-              {/* Gallery View Toggle */}
-              <button
-                onClick={() => setShowGalleryView(!showGalleryView)}
-                className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
-                title="Gallery View"
-              >
-                <Maximize2 size={18} className="text-accent-600" />
-              </button>
-
-              {/* Reset Button */}
-              <button
-                onClick={() => setShowResetConfirm(true)}
-                className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
-                title="Reset all cards"
-              >
-                <RotateCcw size={18} className="text-accent-600" />
-              </button>
-            </div>
-          </div>
-
-          {/* Search Bar - Collapsible */}
-          {showFilters && (
-            <div className="p-3 bg-primary-50 border-b border-neutral-200">
-              <div className="flex flex-col gap-2">
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-400" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500"
-                  />
-                </div>
-                <select className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500">
-                  <option value="match-score">Sort: Best Match</option>
-                  <option value="price-low">Sort: Price Low to High</option>
-                  <option value="price-high">Sort: Price High to Low</option>
-                  <option value="recent">Sort: Recently Posted</option>
-                  <option value="location">Sort: Location</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex border-b border-neutral-200">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 transition-colors ${
-                  activeTab === tab.id
-                    ? "border-b-2 border-secondary-600 bg-secondary-50"
-                    : "hover:bg-primary-50"
-                }`}
-              >
-                <div className={activeTab === tab.id ? tab.color : "text-accent-500"}>
-                  {tab.icon}
-                </div>
-                <span
-                  className={`text-sm font-medium ${
-                    activeTab === tab.id ? "text-accent-700" : "text-accent-500"
-                  }`}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Compare Mode Banner */}
-          {compareMode && (
-            <div className="p-3 bg-secondary-100 border-b border-secondary-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <GitCompare size={16} className="text-secondary-700" />
-                  <span className="text-xs font-medium text-accent-700">
-                    Tap cards to compare (max 4)
-                  </span>
-                </div>
-                {selectedForCompare.length >= 2 && (
-                  <button
-                    onClick={() => setShowCompareModal(true)}
-                    className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Compare {selectedForCompare.length}
-                  </button>
-                )}
-              </div>
-            </div>
+      {/* Header and Action Buttons */}
+      <div className="flex items-center justify-between gap-4 mb-4">
+        {/* Left: Card count */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-accent-600">
+            {cards.length} {activeTab === "queue" ? "remaining" : "items"}
+          </span>
+          {compareMode && selectedForCompare.length > 0 && (
+            <span className="px-2 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 font-medium border border-secondary-300">
+              {selectedForCompare.length} selected
+            </span>
           )}
         </div>
+
+        {/* Right: Action Buttons */}
+        <div className="flex items-center gap-1 bg-white rounded-full p-1.5 border border-neutral-200">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-1.5 rounded-full transition-colors border ${
+              showFilters ? "bg-secondary-500 text-white border-secondary-600" : "hover:bg-white border-neutral-300"
+            }`}
+            title="Search & Filters"
+          >
+            <Search size={16} className={showFilters ? "text-white" : "text-accent-600"} />
+          </button>
+
+          <button
+            onClick={() => {
+              setCompareMode(!compareMode);
+              setSelectedForCompare([]);
+            }}
+            className={`p-1.5 rounded-full transition-colors border ${
+              compareMode ? "bg-secondary-500 text-accent-700 border-secondary-600" : "hover:bg-white border-neutral-300"
+            }`}
+            title="Compare Mode"
+          >
+            <GitCompare size={16} className={compareMode ? "text-accent-700" : "text-accent-600"} />
+          </button>
+
+          <button
+            onClick={() => setShowGalleryView(!showGalleryView)}
+            className="p-1.5 rounded-full hover:bg-white transition-colors border border-neutral-300"
+            title="Gallery View"
+          >
+            <Maximize2 size={16} className="text-accent-600" />
+          </button>
+
+          <button
+            onClick={() => setShowResetConfirm(true)}
+            className="p-1.5 rounded-full hover:bg-white transition-colors border border-neutral-300"
+            title="Reset all cards"
+          >
+            <RotateCcw size={16} className="text-accent-600" />
+          </button>
+        </div>
+      </div>
+
+      {/* Search Bar - Collapsible */}
+      {showFilters && (
+        <div className="mb-4 p-3 bg-primary-50 rounded-lg border border-neutral-200">
+          <div className="flex flex-col gap-2">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500 bg-white"
+              />
+            </div>
+            <select className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500 bg-white">
+              <option value="match-score">Sort: Best Match</option>
+              <option value="price-low">Sort: Price Low to High</option>
+              <option value="price-high">Sort: Price High to Low</option>
+              <option value="recent">Sort: Recently Posted</option>
+              <option value="location">Sort: Location</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Single Column Card Container - Custom Div */}
+      <div className="flex flex-col rounded-xl border-2 border-neutral-200 overflow-hidden bg-white shadow-sm h-[calc(100vh-180px)]">
+        {/* Tabs Header */}
+        <div className="flex border-b border-neutral-200 shrink-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 transition-colors ${
+                activeTab === tab.id
+                  ? "border-b-2 border-secondary-600 bg-secondary-50"
+                  : "hover:bg-primary-50"
+              }`}
+            >
+              <div className={activeTab === tab.id ? tab.color : "text-accent-500"}>
+                {tab.icon}
+              </div>
+              <span
+                className={`text-sm font-medium ${
+                  activeTab === tab.id ? "text-accent-700" : "text-accent-500"
+                }`}
+              >
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Compare Mode Banner */}
+        {compareMode && (
+          <div className="p-3 bg-secondary-100 border-b border-secondary-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <GitCompare size={16} className="text-secondary-700" />
+                <span className="text-xs font-medium text-accent-700">
+                  Tap cards to compare (max 4)
+                </span>
+              </div>
+              {selectedForCompare.length >= 2 && (
+                <button
+                  onClick={() => setShowCompareModal(true)}
+                  className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-xs font-medium transition-colors border border-secondary-600"
+                >
+                  Compare {selectedForCompare.length}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Reaction Overlay - Instagram-style pop animation */}
         <AnimatePresence>
@@ -598,11 +514,11 @@ export function AIMatchingSwipe({
           )}
         </AnimatePresence>
 
-        {/* Card Stack Area */}
-        <div className="flex-1 relative overflow-hidden p-4">
+        {/* Column Content - Card Stack Area */}
+        <div className="bg-primary-50 relative flex-1 p-4">
           {cards.length === 0 ? (
             /* Empty state */
-            <div className="h-full flex flex-col items-center justify-center text-center px-8">
+            <div className="h-full flex flex-col items-center justify-center text-center">
               <div className="mb-3 text-accent-400">
                 <Layers size={48} />
               </div>
@@ -619,7 +535,7 @@ export function AIMatchingSwipe({
             </div>
           ) : (
             /* Card Stack - Using SwipeableCard */
-            <div className="relative w-full" style={{ height: '100%', minHeight: '400px' }}>
+            <div className="relative w-full h-full" style={{ minHeight: '500px' }}>
               <AnimatePresence mode="popLayout">
                 {activeTab === "queue" ? (
                   // Swipeable cards for "For You" tab
@@ -634,13 +550,12 @@ export function AIMatchingSwipe({
                   ))
                 ) : (
                 // Static cards for liked/passed tabs
-                cards.map((cardIndex, index) => {
-                  const cardId = `${activeTab}-card-${cardIndex}`;
-                  const isSelected = selectedForCompare.includes(cardId);
+                cards.map((listing, index) => {
+                  const isSelected = selectedForCompare.includes(listing.id);
 
                   return (
                     <motion.div
-                      key={cardId}
+                      key={listing.id}
                       className="absolute inset-0"
                       initial={false}
                       animate={{
@@ -654,9 +569,9 @@ export function AIMatchingSwipe({
                         onClick={() => {
                           if (compareMode) {
                             if (isSelected) {
-                              setSelectedForCompare(prev => prev.filter(id => id !== cardId));
+                              setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
                             } else if (selectedForCompare.length < 4) {
-                              setSelectedForCompare(prev => [...prev, cardId]);
+                              setSelectedForCompare(prev => [...prev, listing.id]);
                             }
                           }
                         }}
@@ -687,16 +602,16 @@ export function AIMatchingSwipe({
                         {/* Card Content */}
                         <div className="p-4 h-1/2 flex flex-col">
                           <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
-                            MacBook Pro M3 16-inch - Excellent Condition
+                            {listing.title}
                           </h3>
                           <div className="text-2xl font-bold text-secondary-600 mb-2">
-                            RM 8,500
+                            RM {listing.price?.toLocaleString() || '0'}
                           </div>
                           <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
-                            Electronics
+                            {listing.category}
                           </span>
                           <p className="text-sm text-accent-500 line-clamp-3 mb-4">
-                            Need for video editing work. Willing to pay good price for excellent condition.
+                            {listing.description}
                           </p>
                         </div>
                       </div>
@@ -709,37 +624,31 @@ export function AIMatchingSwipe({
           )}
         </div>
 
-        {/* Action Buttons - only shown when there are cards and not in compare mode */}
+        {/* Action Buttons Footer - only shown when there are cards and not in compare mode */}
         {cards.length > 0 && !compareMode && activeTab === "queue" && (
-          <div className="p-4 pb-8 bg-white border-t border-neutral-200 shrink-0 relative z-[100]">
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              {/* Pass */}
-              <button
-                onClick={handlePass}
-                className="w-16 h-16 rounded-full bg-white border-2 border-red-300 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md active:scale-95"
-              >
-                <X size={28} className="text-red-500" />
-              </button>
+          <div className="bg-white border-t border-neutral-200 flex items-center justify-center gap-4 py-3 px-4 shrink-0">
+            <button
+              onClick={handlePass}
+              className="w-14 h-14 rounded-full bg-white border-2 border-red-300 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md active:scale-95"
+            >
+              <X size={24} className="text-red-500" strokeWidth={2.5} />
+            </button>
 
-              {/* View Details */}
-              <button
-                onClick={handleInfo}
-                className="w-14 h-14 rounded-full bg-white border-2 border-accent-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-sm active:scale-95"
-              >
-                <Info size={20} className="text-accent-600" />
-              </button>
+            <button
+              onClick={handleInfo}
+              className="w-12 h-12 rounded-full bg-white border-2 border-neutral-300 flex items-center justify-center hover:bg-primary-50 transition-colors shadow-sm active:scale-95"
+            >
+              <Info size={18} className="text-accent-600" />
+            </button>
 
-              {/* Like */}
-              <button
-                onClick={handleLike}
-                className="w-16 h-16 rounded-full bg-white border-2 border-green-300 flex items-center justify-center hover:bg-green-50 transition-colors shadow-md active:scale-95"
-              >
-                <Heart size={28} className="text-green-500" />
-              </button>
-            </div>
+            <button
+              onClick={handleLike}
+              className="w-14 h-14 rounded-full bg-white border-2 border-green-300 flex items-center justify-center hover:bg-green-50 transition-colors shadow-md active:scale-95"
+            >
+              <Heart size={24} className="text-green-500" strokeWidth={2.5} />
+            </button>
           </div>
         )}
-      </div>
       </div>
     </>
   );
