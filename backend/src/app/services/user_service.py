@@ -13,6 +13,7 @@ Pattern:
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
+from src.app.core.security import get_password_hash
 from src.models.user import User
 from src.schemas.user import UserCreate, UserUpdate
 
@@ -86,8 +87,7 @@ class UserService:
             raise ValueError(f"Email {user_data.email} already registered")
 
         # Create user with hashed password
-        # TODO: Replace with proper password hashing!
-        hashed_password = f"hashed_{user_data.password}"
+        hashed_password = get_password_hash(user_data.password)
 
         user = User(
             email=user_data.email,
@@ -126,7 +126,7 @@ class UserService:
         for field, value in update_data.items():
             if field == "password":
                 # Hash password if provided
-                user.hashed_password = f"hashed_{value}"  # TODO: Use proper hashing
+                user.hashed_password = get_password_hash(value)
             else:
                 setattr(user, field, value)
 
