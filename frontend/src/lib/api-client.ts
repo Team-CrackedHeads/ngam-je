@@ -165,18 +165,12 @@ class ApiClient {
 
   /**
    * Logout user
+   *
+   * JWT logout is handled client-side by clearing tokens.
+   * No backend API call is needed since JWTs are stateless.
    */
   async logout(): Promise<void> {
-    try {
-      await this.request('/api/v1/auth/logout', {
-        method: 'POST',
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Always clear tokens on logout
-      tokenStorage.clearTokens();
-    }
+    tokenStorage.clearTokens();
   }
 
   /**
