@@ -1,33 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Puzzle, Bell, LogOut } from "lucide-react";
+import { Puzzle, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { User } from "@/utils/mock-all-data-used";
 
 type HeaderProps = {
   notifications?: number;
 };
 
 const Header = ({ notifications = 0 }: HeaderProps) => {
-  const { user: authUser } = useAuth();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  // Get current platform user from localStorage
-  useEffect(() => {
-    const userStr = localStorage.getItem("currentUser");
-    if (userStr) {
-      setCurrentUser(JSON.parse(userStr));
-    }
-  }, [authUser]); // Re-check when auth user changes
-
-  const displayName = currentUser?.name || authUser?.username || "Guest";
-
-
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
       {/* Left Logo / App Name + Nav (desktop only) */}
@@ -43,7 +26,7 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               Ngam-je
             </span>
             <span className="text-xs sm:text-sm text-accent-500">
-              Welcome, {displayName}!
+              Welcome!
             </span>
           </div>
         </div>
@@ -51,7 +34,6 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-
         {/* Notifications Button */}
         <Button
           asChild
@@ -68,18 +50,6 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
                 {notifications}
               </Badge>
             )}
-          </Link>
-        </Button>
-
-        {/* Logout Button */}
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="text-accent-500"
-        >
-          <Link href="/logout">
-            <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
           </Link>
         </Button>
       </div>
