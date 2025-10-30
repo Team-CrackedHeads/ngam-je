@@ -1,16 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { Puzzle, Bell } from "lucide-react";
+import { Puzzle, Bell, LogOut, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 type HeaderProps = {
   notifications?: number;
 };
 
 const Header = ({ notifications = 0 }: HeaderProps) => {
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
+
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
       {/* Left Logo / App Name + Nav (desktop only) */}
@@ -26,7 +36,11 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               Ngam-je
             </span>
             <span className="text-xs sm:text-sm text-accent-500">
-              Welcome!
+              {isLoading
+                ? "Loading..."
+                : isAuthenticated && user
+                ? `Welcome, ${user.name || user.email}!`
+                : "Welcome!"}
             </span>
           </div>
         </div>
@@ -34,24 +48,68 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-        {/* Notifications Button */}
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="relative text-accent-500"
-        >
-          <Link href="/notifications">
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-            {notifications > 0 && (
-              <Badge
-                className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white"
-              >
-                {notifications}
-              </Badge>
-            )}
-          </Link>
-        </Button>
+        {/* Notifications Button - only show when authenticated */}
+        {isAuthenticated && (
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="relative text-accent-500"
+          >
+            <Link href="/notifications">
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+              {notifications > 0 && (
+                <Badge
+                  className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white"
+                >
+                  {notifications}
+                </Badge>
+              )}
+            </Link>
+          </Button>
+        )}
+
+        {/* Auth Button - Login or Logout */}
+        {isAuthenticated ? (
+          <>
+            {/* User Profile Button */}
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="text-accent-500"
+              title="Profile"
+            >
+              <Link href="/profile">
+                <User className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Link>
+            </Button>
+
+            {/* Logout Button */}
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="icon"
+              className="text-accent-500"
+              title="Logout"
+              disabled={isLoading}
+            >
+              <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Button>
+          </>
+        ) : (
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="text-accent-500"
+            title="Login"
+          >
+            <Link href="/login">
+              <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Link>
+          </Button>
+        )}
       </div>
     </header>
   );
