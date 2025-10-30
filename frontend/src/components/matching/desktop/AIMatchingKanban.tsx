@@ -51,6 +51,12 @@ export function AIMatchingKanban({
   const [expandedPopupColumn, setExpandedPopupColumn] =
     useState<ColumnType | null>(null);
 
+  // Animation state for card movements
+  const [cardAnimation, setCardAnimation] = useState<{
+    type: "like" | "pass" | null;
+    show: boolean;
+  }>({ type: null, show: false });
+
   // Use global selection state for comparison
   const { selectedForCompare, setSelectedForCompare } = useCompare();
 
@@ -77,6 +83,14 @@ export function AIMatchingKanban({
 
   // Select mode - unified for both main view and popup
   const [selectMode, setSelectMode] = useState(false);
+
+  // Helper function to show animation
+  const showCardAnimation = (type: "like" | "pass") => {
+    setCardAnimation({ type, show: true });
+    setTimeout(() => {
+      setCardAnimation({ type: null, show: false });
+    }, 800);
+  };
 
   // Get user's listing
   const getUserListing = (): MatchedListing => userAIListing;
@@ -754,145 +768,70 @@ export function AIMatchingKanban({
         )}
       </AnimatePresence>
 
-      {/* Main Kanban Interface */}
-      <div className="flex flex-col bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-        {/* Toolbar */}
-        <div className="flex flex-col border-b border-neutral-200">
-          {/* Top Row - Main Controls */}
-          <div className="flex items-center justify-between p-3 border-b border-neutral-200">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-accent-600">
-                {mockAIMatchings.length} new matches
-              </span>
-            </div>
 
-            <div className="flex items-center gap-2">
-              {/* Search Toggle */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-lg transition-colors ${
-                  showFilters
-                    ? "bg-secondary-500 text-white"
-                    : "hover:bg-primary-100"
-                }`}
-                title="Search & Filters"
-              >
-                <Search
-                  size={18}
-                  className={showFilters ? "text-white" : "text-accent-600"}
-                />
-              </button>
-
-              {/* Reset Button */}
-              <button
-                onClick={() => setShowResetConfirm(true)}
-                className="p-2 rounded-lg hover:bg-primary-100 transition-colors"
-                title="Reset all cards"
-              >
-                <Undo2 size={18} className="text-accent-600" />
-              </button>
-
-              {/* Select Mode Toggle */}
-              <button
-                onClick={() => {
-                  const newSelectMode = !selectMode;
-                  setSelectMode(newSelectMode);
-                  if (!newSelectMode) {
-                    setSelectedForCompare([]);
-                  }
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  selectMode
-                    ? "bg-secondary-500 text-accent-700"
-                    : "bg-primary-100 text-accent-700 hover:bg-primary-200"
-                }`}
-                title="Edit Mode"
-              >
-                {selectMode ? "Done" : "Edit"}
-              </button>
-            </div>
-          </div>
-
-          {/* Search Bar - Collapsible */}
-          {showFilters && (
-            <div className="p-4 bg-primary-50 border-b border-neutral-200">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Search
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search by title, description, or tags..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500"
-                  />
-                </div>
-                <select className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500">
-                  <option value="match-score">Sort: Best Match</option>
-                  <option value="price-low">Sort: Price Low to High</option>
-                  <option value="price-high">Sort: Price High to Low</option>
-                  <option value="recent">Sort: Recently Posted</option>
-                  <option value="location">Sort: Location</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Select Mode Banner with Compare Button */}
-          {selectMode && selectedForCompare.length > 0 && (
-            <div className="p-3 bg-secondary-100 border-b border-secondary-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-accent-700">
-                    {selectedForCompare.length} selected
-                    {selectedForCompare.length > 5 && (
-                      <span className="text-red-600 ml-1">(max 5)</span>
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedForCompare.length >= 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (selectedForCompare.length <= 5) {
-                          setShowCompareModal(true);
-                        }
-                      }}
-                      disabled={selectedForCompare.length > 5}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors relative z-10 ${
-                        selectedForCompare.length > 5
-                          ? "bg-neutral-300 text-neutral-500 cursor-not-allowed"
-                          : "bg-secondary-500 hover:bg-secondary-600 text-accent-700 cursor-pointer"
-                      }`}
-                    >
-                      Compare {selectedForCompare.length}{" "}
-                      {selectedForCompare.length === 1 ? "Item" : "Items"}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedForCompare([])}
-                    className="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 text-accent-700 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Header and Action Buttons */}
+      <div className="flex items-center justify-between mb-6">
+        {/* Left: Header with Sparkle Icon */}
+        <div className="flex items-center gap-2">
+          <Sparkles size={24} className="text-secondary-600" />
+          <h2 className="text-2xl font-bold text-accent-700">Listing Matches</h2>
         </div>
 
-        {/* Kanban Columns */}
-        <div className="flex-1 overflow-hidden p-4">
-          <div className="h-full grid grid-cols-3 gap-4">
-            {columns.map((column) => {
-              return (
-                <div
-                  key={column.id}
-                  className={`flex flex-col rounded-xl border-2 overflow-hidden transition-colors ${
+        {/* Right: Action Buttons Bar */}
+        <div className="flex items-center gap-1 bg-primary-50 rounded-full p-1 border border-neutral-200">
+          {/* Search Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2 rounded-full transition-colors ${
+              showFilters
+                ? "bg-secondary-500 text-white"
+                : "hover:bg-white"
+            }`}
+            title="Search & Filters"
+          >
+            <Search
+              size={18}
+              className={showFilters ? "text-white" : "text-accent-600"}
+            />
+          </button>
+
+          {/* Reset Button */}
+          <button
+            onClick={() => setShowResetConfirm(true)}
+            className="p-2 rounded-full hover:bg-white transition-colors"
+            title="Reset all cards"
+          >
+            <Undo2 size={18} className="text-accent-600" />
+          </button>
+
+          {/* Select Mode Toggle */}
+          <button
+            onClick={() => {
+              const newSelectMode = !selectMode;
+              setSelectMode(newSelectMode);
+              if (!newSelectMode) {
+                setSelectedForCompare([]);
+              }
+            }}
+            className={`px-4 py-2 rounded-full font-medium transition-colors ${
+              selectMode
+                ? "bg-secondary-500 text-accent-700"
+                : "hover:bg-white text-accent-700"
+            }`}
+            title="Edit Mode"
+          >
+            {selectMode ? "Done" : "Edit"}
+          </button>
+        </div>
+      </div>
+
+      {/* Kanban Columns */}
+      <div className="flex gap-4 p-0 justify-center">
+        {columns.map((column) => {
+          return (
+            <div
+              key={column.id}
+                  className={`flex-1 flex flex-col rounded-xl border-2 overflow-hidden transition-colors ${
                     draggedCard && draggedCard.sourceColumn !== column.id
                       ? "border-secondary-500 bg-secondary-50"
                       : "border-neutral-200"
@@ -904,6 +843,13 @@ export function AIMatchingKanban({
                   onDrop={(e) => {
                     e.preventDefault();
                     if (draggedCard && draggedCard.sourceColumn !== column.id) {
+                      // Show animation based on target column
+                      if (column.id === "liked") {
+                        showCardAnimation("like");
+                      } else if (column.id === "passed") {
+                        showCardAnimation("pass");
+                      }
+
                       setCardsByColumn((prev) => ({
                         ...prev,
                         [draggedCard.sourceColumn]: prev[
@@ -949,6 +895,32 @@ export function AIMatchingKanban({
                   {/* Column Content - Container for stacked cards */}
                   <div className={`flex-1 p-4 ${column.bgColor}`}>
                     <div className="relative w-full h-[420px]">
+                      {/* Card Movement Animation - Show in respective column */}
+                      <AnimatePresence>
+                        {cardAnimation.show && (
+                          (cardAnimation.type === "like" && column.id === "liked") ||
+                          (cardAnimation.type === "pass" && column.id === "passed")
+                        ) && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.5 }}
+                            transition={{ duration: 0.5 }}
+                            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+                          >
+                            {cardAnimation.type === "like" ? (
+                              <div className="bg-green-500 rounded-full p-8 shadow-2xl">
+                                <Heart size={80} className="text-white" fill="white" />
+                              </div>
+                            ) : (
+                              <div className="bg-red-500 rounded-full p-8 shadow-2xl">
+                                <X size={80} className="text-white" strokeWidth={3} />
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       {/* Empty state */}
                       {cardsByColumn[column.id].length === 0 && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1214,6 +1186,7 @@ export function AIMatchingKanban({
                                   // Move top card to passed
                                   const topCard = cardsByColumn.queue[0];
                                   if (topCard !== undefined) {
+                                    showCardAnimation("pass");
                                     setCardsByColumn((prev) => ({
                                       ...prev,
                                       queue: prev.queue.slice(1),
@@ -1234,6 +1207,7 @@ export function AIMatchingKanban({
                                   // Move top card to liked
                                   const topCard = cardsByColumn.queue[0];
                                   if (topCard !== undefined) {
+                                    showCardAnimation("like");
                                     setCardsByColumn((prev) => ({
                                       ...prev,
                                       queue: prev.queue.slice(1),
@@ -1328,11 +1302,9 @@ export function AIMatchingKanban({
                       )}
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );

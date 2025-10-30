@@ -136,7 +136,7 @@ export default function ListingMatchesPage() {
 
 
       <div className="min-h-screen bg-primary-100 text-accent-500">
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Matches Header */}
           <MatchesHeader
             onBack={() => router.push(`/listings?type=${listingType}`)}

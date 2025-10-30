@@ -58,7 +58,7 @@ export const MatchesHeader = ({
             </button>
           )}
           <h1 className="text-lg font-bold capitalize text-accent-700">
-            Your Matches
+            Potential Matches
           </h1>
           {/* Match count inline with title */}
           {matchCount > 0 && (
