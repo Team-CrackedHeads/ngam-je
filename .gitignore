@@ -124,6 +124,19 @@ humbs.db
 *.sqlite
 *.sqlite3
 
+# Docker volumes
+postgres_data/
+
+# Alembic
+alembic/versions/*.pyc
+
+# GCP Service Account Keys
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!components.json
+
 # Environment variables
 .env.local
 .env.development.local
@@ -149,3 +162,6 @@ temp/
 
 # Claude Code
 CLAUDE.md
+
+# Developer Scripts (Darren)
+git-prune-gone.sh
