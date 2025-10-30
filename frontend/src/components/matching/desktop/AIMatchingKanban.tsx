@@ -305,7 +305,7 @@ export function AIMatchingKanban({
               transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl">
+              <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl py-6 gap-2">
                 {/* Header */}
                 <div className="flex items-start justify-between px-6 shrink-0">
                   <div>
@@ -384,26 +384,24 @@ export function AIMatchingKanban({
                         {selectedForCompare.length} selected
                       </span>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 bg-white rounded-full p-2 border border-neutral-200">
-                          {/* Compare Button */}
-                          <button
-                            onClick={() => {
-                              setExpandedPopupColumn(null);
-                              setShowCompareModal(true);
-                            }}
-                            disabled={
-                              selectedForCompare.length < 1 ||
-                              selectedForCompare.length > 5
-                            }
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedForCompare.length >= 1 &&
-                                selectedForCompare.length <= 5
-                                ? "bg-secondary-500 text-accent-700 hover:bg-secondary-600"
-                                : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                              }`}
-                          >
-                            Compare
-                          </button>
-                        </div>
+                        {/* Compare Button */}
+                        <button
+                          onClick={() => {
+                            setExpandedPopupColumn(null);
+                            setShowCompareModal(true);
+                          }}
+                          disabled={
+                            selectedForCompare.length < 1 ||
+                            selectedForCompare.length > 5
+                          }
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedForCompare.length >= 1 &&
+                              selectedForCompare.length <= 5
+                              ? "bg-secondary-500 text-accent-700 hover:bg-secondary-600"
+                              : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                            }`}
+                        >
+                          Compare
+                        </button>
 
                         {/* Pass Button */}
                         {expandedPopupColumn === "queue" && (
