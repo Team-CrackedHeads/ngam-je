@@ -162,7 +162,7 @@ alembic/versions/*.pyc
 # GCP Service Account Keys
 *.json
 !package.json
-!package-lock.json
+package-lock.json
 !tsconfig.json
 !components.json
 
