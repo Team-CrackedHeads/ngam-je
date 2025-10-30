@@ -1098,9 +1098,9 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       timePosted: "2 hours ago",
     },
     imageUrl:
-      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBkaXNwbGF5JTIwZ29vZ2xlfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1543512214-318c7553f230?w=600&auto=format&fit=crop&q=60",
     gallery: [
-      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBkaXNwbGF5JTIwZ29vZ2xlfGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1543512214-318c7553f230?w=600&auto=format&fit=crop&q=60",
       "https://images.unsplash.com/photo-1573164713988-8665fc963095?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c21hcnQlMjBob21lJTIwZGV2aWNlfGVufDB8fDB8fHww",
     ],
     category: "smart-home",
@@ -1128,7 +1128,7 @@ export const UNIFIED_LISTINGS: UnifiedListingData[] = [
       "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBsaWdodHN8ZW58MHx8MHx8fDA%3D",
     gallery: [
       "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c21hcnQlMjBsaWdodHN8ZW58MHx8MHx8fDA%3D",
-      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z29vZ2xlJTIwbmVzdHxlbnwwfHwwfHx8MA%3D%3D",
+      "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&auto=format&fit=crop&q=60",
     ],
     category: "smart-home",
     listingType: "wanted",

@@ -1,11 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { User, Puzzle, Bell, LogOut, LogIn } from "lucide-react";
+import { Puzzle, LogOut, LogIn, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,33 +13,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { placeholderActivities } from "@/utils/mock-activity-data";
-import AuthModal from "@/components/auth/AuthModal";
-import { useState } from "react";
-import ClientRouter from "@/components/navigation/ClientRouter";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { LoginModal } from "@/components/auth/LoginModal";
+import { SignupModal } from "@/components/auth/SignupModal";
 
-type HeaderProps = {
-  notifications?: number;
-};
-
-const Header = ({ notifications = 0 }: HeaderProps) => {
-  const router = ClientRouter();
-  const { data: session, isPending } = authClient.useSession();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalView, setAuthModalView] = useState<"signin" | "signup">("signin");
+const Header = () => {
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
+  const router = useRouter();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleLogout = async () => {
-    await authClient.signOut();
-    router.push("/"); // Redirect to home after logout
-    router.refresh();
+    await logout();
+    router.push("/");
   };
 
-  const openAuthModal = (view: "signin" | "signup") => {
-    setAuthModalView(view);
-    setIsAuthModalOpen(true);
+  const handleSwitchToSignup = () => {
+    setShowLoginModal(false);
+    setShowSignupModal(true);
   };
 
-  const recentActivities = placeholderActivities.slice(0, 10);
+  const handleSwitchToLogin = () => {
+    setShowSignupModal(false);
+    setShowLoginModal(true);
+  };
 
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
@@ -57,10 +55,10 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
               Ngam-je
             </span>
             <span className="text-xs sm:text-sm text-accent-500">
-              {isPending
+              {isLoading
                 ? "Loading..."
-                : session
-                ? `Welcome, ${session.user.name || session.user.email}!`
+                : isAuthenticated && user
+                ? `Welcome, ${user.username || user.email}!`
                 : "Welcome!"}
             </span>
           </div>
@@ -69,108 +67,82 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-        {/* Notifications Dropdown */}
-        {session && (
+        {/* Auth Button - Login or User Dropdown */}
+        {isAuthenticated ? (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="relative text-accent-500"
+                className="relative h-10 w-10 rounded-full"
               >
-                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                {notifications > 0 && (
-                  <Badge className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white">
-                    {notifications}
-                  </Badge>
-                )}
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.avatar} alt={user?.username || user?.email} />
+                  <AvatarFallback className="bg-primary-600 text-white">
+                    {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Recent Activity</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {recentActivities.map((activity, index) => (
-                <DropdownMenuItem key={index}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{activity.message}</span>
-                    <span className="text-xs text-accent-500">
-                      {activity.date}
-                    </span>
-                  </div>
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {user?.username || "User"}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile/activity" className="justify-center">
-                  View all activity
+                <Link href="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        ) : (
+          <Button
+            onClick={() => setShowLoginModal(true)}
+            variant="ghost"
+            className="text-accent-500 gap-2"
+          >
+            <LogIn className="w-5 h-5" />
+            <span className="hidden sm:inline">Login</span>
+          </Button>
         )}
-
-        {/* Auth Dropdown */}
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            {isPending ? (
-              <Button variant="ghost" size="icon" className="text-accent-500">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent-500"></div>
-              </Button>
-            ) : session ? (
-              <Button variant="ghost" size="icon" className="text-accent-500">
-                <User className="w-5 h-5 sm:w-6 sm:h-6" />
-              </Button>
-            ) : (
-              <Button variant="ghost" className="text-accent-500">
-                <LogIn className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                Login / Sign Up
-              </Button>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {session ? (
-              <>
-                <DropdownMenuLabel>
-                  {session.user.name || session.user.email}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">Settings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </>
-            ) : (
-              <>
-                <DropdownMenuItem onClick={() => openAuthModal("signin")}>
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Sign In
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => openAuthModal("signup")}>
-                  <User className="w-4 h-4 mr-2" />
-                  Sign Up
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
-      {isAuthModalOpen ? (
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          initialView={authModalView}
-        />
-      ) : null}
+
+      {/* Auth Modals */}
+      <LoginModal
+        open={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSwitchToSignup={handleSwitchToSignup}
+      />
+      <SignupModal
+        open={showSignupModal}
+        onOpenChange={setShowSignupModal}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
     </header>
   );
 };
 
 export default Header;
-

@@ -36,23 +36,23 @@ GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
 # ---------- Guard rails ----------
-# Check time range restriction (12:01 AM to 6:59 AM)
+# Check time range restriction (1:31 AM to 6:59 AM - after GitLab servers close at 1:30 AM)
 current_hour=$(date +%H)
 current_minute=$(date +%M)
 
 is_valid_time=false
 
 # Convert to 24-hour format for easier comparison
-if [[ "$current_hour" == "00" && "$current_minute" -ge 01 ]]; then
-    # 12:01 AM to 12:59 AM
+if [[ "$current_hour" == "01" && "$current_minute" -ge 31 ]]; then
+    # 1:31 AM to 1:59 AM
     is_valid_time=true
-elif [[ "$current_hour" -ge 01 && "$current_hour" -le 06 ]]; then
-    # 1:00 AM to 6:59 AM
+elif [[ "$current_hour" -ge 02 && "$current_hour" -le 06 ]]; then
+    # 2:00 AM to 6:59 AM
     is_valid_time=true
 fi
 
 if [[ "$is_valid_time" == "false" && "$FORCE_TIME_OVERRIDE" == "false" ]]; then
-    echo -e "${RED}❌ ERROR: This script can only be executed between 12:01 AM and 6:59 AM.${NC}"
+    echo -e "${RED}❌ ERROR: This script can only be executed between 1:31 AM and 6:59 AM (after GitLab servers close).${NC}"
     echo -e "${YELLOW}Current time: $(date '+%H:%M')${NC}"
     echo -e "${GRAY}Use --force-time-override to bypass this restriction for emergency use.${NC}"
     exit 1

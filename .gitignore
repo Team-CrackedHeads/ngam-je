@@ -153,6 +153,19 @@ humbs.db
 *.sqlite
 *.sqlite3
 
+# Docker volumes
+postgres_data/
+
+# Alembic
+alembic/versions/*.pyc
+
+# GCP Service Account Keys
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!components.json
+
 # Environment variables
 .env.local
 .env.development.local
@@ -178,5 +191,8 @@ temp/
 
 # Claude Code
 CLAUDE.md
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Developer Scripts (Darren)
+git-prune-gone.sh

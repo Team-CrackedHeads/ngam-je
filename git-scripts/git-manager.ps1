@@ -11,22 +11,22 @@ param(
 )
 
 # ---------- Guard rails ----------
-# Check time range restriction (12:01 AM to 7:01 AM)
+# Check time range restriction (1:31 AM to 6:59 AM - after GitLab servers close at 1:30 AM)
 $currentTime = Get-Date
 $currentHour = $currentTime.Hour
 $currentMinute = $currentTime.Minute
 
 $isInValidTimeRange = $false
-if ($currentHour -eq 0 -and $currentMinute -ge 1) {
-    # 12:01 AM to 12:59 AM
+if ($currentHour -eq 1 -and $currentMinute -ge 31) {
+    # 1:31 AM to 1:59 AM
     $isInValidTimeRange = $true
-} elseif ($currentHour -ge 1 -and $currentHour -le 6) {
-    # 1:00 AM to 6:59 AM
+} elseif ($currentHour -ge 2 -and $currentHour -le 6) {
+    # 2:00 AM to 6:59 AM
     $isInValidTimeRange = $true
-} 
+}
 
 if (-not $isInValidTimeRange -and -not $ForceTimeOverride) {
-    Write-Host "ERROR: This script can only be executed between 12:01 AM and 6:59 AM." -ForegroundColor Red
+    Write-Host "ERROR: This script can only be executed between 1:31 AM and 6:59 AM (after GitLab servers close)." -ForegroundColor Red
     Write-Host "Current time: $($currentTime.ToString('HH:mm'))" -ForegroundColor Yellow
     Write-Host "Use -ForceTimeOverride to bypass this restriction for emergency use." -ForegroundColor Gray
     exit 1
