@@ -110,9 +110,9 @@ export function ListingComparisonModal({
           transition={{ type: "spring", duration: 0.5 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl">
+          <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl py-2 gap-0">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-4 shrink-0 border-b border-neutral-200">
+            <div className="flex items-center justify-between px-4 pb-2 shrink-0 border-b border-neutral-200">
               <div>
                 <h2 className="text-2xl font-bold text-accent-700 mb-1">Compare Listings</h2>
                 <p className="text-sm text-accent-500">
@@ -271,11 +271,10 @@ export function ListingComparisonModal({
                                 <span className="text-xs font-semibold text-accent-600">{field.label}</span>
                               </div>
                               <div
-                                className={`p-3 rounded-lg min-h-[3.5rem] flex items-center ${
-                                  isBest
+                                className={`p-3 rounded-lg min-h-[3.5rem] flex items-center ${isBest
                                     ? "bg-success-50 border-2 border-success-500"
                                     : "bg-white border border-neutral-200"
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 w-full">
                                   {isBest && (

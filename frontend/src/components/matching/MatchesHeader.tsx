@@ -60,10 +60,11 @@ export const MatchesHeader = ({
           <h1 className="text-lg font-bold capitalize text-accent-700">
             Potential Matches
           </h1>
-          {/* Match count inline with title */}
+          {/* Match count badge */}
           {matchCount > 0 && (
-            <span className="text-sm text-accent-500">
-              <span className="font-medium text-secondary-600">{matchCount}</span> new
+            <span className="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary-100 border border-secondary-300">
+              <span className="text-xs font-bold text-secondary-700 leading-none">{matchCount}</span>
+              <span className="text-xs font-medium text-secondary-600 leading-none">new</span>
             </span>
           )}
         </div>

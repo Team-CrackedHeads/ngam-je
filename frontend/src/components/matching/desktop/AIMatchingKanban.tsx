@@ -13,6 +13,7 @@ import {
   Maximize2,
   ChevronUp,
   ChevronDown,
+  GitCompare,
 } from "lucide-react";
 import {
   AIMatchingProps,
@@ -311,18 +312,18 @@ export function AIMatchingKanban({
                     <div className="flex items-center gap-3 mb-1">
                       {columns.find((c) => c.id === expandedPopupColumn)
                         ?.icon && (
-                        <div
-                          className={
-                            columns.find((c) => c.id === expandedPopupColumn)
-                              ?.color
-                          }
-                        >
-                          {
-                            columns.find((c) => c.id === expandedPopupColumn)
-                              ?.icon
-                          }
-                        </div>
-                      )}
+                          <div
+                            className={
+                              columns.find((c) => c.id === expandedPopupColumn)
+                                ?.color
+                            }
+                          >
+                            {
+                              columns.find((c) => c.id === expandedPopupColumn)
+                                ?.icon
+                            }
+                          </div>
+                        )}
                       <h2 className="text-2xl font-bold text-accent-700">
                         {
                           columns.find((c) => c.id === expandedPopupColumn)
@@ -351,11 +352,10 @@ export function AIMatchingKanban({
                             setSelectedForCompare([]);
                           }
                         }}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          selectMode
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectMode
                             ? "bg-secondary-500 text-accent-700"
                             : "bg-primary-100 text-accent-700 hover:bg-primary-200"
-                        }`}
+                          }`}
                       >
                         {selectMode ? "Done" : "Edit"}
                       </button>
@@ -384,25 +384,26 @@ export function AIMatchingKanban({
                         {selectedForCompare.length} selected
                       </span>
                       <div className="flex items-center gap-2">
-                        {/* Compare Button */}
-                        <button
-                          onClick={() => {
-                            setExpandedPopupColumn(null);
-                            setShowCompareModal(true);
-                          }}
-                          disabled={
-                            selectedForCompare.length < 1 ||
-                            selectedForCompare.length > 5
-                          }
-                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                            selectedForCompare.length >= 1 &&
-                            selectedForCompare.length <= 5
-                              ? "bg-secondary-500 text-accent-700 hover:bg-secondary-600"
-                              : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                          }`}
-                        >
-                          Compare
-                        </button>
+                        <div className="flex items-center gap-1 bg-white rounded-full p-2 border border-neutral-200">
+                          {/* Compare Button */}
+                          <button
+                            onClick={() => {
+                              setExpandedPopupColumn(null);
+                              setShowCompareModal(true);
+                            }}
+                            disabled={
+                              selectedForCompare.length < 1 ||
+                              selectedForCompare.length > 5
+                            }
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedForCompare.length >= 1 &&
+                                selectedForCompare.length <= 5
+                                ? "bg-secondary-500 text-accent-700 hover:bg-secondary-600"
+                                : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                              }`}
+                          >
+                            Compare
+                          </button>
+                        </div>
 
                         {/* Pass Button */}
                         {expandedPopupColumn === "queue" && (
@@ -447,25 +448,25 @@ export function AIMatchingKanban({
                         {/* Undo Button (for Liked/Passed columns) */}
                         {(expandedPopupColumn === "liked" ||
                           expandedPopupColumn === "passed") && (
-                          <button
-                            onClick={() => {
-                              // Move selected cards back to queue
-                              setCardsByColumn((prev) => ({
-                                ...prev,
-                                [expandedPopupColumn]: prev[
-                                  expandedPopupColumn
-                                ].filter(
-                                  (id) => !selectedForCompare.includes(id)
-                                ),
-                                queue: [...selectedForCompare, ...prev.queue],
-                              }));
-                              setSelectedForCompare([]);
-                            }}
-                            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary-200 text-accent-700 hover:bg-primary-300 border border-primary-300 transition-colors"
-                          >
-                            Move to Queue
-                          </button>
-                        )}
+                            <button
+                              onClick={() => {
+                                // Move selected cards back to queue
+                                setCardsByColumn((prev) => ({
+                                  ...prev,
+                                  [expandedPopupColumn]: prev[
+                                    expandedPopupColumn
+                                  ].filter(
+                                    (id) => !selectedForCompare.includes(id)
+                                  ),
+                                  queue: [...selectedForCompare, ...prev.queue],
+                                }));
+                                setSelectedForCompare([]);
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary-200 text-accent-700 hover:bg-primary-300 border border-primary-300 transition-colors"
+                            >
+                              Move to Queue
+                            </button>
+                          )}
                       </div>
                     </div>
                   )}
@@ -477,10 +478,9 @@ export function AIMatchingKanban({
                     <div className="flex items-center justify-center h-full">
                       <div className="flex flex-col items-center text-center text-accent-400">
                         <div
-                          className={`mb-3 ${
-                            columns.find((c) => c.id === expandedPopupColumn)
+                          className={`mb-3 ${columns.find((c) => c.id === expandedPopupColumn)
                               ?.color || "text-neutral-400"
-                          }`}
+                            }`}
                         >
                           <Layers size={64} />
                         </div>
@@ -552,11 +552,10 @@ export function AIMatchingKanban({
                                 onViewDetails(listing);
                               }
                             }}
-                            className={`flex flex-col bg-white rounded-xl shadow-lg border overflow-hidden transition-all cursor-pointer hover:shadow-xl ${
-                              isSelected
+                            className={`flex flex-col bg-white rounded-xl shadow-lg border overflow-hidden transition-all cursor-pointer hover:shadow-xl ${isSelected
                                 ? "border-4 border-secondary-500"
                                 : "border-neutral-300"
-                            }`}
+                              }`}
                           >
                             {/* Card Image */}
                             <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
@@ -576,11 +575,10 @@ export function AIMatchingKanban({
                               {selectMode && (
                                 <div className="absolute top-2 left-2">
                                   <div
-                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                                      isSelected
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected
                                         ? "bg-secondary-500 border-secondary-500"
                                         : "bg-white/80 border-neutral-400"
-                                    }`}
+                                      }`}
                                   >
                                     {isSelected && (
                                       <svg
@@ -769,59 +767,135 @@ export function AIMatchingKanban({
       </AnimatePresence>
 
 
+      {/* Line Separator with Compare Icon */}
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex-1 flex items-center justify-center px-3">
+          <div className="h-1 bg-neutral-400 w-full rounded-full"></div>
+        </div>
+        <div className="flex items-center justify-center bg-white border-2 border-neutral-400 rounded-full p-2">
+          <GitCompare size={24} className="text-neutral-600" />
+        </div>
+        <div className="flex-1 flex items-center justify-center px-3">
+          <div className="h-1 bg-neutral-400 w-full rounded-full"></div>
+        </div>
+      </div>
+
       {/* Header and Action Buttons */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-4 mb-6">
         {/* Left: Header with Sparkle Icon */}
         <div className="flex items-center gap-2">
           <Sparkles size={24} className="text-secondary-600" />
           <h2 className="text-2xl font-bold text-accent-700">Listing Matches</h2>
         </div>
 
+        {/* Center: Expandable Search Bar */}
+        <div className="flex-1 flex justify-center">
+          {showFilters && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "auto", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-primary-50 rounded-full border border-neutral-200 overflow-hidden"
+            >
+              <div className="flex items-center gap-3 p-2">
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search by title, description, or tags..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-[400px] pl-10 pr-4 py-2 bg-white border border-neutral-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                  />
+                </div>
+                <select className="px-3 py-2 bg-white border border-neutral-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500">
+                  <option value="match-score">Sort: Best Match</option>
+                  <option value="price-low">Sort: Price Low to High</option>
+                  <option value="price-high">Sort: Price High to Low</option>
+                  <option value="recent">Sort: Recently Posted</option>
+                  <option value="location">Sort: Location</option>
+                </select>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
         {/* Right: Action Buttons Bar */}
-        <div className="flex items-center gap-1 bg-primary-50 rounded-full p-1 border border-neutral-200">
-          {/* Search Toggle */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-full transition-colors ${
-              showFilters
-                ? "bg-secondary-500 text-white"
-                : "hover:bg-white"
-            }`}
-            title="Search & Filters"
-          >
-            <Search
-              size={18}
-              className={showFilters ? "text-white" : "text-accent-600"}
-            />
-          </button>
+        <div className="flex items-center gap-3">
+          {/* Action Buttons Group */}
+          <div className="flex items-center gap-1 bg-white rounded-full p-2 border border-neutral-200">
+            {/* Search Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-full transition-colors border ${showFilters
+                  ? "bg-secondary-500 text-white border-secondary-600"
+                  : "hover:bg-white border-neutral-300"
+                }`}
+              title="Search & Filters"
+            >
+              <Search
+                size={18}
+                className={showFilters ? "text-white" : "text-accent-600"}
+              />
+            </button>
 
-          {/* Reset Button */}
-          <button
-            onClick={() => setShowResetConfirm(true)}
-            className="p-2 rounded-full hover:bg-white transition-colors"
-            title="Reset all cards"
-          >
-            <Undo2 size={18} className="text-accent-600" />
-          </button>
+            {/* Reset Button */}
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="p-2 rounded-full hover:bg-white transition-colors border border-neutral-300"
+              title="Reset all cards"
+            >
+              <Undo2 size={18} className="text-accent-600" />
+            </button>
 
-          {/* Select Mode Toggle */}
-          <button
-            onClick={() => {
-              const newSelectMode = !selectMode;
-              setSelectMode(newSelectMode);
-              if (!newSelectMode) {
-                setSelectedForCompare([]);
-              }
-            }}
-            className={`px-4 py-2 rounded-full font-medium transition-colors ${
-              selectMode
-                ? "bg-secondary-500 text-accent-700"
-                : "hover:bg-white text-accent-700"
-            }`}
-            title="Edit Mode"
-          >
-            {selectMode ? "Done" : "Edit"}
-          </button>
+            {/* Select Mode Toggle */}
+            <button
+              onClick={() => {
+                const newSelectMode = !selectMode;
+                setSelectMode(newSelectMode);
+                if (!newSelectMode) {
+                  setSelectedForCompare([]);
+                }
+              }}
+              className={`px-4 py-1 rounded-full font-medium transition-colors border flex items-center ${selectMode
+                  ? "bg-secondary-500 text-accent-700 border-secondary-600"
+                  : "hover:bg-white text-accent-700 border-neutral-300"
+                }`}
+              title="Edit Mode"
+            >
+              {selectMode ? "Done" : "Edit"}
+            </button>
+          </div>
+
+          {/* Compare Button */}
+          {selectMode && selectedForCompare.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="flex items-center gap-1 bg-white rounded-full p-2 border border-neutral-200"
+            >
+              <button
+                onClick={() => {
+                  if (selectedForCompare.length <= 5) {
+                    setShowCompareModal(true);
+                  }
+                }}
+                disabled={selectedForCompare.length > 5}
+                className={`flex items-center gap-2 px-4 py-1 rounded-full font-medium transition-colors border ${selectedForCompare.length > 5
+                    ? "bg-neutral-200 text-neutral-400 cursor-not-allowed border-neutral-300"
+                    : "bg-secondary-500 hover:bg-secondary-600 text-accent-700 border-secondary-600"
+                  }`}
+              >
+                <GitCompare size={18} />
+                <span>Compare ({selectedForCompare.length})</span>
+              </button>
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -831,477 +905,470 @@ export function AIMatchingKanban({
           return (
             <div
               key={column.id}
-                  className={`flex-1 flex flex-col rounded-xl border-2 overflow-hidden transition-colors ${
-                    draggedCard && draggedCard.sourceColumn !== column.id
-                      ? "border-secondary-500 bg-secondary-50"
-                      : "border-neutral-200"
-                  }`}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (draggedCard && draggedCard.sourceColumn !== column.id) {
-                      // Show animation based on target column
-                      if (column.id === "liked") {
-                        showCardAnimation("like");
-                      } else if (column.id === "passed") {
-                        showCardAnimation("pass");
-                      }
+              className={`flex-1 flex flex-col rounded-xl border-2 overflow-hidden transition-colors ${draggedCard && draggedCard.sourceColumn !== column.id
+                  ? "border-secondary-500 bg-secondary-50"
+                  : "border-neutral-200"
+                }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedCard && draggedCard.sourceColumn !== column.id) {
+                  // Show animation based on target column
+                  if (column.id === "liked") {
+                    showCardAnimation("like");
+                  } else if (column.id === "passed") {
+                    showCardAnimation("pass");
+                  }
 
-                      setCardsByColumn((prev) => ({
-                        ...prev,
-                        [draggedCard.sourceColumn]: prev[
-                          draggedCard.sourceColumn
-                        ].filter((id) => id !== draggedCard.listingId),
-                        [column.id]: [
-                          draggedCard.listingId,
-                          ...prev[column.id],
-                        ],
-                      }));
-                    }
-                    setDraggedCard(null);
-                  }}
-                  onDragLeave={() => {
-                    // Optional: could add visual feedback here
-                  }}
-                >
-                  {/* Column Header */}
-                  <div className="p-4 bg-white border-b border-neutral-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={column.color}>{column.icon}</div>
-                        <h3 className="font-semibold text-accent-700">
-                          {column.title}
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Layers size={16} className="text-accent-500" />
-                        <span className="text-sm font-medium text-accent-500">
-                          {cardsByColumn[column.id].length}
-                        </span>
-                        <button
-                          onClick={() => setExpandedPopupColumn(column.id)}
-                          className="p-1.5 rounded-lg hover:bg-primary-100 transition-colors"
-                          title="Expand to fullscreen"
+                  setCardsByColumn((prev) => ({
+                    ...prev,
+                    [draggedCard.sourceColumn]: prev[
+                      draggedCard.sourceColumn
+                    ].filter((id) => id !== draggedCard.listingId),
+                    [column.id]: [
+                      draggedCard.listingId,
+                      ...prev[column.id],
+                    ],
+                  }));
+                }
+                setDraggedCard(null);
+              }}
+              onDragLeave={() => {
+                // Optional: could add visual feedback here
+              }}
+            >
+              {/* Column Header */}
+              <div className="p-4 bg-white border-b border-neutral-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={column.color}>{column.icon}</div>
+                    <h3 className="font-semibold text-accent-700">
+                      {column.title}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Layers size={16} className="text-accent-500" />
+                    <span className="text-sm font-medium text-accent-500">
+                      {cardsByColumn[column.id].length}
+                    </span>
+                    <button
+                      onClick={() => setExpandedPopupColumn(column.id)}
+                      className="p-1.5 rounded-lg hover:bg-primary-100 transition-colors"
+                      title="Expand to fullscreen"
+                    >
+                      <Maximize2 size={18} className="text-accent-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column Content - Container for stacked cards */}
+              <div className={`flex-1 p-4 ${column.bgColor}`}>
+                <div className="relative w-full h-[420px]">
+                  {/* Card Movement Animation - Show in respective column */}
+                  <AnimatePresence>
+                    {cardAnimation.show && (
+                      (cardAnimation.type === "like" && column.id === "liked") ||
+                      (cardAnimation.type === "pass" && column.id === "passed")
+                    ) && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 1.5 }}
+                          transition={{ duration: 0.5 }}
+                          className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
                         >
-                          <Maximize2 size={18} className="text-accent-600" />
-                        </button>
+                          {cardAnimation.type === "like" ? (
+                            <div className="bg-green-500 rounded-full p-8 shadow-2xl">
+                              <Heart size={80} className="text-white" fill="white" />
+                            </div>
+                          ) : (
+                            <div className="bg-red-500 rounded-full p-8 shadow-2xl">
+                              <X size={80} className="text-white" strokeWidth={3} />
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                  </AnimatePresence>
+
+                  {/* Empty state */}
+                  {cardsByColumn[column.id].length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="flex flex-col items-center text-center text-accent-400">
+                        <div className={`mb-3 ${column.color}`}>
+                          <Layers size={48} />
+                        </div>
+                        <p className="text-sm">
+                          {column.id === "queue" && "No more matches"}
+                          {column.id === "liked" && "No liked matches yet"}
+                          {column.id === "passed" &&
+                            "No passed matches yet"}
+                        </p>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Column Content - Container for stacked cards */}
-                  <div className={`flex-1 p-4 ${column.bgColor}`}>
-                    <div className="relative w-full h-[420px]">
-                      {/* Card Movement Animation - Show in respective column */}
-                      <AnimatePresence>
-                        {cardAnimation.show && (
-                          (cardAnimation.type === "like" && column.id === "liked") ||
-                          (cardAnimation.type === "pass" && column.id === "passed")
-                        ) && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 1.5 }}
-                            transition={{ duration: 0.5 }}
-                            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+                  {/* Stacked cards - max 3 visible */}
+                  {cardsByColumn[column.id]
+                    .slice(0, 3)
+                    .map((listingId, stackIndex) => {
+                      const index = stackIndex + 1;
+                      // Only get actual listing data for the top card
+                      const listing =
+                        index === 1 ? getListingById(listingId) : null;
+                      const topListing = getListingById(
+                        cardsByColumn[column.id][0]
+                      );
+
+                      // For visual stacking effect, use top card's data for all
+                      const displayListing = topListing || listing;
+                      if (!displayListing) return null;
+
+                      const matchScore = displayListing.matchScore;
+
+                      // Traffic light system
+                      const getMatchColor = (score: number) => {
+                        if (score >= 75)
+                          return {
+                            bg: "from-green-100 to-green-200",
+                            text: "text-green-700",
+                            border: "border-green-300",
+                          };
+                        if (score >= 50)
+                          return {
+                            bg: "from-secondary-100 to-secondary-200",
+                            text: "text-secondary-700",
+                            border: "border-secondary-300",
+                          };
+                        return {
+                          bg: "from-red-100 to-red-200",
+                          text: "text-red-700",
+                          border: "border-red-300",
+                        };
+                      };
+
+                      const colors = getMatchColor(matchScore);
+                      // Only the top card can be selected
+                      const topCardId = cardsByColumn[column.id][0];
+                      const isSelected =
+                        selectedForCompare.includes(topCardId);
+                      const isTopCard = index === 1;
+
+                      return (
+                        <div
+                          key={`${column.id}-${listingId}-${stackIndex}`}
+                          draggable={!selectMode && isTopCard}
+                          onDragStart={(e) => {
+                            if (!selectMode && isTopCard) {
+                              setDraggedCard({
+                                listingId: topCardId,
+                                sourceColumn: column.id,
+                              });
+                              e.dataTransfer.effectAllowed = "move";
+
+                              // Create a custom drag image centered at cursor
+                              if (e.currentTarget instanceof HTMLElement) {
+                                // Get the inner card element (the actual white card)
+                                const cardElement =
+                                  e.currentTarget.querySelector(
+                                    ".bg-white"
+                                  ) as HTMLElement;
+                                if (cardElement) {
+                                  const rect =
+                                    cardElement.getBoundingClientRect();
+
+                                  // Clone the inner card for drag image
+                                  const dragImage = cardElement.cloneNode(
+                                    true
+                                  ) as HTMLElement;
+                                  dragImage.style.position = "fixed";
+                                  dragImage.style.left = "-10000px";
+                                  dragImage.style.top = "0px";
+                                  dragImage.style.width = rect.width + "px";
+                                  dragImage.style.height =
+                                    rect.height + "px";
+                                  dragImage.style.transform = "none";
+                                  dragImage.style.pointerEvents = "none";
+                                  dragImage.style.zIndex = "9999";
+                                  document.body.appendChild(dragImage);
+
+                                  // Center the drag image on the cursor
+                                  const centerX = rect.width / 2;
+                                  const centerY = rect.height / 2;
+
+                                  e.dataTransfer.setDragImage(
+                                    dragImage,
+                                    centerX,
+                                    centerY
+                                  );
+
+                                  // Clean up after drag starts
+                                  setTimeout(() => {
+                                    if (document.body.contains(dragImage)) {
+                                      document.body.removeChild(dragImage);
+                                    }
+                                  }, 0);
+                                }
+
+                                e.currentTarget.style.opacity = "0.5";
+                              }
+                            }
+                          }}
+                          onDragEnd={(e) => {
+                            if (e.currentTarget instanceof HTMLElement) {
+                              e.currentTarget.style.opacity = "1";
+                            }
+                            setDraggedCard(null);
+                          }}
+                          onClick={(e) => {
+                            // Only the top card is clickable
+                            if (!isTopCard) return;
+
+                            if (selectMode) {
+                              e.stopPropagation();
+                              if (isSelected) {
+                                setSelectedForCompare((prev) =>
+                                  prev.filter((id) => id !== topCardId)
+                                );
+                              } else {
+                                setSelectedForCompare((prev) => [
+                                  ...prev,
+                                  topCardId,
+                                ]);
+                              }
+                            } else {
+                              // When not in select mode, open the listing details
+                              e.stopPropagation();
+                              onViewDetails(displayListing);
+                            }
+                          }}
+                          className={`absolute top-0 left-0 right-0 transition-all duration-300 ${isTopCard
+                              ? `hover:scale-[1.02] hover:shadow-2xl ${selectMode
+                                ? "cursor-pointer"
+                                : "cursor-move"
+                              }`
+                              : "pointer-events-none"
+                            }`}
+                          style={{
+                            transform: `translateY(${(index - 1) * 12
+                              }px) scale(${1 - (index - 1) * 0.04}) rotateZ(${(index - 1) * 1
+                              }deg)`,
+                            zIndex: 10 - index,
+                          }}
+                        >
+                          <div
+                            className={`bg-white rounded-xl shadow-xl border overflow-hidden ${isSelected && isTopCard
+                                ? "border-4 border-secondary-500"
+                                : "border border-neutral-300"
+                              }`}
                           >
-                            {cardAnimation.type === "like" ? (
-                              <div className="bg-green-500 rounded-full p-8 shadow-2xl">
-                                <Heart size={80} className="text-white" fill="white" />
-                              </div>
-                            ) : (
-                              <div className="bg-red-500 rounded-full p-8 shadow-2xl">
-                                <X size={80} className="text-white" strokeWidth={3} />
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Empty state */}
-                      {cardsByColumn[column.id].length === 0 && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="flex flex-col items-center text-center text-accent-400">
-                            <div className={`mb-3 ${column.color}`}>
-                              <Layers size={48} />
+                            {/* Card Image */}
+                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                              <span className="text-accent-400 text-sm">
+                                Image
+                              </span>
+                              {/* Match Score Badge - only show on top card */}
+                              {index === 1 && (
+                                <div
+                                  className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}
+                                >
+                                  <Sparkles size={12} />
+                                  <span className="text-xs font-bold">
+                                    {matchScore}%
+                                  </span>
+                                </div>
+                              )}
+                              {/* Selection Checkbox for Select Mode - only show on top card */}
+                              {selectMode && index === 1 && (
+                                <div className="absolute top-2 left-2">
+                                  <div
+                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center ${isSelected
+                                        ? "bg-secondary-500 border-secondary-500"
+                                        : "bg-white border-neutral-400"
+                                      }`}
+                                  >
+                                    {isSelected && (
+                                      <svg
+                                        className="w-4 h-4 text-accent-700"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={3}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            <p className="text-sm">
-                              {column.id === "queue" && "No more matches"}
-                              {column.id === "liked" && "No liked matches yet"}
-                              {column.id === "passed" &&
-                                "No passed matches yet"}
-                            </p>
+
+                            {/* Card Content */}
+                            <div className="p-4">
+                              <h3 className="font-bold text-base text-accent-700 mb-2 line-clamp-2">
+                                {displayListing.title}
+                              </h3>
+                              <div className="text-xl font-bold text-secondary-600 mb-3">
+                                RM {displayListing.price?.toLocaleString()}
+                              </div>
+                              <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-3">
+                                {displayListing.category}
+                              </span>
+                              <p className="text-xs text-accent-500 line-clamp-2">
+                                {displayListing.description}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      )}
+                      );
+                    })}
 
-                      {/* Stacked cards - max 3 visible */}
-                      {cardsByColumn[column.id]
-                        .slice(0, 3)
-                        .map((listingId, stackIndex) => {
-                          const index = stackIndex + 1;
-                          // Only get actual listing data for the top card
-                          const listing =
-                            index === 1 ? getListingById(listingId) : null;
-                          const topListing = getListingById(
-                            cardsByColumn[column.id][0]
-                          );
+                  {/* Combined Action and Scroll Buttons (not in selectMode) */}
+                  {cardsByColumn[column.id].length > 0 && !selectMode && (
+                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 z-20">
+                      {/* Scroll Buttons (Up) */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCycle(column.id, "up");
+                        }}
+                        className="p-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
+                      >
+                        <ChevronUp size={18} className="text-accent-600" />
+                      </button>
 
-                          // For visual stacking effect, use top card's data for all
-                          const displayListing = topListing || listing;
-                          if (!displayListing) return null;
-
-                          const matchScore = displayListing.matchScore;
-
-                          // Traffic light system
-                          const getMatchColor = (score: number) => {
-                            if (score >= 75)
-                              return {
-                                bg: "from-green-100 to-green-200",
-                                text: "text-green-700",
-                                border: "border-green-300",
-                              };
-                            if (score >= 50)
-                              return {
-                                bg: "from-secondary-100 to-secondary-200",
-                                text: "text-secondary-700",
-                                border: "border-secondary-300",
-                              };
-                            return {
-                              bg: "from-red-100 to-red-200",
-                              text: "text-red-700",
-                              border: "border-red-300",
-                            };
-                          };
-
-                          const colors = getMatchColor(matchScore);
-                          // Only the top card can be selected
-                          const topCardId = cardsByColumn[column.id][0];
-                          const isSelected =
-                            selectedForCompare.includes(topCardId);
-                          const isTopCard = index === 1;
-
-                          return (
-                            <div
-                              key={`${column.id}-${listingId}-${stackIndex}`}
-                              draggable={!selectMode && isTopCard}
-                              onDragStart={(e) => {
-                                if (!selectMode && isTopCard) {
-                                  setDraggedCard({
-                                    listingId: topCardId,
-                                    sourceColumn: column.id,
-                                  });
-                                  e.dataTransfer.effectAllowed = "move";
-
-                                  // Create a custom drag image centered at cursor
-                                  if (e.currentTarget instanceof HTMLElement) {
-                                    // Get the inner card element (the actual white card)
-                                    const cardElement =
-                                      e.currentTarget.querySelector(
-                                        ".bg-white"
-                                      ) as HTMLElement;
-                                    if (cardElement) {
-                                      const rect =
-                                        cardElement.getBoundingClientRect();
-
-                                      // Clone the inner card for drag image
-                                      const dragImage = cardElement.cloneNode(
-                                        true
-                                      ) as HTMLElement;
-                                      dragImage.style.position = "fixed";
-                                      dragImage.style.left = "-10000px";
-                                      dragImage.style.top = "0px";
-                                      dragImage.style.width = rect.width + "px";
-                                      dragImage.style.height =
-                                        rect.height + "px";
-                                      dragImage.style.transform = "none";
-                                      dragImage.style.pointerEvents = "none";
-                                      dragImage.style.zIndex = "9999";
-                                      document.body.appendChild(dragImage);
-
-                                      // Center the drag image on the cursor
-                                      const centerX = rect.width / 2;
-                                      const centerY = rect.height / 2;
-
-                                      e.dataTransfer.setDragImage(
-                                        dragImage,
-                                        centerX,
-                                        centerY
-                                      );
-
-                                      // Clean up after drag starts
-                                      setTimeout(() => {
-                                        if (document.body.contains(dragImage)) {
-                                          document.body.removeChild(dragImage);
-                                        }
-                                      }, 0);
-                                    }
-
-                                    e.currentTarget.style.opacity = "0.5";
-                                  }
-                                }
-                              }}
-                              onDragEnd={(e) => {
-                                if (e.currentTarget instanceof HTMLElement) {
-                                  e.currentTarget.style.opacity = "1";
-                                }
-                                setDraggedCard(null);
-                              }}
-                              onClick={(e) => {
-                                // Only the top card is clickable
-                                if (!isTopCard) return;
-
-                                if (selectMode) {
-                                  e.stopPropagation();
-                                  if (isSelected) {
-                                    setSelectedForCompare((prev) =>
-                                      prev.filter((id) => id !== topCardId)
-                                    );
-                                  } else {
-                                    setSelectedForCompare((prev) => [
-                                      ...prev,
-                                      topCardId,
-                                    ]);
-                                  }
-                                } else {
-                                  // When not in select mode, open the listing details
-                                  e.stopPropagation();
-                                  onViewDetails(displayListing);
-                                }
-                              }}
-                              className={`absolute top-0 left-0 right-0 transition-all duration-300 ${
-                                isTopCard
-                                  ? `hover:scale-[1.02] hover:shadow-2xl ${
-                                      selectMode
-                                        ? "cursor-pointer"
-                                        : "cursor-move"
-                                    }`
-                                  : "pointer-events-none"
-                              }`}
-                              style={{
-                                transform: `translateY(${
-                                  (index - 1) * 12
-                                }px) scale(${1 - (index - 1) * 0.04}) rotateZ(${
-                                  (index - 1) * 1
-                                }deg)`,
-                                zIndex: 10 - index,
-                              }}
-                            >
-                              <div
-                                className={`bg-white rounded-xl shadow-xl border overflow-hidden ${
-                                  isSelected && isTopCard
-                                    ? "border-4 border-secondary-500"
-                                    : "border border-neutral-300"
-                                }`}
-                              >
-                                {/* Card Image */}
-                                <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                                  <span className="text-accent-400 text-sm">
-                                    Image
-                                  </span>
-                                  {/* Match Score Badge - only show on top card */}
-                                  {index === 1 && (
-                                    <div
-                                      className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}
-                                    >
-                                      <Sparkles size={12} />
-                                      <span className="text-xs font-bold">
-                                        {matchScore}%
-                                      </span>
-                                    </div>
-                                  )}
-                                  {/* Selection Checkbox for Select Mode - only show on top card */}
-                                  {selectMode && index === 1 && (
-                                    <div className="absolute top-2 left-2">
-                                      <div
-                                        className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                                          isSelected
-                                            ? "bg-secondary-500 border-secondary-500"
-                                            : "bg-white border-neutral-400"
-                                        }`}
-                                      >
-                                        {isSelected && (
-                                          <svg
-                                            className="w-4 h-4 text-accent-700"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={3}
-                                              d="M5 13l4 4L19 7"
-                                            />
-                                          </svg>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Card Content */}
-                                <div className="p-4">
-                                  <h3 className="font-bold text-base text-accent-700 mb-2 line-clamp-2">
-                                    {displayListing.title}
-                                  </h3>
-                                  <div className="text-xl font-bold text-secondary-600 mb-3">
-                                    RM {displayListing.price?.toLocaleString()}
-                                  </div>
-                                  <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-3">
-                                    {displayListing.category}
-                                  </span>
-                                  <p className="text-xs text-accent-500 line-clamp-2">
-                                    {displayListing.description}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                      {/* Combined Action and Scroll Buttons (not in selectMode) */}
-                      {cardsByColumn[column.id].length > 0 && !selectMode && (
-                        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 z-20">
-                          {/* Scroll Buttons (Up) */}
+                      {/* Action Buttons for Queue Column (Pass/Like) */}
+                      {column.id === "queue" && (
+                        <>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCycle(column.id, "up");
+                              // Move top card to passed
+                              const topCard = cardsByColumn.queue[0];
+                              if (topCard !== undefined) {
+                                showCardAnimation("pass");
+                                setCardsByColumn((prev) => ({
+                                  ...prev,
+                                  queue: prev.queue.slice(1),
+                                  passed: [topCard, ...prev.passed],
+                                }));
+                              }
                             }}
-                            className="p-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-red-300 hover:bg-red-50 transition-colors shadow-lg"
                           >
-                            <ChevronUp size={18} className="text-accent-600" />
-                          </button>
-
-                          {/* Action Buttons for Queue Column (Pass/Like) */}
-                          {column.id === "queue" && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Move top card to passed
-                                  const topCard = cardsByColumn.queue[0];
-                                  if (topCard !== undefined) {
-                                    showCardAnimation("pass");
-                                    setCardsByColumn((prev) => ({
-                                      ...prev,
-                                      queue: prev.queue.slice(1),
-                                      passed: [topCard, ...prev.passed],
-                                    }));
-                                  }
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-red-300 hover:bg-red-50 transition-colors shadow-lg"
-                              >
-                                <X size={18} className="text-red-500" />
-                                <span className="text-sm font-medium text-red-600">
-                                  Pass
-                                </span>
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Move top card to liked
-                                  const topCard = cardsByColumn.queue[0];
-                                  if (topCard !== undefined) {
-                                    showCardAnimation("like");
-                                    setCardsByColumn((prev) => ({
-                                      ...prev,
-                                      queue: prev.queue.slice(1),
-                                      liked: [topCard, ...prev.liked],
-                                    }));
-                                  }
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-green-300 hover:bg-green-50 transition-colors shadow-lg"
-                              >
-                                <Heart size={18} className="text-green-500" />
-                                <span className="text-sm font-medium text-green-600">
-                                  Like
-                                </span>
-                              </button>
-                            </>
-                          )}
-
-                          {/* Action Buttons for Liked/Passed Columns (Undo) */}
-                          {(column.id === "liked" ||
-                            column.id === "passed") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Move top card back to queue
-                                const topCard = cardsByColumn[column.id][0];
-                                if (topCard !== undefined) {
-                                  setCardsByColumn((prev) => ({
-                                    ...prev,
-                                    [column.id]: prev[column.id].slice(1),
-                                    queue: [topCard, ...prev.queue],
-                                  }));
-                                }
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-lg"
-                            >
-                              <Undo2 size={18} className="text-accent-600" />
-                              <span className="text-sm font-medium text-accent-700">
-                                Undo
-                              </span>
-                            </button>
-                          )}
-
-                          {/* Scroll Buttons (Down) */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCycle(column.id, "down");
-                            }}
-                            className="p-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
-                          >
-                            <ChevronDown
-                              size={18}
-                              className="text-accent-600"
-                            />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Cycle Navigation Buttons - Show in select mode for all columns */}
-                      {selectMode && cardsByColumn[column.id].length > 1 && (
-                        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 z-20">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCycle(column.id, "down");
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
-                            title="Previous card"
-                          >
-                            <ChevronDown
-                              size={18}
-                              className="text-accent-600"
-                            />
-                            <span className="text-sm font-medium text-accent-600">
-                              Previous
+                            <X size={18} className="text-red-500" />
+                            <span className="text-sm font-medium text-red-600">
+                              Pass
                             </span>
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCycle(column.id, "up");
+                              // Move top card to liked
+                              const topCard = cardsByColumn.queue[0];
+                              if (topCard !== undefined) {
+                                showCardAnimation("like");
+                                setCardsByColumn((prev) => ({
+                                  ...prev,
+                                  queue: prev.queue.slice(1),
+                                  liked: [topCard, ...prev.liked],
+                                }));
+                              }
                             }}
-                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
-                            title="Next card"
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-green-300 hover:bg-green-50 transition-colors shadow-lg"
                           >
-                            <ChevronUp size={18} className="text-accent-600" />
-                            <span className="text-sm font-medium text-accent-600">
-                              Next
+                            <Heart size={18} className="text-green-500" />
+                            <span className="text-sm font-medium text-green-600">
+                              Like
                             </span>
                           </button>
-                        </div>
+                        </>
                       )}
+
+                      {/* Action Buttons for Liked/Passed Columns (Undo) */}
+                      {(column.id === "liked" ||
+                        column.id === "passed") && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Move top card back to queue
+                              const topCard = cardsByColumn[column.id][0];
+                              if (topCard !== undefined) {
+                                setCardsByColumn((prev) => ({
+                                  ...prev,
+                                  [column.id]: prev[column.id].slice(1),
+                                  queue: [topCard, ...prev.queue],
+                                }));
+                              }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-lg"
+                          >
+                            <Undo2 size={18} className="text-accent-600" />
+                            <span className="text-sm font-medium text-accent-700">
+                              Undo
+                            </span>
+                          </button>
+                        )}
+
+                      {/* Scroll Buttons (Down) */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCycle(column.id, "down");
+                        }}
+                        className="p-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
+                      >
+                        <ChevronDown
+                          size={18}
+                          className="text-accent-600"
+                        />
+                      </button>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Cycle Navigation Buttons - Show in select mode for all columns */}
+                  {selectMode && cardsByColumn[column.id].length > 1 && (
+                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 z-20">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCycle(column.id, "down");
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
+                        title="Previous card"
+                      >
+                        <ChevronDown
+                          size={18}
+                          className="text-accent-600"
+                        />
+                        <span className="text-sm font-medium text-accent-600">
+                          Previous
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCycle(column.id, "up");
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-neutral-300 hover:bg-primary-50 transition-colors shadow-lg"
+                        title="Next card"
+                      >
+                        <ChevronUp size={18} className="text-accent-600" />
+                        <span className="text-sm font-medium text-accent-600">
+                          Next
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })}
