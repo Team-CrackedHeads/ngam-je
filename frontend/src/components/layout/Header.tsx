@@ -1,10 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { User, Puzzle, Bell, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,13 +17,14 @@ import {
 import { placeholderActivities } from "@/utils/mock-activity-data";
 import AuthModal from "@/components/auth/AuthModal";
 import { useState } from "react";
+import ClientRouter from "@/components/navigation/ClientRouter";
 
 type HeaderProps = {
   notifications?: number;
 };
 
 const Header = ({ notifications = 0 }: HeaderProps) => {
-  const router = useRouter();
+  const router = ClientRouter();
   const { data: session, isPending } = authClient.useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<"signin" | "signup">("signin");
@@ -159,11 +161,13 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialView={authModalView}
-      />
+      {isAuthModalOpen ? (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialView={authModalView}
+        />
+      ) : null}
     </header>
   );
 };
