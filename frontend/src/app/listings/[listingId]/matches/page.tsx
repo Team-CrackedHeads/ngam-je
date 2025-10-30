@@ -2,22 +2,15 @@
 
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Package, Home, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake, X, Cable } from "lucide-react";
+import { Package, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake } from "lucide-react";
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-all-data-used";
 import { motion, AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
 import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";
+import { MatchesHeader } from "@/components/matching/MatchesHeader";
 
 export default function ListingMatchesPage() {
   const params = useParams();
@@ -142,43 +135,20 @@ export default function ListingMatchesPage() {
 
 
 
-      <div className="min-h-screen px-4 py-6 bg-primary-100 text-accent-500">
+      <div className="min-h-screen bg-primary-100 text-accent-500">
         <div className="max-w-6xl mx-auto">
-          {/* Breadcrumb Navigation */}
-          <div className="mb-6 hidden md:block">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink
-                    onClick={() => router.push('/')}
-                    className="flex items-center gap-1 cursor-pointer hover:text-accent-700"
-                  >
-                    <Home className="w-4 h-4" />
-                    Home
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink
-                    onClick={() => router.push(`/listings?type=${listingType}`)}
-                    className="cursor-pointer hover:text-accent-700"
-                  >
-                    {listingType === "sale" ? "My Sale Listings" : listingType === "wanted" ? "My Want Listings" : "My Matched Listings"}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="text-accent-700 font-medium">
-                    Matches
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+          {/* Matches Header */}
+          <MatchesHeader
+            onBack={() => router.push(`/listings?type=${listingType}`)}
+            listingType={listingType}
+            listingTitle={yourListing.title}
+            matchCount={matchedListings.length}
+          />
 
-          {/* Your Listing Section - Desktop Only */}
-          {!isMobile && (
-            <>
+          <div className="px-4 py-6">
+            {/* Your Listing Section - Desktop Only */}
+            {!isMobile && (
+              <>
               {/* Your Listing Header */}
               <div className="flex items-center gap-3 mb-4">
                 {listingType === "sale" ? (
@@ -243,14 +213,6 @@ export default function ListingMatchesPage() {
 
           {listingType !== "matched" && (
             <>
-              {/* Matches Header */}
-              <div className="flex items-center gap-3 mb-6">
-                <Sparkles className="w-6 h-6 text-secondary-600" />
-                <h2 className="text-2xl font-bold text-accent-700">
-                  Your Matches
-                </h2>
-              </div>
-
               {/* AI Matching Component */}
               <AIMatchingContainer
                 userMode={listingType === "sale" ? "seller" : "buyer"}
@@ -263,6 +225,7 @@ export default function ListingMatchesPage() {
               />
             </>
           )}
+          </div>
         </div>
       </div>
     </>
