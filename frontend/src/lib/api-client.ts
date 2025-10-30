@@ -83,8 +83,18 @@ class ApiClient {
       });
 
       if (!response.ok) {
+        let errorMessage = 'An error occurred';
+
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
+        } catch {
+          // If JSON parsing fails, try text
+          errorMessage = await response.text().catch(() => 'An error occurred');
+        }
+
         const error: ApiError = {
-          detail: await response.text().catch(() => 'An error occurred'),
+          detail: errorMessage,
           status: response.status,
         };
         throw error;

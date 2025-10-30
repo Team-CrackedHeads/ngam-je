@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Puzzle, Bell, LogOut, LogIn, User } from "lucide-react";
+import { Puzzle, LogOut, LogIn, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { SignupModal } from "@/components/auth/SignupModal";
 
-type HeaderProps = {
-  notifications?: number;
-};
-
-const Header = ({ notifications = 0 }: HeaderProps) => {
+const Header = () => {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -63,64 +67,65 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
 
       {/* Right Buttons */}
       <div className="flex items-center gap-3 relative">
-        {/* Notifications Button - only show when authenticated */}
-        {isAuthenticated && (
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="relative text-accent-500"
-          >
-            <Link href="/notifications">
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-              {notifications > 0 && (
-                <Badge
-                  className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] sm:text-xs font-bold bg-error-500 text-white"
-                >
-                  {notifications}
-                </Badge>
-              )}
-            </Link>
-          </Button>
-        )}
-
-        {/* Auth Button - Login or Logout */}
+        {/* Auth Button - Login or User Dropdown */}
         {isAuthenticated ? (
-          <>
-            {/* User Profile Button */}
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              className="text-accent-500"
-              title="Profile"
-            >
-              <Link href="/profile">
-                <User className="w-5 h-5 sm:w-6 sm:h-6" />
-              </Link>
-            </Button>
-
-            {/* Logout Button */}
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              size="icon"
-              className="text-accent-500"
-              title="Logout"
-              disabled={isLoading}
-            >
-              <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
-            </Button>
-          </>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full"
+              >
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.avatar} alt={user?.username || user?.email} />
+                  <AvatarFallback className="bg-primary-600 text-white">
+                    {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {user?.username || "User"}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <Button
             onClick={() => setShowLoginModal(true)}
             variant="ghost"
-            size="icon"
-            className="text-accent-500"
-            title="Login"
+            className="text-accent-500 gap-2"
           >
-            <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+            <LogIn className="w-5 h-5" />
+            <span className="hidden sm:inline">Login</span>
           </Button>
         )}
       </div>
