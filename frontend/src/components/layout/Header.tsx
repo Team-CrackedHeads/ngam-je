@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Puzzle, Bell, LogOut, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { LoginModal } from "@/components/auth/LoginModal";
+import { SignupModal } from "@/components/auth/SignupModal";
 
 type HeaderProps = {
   notifications?: number;
@@ -15,10 +18,22 @@ type HeaderProps = {
 const Header = ({ notifications = 0 }: HeaderProps) => {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const router = useRouter();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleLogout = async () => {
     await logout();
-    router.push("/login");
+    router.push("/");
+  };
+
+  const handleSwitchToSignup = () => {
+    setShowLoginModal(false);
+    setShowSignupModal(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowSignupModal(false);
+    setShowLoginModal(true);
   };
 
   return (
@@ -99,18 +114,28 @@ const Header = ({ notifications = 0 }: HeaderProps) => {
           </>
         ) : (
           <Button
-            asChild
+            onClick={() => setShowLoginModal(true)}
             variant="ghost"
             size="icon"
             className="text-accent-500"
             title="Login"
           >
-            <Link href="/login">
-              <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
-            </Link>
+            <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
           </Button>
         )}
       </div>
+
+      {/* Auth Modals */}
+      <LoginModal
+        open={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSwitchToSignup={handleSwitchToSignup}
+      />
+      <SignupModal
+        open={showSignupModal}
+        onOpenChange={setShowSignupModal}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
     </header>
   );
 };
