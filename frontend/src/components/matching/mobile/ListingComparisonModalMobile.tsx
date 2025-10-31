@@ -140,7 +140,7 @@ export function ListingComparisonModalMobile({
                   <table className="w-full border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-neutral-200 bg-primary-50">
-                        <th className="sticky left-0 z-10 bg-primary-50 p-2 text-left font-semibold text-accent-700 border-r border-neutral-200 min-w-[80px]"></th>
+                        <th className="sticky left-0 z-10 bg-primary-50 p-2 text-left font-semibold text-accent-700 border-r-2 border-neutral-300 min-w-[80px]"></th>
                         <th className="p-2 text-center font-semibold text-accent-700 min-w-[120px]">
                           <div className="text-xs">Your Listing</div>
                         </th>
@@ -154,7 +154,7 @@ export function ListingComparisonModalMobile({
                     <tbody>
                       {/* Images Row */}
                       <tr className="border-b border-neutral-200">
-                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
+                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
                           <div className="flex items-center justify-center gap-1">
                             <span className="text-[10px]">Image</span>
                           </div>
@@ -175,7 +175,7 @@ export function ListingComparisonModalMobile({
 
                       {/* Title Row */}
                       <tr className="border-b border-neutral-200">
-                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
+                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
                           <div className="flex items-center justify-center gap-1">
                             <span className="text-[10px]">Title</span>
                           </div>
@@ -195,7 +195,7 @@ export function ListingComparisonModalMobile({
                         const Icon = field.icon;
                         return (
                           <tr key={field.key} className="border-b border-neutral-200">
-                            <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
+                            <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
                               <div className="flex items-center gap-1">
                                 <Icon className="h-3 w-3" />
                                 <span className="text-[10px]">{field.label}</span>
@@ -234,7 +234,7 @@ export function ListingComparisonModalMobile({
 
                       {/* Actions Row */}
                       <tr>
-                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
+                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
                           <div className="flex items-center justify-center gap-1">
                             <span className="text-[10px]">Actions</span>
                           </div>
