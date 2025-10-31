@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   X,
   MapPin,
@@ -14,6 +14,7 @@ import {
   Tag,
   TrendingUp,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 
 interface MatchedListing {
@@ -43,7 +44,7 @@ interface ListingComparisonModalProps {
   onNegotiate: (listing: MatchedListing) => void;
 }
 
-export function ListingComparisonModal({
+export function ListingComparisonModalMobile({
   isOpen,
   listings,
   userListing,
@@ -52,6 +53,7 @@ export function ListingComparisonModal({
   onMessage,
   onNegotiate,
 }: ListingComparisonModalProps) {
+  const isMobile = useIsMobile();
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
 
   const toggleTags = (id: string) => {
@@ -100,7 +102,7 @@ export function ListingComparisonModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center ${isMobile ? 'p-0' : 'p-4'}`}
         onClick={onClose}
       >
         <motion.div
@@ -109,14 +111,15 @@ export function ListingComparisonModal({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
           onClick={(e) => e.stopPropagation()}
+          className={isMobile ? 'w-full h-full' : 'w-full max-w-6xl'}
         >
-          <Card className="w-full max-w-6xl max-h-[90vh] bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl py-2 gap-0">
+          <Card className={`w-full h-full bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl gap-0 py-0 ${isMobile ? 'rounded-none' : 'max-h-[90vh]'}`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-2 shrink-0 border-b border-neutral-200">
+            <div className={`flex items-center justify-between ${isMobile ? 'px-4 py-3' : 'px-6 pb-4'} shrink-0 border-b border-neutral-200`}>
               <div>
-                <h2 className="text-2xl font-bold text-accent-700 mb-1">Compare Listings</h2>
-                <p className="text-sm text-accent-500">
-                  Comparing {listings.length} listings side by side
+                <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-accent-700 mb-1`}>Compare Listings</h2>
+                <p className="text-xs md:text-sm text-accent-500">
+                  Comparing {listings.length} {isMobile ? '' : 'listings side by side'}
                 </p>
               </div>
               <Button
@@ -129,18 +132,164 @@ export function ListingComparisonModal({
               </Button>
             </div>
 
-            {/* Comparison Grid - 3 columns: Your Listing | Separator | Matched Listings */}
+            {/* Comparison Content */}
             <div className="flex-1 overflow-y-auto touch-scroll">
-              <div className="p-4 grid gap-4" style={{ gridTemplateColumns: `1fr 2px ${listings.length}fr` }}>
+              {isMobile ? (
+                /* Mobile: Horizontal scrolling table with icons */
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-neutral-200 bg-primary-50">
+                        <th className="sticky left-0 z-10 bg-primary-50 p-2 text-left font-semibold text-accent-700 border-r-2 border-neutral-300 min-w-[80px]"></th>
+                        <th className="p-2 text-center font-semibold text-accent-700 min-w-[120px]">
+                          <div className="text-xs">Your Listing</div>
+                        </th>
+                        {listings.map((listing, idx) => (
+                          <th key={listing.id} className="p-2 text-center font-semibold text-accent-700 min-w-[120px]">
+                            <div className="text-xs">Match {idx + 1}</div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Images Row */}
+                      <tr className="border-b border-neutral-200">
+                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[10px]">Image</span>
+                          </div>
+                        </td>
+                        <td className="p-2">
+                          <div className="aspect-square w-20 mx-auto rounded-lg overflow-hidden bg-primary-100">
+                            <img src={userListing.images[0]} alt={userListing.title} className="w-full h-full object-cover" />
+                          </div>
+                        </td>
+                        {listings.map(listing => (
+                          <td key={listing.id} className="p-2">
+                            <div className="aspect-square w-20 mx-auto rounded-lg overflow-hidden bg-primary-100">
+                              <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+
+                      {/* Title Row */}
+                      <tr className="border-b border-neutral-200">
+                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[10px]">Title</span>
+                          </div>
+                        </td>
+                        <td className="p-2">
+                          <div className="text-xs font-semibold text-accent-700 line-clamp-2">{userListing.title}</div>
+                        </td>
+                        {listings.map(listing => (
+                          <td key={listing.id} className="p-2">
+                            <div className="text-xs font-semibold text-accent-700 line-clamp-2">{listing.title}</div>
+                          </td>
+                        ))}
+                      </tr>
+
+                      {/* Comparison Fields */}
+                      {comparisonFields.map((field) => {
+                        const Icon = field.icon;
+                        return (
+                          <tr key={field.key} className="border-b border-neutral-200">
+                            <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
+                              <div className="flex items-center gap-1">
+                                <Icon className="h-3 w-3" />
+                                <span className="text-[10px]">{field.label}</span>
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <div className="text-xs text-accent-700 font-medium text-center">
+                                {field.key === "price" || field.key === "originalAsk"
+                                  ? userListing[field.key as keyof MatchedListing] ? `RM ${(userListing[field.key as keyof MatchedListing] as number).toLocaleString()}` : "N/A"
+                                  : field.key === "matchScore"
+                                    ? "Your Match"
+                                    : userListing[field.key as keyof MatchedListing]}
+                              </div>
+                            </td>
+                            {listings.map(listing => {
+                              const value = listing[field.key as keyof MatchedListing];
+                              const isBest = isBestValue(listing, field.key);
+                              return (
+                                <td key={listing.id} className={`p-2 ${isBest ? 'bg-success-50' : ''}`}>
+                                  <div className="flex items-center justify-center gap-1">
+                                    {isBest && <CheckCircle className="h-3 w-3 text-success-500 shrink-0" />}
+                                    <span className={`text-xs ${isBest ? 'font-bold text-accent-700' : 'text-accent-600'} text-center`}>
+                                      {field.key === "price" || field.key === "originalAsk"
+                                        ? value ? `RM ${(value as number).toLocaleString()}` : "N/A"
+                                        : field.key === "matchScore"
+                                          ? `${value}%`
+                                          : value}
+                                    </span>
+                                  </div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+
+                      {/* Actions Row */}
+                      <tr>
+                        <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r-2 border-neutral-300">
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[10px]">Actions</span>
+                          </div>
+                        </td>
+                        <td className="p-2 text-center text-xs text-accent-500">-</td>
+                        {listings.map(listing => (
+                          <td key={listing.id} className="p-2">
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                onClick={() => {
+                                  onNegotiate(listing);
+                                  onClose();
+                                }}
+                                size="sm"
+                                className="w-full bg-secondary-500 hover:bg-secondary-600 text-white text-[10px] h-7"
+                              >
+                                Negotiate
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  onMessage(listing);
+                                  onClose();
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="w-full border-neutral-300 hover:bg-primary-50 text-accent-700 text-[10px] h-7"
+                              >
+                                Message
+                              </Button>
+                              <button
+                                onClick={() => {
+                                  onSelectListing(listing);
+                                  onClose();
+                                }}
+                                className="w-full text-accent-600 hover:text-accent-700 font-medium underline text-[10px] text-center"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                /* Desktop: Three-column grid */
+                <div className="p-4 grid gap-4" style={{ gridTemplateColumns: `1fr 2px ${listings.length}fr` }}>
                 {/* Column 1: Your Listing */}
                 <div className="space-y-4">
                   {/* Image */}
                   <div className="aspect-[4/3] rounded-xl overflow-hidden relative bg-primary-100">
-                    <Image
+                    <img
                       src={userListing.images[0]}
                       alt={userListing.title}
-                      width={400}
-                      height={300}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-2 right-2 bg-secondary-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
@@ -218,11 +367,9 @@ export function ListingComparisonModal({
                   {/* Images Row */}
                   {listings.map((listing) => (
                     <div key={`img-${listing.id}`} className="aspect-[4/3] rounded-xl overflow-hidden relative bg-primary-100">
-                      <Image
+                      <img
                         src={listing.images[0]}
                         alt={listing.title}
-                        width={400}
-                        height={300}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -271,10 +418,11 @@ export function ListingComparisonModal({
                                 <span className="text-xs font-semibold text-accent-600">{field.label}</span>
                               </div>
                               <div
-                                className={`p-3 rounded-lg min-h-[3.5rem] flex items-center ${isBest
+                                className={`p-3 rounded-lg min-h-[3.5rem] flex items-center ${
+                                  isBest
                                     ? "bg-success-50 border-2 border-success-500"
                                     : "bg-white border border-neutral-200"
-                                  }`}
+                                }`}
                               >
                                 <div className="flex items-center gap-2 w-full">
                                   {isBest && (
@@ -351,6 +499,7 @@ export function ListingComparisonModal({
                   ))}
                 </div>
               </div>
+              )}
             </div>
           </Card>
         </motion.div>

@@ -57,7 +57,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl"
       >
-        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[90vh] flex flex-col py-0">
+        <Card className="bg-white overflow-hidden border-neutral-200 shadow-2xl max-h-[90vh] flex flex-col py-0 gap-2">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-200 shrink-0 bg-primary-50">
             <div className="flex items-center gap-3">
