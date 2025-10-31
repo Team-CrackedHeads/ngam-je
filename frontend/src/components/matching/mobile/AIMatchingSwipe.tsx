@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
-import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo2 } from "lucide-react";
+import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo2, ChevronUp, ChevronDown } from "lucide-react";
 import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
 import { ListingComparisonModalMobile } from "@/components/matching/mobile/ListingComparisonModalMobile";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-all-data-used";
 import { useCompare } from "@/components/matching/contexts/CompareContext";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -33,6 +34,9 @@ export function AIMatchingSwipe({
 
   // Use global selection state for comparison
   const { selectedForCompare, setSelectedForCompare } = useCompare();
+
+  // Carousel API for vertical scrolling
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   // Card organization by column - stores listing IDs
   const [cardsByColumn, setCardsByColumn] = useState<Record<TabType, string[]>>({
