@@ -102,7 +102,7 @@ export function ListingComparisonModalMobile({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center ${isMobile ? 'p-0' : 'p-4'}`}
         onClick={onClose}
       >
         <motion.div
@@ -111,8 +111,9 @@ export function ListingComparisonModalMobile({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
           onClick={(e) => e.stopPropagation()}
+          className={isMobile ? 'w-full h-full' : 'w-full max-w-6xl'}
         >
-          <Card className={`w-full ${isMobile ? 'max-w-full h-full' : 'max-w-6xl max-h-[90vh]'} bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl py-0 gap-0`}>
+          <Card className={`w-full h-full bg-white flex flex-col overflow-hidden border-neutral-200 shadow-2xl gap-0 py-0 ${isMobile ? 'rounded-none' : 'max-h-[90vh]'}`}>
             {/* Header */}
             <div className={`flex items-center justify-between ${isMobile ? 'px-4 py-3' : 'px-6 pb-4'} shrink-0 border-b border-neutral-200`}>
               <div>
@@ -154,7 +155,9 @@ export function ListingComparisonModalMobile({
                       {/* Images Row */}
                       <tr className="border-b border-neutral-200">
                         <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
-                          Image
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[10px]">Image</span>
+                          </div>
                         </td>
                         <td className="p-2">
                           <div className="aspect-square w-20 mx-auto rounded-lg overflow-hidden bg-primary-100">
@@ -173,7 +176,9 @@ export function ListingComparisonModalMobile({
                       {/* Title Row */}
                       <tr className="border-b border-neutral-200">
                         <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
-                          Title
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[10px]">Title</span>
+                          </div>
                         </td>
                         <td className="p-2">
                           <div className="text-xs font-semibold text-accent-700 line-clamp-2">{userListing.title}</div>
@@ -230,7 +235,9 @@ export function ListingComparisonModalMobile({
                       {/* Actions Row */}
                       <tr>
                         <td className="sticky left-0 z-10 bg-white p-2 font-medium text-accent-600 border-r border-neutral-200">
-                          Actions
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[10px]">Actions</span>
+                          </div>
                         </td>
                         <td className="p-2 text-center text-xs text-accent-500">-</td>
                         {listings.map(listing => (
