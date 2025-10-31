@@ -68,6 +68,138 @@ export function AIMatchingSwipe({
 
   const cards = getCardsForTab(activeTab);
 
+  // Swipeable Card Component for Liked/Passed tabs
+  const SwipeableReviewCard = ({
+    listing,
+    index,
+    totalCards,
+  }: {
+    listing: MatchedListing;
+    index: number;
+    totalCards: number;
+  }) => {
+    const isTopCard = index === 0;
+    const isSelected = selectedForCompare.includes(listing.id);
+    const x = useMotionValue(0);
+    const rotate = useTransform(x, [-200, 0, 200], [-25, 0, 25]);
+    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
+
+    const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const threshold = 100;
+      if (Math.abs(info.velocity.x) >= 500 || Math.abs(info.offset.x) >= threshold) {
+        const direction = info.offset.x > 0 ? 'right' : 'left';
+
+        // For Liked tab: left = move to passed, right = undo
+        // For Passed tab: left = undo, right = move to liked
+        if (activeTab === "liked") {
+          if (direction === 'left') {
+            // Show pass reaction before moving
+            setShowReaction('pass');
+            setTimeout(() => {
+              setShowReaction(null);
+              handleMoveToPassed();
+            }, 800);
+          } else {
+            // Show undo reaction (could be a different icon)
+            setShowReaction(null);
+            handleUndo();
+          }
+        } else if (activeTab === "passed") {
+          if (direction === 'left') {
+            // Show undo reaction
+            setShowReaction(null);
+            handleUndo();
+          } else {
+            // Show like reaction before moving
+            setShowReaction('like');
+            setTimeout(() => {
+              setShowReaction(null);
+              handleMoveToLiked();
+            }, 800);
+          }
+        }
+      }
+    };
+
+    return (
+      <motion.div
+        key={listing.id}
+        style={{
+          x: isTopCard && !compareMode ? x : 0,
+          rotate: isTopCard && !compareMode ? rotate : 0,
+          opacity: isTopCard ? opacity : 1,
+          zIndex: totalCards - index,
+        }}
+        animate={{
+          scale: isTopCard ? 1 : 1 - (index * 0.05),
+          y: isTopCard ? 0 : index * 10,
+        }}
+        drag={isTopCard && !compareMode}
+        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        dragElastic={1}
+        onDragEnd={handleDragEnd}
+        className="absolute w-full h-full"
+      >
+        <div
+          onClick={() => {
+            if (compareMode && isTopCard) {
+              if (isSelected) {
+                setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+              } else if (selectedForCompare.length < 4) {
+                setSelectedForCompare(prev => [...prev, listing.id]);
+              }
+            }
+          }}
+          className={`w-full h-full bg-white rounded-2xl shadow-xl border flex flex-col overflow-hidden ${
+            isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
+          } ${isTopCard && !compareMode ? 'cursor-pointer' : ''}`}
+        >
+          {/* Card Image */}
+          <div className="relative aspect-[4/3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0">
+            <span className="text-accent-400">Image</span>
+
+            {/* Selection Checkbox for Compare Mode */}
+            {compareMode && isTopCard && (
+              <div className="absolute top-3 left-3">
+                <div className={`w-7 h-7 rounded border-2 flex items-center justify-center ${
+                  isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
+                }`}>
+                  {isSelected && (
+                    <svg className="w-4 h-4 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Card Content */}
+          <div className="flex-1 p-3 flex flex-col gap-1.5 overflow-hidden">
+            <h3 className="font-bold text-base text-accent-700 line-clamp-2">
+              {listing.title}
+            </h3>
+            <div className="text-lg font-bold text-secondary-600">
+              RM {listing.price?.toLocaleString() || '0'}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary-200 text-accent-600 font-medium">
+                {listing.category}
+              </span>
+              <div className="flex items-center gap-1 text-xs text-accent-500">
+                <MapPin size={11} />
+                <span className="line-clamp-1">{listing.location}</span>
+              </div>
+            </div>
+            <p className="text-xs text-accent-500 line-clamp-2">
+              {listing.description}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   // Swipeable Card Component - Redesigned with proper sizing
   const SwipeableCard = ({
     listing,
@@ -356,9 +488,9 @@ export function AIMatchingSwipe({
               </div>
 
               {/* Gallery Grid */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 pb-20">
                 <div className="grid grid-cols-2 gap-4">
-                  {allListings.map((listing) => (
+                  {mockAIMatchings.map((listing) => (
                     <div
                       key={listing.id}
                       onClick={() => {
@@ -612,75 +744,15 @@ export function AIMatchingSwipe({
                     />
                   ))
                 ) : (
-                // Static cards for liked/passed tabs
-                cards.map((listing, index) => {
-                  const isSelected = selectedForCompare.includes(listing.id);
-
-                  return (
-                    <motion.div
-                      key={listing.id}
-                      className="absolute inset-0"
-                      initial={false}
-                      animate={{
-                        scale: 1 - index * 0.05,
-                        y: index * 10,
-                        zIndex: cards.length - index,
-                      }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    >
-                      <div
-                        onClick={() => {
-                          if (compareMode) {
-                            if (isSelected) {
-                              setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
-                            } else if (selectedForCompare.length < 4) {
-                              setSelectedForCompare(prev => [...prev, listing.id]);
-                            }
-                          }
-                        }}
-                        className={`h-full bg-white rounded-2xl shadow-xl border overflow-hidden ${
-                          isSelected ? 'border-4 border-secondary-500' : 'border border-neutral-300'
-                        }`}
-                      >
-                        {/* Card Image */}
-                        <div className="relative h-1/2 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                          <span className="text-accent-400">Image</span>
-
-                          {/* Selection Checkbox for Compare Mode */}
-                          {compareMode && index === 0 && (
-                            <div className="absolute top-4 left-4">
-                              <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
-                                isSelected ? 'bg-secondary-500 border-secondary-500' : 'bg-white border-neutral-400'
-                              }`}>
-                                {isSelected && (
-                                  <svg className="w-5 h-5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="p-4 h-1/2 flex flex-col">
-                          <h3 className="font-bold text-lg text-accent-700 mb-2 line-clamp-2">
-                            {listing.title}
-                          </h3>
-                          <div className="text-2xl font-bold text-secondary-600 mb-2">
-                            RM {listing.price?.toLocaleString() || '0'}
-                          </div>
-                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium mb-2 w-fit">
-                            {listing.category}
-                          </span>
-                          <p className="text-sm text-accent-500 line-clamp-3 mb-4">
-                            {listing.description}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
+                // Swipeable cards for liked/passed tabs
+                cards.map((listing, index) => (
+                  <SwipeableReviewCard
+                    key={listing.id}
+                    listing={listing}
+                    index={index}
+                    totalCards={cards.length}
+                  />
+                ))
                 )}
               </AnimatePresence>
             </div>
