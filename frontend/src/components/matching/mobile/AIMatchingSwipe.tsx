@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
-import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
+import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo2 } from "lucide-react";
 import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
 import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-all-data-used";
+import { useCompare } from "@/components/matching/contexts/CompareContext";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -25,12 +26,20 @@ export function AIMatchingSwipe({
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
-  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showReaction, setShowReaction] = useState<'like' | 'pass' | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showGalleryView, setShowGalleryView] = useState(false);
+
+  // Use global selection state for comparison
+  const { selectedForCompare, setSelectedForCompare } = useCompare();
+
+  // Card organization by column - stores listing IDs
+  const [cardsByColumn, setCardsByColumn] = useState<Record<TabType, string[]>>({
+    passed: [],
+    queue: mockAIMatchings.map((listing) => listing.id), // All listings start in queue
+    liked: [],
+  });
 
   // Get user's original listing from centralized mock data
   const getUserListing = (): MatchedListing => userAIListing;
@@ -44,15 +53,17 @@ export function AIMatchingSwipe({
       .filter(Boolean) as MatchedListing[];
   };
 
-  // Use centralized mock data
-  const allListings = mockAIMatchings;
+  // Helper function to get listing by ID
+  const getListingById = (id: string): MatchedListing | undefined => {
+    return mockAIMatchings.find((listing) => listing.id === id);
+  };
 
-  // Mock cards for each tab
-  const getCardsForTab = (tab: TabType) => {
-    if (tab === "queue") return allListings.slice(currentCardIndex, currentCardIndex + 3);
-    if (tab === "liked") return [];
-    if (tab === "passed") return [];
-    return [];
+  // Get cards for current tab
+  const getCardsForTab = (tab: TabType): MatchedListing[] => {
+    return cardsByColumn[tab]
+      .slice(0, 3) // Only show top 3 cards
+      .map((id) => getListingById(id))
+      .filter(Boolean) as MatchedListing[];
   };
 
   const cards = getCardsForTab(activeTab);
@@ -183,6 +194,8 @@ export function AIMatchingSwipe({
     const currentCard = cards[0];
     if (!currentCard) return;
 
+    const targetColumn: TabType = direction === 'right' ? 'liked' : 'passed';
+
     // Show reaction animation
     setShowReaction(direction === 'right' ? 'like' : 'pass');
 
@@ -191,6 +204,13 @@ export function AIMatchingSwipe({
       setShowReaction(null);
     }, 800);
 
+    // Move card from queue to target column
+    setCardsByColumn(prev => ({
+      ...prev,
+      queue: prev.queue.filter(id => id !== currentCard.id),
+      [targetColumn]: [currentCard.id, ...prev[targetColumn]]
+    }));
+
     if (direction === 'right') {
       // Liked
       onMatch(currentCard, 'like');
@@ -198,9 +218,6 @@ export function AIMatchingSwipe({
       // Passed
       onMatch(currentCard, 'pass');
     }
-
-    // Move to next card
-    setCurrentCardIndex(prev => prev + 1);
   };
 
   // Handle button actions
@@ -217,6 +234,48 @@ export function AIMatchingSwipe({
   const handleInfo = () => {
     if (cards.length > 0 && cards[0]) {
       onViewDetails(cards[0]);
+    }
+  };
+
+  const handleUndo = () => {
+    if (activeTab === "queue" || cards.length === 0) return;
+
+    // Move top card back to queue
+    const topCard = cardsByColumn[activeTab][0];
+    if (topCard !== undefined) {
+      setCardsByColumn((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].slice(1),
+        queue: [topCard, ...prev.queue],
+      }));
+    }
+  };
+
+  const handleMoveToLiked = () => {
+    if (activeTab === "liked" || cards.length === 0) return;
+
+    // Move top card to liked
+    const topCard = cardsByColumn[activeTab][0];
+    if (topCard !== undefined) {
+      setCardsByColumn((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].slice(1),
+        liked: [topCard, ...prev.liked],
+      }));
+    }
+  };
+
+  const handleMoveToPassed = () => {
+    if (activeTab === "passed" || cards.length === 0) return;
+
+    // Move top card to passed
+    const topCard = cardsByColumn[activeTab][0];
+    if (topCard !== undefined) {
+      setCardsByColumn((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].slice(1),
+        passed: [topCard, ...prev.passed],
+      }));
     }
   };
 
@@ -257,7 +316,11 @@ export function AIMatchingSwipe({
                   </button>
                   <button
                     onClick={() => {
-                      setCurrentCardIndex(0);
+                      setCardsByColumn({
+                        passed: [],
+                        queue: mockAIMatchings.map((listing) => listing.id),
+                        liked: [],
+                      });
                       setShowResetConfirm(false);
                     }}
                     className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
@@ -479,12 +542,12 @@ export function AIMatchingSwipe({
                   Tap cards to compare (max 4)
                 </span>
               </div>
-              {selectedForCompare.length >= 2 && (
+              {selectedForCompare.length >= 1 && selectedForCompare.length <= 5 && (
                 <button
                   onClick={() => setShowCompareModal(true)}
                   className="px-3 py-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700 rounded-lg text-xs font-medium transition-colors border border-secondary-600"
                 >
-                  Compare {selectedForCompare.length}
+                  Compare {selectedForCompare.length > 1 ? selectedForCompare.length : ''}
                 </button>
               )}
             </div>
@@ -624,7 +687,7 @@ export function AIMatchingSwipe({
           )}
         </div>
 
-        {/* Action Buttons Footer - only shown when there are cards and not in compare mode */}
+        {/* Action Buttons Footer - For Queue Tab */}
         {cards.length > 0 && !compareMode && activeTab === "queue" && (
           <div className="bg-white border-t border-neutral-200 flex items-center justify-center gap-4 py-3 px-4 shrink-0">
             <button
@@ -646,6 +709,48 @@ export function AIMatchingSwipe({
               className="w-14 h-14 rounded-full bg-white border-2 border-green-300 flex items-center justify-center hover:bg-green-50 transition-colors shadow-md active:scale-95"
             >
               <Heart size={24} className="text-green-500" strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
+
+        {/* Action Buttons Footer - For Liked Tab */}
+        {cards.length > 0 && !compareMode && activeTab === "liked" && (
+          <div className="bg-white border-t border-neutral-200 flex items-center justify-center gap-3 py-3 px-4 shrink-0">
+            <button
+              onClick={handleMoveToPassed}
+              className="w-12 h-12 rounded-full bg-white border-2 border-red-300 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md active:scale-95"
+              title="Move to Passed"
+            >
+              <X size={20} className="text-red-500" strokeWidth={2.5} />
+            </button>
+
+            <button
+              onClick={handleUndo}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-md active:scale-95"
+            >
+              <Undo2 size={18} className="text-accent-600" />
+              <span className="text-sm font-medium text-accent-700">Undo</span>
+            </button>
+          </div>
+        )}
+
+        {/* Action Buttons Footer - For Passed Tab */}
+        {cards.length > 0 && !compareMode && activeTab === "passed" && (
+          <div className="bg-white border-t border-neutral-200 flex items-center justify-center gap-3 py-3 px-4 shrink-0">
+            <button
+              onClick={handleUndo}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border-2 border-accent-300 hover:bg-primary-50 transition-colors shadow-md active:scale-95"
+            >
+              <Undo2 size={18} className="text-accent-600" />
+              <span className="text-sm font-medium text-accent-700">Undo</span>
+            </button>
+
+            <button
+              onClick={handleMoveToLiked}
+              className="w-12 h-12 rounded-full bg-white border-2 border-green-300 flex items-center justify-center hover:bg-green-50 transition-colors shadow-md active:scale-95"
+              title="Move to Liked"
+            >
+              <Heart size={20} className="text-green-500" strokeWidth={2.5} />
             </button>
           </div>
         )}
