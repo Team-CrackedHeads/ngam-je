@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
-import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo2, ChevronUp, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, RotateCcw, Maximize2, Minimize2, Undo2 } from "lucide-react";
 import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
 import { ListingComparisonModalMobile } from "@/components/matching/mobile/ListingComparisonModalMobile";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-all-data-used";
 import { useCompare } from "@/components/matching/contexts/CompareContext";
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { MatchCardCarousel } from "@/components/matching/mobile/MatchCardCarousel";
+import { SwipeableMatchCard } from "@/components/matching/mobile/SwipeableMatchCard";
 
 type TabType = "queue" | "liked" | "passed";
 
@@ -35,8 +36,6 @@ export function AIMatchingSwipe({
   // Use global selection state for comparison
   const { selectedForCompare, setSelectedForCompare } = useCompare();
 
-  // Carousel API for vertical scrolling
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   // Card organization by column - stores listing IDs
   const [cardsByColumn, setCardsByColumn] = useState<Record<TabType, string[]>>({
@@ -138,11 +137,11 @@ export function AIMatchingSwipe({
           scale: isTopCard ? 1 : 1 - (index * 0.05),
           y: isTopCard ? 0 : index * 10,
         }}
-        drag={isTopCard && !compareMode}
+        drag={isTopCard && !compareMode ? "x" : false}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={1}
         onDragEnd={handleDragEnd}
-        className="absolute w-full h-full"
+        className="w-full h-full"
       >
         <div
           onClick={() => {
@@ -222,7 +221,9 @@ export function AIMatchingSwipe({
 
     const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const threshold = 100;
-      if (Math.abs(info.velocity.x) >= 500 || Math.abs(info.offset.x) >= threshold) {
+      const horizontalSwipe = Math.abs(info.offset.x) > Math.abs(info.offset.y);
+
+      if (horizontalSwipe && (Math.abs(info.velocity.x) >= 500 || Math.abs(info.offset.x) >= threshold)) {
         onSwipe(info.offset.x > 0 ? 'right' : 'left');
       }
     };
@@ -249,11 +250,11 @@ export function AIMatchingSwipe({
           scale: isTopCard ? 1 : 1 - (index * 0.05),
           y: isTopCard ? 0 : index * 10,
         }}
-        drag={isTopCard && !compareMode}
+        drag={isTopCard && !compareMode ? "x" : false}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={1}
         onDragEnd={handleDragEnd}
-        className="absolute w-full h-full"
+        className="w-full h-full"
       >
         <div
           onClick={() => {
@@ -713,7 +714,7 @@ export function AIMatchingSwipe({
           )}
         </AnimatePresence>
 
-        {/* Column Content - Card Stack Area */}
+        {/* Column Content - Card Stack Area with Vertical Carousel */}
         <div className="bg-primary-50 relative flex-1 p-4">
           {cards.length === 0 ? (
             /* Empty state */
@@ -733,38 +734,40 @@ export function AIMatchingSwipe({
               </p>
             </div>
           ) : (
-            /* Card Stack - Using SwipeableCard */
-            <div className="relative w-full h-full" style={{ minHeight: '500px' }}>
-              <AnimatePresence mode="popLayout">
-                {activeTab === "queue" ? (
-                  // Swipeable cards for "For You" tab
-                  cards.map((listing, index) => (
-                    <SwipeableCard
-                      key={listing.id}
-                      listing={listing}
-                      index={index}
-                      totalCards={cards.length}
-                      onSwipe={handleSwipe}
-                    />
-                  ))
-                ) : (
-                // Swipeable cards for liked/passed tabs
-                cards.map((listing, index) => (
-                  <SwipeableReviewCard
-                    key={listing.id}
+            /* Vertical Carousel with Card Stack */
+            <MatchCardCarousel height="500px">
+              {cardsByColumn[activeTab].map((cardId) => {
+                const listing = getListingById(cardId);
+                if (!listing) return null;
+
+                return (
+                  <SwipeableMatchCard
+                    key={cardId}
                     listing={listing}
-                    index={index}
-                    totalCards={cards.length}
+                    onSwipe={activeTab === "queue" ? handleSwipe : undefined}
+                    onCardClick={() => {
+                      if (compareMode) {
+                        if (selectedForCompare.includes(listing.id)) {
+                          setSelectedForCompare(prev => prev.filter(id => id !== listing.id));
+                        } else if (selectedForCompare.length < 4) {
+                          setSelectedForCompare(prev => [...prev, listing.id]);
+                        }
+                      } else {
+                        onViewDetails(listing);
+                      }
+                    }}
+                    isSelected={selectedForCompare.includes(listing.id)}
+                    showMatchScore={activeTab === "queue" && !compareMode}
+                    enableSwipe={activeTab === "queue" && !compareMode}
                   />
-                ))
-                )}
-              </AnimatePresence>
-            </div>
+                );
+              })}
+            </MatchCardCarousel>
           )}
         </div>
 
         {/* Action Buttons Footer - For Queue Tab */}
-        {cards.length > 0 && !compareMode && activeTab === "queue" && (
+        {cardsByColumn[activeTab].length > 0 && !compareMode && activeTab === "queue" && (
           <div className="bg-white border-t border-neutral-200 flex items-center justify-center gap-4 py-3 px-4 shrink-0">
             <button
               onClick={handlePass}
