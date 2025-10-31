@@ -63,7 +63,7 @@ export function SwipeableMatchCard({
         } ${onCardClick ? 'cursor-pointer' : ''}`}
       >
         {/* Image Section */}
-        <div className="relative aspect-[4/3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0">
+        <div className="relative aspect-[4/3] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0 rounded-t-2xl overflow-hidden">
           <span className="text-accent-400">Image</span>
 
           {/* Match Score Badge */}

@@ -24,8 +24,8 @@ export function MatchCardCarousel({ children, height = "500px" }: MatchCardCarou
     >
       <CarouselContent className="-mt-1" style={{ height }}>
         {children.map((child, index) => (
-          <CarouselItem key={index} className="pt-1">
-            <div className="w-full h-full">
+          <CarouselItem key={index} className="pt-1 pb-4">
+            <div className="w-full h-full px-2">
               {child}
             </div>
           </CarouselItem>

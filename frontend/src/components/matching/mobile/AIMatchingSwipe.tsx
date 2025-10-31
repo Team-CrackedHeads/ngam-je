@@ -416,6 +416,51 @@ export function AIMatchingSwipe({
     }
   };
 
+  // Handle swipe for liked/passed tabs
+  const handleReviewSwipe = (direction: 'left' | 'right', cardId: string) => {
+    if (activeTab === "liked") {
+      if (direction === 'left') {
+        // Swipe left on liked card = move to passed
+        setShowReaction('pass');
+        setTimeout(() => {
+          setShowReaction(null);
+          setCardsByColumn((prev) => ({
+            ...prev,
+            liked: prev.liked.filter(id => id !== cardId),
+            passed: [cardId, ...prev.passed],
+          }));
+        }, 800);
+      } else {
+        // Swipe right on liked card = undo (move back to queue)
+        setCardsByColumn((prev) => ({
+          ...prev,
+          liked: prev.liked.filter(id => id !== cardId),
+          queue: [cardId, ...prev.queue],
+        }));
+      }
+    } else if (activeTab === "passed") {
+      if (direction === 'left') {
+        // Swipe left on passed card = undo (move back to queue)
+        setCardsByColumn((prev) => ({
+          ...prev,
+          passed: prev.passed.filter(id => id !== cardId),
+          queue: [cardId, ...prev.queue],
+        }));
+      } else {
+        // Swipe right on passed card = move to liked
+        setShowReaction('like');
+        setTimeout(() => {
+          setShowReaction(null);
+          setCardsByColumn((prev) => ({
+            ...prev,
+            passed: prev.passed.filter(id => id !== cardId),
+            liked: [cardId, ...prev.liked],
+          }));
+        }, 800);
+      }
+    }
+  };
+
   return (
     <>
       {/* Reset Confirmation Dialog */}
@@ -744,7 +789,11 @@ export function AIMatchingSwipe({
                   <SwipeableMatchCard
                     key={cardId}
                     listing={listing}
-                    onSwipe={activeTab === "queue" ? handleSwipe : undefined}
+                    onSwipe={
+                      activeTab === "queue"
+                        ? handleSwipe
+                        : (direction) => handleReviewSwipe(direction, cardId)
+                    }
                     onCardClick={() => {
                       if (compareMode) {
                         if (selectedForCompare.includes(listing.id)) {
@@ -758,7 +807,7 @@ export function AIMatchingSwipe({
                     }}
                     isSelected={selectedForCompare.includes(listing.id)}
                     showMatchScore={activeTab === "queue" && !compareMode}
-                    enableSwipe={activeTab === "queue" && !compareMode}
+                    enableSwipe={!compareMode}
                   />
                 );
               })}
