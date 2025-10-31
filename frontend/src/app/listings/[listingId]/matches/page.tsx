@@ -145,7 +145,7 @@ export default function ListingMatchesPage() {
             matchCount={matchedListings.length}
           />
 
-          <div className="px-4 py-6">
+          <div className="px-4 md:px-12 py-6">
             {/* Your Listing Section - Desktop Only */}
             {!isMobile && (
               <>
