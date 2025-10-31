@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "motion/react";
 import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, MapPin, Clock, RotateCcw, Maximize2, Minimize2, Undo2 } from "lucide-react";
 import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
-import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
+import { ListingComparisonModalMobile } from "@/components/matching/mobile/ListingComparisonModalMobile";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-all-data-used";
 import { useCompare } from "@/components/matching/contexts/CompareContext";
 
@@ -391,7 +391,7 @@ export function AIMatchingSwipe({
       </AnimatePresence>
 
       {/* Comparison Modal */}
-      <ListingComparisonModal
+      <ListingComparisonModalMobile
         isOpen={showCompareModal}
         listings={getMockListingsForComparison()}
         userListing={getUserListing()}
