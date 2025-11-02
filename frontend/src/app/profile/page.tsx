@@ -20,6 +20,9 @@ interface UserProfile {
   rating_count: number;
   total_listings: number;
   completed_deals: number;
+  kyc_status: string;
+  kyc_session_id: string | null;
+  kyc_verified_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +34,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [kycLoading, setKycLoading] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -56,6 +60,46 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [getToken]);
+
+  const initiateKYC = async () => {
+    setKycLoading(true);
+    try {
+      const token = await getToken();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/kyc/initiate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to initiate KYC");
+      }
+
+      const data = await response.json();
+
+      // Open Didit verification in new window
+      window.open(data.verification_url, "_blank");
+
+      // Update profile to reflect in_progress status
+      if (profile) {
+        setProfile({
+          ...profile,
+          kyc_status: "in_progress",
+          kyc_session_id: data.session_id,
+        });
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to start KYC verification");
+    } finally {
+      setKycLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -135,9 +179,33 @@ export default function ProfilePage() {
                 {profile?.email || user?.primaryEmailAddress?.emailAddress}
               </p>
               <div className="flex items-center flex-wrap gap-2 mt-1">
-                <span className="px-2 py-0.5 text-xs rounded-full bg-success-50 text-success-900 font-medium">
-                  Verified
-                </span>
+                {/* KYC Status Badge */}
+                {profile?.kyc_status === "verified" ? (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-success-50 text-success-900 font-medium flex items-center gap-1">
+                    <CheckCircle size={12} className="sm:w-3 sm:h-3" />
+                    KYC Verified
+                  </span>
+                ) : profile?.kyc_status === "in_progress" ? (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-warning-50 text-warning-900 font-medium">
+                    KYC In Progress
+                  </span>
+                ) : (
+                  <button
+                    onClick={initiateKYC}
+                    disabled={kycLoading}
+                    className="px-2 py-0.5 text-xs rounded-full bg-error-50 text-error-900 font-medium hover:bg-error-100 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {kycLoading ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      <>Unverified - Click to Verify</>
+                    )}
+                  </button>
+                )}
+
                 <div className="flex items-center text-xs sm:text-sm text-yellow-600">
                   <Star size={14} className="sm:w-4 sm:h-4" fill="gold" />
                   <span className="ml-1">

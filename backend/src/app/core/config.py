@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     CLERK_SECRET_KEY: str = ""
     CLERK_FRONTEND_API: str = ""  # e.g., https://your-app.clerk.accounts.dev
 
+    # Didit KYC Verification
+    DIDIT_API_KEY: str = ""
+    DIDIT_WEBHOOK_SECRET: str = ""
+    DIDIT_WORKFLOW_ID: str = ""  # Default KYC workflow ID
+    DIDIT_BASE_URL: str = "https://verification.didit.me"
+
     @property
     def database_url(self) -> str:
         """Construct database URL from components."""
