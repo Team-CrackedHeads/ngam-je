@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Puzzle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,6 +11,7 @@ import { UserButton } from "@clerk/nextjs";
 const Header = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
+  const pathname = usePathname();
 
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
@@ -46,10 +48,10 @@ const Header = () => {
                 avatarBox: "h-10 w-10",
               },
             }}
-            afterSignOutUrl="/"
+            afterSignOutUrl={pathname}
           />
         ) : (
-          <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+          <SignInButton mode="modal" forceRedirectUrl={pathname}>
             <Button variant="ghost" className="text-accent-500 gap-2">
               <LogIn className="w-5 h-5" />
               <span className="hidden sm:inline">Login</span>
