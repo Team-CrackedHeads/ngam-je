@@ -38,11 +38,16 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "http://localhost:3000,http://localhost:8000"
 
-    # Security
+    # Security (Legacy - for old JWT auth, keeping for reference)
     secret_key: str = "dev-secret-key-change-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+
+    # Clerk Authentication
+    CLERK_PUBLISHABLE_KEY: str = ""
+    CLERK_SECRET_KEY: str = ""
+    CLERK_FRONTEND_API: str = ""  # e.g., https://your-app.clerk.accounts.dev
 
     @property
     def database_url(self) -> str:
