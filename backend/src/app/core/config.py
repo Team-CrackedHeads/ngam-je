@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     DIDIT_WORKFLOW_ID: str = ""  # Default KYC workflow ID
     DIDIT_BASE_URL: str = "https://verification.didit.me"
 
+    # ============================================================================
+    # TEMPORARY: KYC Bypass Mode for Development
+    # TODO: Remove this section before production deployment
+    # ============================================================================
+    KYC_SKIP_VERIFICATION: bool = False  # Set to True to bypass real KYC calls
+    # ============================================================================
+
     @property
     def database_url(self) -> str:
         """Construct database URL from components."""

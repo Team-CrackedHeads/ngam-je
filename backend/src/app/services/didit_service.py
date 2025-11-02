@@ -23,6 +23,12 @@ class DiditService:
         self.api_key = settings.DIDIT_API_KEY
         self.webhook_secret = settings.DIDIT_WEBHOOK_SECRET
         self.workflow_id = settings.DIDIT_WORKFLOW_ID
+        # ============================================================================
+        # TEMPORARY: KYC Bypass Mode for Development
+        # TODO: Remove this section before production deployment
+        # ============================================================================
+        self.skip_verification = settings.KYC_SKIP_VERIFICATION
+        # ============================================================================
 
     async def create_verification_session(
         self,
@@ -46,6 +52,21 @@ class DiditService:
         Raises:
             httpx.HTTPStatusError: If the API request fails
         """
+        # ============================================================================
+        # TEMPORARY: KYC Bypass Mode for Development
+        # TODO: Remove this section before production deployment
+        # ============================================================================
+        if self.skip_verification:
+            # Return mock session data for development
+            mock_session_id = f"mock_session_{user_id}_{int(datetime.now().timestamp())}"
+            return {
+                "session_id": mock_session_id,
+                "session_token": "mock_token",
+                "verification_url": f"https://mock-verify.local/session/{mock_session_id}",
+                "raw_response": {"mock": True, "note": "KYC verification bypassed for development"},
+            }
+        # ============================================================================
+
         url = f"{self.base_url}/v2/session/"
         headers = {
             "X-Api-Key": self.api_key,
@@ -100,6 +121,19 @@ class DiditService:
         Raises:
             httpx.HTTPStatusError: If the API request fails
         """
+        # ============================================================================
+        # TEMPORARY: KYC Bypass Mode for Development
+        # TODO: Remove this section before production deployment
+        # ============================================================================
+        if self.skip_verification or session_id.startswith("mock_session_"):
+            # Return mock status for development
+            return {
+                "status": "pending",
+                "decision": {"status": "pending"},
+                "mock": True,
+            }
+        # ============================================================================
+
         url = f"{self.base_url}/v2/session/{session_id}/decision/"
         headers = {
             "X-Api-Key": self.api_key,
