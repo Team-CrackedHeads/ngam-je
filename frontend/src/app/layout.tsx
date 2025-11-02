@@ -5,7 +5,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/Sidebar";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { ClerkProvider } from "@clerk/nextjs";
+// import { AuthProvider } from "@/contexts/AuthContext"; // TODO: Remove after migration
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,12 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full overflow-hidden" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-y-auto`}
-        style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
-      >
-        <AuthProvider>
+    <ClerkProvider>
+      <html lang="en" className="h-full overflow-hidden" suppressHydrationWarning>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-y-auto`}
+          style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
+        >
           <SidebarProvider className="flex-col">
             <Header />
             <div className="flex-1 flex min-h-0 w-full">
@@ -44,9 +45,8 @@ export default function RootLayout({
             </div>
             <Footer />
           </SidebarProvider>
-        </AuthProvider>
-      </body>
-    </html>
-
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
