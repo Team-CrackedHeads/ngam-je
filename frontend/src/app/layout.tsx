@@ -6,7 +6,6 @@ import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/Sidebar";
 import { ClerkProvider } from "@clerk/nextjs";
-// import { AuthProvider } from "@/contexts/AuthContext"; // TODO: Remove after migration
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
