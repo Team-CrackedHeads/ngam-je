@@ -1,21 +1,9 @@
 """Schema exports."""
 
-from src.schemas.auth import AuthResponse, LoginRequest, SignupRequest
-from src.schemas.token import RefreshTokenRequest, Token, TokenPayload
-from src.schemas.user import User, UserCreate, UserInDB, UserUpdate
+from src.schemas.user import User, UserUpdate
 
 __all__ = [
-    # Auth schemas
-    "AuthResponse",
-    "LoginRequest",
-    "SignupRequest",
-    # Token schemas
-    "Token",
-    "TokenPayload",
-    "RefreshTokenRequest",
-    # User schemas
+    # User schemas (Clerk-managed auth, no auth/token schemas needed)
     "User",
-    "UserCreate",
     "UserUpdate",
-    "UserInDB",
 ]

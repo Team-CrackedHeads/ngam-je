@@ -7,12 +7,12 @@ When adding new endpoints, import them here and include them in the api_router.
 
 from fastapi import APIRouter
 
-from src.app.api.v1.endpoints import auth, health, users
+from src.app.api.v1.endpoints import health, users
 
 api_router = APIRouter()
 
 # Include all endpoint routers
-api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
+# Note: Auth is now handled by Clerk - no /auth endpoints needed
 api_router.include_router(health.router, prefix="/health", tags=["health"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 
