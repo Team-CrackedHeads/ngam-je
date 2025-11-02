@@ -21,14 +21,14 @@ def get_clerk_jwks() -> dict:
 
     Cached to avoid repeated requests.
     """
-    # Extract domain from publishable key (format: pk_test_<domain>_<hash> or pk_live_<domain>_<hash>)
-    clerk_domain = settings.CLERK_PUBLISHABLE_KEY.split("_")[2] if "_" in settings.CLERK_PUBLISHABLE_KEY else None
-
-    if not clerk_domain:
-        # Fallback: use Clerk frontend API
+    # Prioritize CLERK_FRONTEND_API if set (most reliable method)
+    if settings.CLERK_FRONTEND_API:
         jwks_url = f"{settings.CLERK_FRONTEND_API}/.well-known/jwks.json"
     else:
-        jwks_url = f"https://{clerk_domain}.clerk.accounts.dev/.well-known/jwks.json"
+        raise ValueError(
+            "CLERK_FRONTEND_API must be set in environment variables. "
+            "Get it from Clerk Dashboard → API Keys → Show API URLs → Frontend API"
+        )
 
     response = requests.get(jwks_url, timeout=10)
     response.raise_for_status()

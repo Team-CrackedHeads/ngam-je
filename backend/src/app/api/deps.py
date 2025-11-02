@@ -76,38 +76,47 @@ def get_current_user(
         def protected_route(user: User = Depends(get_current_user)):
             return {"user": user}
     """
-    token = credentials.credentials
+    try:
+        token = credentials.credentials
 
-    # Verify Clerk token and extract payload
-    payload = verify_clerk_token(token)
-    if not payload:
+        # Verify Clerk token and extract payload
+        payload = verify_clerk_token(token)
+        if not payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired Clerk token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Extract user info from Clerk token
+        clerk_user_id = payload.get("sub")  # Clerk user ID
+        email = payload.get("email")
+
+        if not clerk_user_id or not email:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload - missing user info",
+            )
+
+        username = payload.get("username") or email.split("@")[0]  # Fallback to email prefix
+
+        # Get or create user in our database
+        user = get_or_create_user_from_clerk(clerk_user_id, email, username, db)
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive",
+            )
+
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired Clerk token",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication error: {str(e)}",
         )
-
-    # Extract user info from Clerk token
-    clerk_user_id = payload.get("sub")  # Clerk user ID
-    email = payload.get("email")
-    username = payload.get("username") or email.split("@")[0]  # Fallback to email prefix
-
-    if not clerk_user_id or not email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload - missing user info",
-        )
-
-    # Get or create user in our database
-    user = get_or_create_user_from_clerk(clerk_user_id, email, username, db)
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive",
-        )
-
-    return user
 
 
 # Example: Pagination dependency

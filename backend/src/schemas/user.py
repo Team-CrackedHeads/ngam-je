@@ -25,5 +25,10 @@ class User(UserBase):
 
     id: int
     clerk_user_id: str
+    # Profile statistics
+    rating: float
+    rating_count: int
+    total_listings: int
+    completed_deals: int
     created_at: datetime
     updated_at: datetime

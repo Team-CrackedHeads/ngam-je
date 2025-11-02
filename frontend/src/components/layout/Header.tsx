@@ -29,7 +29,7 @@ const Header = () => {
               {!isLoaded
                 ? "Loading..."
                 : isSignedIn && user
-                ? `Welcome, ${user.firstName || user.username || user.primaryEmailAddress?.emailAddress}!`
+                ? `Welcome, ${user.username || user.primaryEmailAddress?.emailAddress}!`
                 : "Welcome!"}
             </span>
           </div>

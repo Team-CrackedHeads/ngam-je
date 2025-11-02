@@ -1,18 +1,89 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Star, CheckCircle, Camera, Lock } from "lucide-react";
-import { mockSaleListings, mockWantedListings, MOCK_ACHIEVEMENTS, getAchievementStats, MOCK_USER, PROFILE_TABS } from "@/utils/mock-all-data-used";
+import { Star, CheckCircle, Camera, Lock, Loader2 } from "lucide-react";
+import { MOCK_ACHIEVEMENTS, getAchievementStats, PROFILE_TABS } from "@/utils/mock-all-data-used";
 
 // Use centralized tabs configuration
 const tabs = PROFILE_TABS;
 
+interface UserProfile {
+  id: number;
+  clerk_user_id: string;
+  email: string;
+  username: string;
+  is_active: boolean;
+  rating: number;
+  rating_count: number;
+  total_listings: number;
+  completed_deals: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function ProfilePage() {
-  const userData = MOCK_USER;
-  const saleListingsData = mockSaleListings.filter(listing => listing.isOwner === true);
-  const wantedListingsData = mockWantedListings.filter(listing => listing.isOwner === true);
+  const { getToken } = useAuth();
+  const { user } = useUser();
   const pathname = usePathname();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const token = await getToken();
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`;
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch profile: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setProfile(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProfile();
+  }, [getToken]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-100">
+        <Loader2 className="w-8 h-8 animate-spin text-accent-700" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-100">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading profile: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data from API
+  const saleListingsData = []; // TODO: Fetch from listings API
+  const wantedListingsData = []; // TODO: Fetch from listings API
 
   return (
     <div className="min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
@@ -47,7 +118,9 @@ export default function ProfilePage() {
           >
             {/* Avatar */}
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold text-white bg-secondary-500 flex-shrink-0">
-              {userData.name.charAt(0).toUpperCase()}
+              {profile?.username?.charAt(0)?.toUpperCase() ||
+               user?.username?.charAt(0)?.toUpperCase() ||
+               "U"}
               <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow">
                 <Camera size={14} className="sm:w-4 sm:h-4 text-accent-500" />
               </div>
@@ -55,18 +128,20 @@ export default function ProfilePage() {
 
             {/* Profile Info */}
             <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-base sm:text-lg truncate">{userData.name}</h2>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">{userData.email}</p>
+              <h2 className="font-bold text-base sm:text-lg truncate">
+                {profile?.username || user?.username || "User"}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">
+                {profile?.email || user?.primaryEmailAddress?.emailAddress}
+              </p>
               <div className="flex items-center flex-wrap gap-2 mt-1">
-                {userData.verified && (
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-success-50 text-success-900 font-medium">
-                    Verified
-                  </span>
-                )}
+                <span className="px-2 py-0.5 text-xs rounded-full bg-success-50 text-success-900 font-medium">
+                  Verified
+                </span>
                 <div className="flex items-center text-xs sm:text-sm text-yellow-600">
                   <Star size={14} className="sm:w-4 sm:h-4" fill="gold" />
                   <span className="ml-1">
-                    {userData.rating} ({userData.ratingCount})
+                    {profile?.rating.toFixed(1) || "0.0"} ({profile?.rating_count || 0})
                   </span>
                 </div>
               </div>
@@ -78,14 +153,14 @@ export default function ProfilePage() {
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{userData.totalListings}</p>
+            <p className="text-2xl font-bold">{profile?.total_listings || 0}</p>
             <p className="text-sm">Total Listings</p>
           </div>
           <div
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{userData.completedDeals}</p>
+            <p className="text-2xl font-bold">{profile?.completed_deals || 0}</p>
             <p className="text-sm">Completed Deals</p>
           </div>
 
