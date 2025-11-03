@@ -41,12 +41,6 @@ export default function ProductListingScreen() {
   // Find the specific listing by ID
   const listing = getListingById(listingId);
 
-  // Handle back navigation - go to category page with appropriate type
-  const handleBack = () => {
-    const typeParam = listing.listingType === "wanted" ? "wtb" : "wts";
-    router.push(`/threads/${category}?type=${typeParam}`);
-  };
-
   // Show error if listing not found
   if (!listing) {
     return (
@@ -59,7 +53,7 @@ export default function ProductListingScreen() {
             The listing you&apos;re looking for doesn&apos;t exist.
           </p>
           <button
-            onClick={handleBack}
+            onClick={() => router.push(`/threads/${category}`)}
             className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
           >
             Back to {category}
@@ -69,11 +63,17 @@ export default function ProductListingScreen() {
     );
   }
 
+  // Handle back navigation - go to category page with appropriate type
+  const handleBack = () => {
+    const typeParam = listing.listingType === "wanted" ? "wtb" : "wts";
+    router.push(`/threads/${category}?type=${typeParam}`);
+  };
+
   return (
     <div className="min-h-screen w-full pb-32 bg-primary-50">
       <ProductHeader
         onBack={handleBack}
-        listingType={listing.listingType}
+        listingType={listing.listingType === "wanted" ? "want" : listing.listingType}
         category={category}
         listingTitle={listing.title}
         isScrolled={isScrolled}

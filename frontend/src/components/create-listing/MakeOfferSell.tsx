@@ -76,12 +76,12 @@ export default function MakeOfferSell({
 
   // Form data for sell listing
   const initialFAQs = sourceFAQs.map(faq => ({
-    id: faq.id,
+    id: faq.id.toString(),
     question: faq.question,
     answer: ''
   }));
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<SellFormData>({
     uploadedImages: [],
     ownershipProofImage: null,
     generatedTitle: sourceTitle,
@@ -111,7 +111,7 @@ export default function MakeOfferSell({
         question: faq.question,
         answer: ''
       }));
-      setFormData((prev: any) => ({
+      setFormData((prev) => ({
         ...prev,
         faqs: prefilledFAQs
       }));
@@ -122,7 +122,7 @@ export default function MakeOfferSell({
   const generateTitleWithAI = async () => {
     setIsGeneratingTitle(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
       generatedTitle: MOCK_GENERATED_TITLE_SELL
     }));
@@ -132,7 +132,7 @@ export default function MakeOfferSell({
   const generateDescriptionWithAI = async () => {
     setIsGeneratingDescription(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
       generatedDescription: MOCK_GENERATED_DESCRIPTION_SELL
     }));
@@ -142,7 +142,7 @@ export default function MakeOfferSell({
   const generatePhotosWithAI = async () => {
     setIsGeneratingPhotos(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
       uploadedImages: MOCK_GENERATED_IMAGES_SELL
     }));
@@ -164,7 +164,7 @@ export default function MakeOfferSell({
   };
 
   const handleTitleChange = useCallback((text: string) => {
-    setFormData((prev: any) => ({ ...prev, generatedTitle: text }));
+    setFormData((prev) => ({ ...prev, generatedTitle: text }));
 
     if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
 
@@ -178,7 +178,7 @@ export default function MakeOfferSell({
   }, []);
 
   const handleDescriptionChange = useCallback((text: string) => {
-    setFormData((prev: any) => ({ ...prev, generatedDescription: text }));
+    setFormData((prev) => ({ ...prev, generatedDescription: text }));
 
     if (descriptionTimeoutRef.current) clearTimeout(descriptionTimeoutRef.current);
 
@@ -201,7 +201,7 @@ export default function MakeOfferSell({
       reader.onloadend = () => {
         newImageUrls.push(reader.result as string);
         if (newImageUrls.length === files.length) {
-          setFormData((prev: any) => ({
+          setFormData((prev) => ({
             ...prev,
             uploadedImages: [...prev.uploadedImages, ...newImageUrls]
           }));
@@ -212,9 +212,9 @@ export default function MakeOfferSell({
   };
 
   const handleRemoveImage = (index: number) => {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
-      uploadedImages: prev.uploadedImages.filter((_: any, i: number) => i !== index)
+      uploadedImages: prev.uploadedImages.filter((_, i) => i !== index)
     }));
     if (selectedImageIndex >= formData.uploadedImages.length - 1) {
       setSelectedImageIndex(Math.max(0, formData.uploadedImages.length - 2));
@@ -228,7 +228,7 @@ export default function MakeOfferSell({
     const reader = new FileReader();
     reader.onloadend = async () => {
       const imageUrl = reader.result as string;
-      setFormData((prev: any) => ({
+      setFormData((prev) => ({
         ...prev,
         ownershipProofImage: imageUrl
       }));
@@ -465,7 +465,7 @@ export default function MakeOfferSell({
               <FAQsStep
                 listingType="sell"
                 faqs={formData.faqs}
-                onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
+                onFAQsChange={(faqs) => setFormData((prev) => ({ ...prev, faqs }))}
                 mockFAQData={MOCK_FAQ_SELL}
                 hasAnyInput={hasAnyInput()}
                 answerOnlyMode={false}

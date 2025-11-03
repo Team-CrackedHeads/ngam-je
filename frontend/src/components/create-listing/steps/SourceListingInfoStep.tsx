@@ -25,7 +25,7 @@ export default function SourceListingInfoStep({
     <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold mb-2 text-[var(--color-accent-700)]">Source Listing</h2>
-        <p className="text-lg text-[var(--color-primary-900)]">Review the listing you're making an offer for</p>
+        <p className="text-lg text-[var(--color-primary-900)]">Review the listing you&apos;re making an offer for</p>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">

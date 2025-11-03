@@ -50,7 +50,7 @@ export default function GoogleLocationMap({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   const handleMapClick = useCallback(
-    async (event: any) => {
+    async (event: { detail: { latLng?: { lat: number; lng: number } } }) => {
       const lat = event.detail.latLng?.lat;
       const lng = event.detail.latLng?.lng;
 

@@ -19,10 +19,12 @@ const GoogleLocationMap = dynamic(() => import('@/components/create-listing/Goog
   ),
 });
 
+import { PartialFormData } from '@/types/listing-form';
+
 interface PricingShippingStepProps {
   listingType: 'buy' | 'sell';
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: PartialFormData;
+  setFormData: React.Dispatch<React.SetStateAction<PartialFormData>>;
   recommendedPriceRange: { min: number; max: number; average: number };
   showLocationDropdown: boolean;
   setShowLocationDropdown: (show: boolean) => void;

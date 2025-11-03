@@ -57,12 +57,12 @@ export default function MakeOfferBuy({
 
   // Form data for buy listing
   const initialFAQs = sourceFAQs.map(faq => ({
-    id: faq.id,
+    id: faq.id.toString(),
     question: faq.question,
     answer: ''
   }));
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<BuyFormData>({
     generatedTitle: sourceTitle,
     generatedDescription: `Looking to buy: ${sourceTitle}`,
     generatedImages: [],
@@ -93,7 +93,7 @@ export default function MakeOfferBuy({
         question: faq.question,
         answer: ''
       }));
-      setFormData((prev: any) => ({
+      setFormData((prev) => ({
         ...prev,
         faqs: prefilledFAQs
       }));
@@ -298,7 +298,7 @@ export default function MakeOfferBuy({
               <FAQsStep
                 listingType="buy"
                 faqs={formData.faqs}
-                onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
+                onFAQsChange={(faqs) => setFormData((prev) => ({ ...prev, faqs }))}
                 mockFAQData={MOCK_FAQ_BUY}
                 hasAnyInput={hasAnyInput()}
                 answerOnlyMode={true}

@@ -62,18 +62,19 @@ export function HistoricalPriceTrend({
   currency,
   onQuickSelect,
 }: HistoricalPriceTrendProps) {
-  if (!priceHistory || priceHistory.length === 0) {
-    return null;
-  }
-
+  // All hooks must be called before any early returns
   const displayCurrency = currency || 'MYR';
   const format = useMemo(() => formatMoney(displayCurrency), [displayCurrency]);
 
-  const hasYearData = useMemo(() => priceHistory.some((point) => point.year != null), [priceHistory]);
+  const monthOrder = useMemo(() => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], []);
 
-  const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const hasYearData = useMemo(() => {
+    if (!priceHistory || priceHistory.length === 0) return false;
+    return priceHistory.some((point) => point.year != null);
+  }, [priceHistory]);
 
   const monthlySeries = useMemo(() => {
+    if (!priceHistory || priceHistory.length === 0) return [];
     const sorted = priceHistory
       .map((point, originalIndex) => ({ point, originalIndex }))
       .sort((a, b) => {
@@ -100,7 +101,7 @@ export function HistoricalPriceTrend({
   }, [priceHistory, monthOrder]);
 
   const yearlySeries = useMemo(() => {
-    if (!hasYearData) return [] as { label: string; price: number }[];
+    if (!hasYearData || !priceHistory || priceHistory.length === 0) return [] as { label: string; price: number }[];
 
     const grouped = priceHistory.reduce<Record<number, { sum: number; count: number }>>((acc, point) => {
       const year = point.year ?? 0;
@@ -148,6 +149,11 @@ export function HistoricalPriceTrend({
       max: Math.max(maxValue, averageValue + padding),
     };
   }, [recommendedRange, chartData]);
+
+  // Early return after all hooks have been called
+  if (!priceHistory || priceHistory.length === 0) {
+    return null;
+  }
 
   return (
     <div className="rounded-xl border border-[var(--color-primary-200)] bg-white shadow-sm">

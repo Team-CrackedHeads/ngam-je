@@ -3,33 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Heart, MapPin, Clock } from "lucide-react";
+import { UnifiedListingData } from "@/utils/mock-all-data-used";
 
 type ListingCardProps = {
   listing: UnifiedListingData;
   onClick?: (listing: UnifiedListingData) => void;
   onMessage?: (listing: UnifiedListingData) => void;
   onFAQ?: (listing: UnifiedListingData) => void;
-};
-
-type UnifiedListingData = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  description: string;
-  price: number;
-  currency: string;
-  seller: {
-    name: string;
-    location: string;
-    verified: boolean;
-    timePosted: string;
-  };
-  tags: string[];
-  imageUrl: string;
-  category: string;
-  listingType: "sale" | "wanted";
-  views: number;
-  protected: boolean;
 };
 
 const ListingCard: React.FC<ListingCardProps> = ({

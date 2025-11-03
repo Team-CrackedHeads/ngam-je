@@ -4,7 +4,6 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Info, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FAQ } from '@/components/create-listing/faq-generator';
 import {
   MOCK_FAQ_BUY,
   MOCK_FAQ_SELL,
@@ -25,35 +24,7 @@ import ProductDetailsStep from './steps/ProductDetailsStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
-
-interface BuyFormData {
-  generatedTitle: string;
-  generatedDescription: string;
-  generatedImages: string[];
-  minPrice: string;
-  maxPrice: string;
-  currency: string;
-  location: string;
-  quantity: string;
-  shippingOptions: string[];
-  faqs: FAQ[];
-  tags: string[];
-}
-
-interface SellFormData {
-  uploadedImages: string[];
-  ownershipProofImage: string | null;
-  generatedTitle: string;
-  generatedDescription: string;
-  minPrice: string;
-  maxPrice: string;
-  currency: string;
-  location: string;
-  shippingOptions: string[];
-  inventoryQuantity: string;
-  tags: string[];
-  faqs: FAQ[];
-}
+import { BuyFormData, SellFormData, FAQ } from '@/types/listing-form';
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -467,7 +438,15 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
   if (!isOpen) return null;
 
   const formData = listingType === 'buy' ? buyFormData : sellFormData;
-  const setFormData = listingType === 'buy' ? setBuyFormData : setSellFormData;
+
+  // Wrapper function to handle setState properly for both types
+  const setFormData: React.Dispatch<React.SetStateAction<PartialFormData>> = useCallback((update) => {
+    if (listingType === 'buy') {
+      setBuyFormData(update as React.SetStateAction<BuyFormData>);
+    } else {
+      setSellFormData(update as React.SetStateAction<SellFormData>);
+    }
+  }, [listingType]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -712,7 +691,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
             <FAQsStep
               listingType={listingType}
               faqs={formData.faqs}
-              onFAQsChange={(faqs) => setFormData((prev: any) => ({ ...prev, faqs }))}
+              onFAQsChange={(faqs) => setFormData((prev) => ({ ...prev, faqs }))}
               mockFAQData={listingType === 'buy' ? MOCK_FAQ_BUY : MOCK_FAQ_SELL}
               hasAnyInput={hasAnyInput()}
             />

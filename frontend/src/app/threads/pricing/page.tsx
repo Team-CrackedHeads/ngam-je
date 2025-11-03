@@ -352,7 +352,7 @@ function PricingPage() {
           title="Boost This Thread"
           description={`Boost "${threadData.title}" thread`}
           metadata={{
-            threadId: threadData.id,
+            threadId: threadData.id.toString(),
             threadTitle: threadData.title,
             category: threadData.category,
           }}

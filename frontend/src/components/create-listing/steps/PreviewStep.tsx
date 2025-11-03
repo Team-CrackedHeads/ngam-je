@@ -14,10 +14,11 @@ import {
   Edit3,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { PartialFormData, FAQ } from '@/types/listing-form';
 
 interface PreviewStepProps {
   listingType: 'buy' | 'sell';
-  formData: any;
+  formData: PartialFormData;
   selectedImageIndex: number;
   setSelectedImageIndex: (index: number) => void;
   onEditStep: (step: number) => void;
@@ -59,7 +60,7 @@ export default function PreviewStep({
   const description = (formData.generatedDescription as string | undefined) || '';
   const tags: string[] = Array.isArray(formData.tags) ? formData.tags : [];
   const shippingOptions: string[] = Array.isArray(formData.shippingOptions) ? formData.shippingOptions : [];
-  const faqs: any[] = Array.isArray(formData.faqs) ? formData.faqs : [];
+  const faqs: FAQ[] = Array.isArray(formData.faqs) ? formData.faqs : [];
 
   const minPrice = parseFloat(formData.minPrice || '');
   const maxPrice = parseFloat(formData.maxPrice || '');

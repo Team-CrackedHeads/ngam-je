@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, RotateCcw, Maximize2, Minimize2, Undo2 } from "lucide-react";
+import { X, Heart, Info, Layers, Search, GitCompare, Sparkles, RotateCcw, Maximize2, Minimize2, Undo2, MapPin } from "lucide-react";
 import { AIMatchingProps, MatchedListing } from "@/components/matching/types";
 import { ListingComparisonModalMobile } from "@/components/matching/mobile/ListingComparisonModalMobile";
 import { mockAIMatchings, userAIListing } from "@/utils/mock-all-data-used";

@@ -8,11 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import TagGenerator, { TagGeneratorRef } from '@/components/create-listing/tag-generator';
+import { PartialFormData } from '@/types/listing-form';
 
 interface ProductDetailsStepProps {
   listingType: 'buy' | 'sell';
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: PartialFormData;
+  setFormData: React.Dispatch<React.SetStateAction<PartialFormData>>;
   isAIModeEnabled: boolean;
   setIsAIModeEnabled: (enabled: boolean) => void;
   isGeneratingTitle: boolean;
@@ -249,7 +250,7 @@ export default function ProductDetailsStep({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setFormData((prev: any) => ({ ...prev, ownershipProofImage: null }));
+                      setFormData((prev) => ({ ...prev, ownershipProofImage: null }));
                     }}
                     className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                   >
@@ -307,13 +308,13 @@ export default function ProductDetailsStep({
               id="title"
               value={formData.generatedTitle}
               onChange={(e) => {
-                setFormData((prev: any) => ({ ...prev, generatedTitle: e.target.value }));
+                setFormData((prev) => ({ ...prev, generatedTitle: e.target.value }));
                 onTitleChange(e.target.value);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Tab' && titleSuggestion) {
                   e.preventDefault();
-                  setFormData((prev: any) => ({ ...prev, generatedTitle: prev.generatedTitle + titleSuggestion }));
+                  setFormData((prev) => ({ ...prev, generatedTitle: prev.generatedTitle + titleSuggestion }));
                 }
               }}
               placeholder="Enter product title"
@@ -386,13 +387,13 @@ export default function ProductDetailsStep({
               id="description"
               value={formData.generatedDescription}
               onChange={(e) => {
-                setFormData((prev: any) => ({ ...prev, generatedDescription: e.target.value }));
+                setFormData((prev) => ({ ...prev, generatedDescription: e.target.value }));
                 onDescriptionChange(e.target.value);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Tab' && descriptionSuggestion) {
                   e.preventDefault();
-                  setFormData((prev: any) => ({ ...prev, generatedDescription: prev.generatedDescription + descriptionSuggestion }));
+                  setFormData((prev) => ({ ...prev, generatedDescription: prev.generatedDescription + descriptionSuggestion }));
                 }
               }}
               placeholder={listingType === 'buy' ? "Describe what you're looking for..." : "Describe your product..."}
@@ -437,7 +438,7 @@ export default function ProductDetailsStep({
         <TagGenerator
           ref={tagGeneratorRef}
           tags={formData.tags}
-          onTagsChange={(tags) => setFormData((prev: any) => ({ ...prev, tags }))}
+          onTagsChange={(tags) => setFormData((prev) => ({ ...prev, tags }))}
           hasContent={!!(formData.generatedTitle || formData.generatedDescription || images?.length > 0)}
           isAIModeEnabled={isAIModeEnabled}
         />

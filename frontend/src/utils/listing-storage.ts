@@ -23,9 +23,32 @@ export function generateListingId(category: string): string {
   return `${category}-${timestamp}-${random}`;
 }
 
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+interface FormData {
+  generatedTitle?: string;
+  generatedDescription?: string;
+  generatedImages?: string[];
+  uploadedImages?: string[];
+  ownershipProofImage?: string | null;
+  currency?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  tags?: string[];
+  shippingOptions?: string[];
+  faqs?: FAQ[];
+  quantity?: string;
+  inventoryQuantity?: string;
+  location?: string;
+}
+
 // Convert form data to UnifiedListingData format
 export function convertFormToListing(
-  formData: any,
+  formData: FormData,
   listingType: 'buy' | 'sell',
   threadCategory?: string
 ): Omit<UnifiedListingData, 'id'> {
