@@ -38,7 +38,7 @@ export function StripePayment({
   title,
   description,
   metadata,
-  onSuccess,
+  onSuccess: _onSuccess,
   onCancel,
 }: StripePaymentProps) {
   const [clientSecret, setClientSecret] = useState<string>("");

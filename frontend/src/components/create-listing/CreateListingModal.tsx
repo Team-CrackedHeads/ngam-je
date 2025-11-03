@@ -13,7 +13,6 @@ import {
   MOCK_GENERATED_TITLE_SELL,
   MOCK_GENERATED_DESCRIPTION_SELL,
   MOCK_GENERATED_IMAGES_SELL,
-  MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
   MOCK_PRICE_HISTORY,
   MOCK_LOCATION
 } from '@/utils/mock-all-data-used';
@@ -24,7 +23,7 @@ import ProductDetailsStep from './steps/ProductDetailsStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
-import { BuyFormData, SellFormData, FAQ } from '@/types/listing-form';
+import { BuyFormData, SellFormData } from '@/types/listing-form';
 
 interface CreateListingModalProps {
   isOpen: boolean;

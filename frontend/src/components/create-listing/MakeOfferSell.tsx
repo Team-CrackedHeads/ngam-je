@@ -40,7 +40,6 @@ export default function MakeOfferSell({
   category,
   sourceFAQs = []
 }: MakeOfferSellProps) {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const tagGeneratorRef = useRef<TagGeneratorRef | null>(null);

@@ -38,7 +38,6 @@ export default function MakeOfferBuy({
   category,
   sourceFAQs = []
 }: MakeOfferBuyProps) {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 

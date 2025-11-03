@@ -19,7 +19,6 @@ import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
 import { MockAIResponse } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
-import BreadcrumbNav from "./BreadcrumbNav";
 
 type ViewType = "grid" | "list";
 

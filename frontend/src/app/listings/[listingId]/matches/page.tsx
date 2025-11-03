@@ -6,7 +6,7 @@ import { Package, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake } from "luc
 import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
 import { generateMatchesForListing } from "@/utils/mock-all-data-used";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
 import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";

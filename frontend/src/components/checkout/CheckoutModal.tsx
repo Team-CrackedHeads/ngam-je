@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { X, Package, Handshake, Truck, Shield, MapPin, Calendar, ArrowLeft, AlertTriangle, Lightbulb, Loader2, Warehouse, ClipboardCheck } from "lucide-react";
 import { type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';

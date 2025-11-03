@@ -30,7 +30,6 @@ const FAQPage: React.FC = () => {
     router.push(`/threads/${category}/${listingId}`);
   };
 
-  const [aiQuestion, setAiQuestion] = useState<string>("");
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(
     null
   );
