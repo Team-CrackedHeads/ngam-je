@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Star, CheckCircle, Camera, Lock, Loader2 } from "lucide-react";
 import { MOCK_ACHIEVEMENTS, getAchievementStats, PROFILE_TABS } from "@/utils/mock-all-data-used";
+import axios, { AxiosError } from "axios";
 
 // Use centralized tabs configuration
 const tabs = PROFILE_TABS;
@@ -41,19 +42,19 @@ export default function ProfilePage() {
     async function fetchProfile() {
       try {
         const token = await getToken();
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`;
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch profile: ${response.status}`);
-        }
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-        const data = await response.json();
-        setProfile(data);
+        setProfile(response.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const error = err as AxiosError<{ detail?: string }>;
+        const errorMessage = error.response?.data?.detail || error.message || "An error occurred";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -66,10 +67,11 @@ export default function ProfilePage() {
     setKycLoading(true);
     try {
       const token = await getToken();
-      const response = await fetch(
+
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/kyc/initiate`,
+        {},
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -77,12 +79,7 @@ export default function ProfilePage() {
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to initiate KYC");
-      }
-
-      const data = await response.json();
+      const data = response.data as { verification_url: string; session_id: string };
 
       // Open Didit verification in new window
       window.open(data.verification_url, "_blank");
@@ -96,7 +93,9 @@ export default function ProfilePage() {
         });
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to start KYC verification");
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage = error.response?.data?.detail || error.message || "Failed to start KYC verification";
+      alert(errorMessage);
     } finally {
       setKycLoading(false);
     }

@@ -2,8 +2,9 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import axios, { AxiosError } from "axios";
 
 export default function KYCDevApprovePage() {
   const { getToken } = useAuth();
@@ -17,10 +18,11 @@ export default function KYCDevApprovePage() {
 
     try {
       const token = await getToken();
-      const response = await fetch(
+
+      await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/kyc/dev/approve`,
+        {},
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -28,17 +30,14 @@ export default function KYCDevApprovePage() {
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to approve KYC");
-      }
-
       // Success! Redirect to profile
       setTimeout(() => {
         router.push("/profile");
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage = error.response?.data?.detail || error.message || "Failed to approve KYC";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

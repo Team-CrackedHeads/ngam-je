@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse amount if it's a string like "RM 50"
-    let amountNumber = typeof amount === 'number' ? amount : parseFloat(amount.match(/[\d.]+/)?.[0] || '0');
+    const amountNumber = typeof amount === 'number' ? amount : parseFloat(amount.match(/[\d.]+/)?.[0] || '0');
 
     // Create Checkout Session for embedded checkout
     const session = await stripe.checkout.sessions.create({
@@ -45,10 +45,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       clientSecret: session.client_secret,
     });
-  } catch (error: any) {
-    console.error("Error creating checkout session:", error);
+  } catch (error) {
+    const err = error as Error;
+    console.error("Error creating checkout session:", err);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: err.message || "Internal server error" },
       { status: 500 }
     );
   }

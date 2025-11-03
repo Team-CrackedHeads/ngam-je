@@ -3,6 +3,8 @@
  * Handles authenticated requests using Clerk JWT tokens
  */
 
+import axios, { AxiosInstance, AxiosError } from 'axios';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface ApiError {
@@ -15,119 +17,101 @@ export interface ApiError {
  * Usage: const client = createClerkApiClient(await getToken());
  */
 export function createClerkApiClient(token: string | null) {
-  /**
-   * Get headers with Clerk authentication token
-   */
-  const getHeaders = (includeAuth = true): HeadersInit => {
-    const headers: HeadersInit = {
+  // Create Axios instance with base configuration
+  const axiosInstance: AxiosInstance = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 30000, // 30 second timeout
+    headers: {
       'Content-Type': 'application/json',
-    };
+    },
+  });
 
-    if (includeAuth && token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  // Request interceptor - adds auth token to all requests
+  axiosInstance.interceptors.request.use(
+    (config) => {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
 
-    return headers;
-  };
-
-  /**
-   * Generic fetch wrapper with error handling
-   */
-  const request = async <T>(
-    endpoint: string,
-    options: RequestInit = {},
-    includeAuth = true
-  ): Promise<T> => {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const headers = getHeaders(includeAuth);
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          ...headers,
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'An error occurred';
-
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
-        } catch {
-          errorMessage = await response.text().catch(() => 'An error occurred');
-        }
-
-        const error: ApiError = {
-          detail: errorMessage,
-          status: response.status,
+  // Response interceptor - handles errors globally
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError<{ detail?: string; message?: string }>) => {
+      if (error.response) {
+        // Server responded with error status
+        const errorData = error.response.data;
+        const apiError: ApiError = {
+          detail: errorData?.detail || errorData?.message || 'An error occurred',
+          status: error.response.status,
         };
-        throw error;
+        return Promise.reject(apiError);
+      } else if (error.request) {
+        // Request made but no response received
+        const apiError: ApiError = {
+          detail: 'Network error. Please check your connection.',
+          status: 0,
+        };
+        return Promise.reject(apiError);
+      } else {
+        // Something else happened
+        const apiError: ApiError = {
+          detail: error.message || 'An error occurred',
+          status: 0,
+        };
+        return Promise.reject(apiError);
       }
-
-      // Handle 204 No Content
-      if (response.status === 204) {
-        return {} as T;
-      }
-
-      return await response.json();
-    } catch (error) {
-      if ((error as ApiError).status) {
-        throw error;
-      }
-      throw {
-        detail: 'Network error. Please check your connection.',
-        status: 0,
-      } as ApiError;
     }
-  };
+  );
 
   return {
     /**
      * GET request
      */
     get: async <T>(endpoint: string): Promise<T> => {
-      return request<T>(endpoint, { method: 'GET' });
+      const response = await axiosInstance.get<T>(endpoint);
+      return response.data;
     },
 
     /**
      * POST request
      */
-    post: async <T>(endpoint: string, data?: any): Promise<T> => {
-      return request<T>(endpoint, {
-        method: 'POST',
-        body: data ? JSON.stringify(data) : undefined,
-      });
+    post: async <T>(endpoint: string, data?: unknown): Promise<T> => {
+      const response = await axiosInstance.post<T>(endpoint, data);
+      return response.data;
     },
 
     /**
      * PUT request
      */
-    put: async <T>(endpoint: string, data?: any): Promise<T> => {
-      return request<T>(endpoint, {
-        method: 'PUT',
-        body: data ? JSON.stringify(data) : undefined,
-      });
+    put: async <T>(endpoint: string, data?: unknown): Promise<T> => {
+      const response = await axiosInstance.put<T>(endpoint, data);
+      return response.data;
     },
 
     /**
      * PATCH request
      */
-    patch: async <T>(endpoint: string, data?: any): Promise<T> => {
-      return request<T>(endpoint, {
-        method: 'PATCH',
-        body: data ? JSON.stringify(data) : undefined,
-      });
+    patch: async <T>(endpoint: string, data?: unknown): Promise<T> => {
+      const response = await axiosInstance.patch<T>(endpoint, data);
+      return response.data;
     },
 
     /**
      * DELETE request
      */
     delete: async <T>(endpoint: string): Promise<T> => {
-      return request<T>(endpoint, { method: 'DELETE' });
+      const response = await axiosInstance.delete<T>(endpoint);
+      return response.data;
     },
+
+    /**
+     * Access to raw Axios instance for advanced usage
+     */
+    instance: axiosInstance,
   };
 }
 
@@ -149,7 +133,10 @@ export function createClerkApiClient(token: string | null) {
  * ```
  */
 export function useClerkApiClient() {
-  const { getToken } = require('@clerk/nextjs').useAuth();
+  // Dynamic import to avoid issues with SSR
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useAuth } = require('@clerk/nextjs');
+  const { getToken } = useAuth();
 
   return async () => {
     const token = await getToken();

@@ -7,6 +7,7 @@ import {
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
 import { X } from "lucide-react";
+import axios, { AxiosError } from "axios";
 
 // Initialize Stripe
 const stripePromise = loadStripe(
@@ -49,29 +50,19 @@ export function StripePayment({
   useEffect(() => {
     const createCheckoutSession = async () => {
       try {
-        const response = await fetch("/api/create-checkout-session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: amountNumber,
-            title,
-            description,
-            metadata,
-          }),
+        const response = await axios.post<{ clientSecret: string }>("/api/create-checkout-session", {
+          amount: amountNumber,
+          title,
+          description,
+          metadata,
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to create checkout session");
-        }
-
-        setClientSecret(data.clientSecret);
+        setClientSecret(response.data.clientSecret);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message || "Failed to initialize checkout");
+      } catch (err) {
+        const error = err as AxiosError<{ error?: string }>;
+        const errorMessage = error.response?.data?.error || error.message || "Failed to initialize checkout";
+        setError(errorMessage);
         setLoading(false);
       }
     };
