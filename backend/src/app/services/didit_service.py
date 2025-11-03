@@ -59,10 +59,12 @@ class DiditService:
         if self.skip_verification:
             # Return mock session data for development
             mock_session_id = f"mock_session_{user_id}_{int(datetime.now().timestamp())}"
+            # Point to dev approve endpoint instead of fake URL
+            dev_approve_url = "http://localhost:3000/kyc-dev-approve"
             return {
                 "session_id": mock_session_id,
                 "session_token": "mock_token",
-                "verification_url": f"https://mock-verify.local/session/{mock_session_id}",
+                "verification_url": dev_approve_url,
                 "raw_response": {"mock": True, "note": "KYC verification bypassed for development"},
             }
         # ============================================================================

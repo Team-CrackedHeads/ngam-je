@@ -33,6 +33,7 @@ class User(UserBase):
     # KYC verification
     kyc_status: str
     kyc_session_id: str | None
+    kyc_initiated_at: datetime | None
     kyc_verified_at: datetime | None
     created_at: datetime
     updated_at: datetime

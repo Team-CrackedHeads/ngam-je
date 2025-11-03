@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, timezone
 
 from src.app.api.deps import get_current_user
 from src.database import get_db
@@ -9,14 +10,31 @@ from src.schemas.user import User as UserSchema
 
 router = APIRouter()
 
+# KYC session expiry time (15 seconds for testing, change to 900 for 15 minutes in production)
+KYC_EXPIRY_SECONDS = 15  # TODO: Change to 900 for production
+
 
 @router.get("/me", response_model=UserSchema)
-async def get_my_profile(current_user: User = Depends(get_current_user)):
+async def get_my_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Get current authenticated user's profile.
 
     Requires Clerk authentication token.
     """
+    # Auto-reset expired KYC sessions
+    if current_user.kyc_status == "in_progress":
+        if (
+            not current_user.kyc_initiated_at
+            or (datetime.now(timezone.utc) - current_user.kyc_initiated_at).total_seconds() > KYC_EXPIRY_SECONDS
+        ):
+            current_user.kyc_status = "pending"
+            current_user.kyc_session_id = None
+            current_user.kyc_initiated_at = None
+            db.commit()
+
     return current_user
 
 

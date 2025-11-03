@@ -22,6 +22,7 @@ interface UserProfile {
   completed_deals: number;
   kyc_status: string;
   kyc_session_id: string | null;
+  kyc_initiated_at: string | null;
   kyc_verified_at: string | null;
   created_at: string;
   updated_at: string;

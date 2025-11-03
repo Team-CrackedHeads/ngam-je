@@ -81,6 +81,7 @@ async def initiate_kyc_verification(
         # Update user's KYC status and session ID
         current_user.kyc_status = "in_progress"
         current_user.kyc_session_id = session_data["session_id"]
+        current_user.kyc_initiated_at = datetime.now(timezone.utc)
         db.commit()
 
         return {
