@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Label } from '@/components/ui/label';
-import { Image as ImageIcon, CheckCircle, X } from 'lucide-react';
+import { Image as ImageIcon, CheckCircle } from 'lucide-react';
 
 interface SourceListingInfoStepProps {
   sourceTitle: string;
@@ -37,10 +38,11 @@ export default function SourceListingInfoStep({
           {sourceImages.length > 0 ? (
             <div className="space-y-3">
               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)]">
-                <img
+                <Image
                   src={sourceImages[selectedImageIndex]}
                   alt={`Product ${selectedImageIndex + 1}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
 
@@ -56,7 +58,7 @@ export default function SourceListingInfoStep({
                           : 'border-gray-200'
                       }`}
                     >
-                      <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                      <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
                     </button>
                   ))}
                 </div>
@@ -78,10 +80,11 @@ export default function SourceListingInfoStep({
             </Label>
             <div className="space-y-3">
               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-secondary-500)]">
-                <img
+                <Image
                   src={sourceOwnershipProof}
                   alt="Ownership Proof"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
                 <div className="absolute bottom-2 left-2 px-3 py-1 rounded bg-[var(--color-secondary-500)] text-[var(--color-accent-700)] text-sm font-medium flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />

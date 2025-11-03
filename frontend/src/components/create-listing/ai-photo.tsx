@@ -8,7 +8,7 @@
  * @param imageUrl - The URL of the ownership proof image to verify
  * @returns Promise that resolves to true if ownership is verified, false otherwise
  */
-export const verifyOwnershipProofWithAI = async (imageUrl: string): Promise<boolean> => {
+export const verifyOwnershipProofWithAI = async (_imageUrl: string): Promise<boolean> => {
   // Simulate AI verification (2 second delay)
   await new Promise(resolve => setTimeout(resolve, 2000));
 

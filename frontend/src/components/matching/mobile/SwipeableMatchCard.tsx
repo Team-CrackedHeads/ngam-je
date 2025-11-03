@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "motion/react";
-import { Heart, MapPin, Sparkles, X } from "lucide-react";
+import { MapPin, Sparkles } from "lucide-react";
 import { MatchedListing } from "@/components/matching/types";
 
 interface SwipeableMatchCardProps {

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import { X, Upload, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -107,11 +108,12 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
 
           <div className="p-6 space-y-4">
             {imagePreview && (
-              <div className="w-full h-48 rounded-lg overflow-hidden">
-                <img
+              <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                <Image
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             )}
@@ -204,10 +206,11 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               </div>
             ) : (
               <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
                 <Button
                   size="icon"

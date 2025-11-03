@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { Sparkles, Loader2, Upload, Image as ImageIcon, Trash2, Check } from 'lucide-react';
+import React from 'react';
+import Image from 'next/image';
+import { Sparkles, Loader2, Upload, Trash2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,8 +64,8 @@ export default function ProductDetailsStep({
   onRemoveImage,
   onOwnershipProofUpload,
   ownershipProofImage,
-  isVerifyingOwnership,
-  ownershipVerified,
+  isVerifyingOwnership: _isVerifyingOwnership,
+  ownershipVerified: _ownershipVerified,
   tagGeneratorRef
 }: ProductDetailsStepProps) {
   const hasAnyInput = formData.generatedTitle?.length > 0 ||
@@ -167,10 +168,11 @@ export default function ProductDetailsStep({
             <div className="space-y-3">
               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
                    onClick={() => document.getElementById('imageUpload')?.click()}>
-                <img
+                <Image
                   src={images[selectedImageIndex]}
                   alt={`Product ${selectedImageIndex + 1}`}
-                  className="w-full h-full object-cover transition-all group-hover:blur-sm"
+                  fill
+                  className="object-cover transition-all group-hover:blur-sm"
                 />
                 {/* Upload Overlay on Hover */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
@@ -199,7 +201,7 @@ export default function ProductDetailsStep({
                         : 'border-gray-200'
                     }`}
                   >
-                    <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
                   </button>
                 ))}
               </div>
@@ -237,10 +239,11 @@ export default function ProductDetailsStep({
                   className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-secondary-500)] cursor-pointer group"
                   onClick={() => document.getElementById('ownershipProofUpload')?.click()}
                 >
-                  <img
+                  <Image
                     src={ownershipProofImage}
                     alt="Ownership Proof"
-                    className="w-full h-full object-cover transition-all group-hover:blur-sm"
+                    fill
+                    className="object-cover transition-all group-hover:blur-sm"
                   />
                   {/* Upload Overlay on Hover */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">

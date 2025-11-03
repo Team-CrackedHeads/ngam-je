@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
 import { MOCK_THREADS, TIER_FEATURES } from "@/utils/mock-all-data-used";
@@ -137,11 +138,12 @@ function PricingPage() {
           <div className="text-center">
             {/* thread image */}
             <div className="flex justify-center mb-4 sm:mb-6">
-              <div className="w-30 h-30 sm:w-30 sm:h-30 rounded-full overflow-hidden border-2 border-neutral-white shadow-lg">
-                <img
+              <div className="relative w-30 h-30 sm:w-30 sm:h-30 rounded-full overflow-hidden border-2 border-neutral-white shadow-lg">
+                <Image
                   src={threadData.imageUrl}
                   alt={threadData.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>

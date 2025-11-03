@@ -130,7 +130,7 @@ const Sorting: React.FC<SortingProps> = ({
     {
       label: "Has Gallery",
       filter: "Has Gallery" as QuickFilter,
-      icon: <Image size={ICON_SIZE} />,
+      icon: <Image size={ICON_SIZE} aria-label="Gallery filter icon" />,
     },
   ];
 

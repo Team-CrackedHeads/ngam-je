@@ -91,7 +91,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
   const placesLibrary = useMapsLibrary('places');
 
   // Handle location search with Google Places Autocomplete
-  const handleLocationSearch = (query: string, isDelivery: boolean = true) => {
+  const handleLocationSearch = (query: string, _isDelivery: boolean = true) => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }

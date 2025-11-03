@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { DollarSign, MapPin, ChevronDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,8 +47,8 @@ function PricingShippingContent({
   recommendedPriceRange,
   showLocationDropdown,
   setShowLocationDropdown,
-  filteredLocations,
-  setFilteredLocations,
+  filteredLocations: _filteredLocations,
+  setFilteredLocations: _setFilteredLocations,
   selectedLocationIndex,
   setSelectedLocationIndex,
   showCurrencyDropdown,

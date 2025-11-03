@@ -45,6 +45,14 @@ function truncateWords(text: string, min = 100, max = 250): string {
   return words.slice(0, target).join(" ") + "…";
 }
 
+// Default suggestions for the "Continue asking" feature
+const DEFAULT_SUGGESTIONS = [
+  "Show me more details",
+  "Is the price fair right now?",
+  "Common defects to check?",
+  "How to verify authenticity?",
+];
+
 export default function NgamOverview({
   longContent,
   shortContent,
@@ -61,14 +69,6 @@ export default function NgamOverview({
 }: NgamOverviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [askValue, setAskValue] = useState("");
-
-  // Import default suggestions from centralized data
-  const DEFAULT_SUGGESTIONS = [
-    "Show me more details",
-    "Is the price fair right now?",
-    "Common defects to check?",
-    "How to verify authenticity?",
-  ];
 
   // Defaults for suggestion bubbles (expanded mode only)
   const bubbles = useMemo(

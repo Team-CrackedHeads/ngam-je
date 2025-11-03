@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, Info, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
@@ -12,11 +11,9 @@ import PreviewStep from './steps/PreviewStep';
 import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 import {
   MOCK_LOCATION,
-  MOCK_PRICE_HISTORY,
   MOCK_GENERATED_TITLE_SELL,
   MOCK_GENERATED_DESCRIPTION_SELL,
   MOCK_GENERATED_IMAGES_SELL,
-  MOCK_OWNERSHIP_PROOF_IMAGE_SELL,
   MOCK_FAQ_SELL
 } from '@/utils/mock-all-data-used';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';

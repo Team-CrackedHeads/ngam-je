@@ -97,17 +97,17 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
       setDraftOrder(prev => prev.filter(draftId => draftId !== id));
       setDraftValues(prev => {
         if (!(id in prev)) return prev;
-        const { [id]: _, ...rest } = prev;
+        const { [id]: _removed, ...rest } = prev;
         return rest;
       });
       setSavedQuestions(prev => {
         if (!(id in prev)) return prev;
-        const { [id]: _, ...rest } = prev;
+        const { [id]: _removed, ...rest } = prev;
         return rest;
       });
       setDraftPositions(prev => {
         if (!(id in prev)) return prev;
-        const { [id]: _, ...rest } = prev;
+        const { [id]: _removed, ...rest } = prev;
         return rest;
       });
       return;

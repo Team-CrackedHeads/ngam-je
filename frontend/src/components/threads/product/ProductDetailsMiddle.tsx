@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface ProductDetailsMiddleProps {
   galleryImages: string[];
@@ -24,13 +25,14 @@ const ProductDetailsMiddle: React.FC<ProductDetailsMiddleProps> = ({
             {galleryImages.map((image, index) => (
               <div
                 key={index} // Using index as key. Consider a unique ID if available for better performance/stability with dynamic lists.
-                className="w-24 h-24 rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
+                className="relative w-24 h-24 rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => openModal(index)}
               >
-                <img
+                <Image
                   src={image.replace("w=1200", "w=200")} // Adjusting image size for thumbnail
                   alt={`Gallery thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             ))}

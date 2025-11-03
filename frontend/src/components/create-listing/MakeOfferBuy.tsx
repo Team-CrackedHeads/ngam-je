@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, MessageCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
@@ -9,7 +8,7 @@ import SourceListingInfoStep from './steps/SourceListingInfoStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
-import { MOCK_LOCATION, MOCK_PRICE_HISTORY, MOCK_FAQ_BUY } from '@/utils/mock-all-data-used';
+import { MOCK_LOCATION, MOCK_FAQ_BUY } from '@/utils/mock-all-data-used';
 
 interface MakeOfferBuyProps {
   isOpen: boolean;

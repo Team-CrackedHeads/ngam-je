@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Info, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,11 +20,12 @@ import {
 import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
+import type { PartialFormData } from '@/types/listing-form';
+import type { BuyFormData, SellFormData } from '@/types/listing-form';
 import ProductDetailsStep from './steps/ProductDetailsStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
 import PreviewStep from './steps/PreviewStep';
-import { BuyFormData, SellFormData } from '@/types/listing-form';
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -100,6 +102,14 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
     average: 0
   });
 
+  // Wrapper function to handle setState properly for both types
+  const setFormData = useCallback((update: React.SetStateAction<PartialFormData>) => {
+    if (listingType === 'buy') {
+      setBuyFormData(update as React.SetStateAction<BuyFormData>);
+    } else {
+      setSellFormData(update as React.SetStateAction<SellFormData>);
+    }
+  }, [listingType]);
 
   const steps = listingType === null
     ? [{ number: 1, label: 'Choose Type', icon: ListPlus }]
@@ -438,15 +448,6 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
 
   const formData = listingType === 'buy' ? buyFormData : sellFormData;
 
-  // Wrapper function to handle setState properly for both types
-  const setFormData: React.Dispatch<React.SetStateAction<PartialFormData>> = useCallback((update) => {
-    if (listingType === 'buy') {
-      setBuyFormData(update as React.SetStateAction<BuyFormData>);
-    } else {
-      setSellFormData(update as React.SetStateAction<SellFormData>);
-    }
-  }, [listingType]);
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col border border-neutral-200">
@@ -519,7 +520,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
               <div className="space-y-4">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center mb-4">
-                  <img src="/Forms-cuate.svg" alt="Create Listing" className="w-32 h-32" />
+                  <Image src="/create-listing-illustration.svg" alt="Create Listing" width={128} height={128} />
                 </div>
                 <h2 className="text-3xl font-bold mb-2 text-accent-700">
                   Create Your Listing

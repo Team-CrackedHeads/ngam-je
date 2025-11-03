@@ -11,10 +11,10 @@ interface GoogleLocationMapProps {
 }
 
 function MapContent({
-  location,
-  onLocationSelect,
+  location: _location,
+  onLocationSelect: _onLocationSelect,
   initialCoordinates,
-  hideLocationDisplay,
+  hideLocationDisplay: _hideLocationDisplay,
 }: GoogleLocationMapProps) {
   const map = useMap();
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number }>(

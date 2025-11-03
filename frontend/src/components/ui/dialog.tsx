@@ -37,7 +37,7 @@ const DialogContent = React.forwardRef<
   }
 >(({ className, children, showOverlay = true, hideCloseButton = false, ...props }, ref) => {
   // Remove custom props from being passed to DialogPrimitive.Content
-  const { showOverlay: _, hideCloseButton: __, ...contentProps } = { showOverlay, hideCloseButton, ...props };
+  const { showOverlay: _, hideCloseButton: __, ..._contentProps } = { showOverlay, hideCloseButton, ...props };
 
   return (
     <DialogPortal>

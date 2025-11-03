@@ -1,5 +1,5 @@
 // src/components/threads/product/ActionButtons.tsx
-import { MessageCircle, HelpCircle, ShoppingCart, HandCoins } from "lucide-react";
+import { MessageCircle, HandCoins } from "lucide-react";
 // Import shared styles from the ProductDetails file
 import { wideButtonClasses } from "./ProductDetails";
 
@@ -7,16 +7,16 @@ const glowStyle = "text-accent-500 focus:ring-accent-500";
 
 interface ActionButtonsProps {
   onChat?: () => void;
-  onFAQ?: () => void;
+  _onFAQ?: () => void;
   onBuyNow?: () => void;
   listingType?: "sale" | "want";
 }
 
 export const ActionButtons = ({
   onChat,
-  onFAQ,
+  _onFAQ,
   onBuyNow,
-  listingType = "sale",
+  listingType: _listingType = "sale",
 }: ActionButtonsProps) => {
 
   return (
@@ -30,7 +30,7 @@ export const ActionButtons = ({
     </button>
     {/* <button
       className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
-      onClick={onFAQ}
+      onClick={_onFAQ}
     >
       <HelpCircle className="w-5 h-5 text-accent-500" />
       <span>FAQ</span>

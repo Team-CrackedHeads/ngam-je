@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Clock, Plus, X, Repeat } from 'lucide-react';
+import { Calendar, Plus, X, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
@@ -184,7 +184,7 @@ export function MeetupScheduler({ onScheduleSelect, initialAvailability }: Meetu
     return times;
   };
 
-  const timeOptions = generateTimeOptions();
+  const _timeOptions = generateTimeOptions();
 
   // Get next 30 days for date selection
   const getAvailableDates = () => {
@@ -221,7 +221,7 @@ export function MeetupScheduler({ onScheduleSelect, initialAvailability }: Meetu
   };
 
   // Convert 24-hour time string to TimeSelection
-  const timeStringToSelection = (timeStr: string): TimeSelection => {
+  const _timeStringToSelection = (timeStr: string): TimeSelection => {
     const [hours, minutes] = timeStr.split(':');
     const hour24 = parseInt(hours);
     const period: 'AM' | 'PM' = hour24 >= 12 ? 'PM' : 'AM';
@@ -234,7 +234,7 @@ export function MeetupScheduler({ onScheduleSelect, initialAvailability }: Meetu
   };
 
   // Convert TimeSelection to 24-hour time string
-  const timeSelectionToString = (selection: TimeSelection): string => {
+  const _timeSelectionToString = (selection: TimeSelection): string => {
     let hour24 = parseInt(selection.hour);
     if (selection.period === 'PM' && hour24 !== 12) {
       hour24 += 12;

@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Tag, X, Plus, RefreshCw, Loader2, Sparkles } from 'lucide-react';
+import { Tag, X, Plus, Loader2, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { databaseTags, suggestedTags } from '@/utils/mock-all-data-used';
 
 // Editable Tag Component
@@ -76,7 +75,7 @@ export interface TagGeneratorRef {
   generateTags: () => Promise<void>;
 }
 
-const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onTagsChange, hasContent = true, isAIModeEnabled = false }, ref) => {
+const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onTagsChange, hasContent: _hasContent = true, isAIModeEnabled = false }, ref) => {
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
