@@ -19,7 +19,7 @@ const tabs: { id: TabType; label: string; icon: React.ReactNode; color: string }
 ];
 
 export function AIMatchingSwipe({
-  _availableListings,
+  availableListings: _availableListings,
   onMatch,
   onMessage,
   onViewDetails,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { APIProvider, Map, AdvancedMarker, Pin, useMap } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, AdvancedMarker, Pin, useMap, MapMouseEvent } from '@vis.gl/react-google-maps';
 
 interface GoogleLocationMapProps {
   location: string;
@@ -50,11 +50,13 @@ export default function GoogleLocationMap({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   const handleMapClick = useCallback(
-    async (event: { detail: { latLng?: { lat: number; lng: number } } }) => {
-      const lat = event.detail.latLng?.lat;
-      const lng = event.detail.latLng?.lng;
+    async (event: MapMouseEvent) => {
+      const latLng = event.detail.latLng;
 
-      if (!lat || !lng) return;
+      if (!latLng) return;
+
+      const lat = latLng.lat;
+      const lng = latLng.lng;
 
       const coordinates = { lat, lng };
 

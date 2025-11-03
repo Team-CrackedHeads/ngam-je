@@ -186,7 +186,7 @@ function PricingShippingContent({
         <HistoricalPriceTrend
           priceHistory={MOCK_PRICE_HISTORY}
           recommendedRange={recommendedPriceRange}
-          currency={formData.currency}
+          currency={formData.currency || 'MYR'}
           onQuickSelect={handleRecommendedClick}
         />
 
@@ -499,7 +499,7 @@ function PricingShippingContent({
               Or click on the map to select
             </Label>
             <GoogleLocationMap
-              location={formData.location}
+              location={formData.location || ''}
               onLocationSelect={handleLocationSelectFromMap}
               initialCoordinates={mapCoordinates}
             />
@@ -511,7 +511,7 @@ function PricingShippingContent({
 
         {/* Shipping Section */}
         <ShippingPreferences
-          shippingOptions={formData.shippingOptions}
+          shippingOptions={formData.shippingOptions || []}
           onShippingOptionsChange={(options) => setFormData({ ...formData, shippingOptions: options })}
         />
       </div>

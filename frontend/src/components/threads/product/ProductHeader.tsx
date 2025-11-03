@@ -11,7 +11,7 @@ const glowStyle = "text-accent-500 focus:ring-accent-500";
 
 interface ProductHeaderProps {
   onBack?: () => void;
-  listingType?: "sale" | "want";
+  listingType?: "sale" | "wanted";
   category: string;
   listingTitle: string;
   isScrolled?: boolean;

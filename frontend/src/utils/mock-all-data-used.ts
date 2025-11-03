@@ -431,6 +431,7 @@ export type UnifiedListingData = {
   tags: string[];
   views: number;
   protected: boolean;
+  faqs?: Array<{ id: string; question: string; answer: string }>;
 };
 
 export const UNIFIED_LISTINGS: UnifiedListingData[] = [
@@ -2664,7 +2665,7 @@ export const messagesData: MessagePreview[] = [
     product: {
       title: "Nike Air Max - Blue/Orange",
       price: "$299.9",
-      image: "/shoe.png",
+      image: "https://unsplash.com/es/fotos/azul-blanco-y-naranja-nike-air-max-90-JV1RMoBC8fQ",
     },
   },
   {
@@ -2687,7 +2688,7 @@ export const messagesData: MessagePreview[] = [
     product: {
       title: "Vintage Leather Jacket",
       price: "$200",
-      image: "/jacket.png",
+      image: "https://unsplash.com/photos/a-row-of-leather-jackets-hanging-on-a-rack-6R5srMX5iUk",
     },
   },
   {

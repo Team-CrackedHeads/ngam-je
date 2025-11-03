@@ -7,14 +7,14 @@ const glowStyle = "text-accent-500 focus:ring-accent-500";
 
 interface ActionButtonsProps {
   onChat?: () => void;
-  _onFAQ?: () => void;
+  onFAQ?: () => void;
   onBuyNow?: () => void;
   listingType?: "sale" | "want";
 }
 
 export const ActionButtons = ({
   onChat,
-  _onFAQ,
+  onFAQ: _onFAQ,
   onBuyNow,
   listingType: _listingType = "sale",
 }: ActionButtonsProps) => {

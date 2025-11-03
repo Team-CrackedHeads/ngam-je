@@ -24,7 +24,7 @@ export default function ChatHistoryDisplay({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [inputText, setInputText] = useState("");
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[selectedChat]>(mockFullChatHistory);
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(mockFullChatHistory);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Handle chat selection from URL query param or initialChatId
@@ -73,7 +73,7 @@ export default function ChatHistoryDisplay({
         chat.id === selectedChat.id
           ? {
               ...chat,
-              messages: [...(chat.messages || [selectedChat]), newMessage],
+              messages: [...(chat.messages || []), newMessage],
             }
           : chat
       )
@@ -92,7 +92,7 @@ export default function ChatHistoryDisplay({
 
   // Helper to format timestamp
   const formatTimestamp = (date: Date) => {
-    return date.toLocaleTimeString([selectedChat], { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   return (

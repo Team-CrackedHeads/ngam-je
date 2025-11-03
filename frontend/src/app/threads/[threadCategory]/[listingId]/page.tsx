@@ -73,7 +73,7 @@ export default function ProductListingScreen() {
     <div className="min-h-screen w-full pb-32 bg-primary-50">
       <ProductHeader
         onBack={handleBack}
-        listingType={listing.listingType === "wanted" ? "want" : listing.listingType}
+        listingType={listing.listingType}
         category={category}
         listingTitle={listing.title}
         isScrolled={isScrolled}

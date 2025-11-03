@@ -10,7 +10,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { getMockMatchedListings, _mockSaleListings, type Listing } from "@/utils/mock-all-data-used";
+import { getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
 import { AnimatePresence } from "motion/react";
 import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";

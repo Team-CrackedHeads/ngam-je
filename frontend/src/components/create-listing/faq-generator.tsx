@@ -167,7 +167,7 @@ export default function FAQGenerator({ faqs, onFAQsChange, hasAnyInput = true, m
         setDraftPositions(positions);
         setSavedQuestions(prev => {
           const next = { ...prev };
-          order.forEach(id => {
+          order.forEach((id: string) => {
             next[id] = false;
           });
           return next;

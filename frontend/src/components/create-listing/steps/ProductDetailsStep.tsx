@@ -68,9 +68,9 @@ export default function ProductDetailsStep({
   ownershipVerified: _ownershipVerified,
   tagGeneratorRef
 }: ProductDetailsStepProps) {
-  const hasAnyInput = formData.generatedTitle?.length > 0 ||
-                      formData.generatedDescription?.length > 0 ||
-                      (listingType === 'buy' ? formData.generatedImages?.length : formData.uploadedImages?.length) > 0;
+  const hasAnyInput = (formData.generatedTitle?.length || 0) > 0 ||
+                      (formData.generatedDescription?.length || 0) > 0 ||
+                      ((listingType === 'buy' ? formData.generatedImages?.length : formData.uploadedImages?.length) || 0) > 0;
 
   const images = listingType === 'buy' ? formData.generatedImages : formData.uploadedImages;
 
@@ -164,12 +164,12 @@ export default function ProductDetailsStep({
             className="hidden"
           />
 
-          {images?.length > 0 ? (
+          {(images?.length || 0) > 0 ? (
             <div className="space-y-3">
               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
                    onClick={() => document.getElementById('imageUpload')?.click()}>
                 <Image
-                  src={images[selectedImageIndex]}
+                  src={images![selectedImageIndex]}
                   alt={`Product ${selectedImageIndex + 1}`}
                   fill
                   className="object-cover transition-all group-hover:blur-sm"
@@ -191,7 +191,7 @@ export default function ProductDetailsStep({
               </div>
 
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((img: string, idx: number) => (
+                {images!.map((img: string, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImageIndex(idx)}
@@ -440,9 +440,9 @@ export default function ProductDetailsStep({
         {/* Tags Section */}
         <TagGenerator
           ref={tagGeneratorRef}
-          tags={formData.tags}
+          tags={formData.tags || []}
           onTagsChange={(tags) => setFormData((prev) => ({ ...prev, tags }))}
-          hasContent={!!(formData.generatedTitle || formData.generatedDescription || images?.length > 0)}
+          hasContent={!!(formData.generatedTitle || formData.generatedDescription || (images && images.length > 0))}
           isAIModeEnabled={isAIModeEnabled}
         />
       </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, MessageCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
+import type { BuyFormData, PartialFormData } from '@/types/listing-form';
 import SourceListingInfoStep from './steps/SourceListingInfoStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
@@ -125,8 +126,9 @@ export default function MakeOfferBuy({
   };
 
   const handleSubmit = async () => {
-    const listingId = generateListingId();
-    const newListing = convertFormToListing(formData, 'buy', listingId, category);
+    const listingId = generateListingId(category);
+    const listingWithoutId = convertFormToListing(formData, 'buy', category);
+    const newListing = { ...listingWithoutId, id: listingId };
     addNewListing(newListing);
 
     console.log('🎯 Auto-matching buy offer with source listing:', sourceListingId);
@@ -274,7 +276,7 @@ export default function MakeOfferBuy({
               <PricingShippingStep
                 listingType="buy"
                 formData={formData}
-                setFormData={setFormData}
+                setFormData={setFormData as React.Dispatch<React.SetStateAction<PartialFormData>>}
                 recommendedPriceRange={recommendedPriceRange}
                 showLocationDropdown={showLocationDropdown}
                 setShowLocationDropdown={setShowLocationDropdown}

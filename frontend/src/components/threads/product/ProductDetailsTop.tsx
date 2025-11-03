@@ -32,7 +32,7 @@ const ProductDetailsTop: React.FC<ProductCardDetailsProps> = ({
         {/* Updated badge logic */}
         <span
           className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold text-accent-700 ${
-            listing.listingType === "for-sale"
+            listing.listingType === "sale"
               ? "bg-secondary-500"
               : "bg-primary-500"
           }`}

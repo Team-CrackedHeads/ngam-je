@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
@@ -76,7 +76,7 @@ function TierCard({
 }
 
 // main pricing page component
-function PricingPage() {
+function PricingPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const currentTier = parseInt(searchParams.get("tier") || "0");
@@ -366,4 +366,14 @@ function PricingPage() {
   );
 }
 
-export default PricingPage;
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-primary-50 flex items-center justify-center">
+        <div className="text-accent-700">Loading...</div>
+      </div>
+    }>
+      <PricingPageContent />
+    </Suspense>
+  );
+}

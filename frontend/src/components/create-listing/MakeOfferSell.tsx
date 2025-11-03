@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Check, DollarSign, Eye, Info, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
+import type { SellFormData, PartialFormData } from '@/types/listing-form';
 import ProductDetailsStep from './steps/ProductDetailsStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
@@ -264,8 +265,9 @@ export default function MakeOfferSell({
   };
 
   const handleSubmit = async () => {
-    const listingId = generateListingId();
-    const newListing = convertFormToListing(formData, 'sell', listingId, category);
+    const listingId = generateListingId(category);
+    const listingWithoutId = convertFormToListing(formData, 'sell', category);
+    const newListing = { ...listingWithoutId, id: listingId };
     addNewListing(newListing);
 
     console.log('🎯 Auto-matching sell offer with source listing:', sourceListingId);
@@ -407,7 +409,7 @@ export default function MakeOfferSell({
               <ProductDetailsStep
                 listingType="sell"
                 formData={formData}
-                setFormData={setFormData}
+                setFormData={setFormData as React.Dispatch<React.SetStateAction<PartialFormData>>}
                 isAIModeEnabled={isAIModeEnabled}
                 setIsAIModeEnabled={setIsAIModeEnabled}
                 isGeneratingTitle={isGeneratingTitle}
@@ -439,7 +441,7 @@ export default function MakeOfferSell({
               <PricingShippingStep
                 listingType="sell"
                 formData={formData}
-                setFormData={setFormData}
+                setFormData={setFormData as React.Dispatch<React.SetStateAction<PartialFormData>>}
                 recommendedPriceRange={recommendedPriceRange}
                 showLocationDropdown={showLocationDropdown}
                 setShowLocationDropdown={setShowLocationDropdown}

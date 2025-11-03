@@ -66,7 +66,7 @@ export function convertFormToListing(
     title: formData.generatedTitle || 'Untitled Listing',
     subtitle: isBuy ? `Budget ${formData.currency} ${formData.minPrice} - ${formData.maxPrice}` : undefined,
     description: formData.generatedDescription || '',
-    price: parseFloat(isBuy ? formData.maxPrice : formData.minPrice) || 0,
+    price: parseFloat(isBuy ? (formData.maxPrice || '0') : (formData.minPrice || '0')) || 0,
     currency: formData.currency || 'MYR',
     seller: {
       name: 'You', // In real app, get from auth context

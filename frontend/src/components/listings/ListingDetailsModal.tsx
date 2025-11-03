@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Package, Handshake, X, MapPin, Clock, Eye, Heart, Tag, BadgeCheck, TrendingUp, User } from "lucide-react";
-import { type Listing } from "@/utils/mock-listings-data";
+import { type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
@@ -248,24 +248,17 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                     </span>
                   </div>
                 )}
-                {/* Match Quality */}
-                {type === "matched" && "matchQuality" in listing && listing.matchQuality && (
+                {/* AI Match Score from background negotiations */}
+                {type === "matched" && "matchScore" in listing && typeof listing.matchScore === 'number' && (
                   <div className="flex justify-between">
-                    <span className="text-accent-500">Match Quality</span>
-                    <span className={`font-medium capitalize ${
-                      listing.matchQuality === 'excellent' ? 'text-success-500' :
-                      listing.matchQuality === 'good' ? 'text-secondary-700' :
+                    <span className="text-accent-500">AI Match Score</span>
+                    <span className={`font-medium ${
+                      listing.matchScore >= 80 ? 'text-success-500' :
+                      listing.matchScore >= 60 ? 'text-secondary-700' :
                       'text-primary-600'
                     }`}>
-                      {listing.matchQuality}
+                      {listing.matchScore}%
                     </span>
-                  </div>
-                )}
-                {/* Match Score Detail */}
-                {type === "matched" && "matchScore" in listing && listing.matchScore !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-accent-500">Match Score</span>
-                    <span className="font-medium text-accent-700">{listing.matchScore}/100</span>
                   </div>
                 )}
               </div>
