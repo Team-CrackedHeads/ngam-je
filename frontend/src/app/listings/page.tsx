@@ -1,9 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Grid, List, Timer, AlertTriangle } from "lucide-react";
-import { useState, useEffect } from "react";
-import { mockBuyListings, mockSellListings, type Listing } from "@/utils/mock-listings-data";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { mockSaleListings, mockWantedListings, getMockMatchedListings, getMatchCount, LISTINGS_TABS, type Listing } from "@/utils/mock-all-data-used";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import CategoryDropdown from "@/components/ui/CategoryDropdown";
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -52,25 +55,163 @@ function getExtensionPrice(subscriptionTier: string): string {
 }
 
 
-// Tabs configuration
-const tabs = [
-  { label: "Buy Listings", value: "buy", icon: ShoppingCart },
-  { label: "Sell Listings", value: "sell", icon: Package },
-];
+// Use centralized tabs configuration and add icons
+const tabs = LISTINGS_TABS.map(tab => ({
+  ...tab,
+  icon: tab.iconName === "ShoppingCart" ? ShoppingCart : tab.iconName === "Package" ? Package : Handshake
+}));
 
-function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "buy" | "sell"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+// Mobile-specific compact card component
+function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {
+  const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.subscriptionTier);
+  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
 
-  const handleExtendListing = () => {
+  const handleExtendListing = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
+  };
+
+  const handleViewMatches = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  const handleCardClick = () => {
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  return (
+    <div>
+      {/* Timer badge and Match badge above card */}
+      <div className="mb-2 flex items-center gap-2 flex-wrap">
+        <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+          timeRemaining.expired
+            ? 'bg-red-100 text-red-700'
+            : timeRemaining.urgent
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-green-100 text-green-700'
+        }`}>
+          {timeRemaining.expired ? (
+            <AlertTriangle size={10} />
+          ) : (
+            <Timer size={10} />
+          )}
+          <span className="font-medium">{timeRemaining.text}</span>
+        </div>
+
+        {/* Match badge */}
+        {matchCount > 0 && (
+          <button
+            onClick={handleViewMatches}
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
+          >
+            <Sparkles size={12} />
+            <span>{matchCount}</span>
+          </button>
+        )}
+      </div>
+
+      <div onClick={handleCardClick} className={`rounded-xl shadow p-3 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+        {/* Image placeholder */}
+        <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2 flex items-center justify-center relative">
+          <span className="text-gray-400 text-xs">Image</span>
+
+          {/* Extension overlay for urgent/expired listings */}
+          {(timeRemaining.urgent || timeRemaining.expired) && (
+            <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-lg flex flex-col items-center justify-center">
+              <AlertTriangle className="mb-1 text-black w-3 h-3" />
+              <button
+                onClick={handleExtendListing}
+                className="px-2 py-0.5 bg-secondary-500 text-accent-700 rounded text-[10px] font-medium hover:bg-secondary-600 transition-colors shadow-md"
+              >
+                {extensionPrice}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Title */}
+          <h3 className="font-semibold text-accent-700 line-clamp-2 text-xs leading-tight mb-1">
+            {listing.title}
+          </h3>
+
+          {/* Price/Budget */}
+          <div className="mb-2">
+            <span className="font-bold text-base text-secondary-700">
+              {type === "sale" ? listing.price : listing.budget}
+            </span>
+          </div>
+
+          {/* Category badge */}
+          <div className="mb-2">
+            <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary-200 text-accent-600">
+              {listing.category}
+            </span>
+          </div>
+
+          {/* Footer - compact */}
+          <div className="space-y-1 mt-auto">
+            {/* Location */}
+            <div className="flex items-center gap-1 text-[10px] text-accent-400">
+              <MapPin className="w-[11px] h-[11px]" />
+              <span className="truncate">{listing.location}</span>
+            </div>
+
+            {/* Views and Likes */}
+            <div className="flex items-center gap-3 text-[11px] text-accent-400">
+              <div className="flex items-center gap-1">
+                <Eye size={12} />
+                <span>{listing.views}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Heart size={12} />
+                <span>{listing.likes}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+  const router = useRouter();
+  const isMobile = useIsMobile();
+  const timeRemaining = getTimeRemaining(listing.expiresAt);
+  const extensionPrice = getExtensionPrice(listing.subscriptionTier);
+  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
+
+  const handleExtendListing = (e: React.MouseEvent) => {
+    e.stopPropagation();
     console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
     // Future implementation: API call to extend listing
   };
+
+  const handleViewMatches = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  const handleCardClick = () => {
+    // Navigate to matches page for this listing
+    router.push(`/listings/${listing.id}/matches?type=${type}`);
+  };
+
+  // Use mobile component for grid view on mobile
+  if (isMobile && viewMode === "grid") {
+    return <MobileProductCard listing={listing} type={type} isHighlighted={isHighlighted} />;
+  }
+
   if (viewMode === "list") {
     return (
       <div>
-        {/* Timer badge above card */}
-        <div className="mb-2">
+        {/* Timer badge and Match badge above card */}
+        <div className="mb-2 flex items-center gap-2">
           <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
             timeRemaining.expired
               ? 'bg-red-100 text-red-700'
@@ -85,9 +226,21 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
             )}
             <span className="font-medium">{timeRemaining.text}</span>
           </div>
+
+          {/* Match badge */}
+          {matchCount > 0 && (
+            <button
+              onClick={handleViewMatches}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
+            >
+              <Sparkles size={12} />
+              <span className="max-md:hidden">{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+              <span className="md:hidden">{matchCount}</span>
+            </button>
+          )}
         </div>
 
-        <div className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-48 ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+        <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-48 ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
           <div className="flex gap-4 h-full">
           {/* Image Section */}
           <div className="flex-shrink-0">
@@ -96,7 +249,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
               <span className="text-gray-400 text-xs">Image</span>
 
               {/* Extension overlay for urgent/expired listings - row view only */}
-              {listing.isOwner && (timeRemaining.urgent || timeRemaining.expired) && (
+              {(timeRemaining.urgent || timeRemaining.expired) && (
                 <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
                   <div className="flex items-center gap-1 mb-2">
                     <AlertTriangle size={16} className="text-black" />
@@ -122,7 +275,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
                   {listing.title}
                 </h3>
                 <span className="font-bold text-sm text-secondary-700 ml-2 whitespace-nowrap">
-                  {type === "buy" ? listing.price : listing.budget}
+                  {type === "sale" ? listing.price : listing.budget}
                 </span>
               </div>
 
@@ -176,8 +329,8 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
 
   return (
     <div>
-      {/* Timer badge above card */}
-      <div className="mb-2">
+      {/* Timer badge and Match badge above card */}
+      <div className="mb-2 flex items-center gap-2 flex-wrap">
         <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
           timeRemaining.expired
             ? 'bg-red-100 text-red-700'
@@ -192,16 +345,28 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
           )}
           <span className="font-medium">{timeRemaining.text}</span>
         </div>
+
+        {/* Match badge */}
+        {matchCount > 0 && (
+          <button
+            onClick={handleViewMatches}
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
+          >
+            <Sparkles size={12} />
+            <span className="max-md:hidden">{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+            <span className="md:hidden">{matchCount}</span>
+          </button>
+        )}
       </div>
 
-      <div className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+      <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
 
       {/* Image placeholder */}
       <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative">
         <span className="text-gray-400 text-sm">Image placeholder</span>
 
         {/* Extension overlay for urgent/expired listings */}
-        {listing.isOwner && (timeRemaining.urgent || timeRemaining.expired) && (
+        {(timeRemaining.urgent || timeRemaining.expired) && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
             <AlertTriangle size={16} className="mb-1 text-black" />
             <div className="text-center">
@@ -238,7 +403,7 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
         {/* Price/Budget */}
         <div className="mb-2">
           <span className="font-bold text-lg text-secondary-700">
-            {type === "buy" ? listing.price : listing.budget}
+            {type === "sale" ? listing.price : listing.budget}
           </span>
         </div>
 
@@ -279,17 +444,20 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
   );
 }
 
-export default function ListingsPage() {
+function ListingsPageContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"sale" | "wanted" | "matched">("sale");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const type = searchParams.get("type") as "buy" | "sell";
+    const type = searchParams.get("type") as "sale" | "wanted" | "matched";
     const highlight = searchParams.get("highlight");
 
-    if (type && (type === "buy" || type === "sell")) {
+    if (type && (type === "sale" || type === "wanted" || type === "matched")) {
       setActiveTab(type);
     }
 
@@ -301,8 +469,24 @@ export default function ListingsPage() {
     }
   }, [searchParams]);
 
-  const currentListings = activeTab === "buy" ? mockBuyListings : mockSellListings;
-  const ActiveIcon = activeTab === "buy" ? ShoppingCart : Package;
+  // Filter to show only the user's own listings
+  const allListings = activeTab === "sale" ? mockSaleListings : activeTab === "wanted" ? mockWantedListings : getMockMatchedListings();
+  const userListings = allListings.filter(listing => listing.isOwner === true);
+  const categories = [...new Set(userListings.map(listing => listing.category))];
+
+  // Apply category and search filters
+  let currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
+
+  // Apply search filter
+  if (searchQuery.trim()) {
+    currentListings = currentListings.filter(listing =>
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  const ActiveIcon = activeTab === "sale" ? ShoppingCart : activeTab === "wanted" ? Package : Handshake;
 
   return (
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
@@ -316,7 +500,7 @@ export default function ListingsPage() {
             return (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value as "buy" | "sell")}
+                onClick={() => router.push(`/listings?type=${tab.value}`, { scroll: false })}
                 className={`flex items-center gap-2 pb-2 transition-colors ${
                   isActive
                     ? 'text-accent-700 border-b-2 border-accent-700'
@@ -330,42 +514,82 @@ export default function ListingsPage() {
           })}
         </div>
 
-        {/* Listings Count and Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-accent-600">
-              {currentListings.length} {activeTab === "buy" ? "items for sale" : "wanted items"}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-secondary-500 text-accent-700"
-                    : "bg-white text-accent-500 hover:bg-secondary-200"
-                }`}
-              >
-                <Grid size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === "list"
-                    ? "bg-secondary-500 text-accent-700"
-                    : "bg-white text-accent-500 hover:bg-secondary-200"
-                }`}
-              >
-                <List size={16} />
-              </button>
+        {/* Control Bar */}
+        <div className="hidden md:flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
+          {/* Left Section */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600 font-medium">Category:</span>
+              <CategoryDropdown
+                categories={categories}
+                selectedCategory={selectedCategory}
+                categoryAction={setSelectedCategory}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600 font-medium">View:</span>
+              <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
             </div>
           </div>
-          <button className="px-4 py-2 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-            + New {activeTab === "buy" ? "Request" : "Sale"}
-          </button>
+
+          {/* Right Section */}
+          {activeTab === "matched" ? (
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search matched listings..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+              />
+            </div>
+          ) : (
+            <button
+              onClick={() => {}}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600 transition"
+            >
+              <Plus className="w-4 h-4" />
+              Create Listing
+            </button>
+          )}
+        </div>
+
+        <div className="md:hidden mb-4 space-y-2">
+          <div className="flex items-center gap-2 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+            <CategoryDropdown
+              categories={categories}
+              selectedCategory={selectedCategory}
+              categoryAction={setSelectedCategory}
+            />
+            <ViewDropdown activeView={viewMode} viewAction={setViewMode} />
+            {activeTab !== "matched" && (
+              <button
+                onClick={() => {}}
+                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
+                aria-label="Create new listing"
+              >
+                <Plus className="w-4 h-4" />
+                New
+              </button>
+            )}
+          </div>
+          {activeTab === "matched" && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search matched listings..."
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white rounded-xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+              />
+            </div>
+          )}
         </div>
 
         {/* Listings Grid */}
-        <div className={viewMode === "grid" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+        <div className={viewMode === "grid" ? "grid gap-4 grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
           {currentListings.map((listing) => (
             <ProductCard
               key={listing.id}
@@ -382,17 +606,29 @@ export default function ListingsPage() {
           <div className="text-center py-12">
             <ActiveIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-accent-600 mb-2">
-              No {activeTab === "buy" ? "items for sale" : "wanted items"} yet
+              No {activeTab === "sale" ? "items for sale" : activeTab === "wanted" ? "wanted items" : "matched items"} yet
             </h3>
-            <p className="text-accent-400 mb-4">
-              Be the first to post a {activeTab === "buy" ? "sale listing" : "wanted request"}!
-            </p>
-            <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-              Create {activeTab === "buy" ? "Wanted Request" : "Sale Listing"}
-            </button>
+            {activeTab !== "matched" && (
+              <>
+                <p className="text-accent-400 mb-4">
+                  Be the first to post a {activeTab === "sale" ? "sale listing" : activeTab === "wanted" ? "wanted request" : "matched request"}!
+                </p>
+                <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
+                  Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function ListingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 flex items-center justify-center"><div className="text-accent-500">Loading...</div></div>}>
+      <ListingsPageContent />
+    </Suspense>
   );
 }

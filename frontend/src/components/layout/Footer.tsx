@@ -1,0 +1,75 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { House, MessageSquare, User, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
+
+const Footer = () => {
+  const pathname = usePathname();
+  const { openMobile } = useSidebar();
+  const scrollDirection = useScrollDirection();
+
+  const hideOnRoutes = ["/messages"];
+  const shouldHide = hideOnRoutes.some((route) => pathname.startsWith(route));
+
+  if (shouldHide) return null;
+
+  const links = [
+    { href: "/threads", label: "Threads", icon: House },
+    { href: "/messages", label: "Messages", icon: MessageSquare },
+    { href: "/profile", label: "Profile", icon: User },
+    { href: "/settings", label: "Settings", icon: Settings },
+  ];
+
+  return (
+    <footer
+      className={cn(
+        "fixed bottom-0 left-0 right-0 shadow-md pb-[env(safe-area-inset-bottom)] md:hidden bg-white z-[200] transition-transform duration-300",
+        openMobile ? "hidden" : "block",
+        scrollDirection === "down" ? "translate-y-full" : "translate-y-0"
+      )}
+    >
+      <div className="flex justify-around items-stretch relative h-16">
+        {links.map((link, index) => {
+          const Icon = link.icon;
+          const isActive =
+            pathname === link.href ||
+            (link.href !== "/" && pathname.startsWith(link.href));
+
+          return (
+            <Button
+              key={index}
+              asChild
+              variant="ghost"
+              className={cn(
+                "flex-1 h-full flex flex-col items-center justify-center rounded-xl font-medium px-4 py-2 transition",
+                isActive
+                  ? "text-secondary-500"
+                  : "text-accent-500 hover:text-secondary-500 hover:bg-primary-100"
+              )}
+            >
+              <Link
+                href={link.href}
+                className="flex flex-col items-center gap-1"
+              >
+                <Icon
+                  className={cn(
+                    "transition-transform duration-200",
+                    isActive ? "w-7 h-7" : "w-5 h-5"
+                  )}
+                />
+                <span className="text-[10px]">{link.label}</span>
+              </Link>
+            </Button>
+          );
+        })}
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

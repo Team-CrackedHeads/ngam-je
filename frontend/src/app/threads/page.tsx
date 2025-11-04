@@ -8,29 +8,29 @@ import {
   ChevronUp,
   MessageSquarePlus,
 } from "lucide-react";
-import ThreadCard from "../components/threads-ui/ThreadCard";
-import { MOCK_THREADS, ThreadData } from "../../utils/mock-threads-data";
+import ThreadCard from "@/components/threads/ThreadCard";
+import { MOCK_THREADS, ThreadData } from "@/utils/mock-all-data-used";
 
-import CreateThreadsSection from "../components/threads-ui/CreateThreadsSection";
-import AIAgentSearch from "../components/threads-ui/AIAgentSearch";
-import NgamOverview from "../components/threads-ui/NgamOverview";
-import FilterButton from "../components/threads-ui/FilterButton";
-import PageHeader from "../components/threads-ui/PageHeader";
-import { MockAIResponse } from "../../utils/mock-ai-data";
+import CreateThreadsSection from "@/components/threads/CreateThreadsSection";
+import AIAgentSearch from "@/components/threads/AIAgentSearch";
+import NgamOverview from "@/components/threads/NgamOverview";
+import FilterButton, { FilterType } from "@/components/threads/FilterButton";
+import ViewDropdown from "@/components/threads/ViewDropdown";
+import PageHeader from "@/components/threads/PageHeader";
+import { MockAIResponse } from "@/utils/mock-all-data-used";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-type FilterType = "All" | "Hot" | "Top" | "New";
+type ViewType = "grid" | "list";
 
 function ThreadsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
-  const [isAIOpen, setIsAIOpen] = useState(false);
+  const [viewType, setViewType] = useState<ViewType>("grid");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
 
   // AI overview / query
-  const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(
-    null
-  );
+  const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(null);
   const [isAILoading, setIsAILoading] = useState(false);
   const [lastQuery, setLastQuery] = useState<string>("");
 
@@ -39,48 +39,27 @@ function ThreadsPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const inlineCreateBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  const searchSectionRef = useRef<HTMLElement | null>(null); // AI Agent section
-  const threadsSectionRef = useRef<HTMLElement | null>(null); // Community section
-  const metaRowRef = useRef<HTMLDivElement | null>(null); // Listings meta row
-  const overviewWrapRef = useRef<HTMLDivElement | null>(null); // Visual overview card
-  const overviewAnchorRef = useRef<HTMLDivElement | null>(null); // Invisible overview anchor
-  const headerRef = useRef<HTMLDivElement | null>(null); // PageHeader line
+  const searchSectionRef = useRef<HTMLElement | null>(null);
+  const threadsSectionRef = useRef<HTMLElement | null>(null);
+  const metaRowRef = useRef<HTMLDivElement | null>(null);
+  const overviewWrapRef = useRef<HTMLDivElement | null>(null);
+  const overviewAnchorRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
 
-  // FAB visibility (Create Thread)
-  const [showFab, setShowFab] = useState(false);
-  const [inlineBtnVisible, setInlineBtnVisible] = useState(true);
-  const [inThreadsSection, setInThreadsSection] = useState(false);
-  const FAB_SCROLL_THRESHOLD = 200;
-
-  // Section detection for bottom CTA
+  // UI state
   const [inSearchView, setInSearchView] = useState(false);
   const [inOverviewView, setInOverviewView] = useState(false);
   const [isMetaInView, setIsMetaInView] = useState(false);
+  const isMobile = useIsMobile();
 
-  // --- helpers: derive keywords from the AI query ---
+  // Derived query keywords
   const queryKeywords = useMemo(() => {
     const base = (lastQuery || "").toLowerCase();
-    const words = base
-      .replace(/[^a-z0-9\s]/g, " ")
-      .split(/\s+/)
-      .filter(Boolean);
+    const words = base.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
     const set = new Set<string>(words);
 
     if (/[^\w](sneaker|sneakers|shoe|shoes)\b/.test(" " + base)) {
-      [
-        "sneaker",
-        "sneakers",
-        "shoe",
-        "shoes",
-        "yeezy",
-        "jordan",
-        "nike",
-        "adidas",
-        "new balance",
-        "nb",
-        "asics",
-        "salomon",
-      ].forEach((k) => set.add(k));
+      ["sneaker", "sneakers", "shoe", "shoes", "yeezy", "jordan", "nike", "adidas", "new balance", "nb", "asics", "salomon"].forEach((k) => set.add(k));
     }
     if (/\biphone|ios|apple\b/.test(base)) {
       ["iphone", "apple", "ios"].forEach((k) => set.add(k));
@@ -92,23 +71,16 @@ function ThreadsPage() {
     return Array.from(set);
   }, [lastQuery]);
 
-  // base filter/sort
   const getBaseFilteredThreads = useCallback((): ThreadData[] => {
-    let filtered = [...MOCK_THREADS];
+    const filtered = [...MOCK_THREADS];
     switch (activeFilter) {
       case "Hot":
-        return filtered
-          .filter((t) => t.isHot)
-          .sort((a, b) => b.upvotes - a.upvotes);
+        return filtered.filter((t) => t.isHot).sort((a, b) => b.upvotes - a.upvotes);
       case "Top":
         return filtered.sort((a, b) => b.upvotes - a.upvotes);
       case "New": {
         const toMin = (t: string) =>
-          t.includes("d")
-            ? parseInt(t) * 1440
-            : t.includes("h")
-            ? parseInt(t) * 60
-            : parseInt(t);
+          t.includes("d") ? parseInt(t) * 1440 : t.includes("h") ? parseInt(t) * 60 : parseInt(t);
         return filtered.sort((a, b) => toMin(a.timeAgo) - toMin(b.timeAgo));
       }
       default:
@@ -116,7 +88,6 @@ function ThreadsPage() {
     }
   }, [activeFilter]);
 
-  // apply query keywords
   const getFilteredThreads = useCallback((): ThreadData[] => {
     const base = getBaseFilteredThreads();
     if (!queryKeywords.length) return base;
@@ -130,7 +101,6 @@ function ThreadsPage() {
   const allFilteredThreads = getFilteredThreads();
   const threadsToShow = allFilteredThreads.slice(0, displayedCount);
 
-  // pagination
   useEffect(() => setDisplayedCount(6), [activeFilter, lastQuery]);
 
   const loadMoreItems = useCallback(() => {
@@ -142,110 +112,53 @@ function ThreadsPage() {
     }, 500);
   }, [isLoading, displayedCount, allFilteredThreads.length]);
 
-  // infinite scroll sentinel
+  // 👇 Scroll + Intersection logic
   useEffect(() => {
-    const root = snapContainerRef.current,
-      sent = sentinelRef.current;
-    if (!root || !sent) return;
-    const io = new IntersectionObserver(
-      (e) => e[0].isIntersecting && loadMoreItems(),
-      {
-        root,
-        rootMargin: "200px 0px 200px 0px",
-        threshold: 0,
-      }
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) loadMoreItems();
+      },
+      { threshold: 1.0 }
     );
-    io.observe(sent);
-    return () => io.disconnect();
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   }, [loadMoreItems]);
 
-  // Watch top-level sections for bottom CTA logic (search, overview, meta)
+  // 👇 View detection for CTA state
   useEffect(() => {
-    const root = snapContainerRef.current;
-    const ios: IntersectionObserver[] = [];
-    if (!root) return;
+    const searchEl = searchSectionRef.current;
+    const overviewEl = overviewWrapRef.current;
+    const metaEl = metaRowRef.current;
+    if (!searchEl || !metaEl) return;
 
-    if (searchSectionRef.current) {
-      const ioSearch = new IntersectionObserver(
-        (e) => setInSearchView(e[0].isIntersecting),
-        { root, threshold: 0.1 }
-      );
-      ioSearch.observe(searchSectionRef.current);
-      ios.push(ioSearch);
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === searchEl) setInSearchView(entry.isIntersecting);
+          if (entry.target === overviewEl) setInOverviewView(entry.isIntersecting);
+          if (entry.target === metaEl) setIsMetaInView(entry.isIntersecting);
+        });
+      },
+      { threshold: 0.2 }
+    );
 
-    if (overviewAnchorRef.current) {
-      const ioOverview = new IntersectionObserver(
-        (e) => setInOverviewView(e[0].isIntersecting),
-        { root, threshold: 0.01 }
-      );
-      ioOverview.observe(overviewAnchorRef.current);
-      ios.push(ioOverview);
-    } else {
-      setInOverviewView(false);
-    }
+    observer.observe(searchEl);
+    if (overviewEl) observer.observe(overviewEl);
+    observer.observe(metaEl);
 
-    if (metaRowRef.current) {
-      const ioMeta = new IntersectionObserver(
-        (e) => setIsMetaInView(e[0].isIntersecting),
-        { root, threshold: 0.01 }
-      );
-      ioMeta.observe(metaRowRef.current);
-      ios.push(ioMeta);
-    }
-
-    return () => ios.forEach((o) => o.disconnect());
+    return () => observer.disconnect();
   }, [currentOverview, isAILoading]);
 
-  // Track entire threads section (for FAB logic)
-  useEffect(() => {
-    const root = snapContainerRef.current,
-      sec = threadsSectionRef.current;
-    if (!root || !sec) return;
-    const io = new IntersectionObserver(
-      (e) => setInThreadsSection(e[0].isIntersecting),
-      { root, threshold: 0.01 }
-    );
-    io.observe(sec);
-    return () => io.disconnect();
-  }, []);
-
-  // inline create visibility watcher
-  useEffect(() => {
-    const root = snapContainerRef.current,
-      target = inlineCreateBtnRef.current;
-    if (!root || !target) return;
-    const io = new IntersectionObserver(
-      (e) => setInlineBtnVisible(e[0].isIntersecting),
-      { root, threshold: 0.01 }
-    );
-    io.observe(target);
-    return () => io.disconnect();
-  }, [threadsToShow.length]);
-
-  // FAB show/hide from scroll
-  useEffect(() => {
-    const root = snapContainerRef.current,
-      sec = threadsSectionRef.current;
-    if (!root || !sec) return;
-    const onScroll = () => {
-      if (!inThreadsSection) return setShowFab(false);
-      const secTop = sec.offsetTop,
-        dist = Math.max(0, root.scrollTop - secTop);
-      setShowFab(!inlineBtnVisible && dist > FAB_SCROLL_THRESHOLD);
-    };
-    onScroll();
-    root.addEventListener("scroll", onScroll, { passive: true });
-    return () => root.removeEventListener("scroll", onScroll);
-  }, [inThreadsSection, inlineBtnVisible]);
-
-  // AI events
+  // AI Handlers
   const handleAISearchStart = () => {
     setIsAILoading(true);
     setCurrentOverview(null);
     setLastQuery("");
-    const container = snapContainerRef.current,
-      target = threadsSectionRef.current;
+    const container = snapContainerRef.current, target = threadsSectionRef.current;
     if (container && target) {
       const prev = container.style.scrollBehavior;
       container.style.scrollBehavior = "auto";
@@ -257,146 +170,71 @@ function ThreadsPage() {
   const handleAISearchComplete = (r: MockAIResponse) => {
     setCurrentOverview(r);
     setIsAILoading(false);
-    setLastQuery((r as any)?.prompt || "");
+    setLastQuery((r as MockAIResponse & { prompt?: string })?.prompt || "");
   };
 
-  const hasQueryFilter = queryKeywords.length > 0;
-  const hasOverview = !!(currentOverview || isAILoading);
+  const handleOpenAI = () => {
+    // Open AI chat or navigate to AI interface
+  };
 
-  // --- Conditional CTA: compute target + whether it's visible ---
+  const handleDismissOverview = () => {
+    setCurrentOverview(null);
+    setIsAILoading(false);
+    setLastQuery("");
+  };
+
+  // CTA State
+  const hasOverview = !!(currentOverview || isAILoading);
+  const hasQueryFilter = queryKeywords.length > 0 || lastQuery.length > 0;
+
   const ctaState = useMemo(() => {
-    // Decide label/icon + target ref + "is target visible" using our visibility flags
-    if (inSearchView) {
-      return {
-        label: "See Listings",
-        icon: "down" as const,
-        targetRef: metaRowRef,
-        targetVisible: isMetaInView,
-      };
+    if (inSearchView || inOverviewView) {
+      return { label: "See Listings", icon: "down" as const, targetRef: metaRowRef, targetVisible: isMetaInView };
     }
-    if (inOverviewView) {
-      return {
-        label: "See Listings",
-        icon: "down" as const,
-        targetRef: metaRowRef,
-        targetVisible: isMetaInView,
-      };
-    }
-    // Listings view
     if (hasOverview) {
-      return {
-        label: "Back to AI",
-        icon: "up" as const,
-        targetRef: overviewAnchorRef,
-        targetVisible: inOverviewView,
-      };
+      return { label: "Back to AI", icon: "up" as const, targetRef: overviewAnchorRef, targetVisible: inOverviewView };
     }
-    return {
-      label: "New AI Chat",
-      icon: "new" as const,
-      targetRef: searchSectionRef,
-      targetVisible: inSearchView,
-    };
+    return { label: "New AI Chat", icon: "new" as const, targetRef: searchSectionRef, targetVisible: inSearchView };
   }, [inSearchView, inOverviewView, isMetaInView, hasOverview]);
 
   const handleBottomJump = () => {
-    ctaState.targetRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    ctaState.targetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const shouldShowCTA = !ctaState.targetVisible; // Hide when the target is already on screen
+  const shouldShowCTA = !ctaState.targetVisible && !isMobile;
 
   return (
     <>
-      {/* SNAP/SCROLL CONTAINER */}
-      <div
-        ref={snapContainerRef}
-        className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
-      >
-        {/* SECTION 1: AI AGENT (Hero) */}
-        <section
-          id="search"
-          ref={searchSectionRef}
-          className="h-full snap-start"
-        >
+      {/* SNAP CONTAINER */}
+      <div ref={snapContainerRef} className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth">
+        {/* SECTION 1: AI Agent */}
+        <section id="search" ref={searchSectionRef} className="h-full snap-start">
           <AIAgentSearch
-            onOpenAI={() => setIsAIOpen(true)}
+            onOpenAI={handleOpenAI}
             onSearchStart={handleAISearchStart}
             onSearchComplete={handleAISearchComplete}
           />
         </section>
 
-        {/* SECTION 2: COMMUNITY THREADS (Overview + Listings in one visual section) */}
-        <section
-          id="ngam-overview"
-          ref={threadsSectionRef}
-          className="snap-start bg-gray-50"
-        >
-          <div className="container mx-auto px-4 md:px-8 py-8 pb-32 md:pb-40">
-            {/* Page header — scroll target */}
+        {/* SECTION 2: Threads */}
+        <section id="ngam-overview" ref={threadsSectionRef} className="snap-start bg-gray-50">
+          <div className="container mx-auto px-4 md:px-8 py-6 pb-20 md:pb-16">
+
+            {/* Page Header */}
             <div ref={headerRef}>
               <PageHeader />
             </div>
 
-            {/* Invisible snap anchor for true Overview section (no visual space added) */}
-            {hasOverview && (
-              <div
-                id="overview"
-                ref={overviewAnchorRef}
-                className="snap-start h-0"
-              />
-            )}
-
-            {/* AI Overview (shown when present) */}
-            {hasOverview && (
-              <div ref={overviewWrapRef} className="mb-4 relative">
-                <NgamOverview
-                  content={currentOverview?.content}
-                  images={currentOverview?.images}
-                  sources={currentOverview?.sources}
-                  isLoading={isAILoading}
-                />
-              </div>
-            )}
-
-            {/* Filters */}
-            <FilterButton
-              activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
-            />
-
-            {/* Meta + Inline Create (anchor for listings) */}
-            <div
-              ref={metaRowRef}
-              className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 mt-4"
-            >
+            <div className="hidden md:flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-2xl shadow-sm border border-gray-200 mt-4">
               <div className="flex items-center gap-3">
-                <p className="text-sm sm:text-base text-gray-600">
-                  Showing {threadsToShow.length} of {allFilteredThreads.length}{" "}
-                  threads
-                  {activeFilter !== "All" && ` • Filter: ${activeFilter}`}
-                </p>
-
-                {hasQueryFilter && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-neutral-300 bg-white text-gray-700">
-                    <FilterIcon className="w-3 h-3" />
-                    Query filter
-                    {lastQuery && (
-                      <span className="max-w-[160px] truncate">
-                        : {lastQuery}
-                      </span>
-                    )}
-                    <button
-                      aria-label="Clear query filter"
-                      className="ml-1 hover:opacity-70"
-                      onClick={() => setLastQuery("")}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 font-medium">Sort By:</span>
+                  <FilterButton activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 font-medium">View:</span>
+                  <ViewDropdown activeView={viewType} viewAction={setViewType} />
+                </div>
               </div>
 
               <button
@@ -409,59 +247,91 @@ function ThreadsPage() {
               </button>
             </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="md:hidden mt-4">
+              <div className="flex flex-wrap items-center gap-2 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+                <FilterButton activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+                <ViewDropdown activeView={viewType} viewAction={setViewType} />
+                <button
+                  ref={inlineCreateBtnRef}
+                  onClick={() => setIsCreateOpen(true)}
+                  className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
+                  aria-label="Create new thread"
+                >
+                  <Plus className="w-4 h-4" />
+                  New
+                </button>
+              </div>
+            </div>
+
+            {hasOverview && (
+              <>
+                <div id="overview" ref={overviewAnchorRef} className="snap-start h-0" />
+                <div ref={overviewWrapRef} className="mb-4 mt-4 relative">
+                  <button
+                    onClick={handleDismissOverview}
+                    className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm transition-colors"
+                    aria-label="Dismiss overview"
+                  >
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <NgamOverview
+                    content={currentOverview?.content}
+                    images={currentOverview?.images}
+                    sources={currentOverview?.sources}
+                    isLoading={isAILoading}
+                  />
+                </div>
+              </>
+            )}
+
+            <div ref={metaRowRef} className="flex items-center gap-3 py-3">
+              <p className="text-base text-gray-600">
+                Showing {threadsToShow.length} of {allFilteredThreads.length} threads
+              </p>
+              {hasQueryFilter && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-neutral-300 bg-white text-gray-700">
+                  <FilterIcon className="w-3 h-3" />
+                  Query filter
+                  {lastQuery && <span className="max-w-[160px] truncate">: {lastQuery}</span>}
+                  <button onClick={() => setLastQuery("")} className="ml-1 hover:opacity-70">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+
+            <div className={viewType === "grid"
+              ? "grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              : "flex flex-col gap-4"
+            }>
               {threadsToShow.map((thread) => (
                 <ThreadCard key={thread.id} thread={thread} />
               ))}
             </div>
 
-            {/* Loading indicator */}
+            {/* Loading + Empty + End State */}
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-                <span className="ml-2 text-gray-600">
-                  Loading more threads...
-                </span>
+                <span className="ml-2 text-gray-600">Loading more threads...</span>
               </div>
             )}
-
-            {/* End state */}
-            {displayedCount >= allFilteredThreads.length &&
-              allFilteredThreads.length > 6 && (
-                <div className="flex items-center justify-center py-8 text-gray-500">
-                  -No more items-
-                </div>
-              )}
-
-            {/* Empty state */}
+            {displayedCount >= allFilteredThreads.length && allFilteredThreads.length > 6 && (
+              <div className="flex items-center justify-center py-8 text-gray-500">- No more items -</div>
+            )}
             {allFilteredThreads.length === 0 && (
               <div className="flex items-center justify-center h-64 text-gray-500">
-                {queryKeywords.length
-                  ? "No threads matched your AI query."
-                  : "No threads found."}
+                {queryKeywords.length ? "No threads matched your AI query." : "No threads found."}
               </div>
             )}
 
-            {/* Infinite-scroll sentinel */}
+            {/* Infinite Scroll Sentinel */}
             <div ref={sentinelRef} className="h-px" />
           </div>
         </section>
       </div>
 
-      {/* Floating Create Thread Button (right) */}
-      {showFab && (
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          aria-label="Create Thread"
-          className="fixed bottom-20 md:bottom-6 right-2 md:right-6 z-50 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 shadow-xl bg-secondary-500 text-accent-700 border border-secondary-600 hover:scale-105 active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="hidden sm:inline font-semibold">Create Thread</span>
-        </button>
-      )}
-
-      {/* Bottom-center navigation CTA — now CONDITIONAL */}
+      {/* Bottom CTA */}
       {shouldShowCTA && (
         <button
           onClick={handleBottomJump}
@@ -475,11 +345,7 @@ function ThreadsPage() {
       )}
 
       {/* Overlays */}
-
-      <CreateThreadsSection
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-      />
+      <CreateThreadsSection isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
     </>
   );
 }

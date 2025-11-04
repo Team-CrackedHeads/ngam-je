@@ -1,59 +1,136 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Star, CheckCircle, Camera } from "lucide-react";
+import { Star, CheckCircle, Camera, Lock, Loader2 } from "lucide-react";
+import { MOCK_ACHIEVEMENTS, getAchievementStats, PROFILE_TABS } from "@/utils/mock-all-data-used";
+import axios, { AxiosError } from "axios";
 
-export type User = {
-  name: string;
+// Use centralized tabs configuration
+const tabs = PROFILE_TABS;
+
+interface UserProfile {
+  id: number;
+  clerk_user_id: string;
   email: string;
-  verified: boolean;
+  username: string;
+  is_active: boolean;
   rating: number;
-  ratingCount: number;
-  totalListings: number;
-  completedDeals: number;
-  forSale: number;
-  wantToBuy: number;
-  achievements: { label: string }[];
-};
-
-interface ProfilePageProps {
-  user?: User;
+  rating_count: number;
+  total_listings: number;
+  completed_deals: number;
+  kyc_status: string;
+  kyc_session_id: string | null;
+  kyc_initiated_at: string | null;
+  kyc_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// Placeholder user if no prop is passed
-const placeholderUser: User = {
-  name: "John Michael Smith",
-  email: "user@example.com",
-  verified: true,
-  rating: 4.8,
-  ratingCount: 24,
-  totalListings: 12,
-  completedDeals: 28,
-  forSale: 3,
-  wantToBuy: 2,
-  achievements: [
-    { label: "First Sale" },
-    { label: "Trusted Seller" },
-    { label: "Test" },
-    { label: "Test" },
-    { label: "Test" },
-    { label: "Test" },
-  ],
-};
-
-// Tabs configuration
-const tabs = [
-  { label: "Overview", href: "/profile" },
-  { label: "Activity", href: "/profile/activity" },
-];
-
-export default function ProfilePage({ user }: ProfilePageProps) {
-  const data = user ?? placeholderUser;
+export default function ProfilePage() {
+  const { getToken } = useAuth();
+  const { user } = useUser();
   const pathname = usePathname();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [kycLoading, setKycLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const token = await getToken();
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setProfile(response.data);
+      } catch (err) {
+        const error = err as AxiosError<{ detail?: string }>;
+        const errorMessage = error.response?.data?.detail || error.message || "An error occurred";
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProfile();
+  }, [getToken]);
+
+  const initiateKYC = async () => {
+    setKycLoading(true);
+    try {
+      const token = await getToken();
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/kyc/initiate`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = response.data as { verification_url: string; session_id: string };
+
+      // Open Didit verification in new window
+      window.open(data.verification_url, "_blank");
+
+      // Update profile to reflect in_progress status
+      if (profile) {
+        setProfile({
+          ...profile,
+          kyc_status: "in_progress",
+          kyc_session_id: data.session_id,
+        });
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage = error.response?.data?.detail || error.message || "Failed to start KYC verification";
+      alert(errorMessage);
+    } finally {
+      setKycLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-100">
+        <Loader2 className="w-8 h-8 animate-spin text-accent-700" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-100">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading profile: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data from API
+  const saleListingsData = []; // TODO: Fetch from listings API
+  const wantedListingsData = []; // TODO: Fetch from listings API
 
   return (
-    <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
+    <div className="min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         {/* <div className="flex justify-center mb-4">
@@ -61,15 +138,14 @@ export default function ProfilePage({ user }: ProfilePageProps) {
         </div> */}
 
         {/* Tabs */}
-        <div className="flex justify-center mb-6 border-b pb-2 space-x-6">
+        <div className="flex justify-center mb-4 sm:mb-6 border-b pb-2 space-x-4 sm:space-x-6">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                // className="text-base font-medium pb-2"
-                className={`${isActive ? 'text-accent-700 border-b-2 border-accent-700' : 'text-accent-500'}`}
+                className={`text-sm sm:text-base font-medium ${isActive ? 'text-accent-700 border-b-2 border-accent-700' : 'text-accent-500'}`}
               >
                 {tab.label}
               </Link>
@@ -78,34 +154,62 @@ export default function ProfilePage({ user }: ProfilePageProps) {
         </div>
 
         {/* Responsive Layout */}
-        <div className="grid gap-6 md:grid-cols-3 md:auto-rows-min">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-3 md:auto-rows-min">
           {/* Profile Card */}
           <div
-            className="rounded-2xl shadow p-4 flex items-center space-x-4 md:col-span-3"
+            className="rounded-2xl shadow p-3 sm:p-4 flex items-center space-x-3 sm:space-x-4 md:col-span-3"
             style={{ backgroundColor: "#fff" }}
           >
             {/* Avatar */}
-            <div className="relative w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white bg-secondary-500">
-              {data.name.charAt(0).toUpperCase()}
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold text-white bg-secondary-500 flex-shrink-0">
+              {profile?.username?.charAt(0)?.toUpperCase() ||
+               user?.username?.charAt(0)?.toUpperCase() ||
+               "U"}
               <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow">
-                <Camera size={16} className="text-accent-500" />
+                <Camera size={14} className="sm:w-4 sm:h-4 text-accent-500" />
               </div>
             </div>
 
             {/* Profile Info */}
-            <div className="flex-1">
-              <h2 className="font-bold text-lg">{data.name}</h2>
-              <p className="text-sm text-gray-600">{data.email}</p>
-              <div className="flex items-center space-x-2 mt-1">
-                {data.verified && (
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
-                    Verified
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-base sm:text-lg truncate">
+                {profile?.username || user?.username || "User"}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">
+                {profile?.email || user?.primaryEmailAddress?.emailAddress}
+              </p>
+              <div className="flex items-center flex-wrap gap-2 mt-1">
+                {/* KYC Status Badge */}
+                {profile?.kyc_status === "verified" ? (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-success-50 text-success-900 font-medium flex items-center gap-1">
+                    <CheckCircle size={12} className="sm:w-3 sm:h-3" />
+                    KYC Verified
                   </span>
+                ) : profile?.kyc_status === "in_progress" ? (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-warning-50 text-warning-900 font-medium">
+                    KYC In Progress
+                  </span>
+                ) : (
+                  <button
+                    onClick={initiateKYC}
+                    disabled={kycLoading}
+                    className="px-2 py-0.5 text-xs rounded-full bg-error-50 text-error-900 font-medium hover:bg-error-100 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {kycLoading ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      <>Unverified - Click to Verify</>
+                    )}
+                  </button>
                 )}
-                <div className="flex items-center text-sm text-yellow-600">
-                  <Star size={16} fill="gold" />
+
+                <div className="flex items-center text-xs sm:text-sm text-yellow-600">
+                  <Star size={14} className="sm:w-4 sm:h-4" fill="gold" />
                   <span className="ml-1">
-                    {data.rating} ({data.ratingCount})
+                    {profile?.rating.toFixed(1) || "0.0"} ({profile?.rating_count || 0})
                   </span>
                 </div>
               </div>
@@ -117,14 +221,14 @@ export default function ProfilePage({ user }: ProfilePageProps) {
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.totalListings}</p>
+            <p className="text-2xl font-bold">{profile?.total_listings || 0}</p>
             <p className="text-sm">Total Listings</p>
           </div>
           <div
             className="rounded-2xl shadow p-4 flex flex-col items-center justify-center text-center md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <p className="text-2xl font-bold">{data.completedDeals}</p>
+            <p className="text-2xl font-bold">{profile?.completed_deals || 0}</p>
             <p className="text-sm">Completed Deals</p>
           </div>
 
@@ -133,37 +237,74 @@ export default function ProfilePage({ user }: ProfilePageProps) {
             className="rounded-2xl shadow p-4 md:col-span-1"
             style={{ backgroundColor: "#fff" }}
           >
-            <h3 className="font-semibold mb-3">Active Listings</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">Active Listings</h3>
+              <span className="px-2 sm:px-3 py-1 text-xs rounded-full bg-secondary-500 text-accent-700 font-medium whitespace-nowrap">
+                {saleListingsData.length + wantedListingsData.length}
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl p-4 text-center bg-secondary-500">
-                <p className="text-2xl font-bold">{data.forSale}</p>
+              <Link
+                href="/listings?type=sale"
+                className="rounded-xl p-4 text-center bg-secondary-500 hover:bg-secondary-600 transition-colors cursor-pointer"
+              >
+                <p className="text-2xl font-bold">{saleListingsData.length}</p>
                 <p className="text-sm">For Sale</p>
-              </div>
-              <div className="rounded-xl p-4 text-center bg-secondary-100">
-                <p className="text-2xl font-bold">{data.wantToBuy}</p>
+              </Link>
+              <Link
+                href="/listings?type=wanted"
+                className="rounded-xl p-4 text-center bg-secondary-100 hover:bg-secondary-200 transition-colors cursor-pointer"
+              >
+                <p className="text-2xl font-bold">{wantedListingsData.length}</p>
                 <p className="text-sm">Want to Buy</p>
-              </div>
+              </Link>
             </div>
           </div>
 
           {/* Achievements */}
           <div
-            className="rounded-2xl shadow p-4 md:col-span-3"
+            className="rounded-2xl shadow p-3 sm:p-4 md:col-span-3 overflow-hidden"
             style={{ backgroundColor: "#fff" }}
           >
-            <h3 className="font-semibold mb-3">Achievements</h3>
-            <div className="flex flex-col gap-3">
-              {data.achievements.map((ach, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-xl p-4 flex items-center justify-between bg-primary-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle size={20} className="text-secondary-600" />
-                    <p className="text-sm">{ach.label}</p>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-sm sm:text-base">Achievements</h3>
+              <span className="px-2 sm:px-3 py-1 text-xs rounded-full bg-secondary-500 text-white font-medium whitespace-nowrap">
+                {getAchievementStats().unlocked}/{getAchievementStats().total}
+              </span>
+            </div>
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {MOCK_ACHIEVEMENTS.map((ach) => {
+                const IconComponent = ach.icon;
+                return (
+                  <div
+                    key={ach.id}
+                    className={`rounded-xl p-3 sm:p-4 flex-shrink-0 w-36 sm:w-40 flex flex-col items-center justify-center text-center transition-all ${
+                      ach.unlocked
+                        ? "bg-secondary-100 border-2 border-secondary-500"
+                        : "bg-gray-100 opacity-60"
+                    }`}
+                  >
+                    <div className="mb-2 relative">
+                      {ach.unlocked ? (
+                        <IconComponent size={28} className="sm:w-8 sm:h-8 text-secondary-600" />
+                      ) : (
+                        <div className="relative">
+                          <IconComponent size={28} className="sm:w-8 sm:h-8 text-gray-400 opacity-30" />
+                          <Lock size={14} className="sm:w-4 sm:h-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold mb-1">{ach.label}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-600 line-clamp-2">{ach.description}</p>
+                    {ach.unlocked && ach.unlockedAt && (
+                      <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs text-secondary-600">
+                        <CheckCircle size={10} className="sm:w-3 sm:h-3" />
+                        <span className="whitespace-nowrap">{ach.unlockedAt}</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

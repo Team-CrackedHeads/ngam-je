@@ -107,6 +107,20 @@
   --color-neutral-900: #111827;
   --color-neutral-black: #000000;
 
+  /* ==============================
+     Tier Badge Colors
+     ============================== */
+  --color-tier-0-bg: var(--color-neutral-300);
+  --color-tier-0-text: var(--color-neutral-700);
+
+  --color-tier-1-bg: var(--color-primary-400);
+  --color-tier-1-text: var(--color-primary-900);
+
+  --color-tier-2-bg: var(--color-secondary-400);
+  --color-tier-2-text: var(--color-accent-700);
+
+  --color-tier-3-bg: var(--color-accent-600);
+  --color-tier-3-text: var(--color-neutral-white);
 }
 
 :root {
@@ -145,7 +159,6 @@
   --sidebar-ring: oklch(0.708 0 0);
   --sidebar-width: 16rem;
   --sidebar-width-icon: 4rem;
-  --sidebar-height: calc(100vh - var(--header-height, 4rem));
 }
 
 .dark {
@@ -183,7 +196,6 @@
   --sidebar-ring: oklch(0.556 0 0);
   --sidebar-width: 16rem;
   --sidebar-width-icon: 4rem;
-  --sidebar-height: calc(100vh - var(--header-height, 4rem));
 }
 
 @layer base {
@@ -195,31 +207,22 @@
   }
 }
 
-/* Proper color theory utility classes */
 @layer utilities {
-
-  /* Primary gradient utilities (Green to Gold - complementary harmony) */
   .bg-primary-gradient {
     background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
   }
   .bg-primary-gradient-reverse {
     background: linear-gradient(135deg, var(--color-secondary-500), var(--color-primary-500));
   }
-
-  /* Subtle gradients for backgrounds */
   .bg-primary-subtle {
     background: linear-gradient(135deg, var(--color-primary-50), var(--color-primary-100));
   }
   .bg-secondary-subtle {
     background: linear-gradient(135deg, var(--color-secondary-50), var(--color-secondary-100));
   }
-
-  /* High-contrast accent gradients */
   .bg-accent-gradient {
     background: linear-gradient(135deg, var(--color-accent-700), var(--color-accent-900));
   }
-
-  /* Semantic gradients */
   .bg-success-gradient {
     background: linear-gradient(135deg, var(--color-success-500), var(--color-primary-600));
   }
@@ -229,5 +232,13 @@
   .bg-error-gradient {
     background: linear-gradient(135deg, var(--color-error-500), var(--color-accent-700));
   }
+}
 
+/* Clerk Modal Centering Fix */
+.cl-modalContent {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }

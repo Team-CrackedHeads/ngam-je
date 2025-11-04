@@ -87,18 +87,51 @@ marimo/_lsp/
 __marimo__/
 uv.lock
 
-# Node.js
-node_modules/
+# dependencies
+**/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.next
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.next/
-out/
-.nuxt
-.output
+
+# env files (actual secrets - never commit)
+# Note: .env.*.example files should be committed as templates
+.env
+.env.local
+.env.backend
+.env.frontend
+.env.docker
+
+# vercel
 .vercel
-.netlify
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
 # Bun
 bun.lockb
@@ -117,15 +150,27 @@ bun.lockb
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+humbs.db
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Environment variables
-.env.local
+# Docker volumes
+postgres_data/
+
+# Alembic
+alembic/versions/*.pyc
+
+# GCP Service Account Keys
+*.json
+!package.json
+package-lock.json
+!tsconfig.json
+!components.json
+
+# Environment variables (duplicates cleaned up - see line 121)
 .env.development.local
 .env.test.local
 .env.production.local
@@ -149,3 +194,8 @@ temp/
 
 # Claude Code
 CLAUDE.md
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Developer Scripts (Darren)
+git-prune-gone.sh

@@ -1,0 +1,70 @@
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ngam-je-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ngamje}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ngamje_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ngamje_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ngamje}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ngam-je-network
+
+  pgadmin:
+    image: dpage/pgadmin4:9.9
+    container_name: ngam-je-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@localhost.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - ngam-je-network
+
+  # Uncomment when ready to run backend in Docker
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: ngam-je-backend
+  #   restart: unless-stopped
+  #   environment
+  #     DATABASE_URL: postgresql://${POSTGRES_USER:-ngamje}:${POSTGRES_PASSWORD:-ngamje_dev_password}@postgres:5432/${POSTGRES_DB:-ngamje_db}
+  #     ENV: development
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./backend:/app
+  #   networks:
+  #     - ngam-je-network
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  ngam-je-network:
+    driver: bridge
