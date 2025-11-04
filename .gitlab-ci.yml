@@ -59,7 +59,7 @@ build:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# Mirror to GitHub at 11:50 PM daily (only runs on scheduled pipelines)
+# Mirror to GitHub at 1:20 AM daily (only runs on scheduled pipelines)
 mirror-to-github:
   stage: mirror
   image: alpine/git:latest

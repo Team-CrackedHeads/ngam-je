@@ -56,6 +56,12 @@ jobs:
             fi
           done
 
+      - name: Fetch from GitLab to detect divergent branches
+        run: |
+          set -euo pipefail
+          echo "📥 Fetching from GitLab to check for divergent branches..."
+          git fetch gitlab --prune || echo "⚠️ Warning: failed to fetch from GitLab"
+
       - name: Push all non-main branches to GitLab
         run: |
           set -euo pipefail
@@ -67,7 +73,16 @@ jobs:
               continue
             fi
             echo "🔄 Pushing branch: $branch"
-            git push gitlab "$branch:$branch" || echo "⚠️ Warning: failed to push $branch"
+            # Try normal push first
+            if git push gitlab "$branch:$branch" 2>&1; then
+              echo "✅ Successfully pushed $branch"
+            else
+              # If rejected due to divergence, push as GHDIVERTED branch
+              echo "⚠️ Push rejected - branches have diverged"
+              DIVERTED_BRANCH="GHDIVERTED-${branch}"
+              echo "🔀 Pushing as divergent branch: $DIVERTED_BRANCH"
+              git push gitlab "$branch:$DIVERTED_BRANCH" || echo "❌ Failed to push $DIVERTED_BRANCH"
+            fi
           done
 
       - name: (Optional) Prune deleted branches from GitLab
