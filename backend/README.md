@@ -62,7 +62,7 @@ backend/
 │   └── database.py                 # Database configuration
 ├── alembic/                        # Database migrations
 ├── tests/                          # Test files
-├── .env.example                   # Environment variables template
+├── .env.backend.example           # Backend environment variables template
 ├── pyproject.toml                 # Project dependencies and config
 └── README.md                      # This file
 ```
@@ -106,10 +106,11 @@ uv sync
 3. **Configure Environment**
 
 ```bash
-# Copy example environment file
-cp ../.env.example ../.env
+# Copy backend environment template
+cp .env.backend.example .env
 
-# Edit .env with your settings (defaults work for local development)
+# Edit .env with your actual credentials
+# See .env.backend.example for detailed configuration options
 ```
 
 4. **Run Database Migrations**
@@ -336,7 +337,7 @@ Then create a Pull Request on the repository with:
 
 ### Environment Variables
 
-Key environment variables (see `.env.example` for full list):
+Key environment variables (see `.env.backend.example` for full list):
 
 - `ENV` - Environment (development/staging/production)
 - `DEBUG` - Enable debug mode

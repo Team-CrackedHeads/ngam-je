@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     DIDIT_WEBHOOK_SECRET: str = ""
     DIDIT_WORKFLOW_ID: str = ""  # Default KYC workflow ID
     DIDIT_BASE_URL: str = "https://verification.didit.me"
+    DIDIT_CALLBACK_URL: str = ""  # Webhook callback URL (must be publicly accessible)
 
     # ============================================================================
     # TEMPORARY: KYC Bypass Mode for Development

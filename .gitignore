@@ -118,9 +118,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (actual secrets - never commit)
+# Note: .env.*.example files should be committed as templates
 .env
 .env.local
+.env.backend
+.env.frontend
+.env.docker
 
 # vercel
 .vercel
@@ -166,8 +170,7 @@ package-lock.json
 !tsconfig.json
 !components.json
 
-# Environment variables
-.env.local
+# Environment variables (duplicates cleaned up - see line 121)
 .env.development.local
 .env.test.local
 .env.production.local

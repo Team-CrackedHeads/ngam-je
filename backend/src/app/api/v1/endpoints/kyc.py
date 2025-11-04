@@ -62,9 +62,13 @@ async def initiate_kyc_verification(
             # Session might be expired or invalid, create a new one
             pass
 
-    # Create webhook callback URL
-    # Using ngrok for development - in production use your actual domain
-    callback_url = f"https://a649430b6c60.ngrok-free.app/api/v1/kyc/webhook"
+    # Get webhook callback URL from settings
+    callback_url = settings.DIDIT_CALLBACK_URL
+    if not callback_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="DIDIT_CALLBACK_URL is not configured",
+        )
 
     # Create Didit verification session
     try:
