@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ThreadData } from "@/utils/mock-all-data-used";
+import { ThreadDisplay } from "@/types/thread";
 // import { motion } from "framer-motion";
 import TierBadge from "@/components/threads/TierBadge";
 
@@ -26,13 +26,14 @@ function getTierLevel(current: number, goal: number): number {
 
 /* ---------------- Props ---------------- */
 type ThreadCardProps = {
-  thread: ThreadData;
+  thread: ThreadDisplay;
 };
 
 /* ---------------- Component ---------------- */
 export default function ThreadCard({ thread }: ThreadCardProps) {
   const router = useRouter();
-  const tierLevel = getTierLevel(thread.currentTokens, thread.goalTokens);
+  // Use tier directly from the API/database
+  const tierLevel = thread.tier;
 
   return (
     <Card

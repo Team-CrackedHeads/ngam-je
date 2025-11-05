@@ -9,7 +9,8 @@ import {
   MessageSquarePlus,
 } from "lucide-react";
 import ThreadCard from "@/components/threads/ThreadCard";
-import { MOCK_THREADS, ThreadData } from "@/utils/mock-all-data-used";
+import { Thread, ThreadDisplay } from "@/types/thread";
+import axios from "axios";
 
 import CreateThreadsSection from "@/components/threads/CreateThreadsSection";
 import AIAgentSearch from "@/components/threads/AIAgentSearch";
@@ -28,6 +29,8 @@ function ThreadsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [threadsLoading, setThreadsLoading] = useState(true);
 
   // AI overview / query
   const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(null);
@@ -71,24 +74,75 @@ function ThreadsPage() {
     return Array.from(set);
   }, [lastQuery]);
 
-  const getBaseFilteredThreads = useCallback((): ThreadData[] => {
-    const filtered = [...MOCK_THREADS];
+  // Fetch threads from API
+  const fetchThreads = useCallback(async () => {
+    try {
+      setThreadsLoading(true);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threads/`);
+      setThreads(response.data.threads);
+    } catch (error) {
+      console.error('Failed to fetch threads:', error);
+    } finally {
+      setThreadsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchThreads();
+  }, [fetchThreads]);
+
+  // Convert API Thread to ThreadDisplay for compatibility with existing UI
+  const convertToThreadDisplay = useCallback((thread: Thread): ThreadDisplay => {
+    return {
+      id: thread.id,
+      title: thread.title,
+      description: thread.description,
+      imageUrl: thread.image_url || "",
+      category: thread.category,
+      tags: thread.tags,
+      tier: thread.tier,
+      contributions: thread.contributions,
+      onlineUsers: thread.online_users,
+      totalUsers: thread.member_count,
+      // Mock fields for UI compatibility
+      comments: 0,
+      views: 0,
+      upvotes: thread.active_contributions * 100,
+      currentTokens: thread.active_contributions * 500,
+      goalTokens: (thread.tier + 1) * 5000,
+      isPinned: thread.tier >= 3,
+      isHot: thread.tier >= 2,
+      timeAgo: "Recently",
+    };
+  }, []);
+
+  const getBaseFilteredThreads = useCallback((): ThreadDisplay[] => {
+    const filtered = threads.map(convertToThreadDisplay);
     switch (activeFilter) {
       case "Hot":
-        return filtered.filter((t) => t.isHot).sort((a, b) => b.upvotes - a.upvotes);
+        // Hot: High tier + active engagement (online users)
+        return filtered
+          .filter((t) => t.isHot)
+          .sort((a, b) => {
+            const scoreA = (a.tier || 0) * 100 + (a.onlineUsers || 0);
+            const scoreB = (b.tier || 0) * 100 + (b.onlineUsers || 0);
+            return scoreB - scoreA;
+          });
       case "Top":
-        return filtered.sort((a, b) => b.upvotes - a.upvotes);
-      case "New": {
-        const toMin = (t: string) =>
-          t.includes("d") ? parseInt(t) * 1440 : t.includes("h") ? parseInt(t) * 60 : parseInt(t);
-        return filtered.sort((a, b) => toMin(a.timeAgo) - toMin(b.timeAgo));
-      }
+        // Top: Based on total users and contributions
+        return filtered.sort((a, b) => {
+          const scoreA = (a.totalUsers || 0) + (a.contributions || 0) * 10;
+          const scoreB = (b.totalUsers || 0) + (b.contributions || 0) * 10;
+          return scoreB - scoreA;
+        });
+      case "New":
+        return [...filtered].reverse(); // Newest first (API returns DESC by created_at)
       default:
         return filtered;
     }
-  }, [activeFilter]);
+  }, [threads, activeFilter, convertToThreadDisplay]);
 
-  const getFilteredThreads = useCallback((): ThreadData[] => {
+  const getFilteredThreads = useCallback((): ThreadDisplay[] => {
     const base = getBaseFilteredThreads();
     if (!queryKeywords.length) return base;
     const matched = base.filter((t) => {
@@ -300,14 +354,21 @@ function ThreadsPage() {
               )}
             </div>
 
-            <div className={viewType === "grid"
-              ? "grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
-              : "flex flex-col gap-4"
-            }>
-              {threadsToShow.map((thread) => (
-                <ThreadCard key={thread.id} thread={thread} />
-              ))}
-            </div>
+            {threadsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+                <span className="ml-3 text-gray-600">Loading threads...</span>
+              </div>
+            ) : (
+              <div className={viewType === "grid"
+                ? "grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                : "flex flex-col gap-4"
+              }>
+                {threadsToShow.map((thread) => (
+                  <ThreadCard key={thread.id} thread={thread} />
+                ))}
+              </div>
+            )}
 
             {/* Loading + Empty + End State */}
             {isLoading && (
@@ -345,7 +406,11 @@ function ThreadsPage() {
       )}
 
       {/* Overlays */}
-      <CreateThreadsSection isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      <CreateThreadsSection
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onThreadCreated={fetchThreads}
+      />
     </>
   );
 }

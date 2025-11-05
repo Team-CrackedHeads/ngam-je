@@ -1,27 +1,11 @@
 //MARYAM
-// level 1: community/category data (existing, but with category added)
-export type ThreadData = {
-  id: number;
-  title: string;
-  description: string;
-  imageUrl: string;
-  comments: number;
-  views: number;
-  upvotes: number;
-  currentTokens: number;
-  goalTokens: number;
-  tags: string[];
-  isPinned: boolean;
-  isHot: boolean;
-  timeAgo: string;
-  contributions: number;
-  category: string; // new: for url routing
-  onlineUsers?: number;
-  totalUsers?: number;
-};
+import { ThreadDisplay } from '@/types/thread';
+
+// Type alias for backward compatibility
+export type ThreadData = ThreadDisplay;
 
 // community data (level 1) - updated with category
-export const MOCK_THREADS: ThreadData[] = [
+export const MOCK_THREADS: ThreadDisplay[] = [
   {
     id: 1,
     title: "Pre-loved Apple",
@@ -2302,7 +2286,14 @@ function convertToLegacyListing(
   // Mark some listings as matched for testing checkout (listings from other user)
   // Sale listings: IDs 1-10, mark 2, 4, 6 as matched
   // Wanted listings: IDs 11-20, mark 12, 14, 16 as matched
-  const isMatchedListing = unified.userId === "user-2" && (numericId === 2 || numericId === 4 || numericId === 6 || numericId === 12 || numericId === 14 || numericId === 16);
+  const isMatchedListing =
+    unified.userId === "user-2" &&
+    (numericId === 2 ||
+      numericId === 4 ||
+      numericId === 6 ||
+      numericId === 12 ||
+      numericId === 14 ||
+      numericId === 16);
 
   return {
     id: numericId,
@@ -2665,7 +2656,8 @@ export const messagesData: MessagePreview[] = [
     product: {
       title: "Nike Air Max - Blue/Orange",
       price: "$299.9",
-      image: "https://images.unsplash.com/photo-1595943606615-5973834c7efd?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687",
+      image:
+        "https://images.unsplash.com/photo-1595943606615-5973834c7efd?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687",
     },
   },
   {
@@ -2688,7 +2680,8 @@ export const messagesData: MessagePreview[] = [
     product: {
       title: "Vintage Leather Jacket",
       price: "$200",
-      image: "https://images.unsplash.com/photo-1731341869905-5ef9bcd272f1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170",
+      image:
+        "https://images.unsplash.com/photo-1731341869905-5ef9bcd272f1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170",
     },
   },
   {
