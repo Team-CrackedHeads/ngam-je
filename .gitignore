@@ -183,8 +183,9 @@ chroma/
 faiss/
 pinecone/
 
-# AI Models
-models/
+# AI Models (exclude backend source code models)
+/models/
+ai_models/
 *.pkl
 *.model
 
