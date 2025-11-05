@@ -119,6 +119,13 @@ function ThreadsPage() {
   const getBaseFilteredThreads = useCallback((): ThreadDisplay[] => {
     const filtered = threads.map(convertToThreadDisplay);
     switch (activeFilter) {
+      case "Best":
+        // Best: Highest tier threads with most contributions
+        return filtered.sort((a, b) => {
+          const scoreA = (a.tier || 0) * 1000 + (a.contributions || 0);
+          const scoreB = (b.tier || 0) * 1000 + (b.contributions || 0);
+          return scoreB - scoreA;
+        });
       case "Hot":
         // Hot: High tier + active engagement (online users)
         return filtered
@@ -128,6 +135,9 @@ function ThreadsPage() {
             const scoreB = (b.tier || 0) * 100 + (b.onlineUsers || 0);
             return scoreB - scoreA;
           });
+      case "New":
+        // New: Most recently created (API returns newest first already)
+        return filtered;
       case "Top":
         // Top: Based on total users and contributions
         return filtered.sort((a, b) => {
@@ -135,8 +145,12 @@ function ThreadsPage() {
           const scoreB = (b.totalUsers || 0) + (b.contributions || 0) * 10;
           return scoreB - scoreA;
         });
-      case "New":
-        return [...filtered].reverse(); // Newest first (API returns DESC by created_at)
+      case "Rising":
+        // Rising: Good tier but newer threads (balance between tier and recency)
+        return filtered
+          .filter((t) => (t.tier || 0) >= 1)
+          .sort((a, b) => (b.tier || 0) - (a.tier || 0));
+      case "All":
       default:
         return filtered;
     }
