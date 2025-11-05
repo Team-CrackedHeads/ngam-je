@@ -37,7 +37,9 @@ class ThreadResponse(ThreadBase):
 
     id: int
     tier: int = Field(..., description="Thread tier level (0-3)")
-    contributions: int = Field(..., description="Number of boosts/contributions")
+    contributions: int = Field(..., description="Total boosts received (all time)")
+    active_contributions: int = Field(..., description="Currently active boosts")
+    boost_expires_at: Optional[datetime] = Field(None, description="When current tier expires")
     member_count: int = Field(..., description="Total members in this thread")
     created_by_user_id: int
     created_at: datetime

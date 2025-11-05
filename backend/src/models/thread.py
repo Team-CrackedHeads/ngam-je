@@ -22,7 +22,9 @@ class Thread(Base):
 
     # Tier system (0-3, like Discord boosts)
     tier = Column(Integer, default=0, nullable=False)  # Starts at Tier 0
-    contributions = Column(Integer, default=0, nullable=False)  # Number of boosts/contributions
+    contributions = Column(Integer, default=0, nullable=False)  # Total boosts received (all time)
+    active_contributions = Column(Integer, default=0, nullable=False)  # Currently active boosts (can decrease)
+    boost_expires_at = Column(DateTime(timezone=True), nullable=True)  # When current tier expires
 
     # Membership tracking
     member_count = Column(Integer, default=0, nullable=False)  # Total members who joined
