@@ -17,6 +17,11 @@ dependencies = [
     "uvicorn>=0.38.0", # For fetching Clerk JWKS
     "clerk-backend-api>=3.3.1",
     "httpx>=0.28.1",
+    "fastmcp>=2.13.0.2",
+    "langchain==0.3.27",
+    "langchain-community==0.3.29",
+    "langchain-google-genai==2.1.12",
+    "langchain-mcp-adapters==0.1.9",
 ]
 
 [dependency-groups]

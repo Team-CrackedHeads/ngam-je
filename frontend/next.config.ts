@@ -54,6 +54,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'al-ikhsan.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'store.storeimages.cdn-apple.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.dell.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.apple.com',
+      },
     ],
   },
 };
