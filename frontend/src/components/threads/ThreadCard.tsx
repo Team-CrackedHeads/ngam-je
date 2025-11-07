@@ -38,7 +38,7 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
   return (
     <Card
       className="flex flex-col h-full border border-gray-100 overflow-hidden transition-shadow hover:shadow-lg cursor-pointer p-0"
-      onClick={() => router.push(`/threads/${thread.category}`)}
+      onClick={() => router.push(`/threads/${thread.id}`)}
     >
       {/* Header Section */}
       <CardHeader className="p-0 m-0 relative flex-shrink-0">

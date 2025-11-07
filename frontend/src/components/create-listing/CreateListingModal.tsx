@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { Info, DollarSign, Eye, Check, ChevronLeft, ChevronRight, X, MessageCircle, ShoppingCart, Package, ListPlus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,9 +20,11 @@ import {
 } from '@/utils/mock-all-data-used';
 import { TagGeneratorRef } from '@/components/create-listing/tag-generator';
 import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo';
-import { addNewListing, generateListingId, convertFormToListing } from '@/utils/listing-storage';
 import type { PartialFormData } from '@/types/listing-form';
 import type { BuyFormData, SellFormData } from '@/types/listing-form';
+import { createClerkApiClient } from '@/lib/clerk-api-client';
+import { createListing } from '@/lib/api/listings';
+import type { ListingCreate } from '@/types/listing';
 import ProductDetailsStep from './steps/ProductDetailsStep';
 import PricingShippingStep from './steps/PricingShippingStep';
 import FAQsStep from './steps/FAQsStep';
@@ -32,15 +35,18 @@ interface CreateListingModalProps {
   onClose: () => void;
   onSubmitBuy?: (data: BuyFormData) => void;
   onSubmitSell?: (data: SellFormData) => void;
-  category?: string; // Thread category where listing is being created
+  threadId: number; // Thread ID where listing is being created
+  onListingCreated?: () => void; // Callback after listing is created
 }
 
 type ListingType = null | 'buy' | 'sell';
 
-export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSubmitSell, category }: CreateListingModalProps) {
+export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSubmitSell, threadId, onListingCreated }: CreateListingModalProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [listingType, setListingType] = useState<ListingType>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Common states
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
@@ -350,30 +356,86 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
   const handleSubmit = async () => {
     if (!listingType) return;
 
-    const formData = listingType === 'buy' ? buyFormData : sellFormData;
+    try {
+      setIsSubmitting(true);
 
-    // Convert form data to listing format, passing the thread category
-    const listingData = convertFormToListing(formData, listingType, category);
+      const formData = listingType === 'buy' ? buyFormData : sellFormData;
 
-    // Generate ID and add to storage
-    const listingId = generateListingId(listingData.category);
-    const completeListing = { ...listingData, id: listingId };
-    addNewListing(completeListing);
+      // Get images based on listing type
+      const images = listingType === 'buy'
+        ? (formData as BuyFormData).generatedImages
+        : (formData as SellFormData).uploadedImages;
 
-    // Call original callbacks if provided
-    if (listingType === 'buy' && onSubmitBuy) {
-      onSubmitBuy(buyFormData);
-    } else if (listingType === 'sell' && onSubmitSell) {
-      onSubmitSell(sellFormData);
+      // Prepare listing data for API
+      const displayPrice = parseFloat(listingType === 'buy' ? formData.maxPrice : formData.minPrice);
+      const minPrice = formData.minPrice ? parseFloat(formData.minPrice) : null;
+      const maxPrice = formData.maxPrice ? parseFloat(formData.maxPrice) : null;
+      const inventoryQty = listingType === 'sell' && (formData as SellFormData).inventoryQuantity
+        ? parseInt((formData as SellFormData).inventoryQuantity)
+        : null;
+
+      // Validation checks
+      if (!displayPrice || isNaN(displayPrice) || displayPrice <= 0) {
+        alert('Please enter a valid price greater than 0');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const listingData: ListingCreate = {
+        thread_id: threadId, // CRITICAL: Connect to thread
+        title: formData.generatedTitle,
+        description: formData.generatedDescription,
+        price: displayPrice,
+        min_price: minPrice && minPrice > 0 ? minPrice : null,
+        max_price: maxPrice && maxPrice > 0 ? maxPrice : null,
+        currency: formData.currency || 'MYR',
+        listing_type: listingType === 'buy' ? 'wanted' : 'sale',
+        image_url: images && images.length > 0 ? images[0] : null,
+        gallery: images && images.length > 1 ? images.slice(1) : [],
+        tags: formData.tags || [],
+        creator_location: formData.location || null,
+        shipping_options: formData.shippingOptions || [],
+        inventory_quantity: inventoryQty && inventoryQty > 0 ? inventoryQty : null,
+        ownership_proof_url: listingType === 'sell'
+          ? (formData as SellFormData).ownershipProofImage || null
+          : null,
+        faqs: formData.faqs || [],
+      };
+
+      console.log('Creating listing with data:', listingData);
+
+      // Call backend API
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+      const createdListing = await createListing(apiClient.instance, listingData);
+
+      // Call original callbacks if provided
+      if (listingType === 'buy' && onSubmitBuy) {
+        onSubmitBuy(buyFormData);
+      } else if (listingType === 'sell' && onSubmitSell) {
+        onSubmitSell(sellFormData);
+      }
+
+      console.log(`${listingType} listing created:`, createdListing);
+
+      // Notify parent component to refresh listings
+      if (onListingCreated) {
+        onListingCreated();
+      }
+
+      // Close modal
+      handleClose();
+
+      // Navigate to the new listing
+      router.push(`/threads/${threadId}/listings/${createdListing.id}`);
+    } catch (error: any) {
+      console.error('Failed to create listing:', error);
+      const errorMessage = error?.detail || error?.message || 'Failed to create listing. Please try again.';
+      console.error('Error details:', errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    console.log(`${listingType} listing created:`, completeListing);
-
-    // Close modal
-    handleClose();
-
-    // Navigate to the new listing
-    router.push(`/threads/${listingData.category}/${listingId}`);
   };
 
   const handleClose = () => {

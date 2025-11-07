@@ -181,7 +181,7 @@ export default function PreviewStep({
             images.length > 0 ? (
               <div className="space-y-4">
                 <div className="relative aspect-video rounded-lg overflow-hidden border-2 bg-[var(--color-primary-200)] border-[var(--color-secondary-500)]">
-                  <Image src={activeImage ?? images[0]} alt="Listing preview" fill className="object-cover" />
+                  <Image src={activeImage ?? images[0]} alt="Listing preview" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 896px" className="object-cover" />
                 </div>
                 {images.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto">
@@ -190,12 +190,12 @@ export default function PreviewStep({
                         key={img + idx}
                         type="button"
                         onClick={() => setSelectedImageIndex(idx)}
-                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx
+                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx
                           ? 'border-[var(--color-secondary-500)] scale-100'
                           : 'border-transparent opacity-70 hover:opacity-100'
                           }`}
                       >
-                        <Image src={img} alt={`Generated option ${idx + 1}`} fill className="object-cover" />
+                        <Image src={img} alt={`Generated option ${idx + 1}`} fill sizes="64px" className="object-cover" />
                       </button>
                     ))}
                   </div>
@@ -211,7 +211,7 @@ export default function PreviewStep({
                   key={image + index}
                   className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-[var(--color-primary-200)]"
                 >
-                  <Image src={image} alt={`Product ${index + 1}`} fill className="object-cover" />
+                  <Image src={image} alt={`Product ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 200px" className="object-cover" />
                   {index === 0 && (
                     <div className="absolute bottom-1 left-1 text-xs px-2 py-1 rounded bg-[var(--color-secondary-500)] text-[var(--color-accent-700)]">
                       Cover
@@ -236,7 +236,7 @@ export default function PreviewStep({
             {formData.ownershipProofImage ? (
               <div className="space-y-3">
                 <div className="relative max-w-md aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-secondary-500)]">
-                  <Image src={formData.ownershipProofImage} alt="Ownership proof" fill className="object-cover" />
+                  <Image src={formData.ownershipProofImage} alt="Ownership proof" fill sizes="(max-width: 768px) 100vw, 448px" className="object-cover" />
                   {ownershipVerified !== undefined && ownershipVerified !== null && (
                     <div
                       className={`absolute bottom-2 left-2 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded font-medium ${ownershipVerified

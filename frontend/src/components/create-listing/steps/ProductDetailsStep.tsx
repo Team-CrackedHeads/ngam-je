@@ -172,6 +172,7 @@ export default function ProductDetailsStep({
                   src={images![selectedImageIndex]}
                   alt={`Product ${selectedImageIndex + 1}`}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 768px"
                   className="object-cover transition-all group-hover:blur-sm"
                 />
                 {/* Upload Overlay on Hover */}
@@ -201,7 +202,7 @@ export default function ProductDetailsStep({
                         : 'border-gray-200'
                     }`}
                   >
-                    <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                    <Image src={img} alt={`Thumbnail ${idx + 1}`} fill sizes="80px" className="object-cover" />
                   </button>
                 ))}
               </div>
@@ -243,6 +244,7 @@ export default function ProductDetailsStep({
                     src={ownershipProofImage}
                     alt="Ownership Proof"
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 768px"
                     className="object-cover transition-all group-hover:blur-sm"
                   />
                   {/* Upload Overlay on Hover */}

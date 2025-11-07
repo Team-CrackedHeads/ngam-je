@@ -7,6 +7,13 @@ from src.schemas.thread import (
     ThreadResponse,
     ThreadListResponse,
 )
+from src.schemas.listing import (
+    FAQ,
+    ListingCreate,
+    ListingUpdate,
+    ListingResponse,
+    ListingListResponse,
+)
 
 __all__ = [
     # User schemas (Clerk-managed auth, no auth/token schemas needed)
@@ -17,4 +24,10 @@ __all__ = [
     "ThreadUpdate",
     "ThreadResponse",
     "ThreadListResponse",
+    # Listing schemas
+    "FAQ",
+    "ListingCreate",
+    "ListingUpdate",
+    "ListingResponse",
+    "ListingListResponse",
 ]
