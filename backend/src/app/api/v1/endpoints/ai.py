@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 
-from src.app.services.ai.agents.product_search import ProductSearchAgent
+from src.app.services.ai.agents import ProductSearchAgent
 
 router = APIRouter()
 
