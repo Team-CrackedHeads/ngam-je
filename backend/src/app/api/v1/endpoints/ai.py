@@ -9,7 +9,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 
+from src.app.core.logging_config import get_logger
 from src.app.services.ai.agents import ProductSearchAgent
+
+# Get logger for this module
+logger = get_logger("app.api.ai")
 
 router = APIRouter()
 
@@ -57,12 +61,16 @@ async def get_product_details(request: ProductRequest):
         HTTPException: If the AI agent fails to generate valid response
     """
     try:
+        logger.info(f"🔍 Getting product details for: {request.product_name}")
         agent = ProductSearchAgent()
         result = await agent.get_product_details(request.product_name)
+        logger.info(f"✅ Successfully retrieved product details for: {request.product_name}")
         return result
     except ValueError as e:
+        logger.error(f"❌ ValueError in get_product_details: {e}")
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
+        logger.error(f"❌ Exception in get_product_details: {type(e).__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"AI agent error: {str(e)}")
 
 

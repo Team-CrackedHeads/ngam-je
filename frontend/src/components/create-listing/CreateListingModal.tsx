@@ -193,17 +193,11 @@ export default function CreateListingModal({
         listingType === "buy"
           ? buyFormData.generatedTitle || "Untitled Product"
           : sellFormData.generatedTitle || "Untitled Product";
-      
-      const productImages =
-        listingType === "buy"
-          ? buyFormData.generatedImages || []
-          : sellFormData.uploadedImages || [];
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/product_details`,
         {
           product_name: productName,
-          product_images: productImages,
         }
       );
 
@@ -211,6 +205,9 @@ export default function CreateListingModal({
     } catch (error) {
       console.error("Error generating product details: ", error);
       alert("Failed to generate product details.");
+      return null;
+    } finally {
+      setIsGeneratingAll(false);
     }
   };
 
@@ -219,12 +216,12 @@ export default function CreateListingModal({
     // await new Promise((resolve) => setTimeout(resolve, 1500));
     const productData = await getProductDataFromAI();
 
-    if (listingType === "buy") {
+    if (productData && listingType === "buy") {
       setBuyFormData((prev) => ({
         ...prev,
         generatedTitle: productData.title,
       }));
-    } else {
+    } else if (productData) {
       setSellFormData((prev) => ({
         ...prev,
         generatedTitle: productData.title,
@@ -239,12 +236,12 @@ export default function CreateListingModal({
     // await new Promise((resolve) => setTimeout(resolve, 2000));
     const productData = await getProductDataFromAI();
 
-    if (listingType === "buy") {
+    if (productData && listingType === "buy") {
       setBuyFormData((prev) => ({
         ...prev,
         generatedDescription: productData.description,
       }));
-    } else {
+    } else if (productData) {
       setSellFormData((prev) => ({
         ...prev,
         generatedDescription: productData.description,
@@ -259,15 +256,15 @@ export default function CreateListingModal({
     // await new Promise((resolve) => setTimeout(resolve, 2000));
     const productData = await getProductDataFromAI();
 
-    if (listingType === "buy") {
+    if (productData && listingType === "buy") {
       setBuyFormData((prev) => ({
         ...prev,
         generatedImages: [
           ...prev.generatedImages,
-          productData.images,
+          ...productData.images, // Spread the array, don't wrap it
         ],
       }));
-    } else {
+    } else if (productData) {
       setSellFormData((prev) => ({
         ...prev,
         uploadedImages: [...prev.uploadedImages, ...productData.images],
@@ -288,16 +285,13 @@ export default function CreateListingModal({
       //     : sellFormData.generatedTitle || "Untitled Product";
 
       const productData = await getProductDataFromAI();
-      // const response = await axios.post(
-      //   `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/product_details`,
-      //   {
-      //     product_name: productName,
-      //   }
-      // );
       console.log("AI product details:", productData);
 
-      // Expecting structure:
-      // { title, description, images: [], tags: [] }
+      // Backend returns: { title, description, images: [], tags: [] }
+
+      if (!productData) {
+        return; // Error already handled in getProductDataFromAI
+      }
 
       if (listingType === "buy") {
         setBuyFormData((prev) => ({
@@ -481,12 +475,12 @@ export default function CreateListingModal({
       );
 
       const prices = response.data;
-      // Expected format: { min, max, average }
+      // Backend returns: { min_price, max_price, avg_price, price_history }
 
       setRecommendedPriceRange({
-        min: prices.min || 0,
-        max: prices.max || 0,
-        average: prices.average || 0,
+        min: prices.min_price || 0,
+        max: prices.max_price || 0,
+        average: prices.avg_price || 0,
       });
     } catch (error) {
       console.error("Error fetching product prices:", error);
