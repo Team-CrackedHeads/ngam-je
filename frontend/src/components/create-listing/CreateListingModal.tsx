@@ -16,6 +16,8 @@ import {
   Package,
   ListPlus,
   Sparkles,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -962,33 +964,62 @@ export default function CreateListingModal({
                         id="context-image-upload"
                         onChange={handleContextImageUpload}
                       />
-                      <label
-                        htmlFor="context-image-upload"
-                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Sparkles className="w-10 h-10 mb-3 text-gray-400" />
-                          <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
-                        </div>
-                      </label>
 
-                      {/* Image Previews */}
-                      {contextImages.length > 0 && (
-                        <div className="flex gap-2 flex-wrap mt-4">
-                          {contextImages.map((img, idx) => (
-                            <div key={idx} className="relative w-24 h-24">
-                              <Image src={img} alt={`Context ${idx}`} fill className="object-cover rounded-lg" />
-                              <button
-                                onClick={() => setContextImages(prev => prev.filter((_, i) => i !== idx))}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
+                      {contextImages.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
+                               onClick={() => document.getElementById('context-image-upload')?.click()}>
+                            <Image
+                              src={contextImages[selectedImageIndex]}
+                              alt={`Context ${selectedImageIndex + 1}`}
+                              fill
+                              className="object-cover transition-all group-hover:blur-sm"
+                            />
+                            {/* Upload Overlay on Hover */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                              <Upload className="w-12 h-12 text-white mb-2" />
+                              <p className="text-white font-medium">Upload More Photos</p>
                             </div>
-                          ))}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newImages = contextImages.filter((_, i) => i !== selectedImageIndex);
+                                setContextImages(newImages);
+                                if (selectedImageIndex >= newImages.length) {
+                                  setSelectedImageIndex(Math.max(0, newImages.length - 1));
+                                }
+                              }}
+                              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex gap-2 overflow-x-auto pb-2">
+                            {contextImages.map((img, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setSelectedImageIndex(idx)}
+                                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                  selectedImageIndex === idx
+                                    ? 'border-[var(--color-secondary-500)] shadow-md'
+                                    : 'border-gray-200'
+                                }`}
+                              >
+                                <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
+                          onClick={() => document.getElementById('context-image-upload')?.click()}
+                        >
+                          <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                          <p className="text-[var(--color-primary-900)] mb-2 font-medium">Click to Upload Photos</p>
+                          <p className="text-sm text-[var(--color-primary-700)]">Provide images to help generate your listing</p>
                         </div>
                       )}
                     </div>
