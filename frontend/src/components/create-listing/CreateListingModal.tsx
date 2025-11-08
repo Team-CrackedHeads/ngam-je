@@ -83,10 +83,14 @@ export default function CreateListingModal({
   // AI Context Gathering states
   const [aiContextGathered, setAiContextGathered] = useState(false);
   const [userInput, setUserInput] = useState("");
-  const [contextImages, setContextImages] = useState<string[]>([]);
-  const [searchedImages, setSearchedImages] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [externalImages, setExternalImages] = useState<string[]>([]); // Results from both search AND generate
+  const [selectedExternalImages, setSelectedExternalImages] = useState<string[]>([]); // Selected from search/generate (max 3)
   const [isSearchingImages, setIsSearchingImages] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [generatedCount, setGeneratedCount] = useState(0); // Track how many times generated (max 3)
+  const [imageMode, setImageMode] = useState<'upload' | 'search' | 'generate'>('upload');
+  const [imageQuery, setImageQuery] = useState("");
   const [titleSuggestion, setTitleSuggestion] = useState("");
   const [descriptionSuggestion, setDescriptionSuggestion] = useState("");
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -454,12 +458,18 @@ export default function CreateListingModal({
     const files = e.target.files;
     if (files) {
       const newImages: string[] = [];
-      Array.from(files).forEach((file) => {
+      const combinedLength = uploadedImages.length + selectedExternalImages.length;
+      const remainingSlots = 5 - combinedLength;
+
+      // Only process up to the remaining slots
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+      filesToProcess.forEach((file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           newImages.push(reader.result as string);
-          if (newImages.length === files.length) {
-            setContextImages((prev) => [...prev, ...newImages]);
+          if (newImages.length === filesToProcess.length) {
+            setUploadedImages((prev) => [...prev, ...newImages]);
           }
         };
         reader.readAsDataURL(file);
@@ -468,23 +478,20 @@ export default function CreateListingModal({
   };
 
   const handleSearchImages = async () => {
-    if (!userInput.trim()) return;
+    if (!imageQuery.trim()) return;
 
     setIsSearchingImages(true);
     try {
-      // TODO: Call backend /api/v1/ai/search_images
+      // TODO: Call backend /api/v1/ai/search_images with imageQuery
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Mock Unsplash results
+      // Mock Unsplash results (3 images) - populates externalImages
       const mockImages = [
         "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
         "https://images.unsplash.com/photo-1572635196237-14b3f281503f",
         "https://images.unsplash.com/photo-1560343090-f0409e92791a",
-        "https://images.unsplash.com/photo-1491553895911-0055eca6402d",
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77",
       ];
-      setSearchedImages(mockImages);
+      setExternalImages(mockImages);
     } catch (error) {
       console.error("Error searching images:", error);
       alert("Failed to search images. Please try again.");
@@ -494,19 +501,28 @@ export default function CreateListingModal({
   };
 
   const handleGenerateImages = async () => {
-    if (!userInput.trim()) return;
+    if (!imageQuery.trim()) return;
+    if (generatedCount >= 3) {
+      alert("You can only generate up to 3 images per session.");
+      return;
+    }
 
     setIsGeneratingImages(true);
     try {
-      // TODO: Call backend /api/v1/ai/generate_images (text-to-image)
+      // TODO: Call backend /api/v1/ai/generate_images (text-to-image) with imageQuery
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Mock generated images
-      const mockGenerated = [
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-        "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
-      ];
-      setSearchedImages(mockGenerated);
+      // Mock generated image (single image)
+      const mockGenerated = "https://images.unsplash.com/photo-1523275335684-37898b6baf30";
+
+      // Add to externalImages array (same as search)
+      setExternalImages(prev => [...prev, mockGenerated]);
+      setGeneratedCount(prev => prev + 1);
+
+      // Automatically add to selected if under limit
+      if (selectedExternalImages.length < 3) {
+        setSelectedExternalImages(prev => [...prev, mockGenerated]);
+      }
     } catch (error) {
       console.error("Error generating images:", error);
       alert("Failed to generate images. Please try again.");
@@ -515,20 +531,21 @@ export default function CreateListingModal({
     }
   };
 
-  const handleSelectSearchedImage = (imageUrl: string) => {
-    if (contextImages.includes(imageUrl)) {
+  const handleSelectExternalImage = (imageUrl: string) => {
+    if (selectedExternalImages.includes(imageUrl)) {
       // Deselect
-      setContextImages(prev => prev.filter(img => img !== imageUrl));
+      setSelectedExternalImages(prev => prev.filter(img => img !== imageUrl));
     } else {
-      // Select (max 5 images)
-      if (contextImages.length < 5) {
-        setContextImages(prev => [...prev, imageUrl]);
+      // Select (max 3 images from search/generate combined)
+      if (selectedExternalImages.length < 3) {
+        setSelectedExternalImages(prev => [...prev, imageUrl]);
       }
     }
   };
 
   const handleSendMessage = async () => {
-    if (!userInput.trim() && contextImages.length === 0) return;
+    const allImages = [...selectedExternalImages, ...uploadedImages];
+    if (!userInput.trim() && allImages.length === 0) return;
 
     setIsGeneratingAll(true);
 
@@ -542,7 +559,7 @@ export default function CreateListingModal({
         title: "Sample Product Title",
         description: "This is a generated description based on your input and images.",
         tags: ["electronics", "gadgets"],
-        images: contextImages, // Use uploaded/selected images
+        images: allImages, // Use combined images (searched/generated + uploaded)
       };
 
       // Pre-fill form data
@@ -1018,75 +1035,338 @@ export default function CreateListingModal({
                       </p>
                     </div>
 
-                    {/* Image Upload Area */}
-                    <div>
+                    {/* Image Section with Tabs */}
+                    <div className="space-y-4">
                       <label className="block text-sm font-medium mb-2 text-accent-700">
                         Product Images
                       </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        id="context-image-upload"
-                        onChange={handleContextImageUpload}
-                      />
 
-                      {contextImages.length > 0 ? (
-                        <div className="space-y-3">
-                          <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
-                               onClick={() => document.getElementById('context-image-upload')?.click()}>
-                            <Image
-                              src={contextImages[selectedImageIndex]}
-                              alt={`Context ${selectedImageIndex + 1}`}
-                              fill
-                              className="object-cover transition-all group-hover:blur-sm"
-                            />
-                            {/* Upload Overlay on Hover */}
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
-                              <Upload className="w-12 h-12 text-white mb-2" />
-                              <p className="text-white font-medium">Upload More Photos</p>
-                            </div>
+                      {/* Tab Buttons */}
+                      <div className="flex gap-2 border-b border-gray-200">
+                        <button
+                          onClick={() => setImageMode('upload')}
+                          className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                            imageMode === 'upload'
+                              ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
+                              : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                          }`}
+                        >
+                          <Upload className="w-4 h-4 inline-block mr-2" />
+                          Upload
+                        </button>
+                        {listingType === 'buy' && (
+                          <>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newImages = contextImages.filter((_, i) => i !== selectedImageIndex);
-                                setContextImages(newImages);
-                                if (selectedImageIndex >= newImages.length) {
-                                  setSelectedImageIndex(Math.max(0, newImages.length - 1));
-                                }
-                              }}
-                              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                              onClick={() => setImageMode('search')}
+                              className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                                imageMode === 'search'
+                                  ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
+                                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                              }`}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Search className="w-4 h-4 inline-block mr-2" />
+                              Search
                             </button>
-                          </div>
+                            <button
+                              onClick={() => setImageMode('generate')}
+                              className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                                imageMode === 'generate'
+                                  ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
+                                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                              }`}
+                            >
+                              <Wand2 className="w-4 h-4 inline-block mr-2" />
+                              Generate
+                            </button>
+                          </>
+                        )}
+                      </div>
 
-                          <div className="flex gap-2 overflow-x-auto pb-2">
-                            {contextImages.map((img, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => setSelectedImageIndex(idx)}
-                                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                                  selectedImageIndex === idx
-                                    ? 'border-[var(--color-secondary-500)] shadow-md'
-                                    : 'border-gray-200'
-                                }`}
+                      {/* Upload Tab Content */}
+                      {imageMode === 'upload' && (
+                        <div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            id="context-image-upload"
+                            onChange={handleContextImageUpload}
+                          />
+
+                          {(() => {
+                            const allImages = [...selectedExternalImages, ...uploadedImages];
+                            const remainingSlots = 5 - allImages.length;
+
+                            return allImages.length > 0 ? (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-accent-700">
+                                    {allImages.length} / 5 images
+                                  </span>
+                                  {remainingSlots > 0 && (
+                                    <span className="text-xs text-gray-600">
+                                      {remainingSlots} slot{remainingSlots > 1 ? 's' : ''} remaining
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
+                                     onClick={() => remainingSlots > 0 && document.getElementById('context-image-upload')?.click()}>
+                                  <Image
+                                    src={allImages[selectedImageIndex]}
+                                    alt={`Image ${selectedImageIndex + 1}`}
+                                    fill
+                                    className="object-cover transition-all group-hover:blur-sm"
+                                  />
+                                  {remainingSlots > 0 && (
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                                      <Upload className="w-12 h-12 text-white mb-2" />
+                                      <p className="text-white font-medium">Upload More Photos</p>
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Determine if this is an external or uploaded image
+                                      if (selectedImageIndex < selectedExternalImages.length) {
+                                        // Remove from selectedExternalImages
+                                        const newExternalImages = selectedExternalImages.filter((_, i) => i !== selectedImageIndex);
+                                        setSelectedExternalImages(newExternalImages);
+                                      } else {
+                                        // Remove from uploadedImages
+                                        const uploadedIndex = selectedImageIndex - selectedExternalImages.length;
+                                        const newUploadedImages = uploadedImages.filter((_, i) => i !== uploadedIndex);
+                                        setUploadedImages(newUploadedImages);
+                                      }
+                                      const newLength = allImages.length - 1;
+                                      if (selectedImageIndex >= newLength) {
+                                        setSelectedImageIndex(Math.max(0, newLength - 1));
+                                      }
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                  {allImages.map((img, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => setSelectedImageIndex(idx)}
+                                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                        selectedImageIndex === idx
+                                          ? 'border-[var(--color-secondary-500)] shadow-md'
+                                          : 'border-gray-200'
+                                      }`}
+                                    >
+                                      <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div
+                                className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
+                                onClick={() => document.getElementById('context-image-upload')?.click()}
                               >
-                                <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
-                              </button>
-                            ))}
+                                <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                <p className="text-[var(--color-primary-900)] mb-2 font-medium">Click to Upload Photos</p>
+                                <p className="text-sm text-[var(--color-primary-700)]">Or use Search/Generate tabs to find images</p>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Search Tab Content */}
+                      {imageMode === 'search' && listingType === 'buy' && (
+                        <div>
+                          <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-[var(--color-primary-50)]">
+                            <label className="block text-sm font-medium mb-2 text-accent-700">
+                              Search for images
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={imageQuery}
+                                onChange={(e) => setImageQuery(e.target.value)}
+                                placeholder="e.g., iPhone 15 Pro, Nike Air Max..."
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)]"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter' && imageQuery.trim()) {
+                                    handleSearchImages();
+                                  }
+                                }}
+                              />
+                              <Button
+                                onClick={handleSearchImages}
+                                disabled={!imageQuery.trim() || isSearchingImages}
+                                className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                              >
+                                {isSearchingImages ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Search className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      ) : (
-                        <div
-                          className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
-                          onClick={() => document.getElementById('context-image-upload')?.click()}
-                        >
-                          <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
-                          <p className="text-[var(--color-primary-900)] mb-2 font-medium">Click to Upload Photos</p>
-                          <p className="text-sm text-[var(--color-primary-700)]">Provide images to help generate your listing</p>
+                      )}
+
+                      {/* Generate Tab Content */}
+                      {imageMode === 'generate' && listingType === 'buy' && (
+                        <div>
+                          <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-[var(--color-primary-50)]">
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-medium text-accent-700">
+                                Describe the image to generate
+                              </label>
+                              <span className="text-xs text-gray-600">
+                                {generatedCount} / 3 generated
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={imageQuery}
+                                onChange={(e) => setImageQuery(e.target.value)}
+                                placeholder="e.g., sleek black smartphone with triple camera..."
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)]"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter' && imageQuery.trim()) {
+                                    handleGenerateImages();
+                                  }
+                                }}
+                              />
+                              <Button
+                                onClick={handleGenerateImages}
+                                disabled={!imageQuery.trim() || isGeneratingImages || generatedCount >= 3}
+                                className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                              >
+                                {isGeneratingImages ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Wand2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* External Images Grid (same array as Search) */}
+                          {externalImages.length > 0 && (
+                            <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-white mt-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-medium text-accent-700">
+                                  Select up to 3 images from Search/Generate
+                                </h3>
+                                <span className="text-xs text-gray-600">
+                                  {selectedExternalImages.length} / 3 selected
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-3">
+                                {externalImages.map((imageUrl, index) => {
+                                  const isSelected = selectedExternalImages.includes(imageUrl);
+                                  const canSelect = selectedExternalImages.length < 3;
+                                  return (
+                                    <div
+                                      key={index}
+                                      onClick={() => handleSelectExternalImage(imageUrl)}
+                                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                                        isSelected
+                                          ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
+                                          : canSelect
+                                          ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
+                                          : 'border-gray-200 opacity-50 cursor-not-allowed'
+                                      }`}
+                                    >
+                                      <Image
+                                        src={imageUrl}
+                                        alt={`Generated ${index + 1}`}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                      {isSelected && (
+                                        <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
+                                          <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
+                                            <Check className="w-4 h-4 text-black" />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="mt-4 flex justify-end">
+                                <Button
+                                  onClick={() => setImageMode('upload')}
+                                  disabled={selectedExternalImages.length === 0}
+                                  className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                                >
+                                  Done
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Shared: Search Results Grid (only for Search tab) */}
+                      {imageMode === 'search' && externalImages.length > 0 && (
+                        <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-white mt-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-medium text-accent-700">
+                              Select up to 3 images from Search/Generate
+                            </h3>
+                            <span className="text-xs text-gray-600">
+                              {selectedExternalImages.length} / 3 selected
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            {externalImages.map((imageUrl, index) => {
+                              const isSelected = selectedExternalImages.includes(imageUrl);
+                              const canSelect = selectedExternalImages.length < 3;
+                              return (
+                                <div
+                                  key={index}
+                                  onClick={() => handleSelectExternalImage(imageUrl)}
+                                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                                    isSelected
+                                      ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
+                                      : canSelect
+                                      ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
+                                      : 'border-gray-200 opacity-50 cursor-not-allowed'
+                                  }`}
+                                >
+                                  <Image
+                                    src={imageUrl}
+                                    alt={`Search result ${index + 1}`}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  {isSelected && (
+                                    <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
+                                      <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
+                                        <Check className="w-4 h-4 text-black" />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="mt-4 flex justify-end">
+                            <Button
+                              onClick={() => setImageMode('upload')}
+                              disabled={selectedExternalImages.length === 0}
+                              className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                            >
+                              Done
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1113,7 +1393,10 @@ export default function CreateListingModal({
                       <Button
                         onClick={() => {
                           setIsAIModeEnabled(false);
-                          setContextImages([]);
+                          setUploadedImages([]);
+                          setExternalImages([]);
+                          setSelectedExternalImages([]);
+                          setGeneratedCount(0);
                           setUserInput("");
                         }}
                         variant="outline"
@@ -1123,7 +1406,7 @@ export default function CreateListingModal({
                       </Button>
                       <Button
                         onClick={handleSendMessage}
-                        disabled={!userInput.trim() && contextImages.length === 0}
+                        disabled={!userInput.trim() && selectedExternalImages.length === 0 && uploadedImages.length === 0}
                         className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
                       >
                         <Sparkles className="w-4 h-4 mr-2" />
