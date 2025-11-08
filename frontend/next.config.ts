@@ -66,6 +66,15 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'www.apple.com',
       },
+      // SerpAPI image sources
+      {
+        protocol: 'https',
+        hostname: 'serpapi.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.gstatic.com', // Google Shopping images
+      },
     ],
   },
 };

@@ -6,7 +6,11 @@ Centralized configuration management for all AI services using Pydantic settings
 
 import os
 from typing import Literal
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class AISettings(BaseSettings):
@@ -43,6 +47,7 @@ class AISettings(BaseSettings):
         env_prefix = "AI_"
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra env vars from .env file
 
 
 # Singleton instance
