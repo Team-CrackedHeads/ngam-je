@@ -73,6 +73,11 @@ export default function CreateListingModal({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+
+  // AI Context Gathering states
+  const [aiContextGathered, setAiContextGathered] = useState(false);
+  const [userInput, setUserInput] = useState("");
+  const [contextImages, setContextImages] = useState<string[]>([]);
   const [titleSuggestion, setTitleSuggestion] = useState("");
   const [descriptionSuggestion, setDescriptionSuggestion] = useState("");
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -435,6 +440,71 @@ export default function CreateListingModal({
     }
   };
 
+  // AI Context Gathering handlers
+  const handleContextImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages: string[] = [];
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newImages.push(reader.result as string);
+          if (newImages.length === files.length) {
+            setContextImages((prev) => [...prev, ...newImages]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!userInput.trim() && contextImages.length === 0) return;
+
+    setIsGeneratingAll(true);
+
+    try {
+      // TODO: Call backend API with context (images + text)
+      // For now, simulate AI generation
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Mock data - will be replaced with real API response
+      const mockGeneratedData = {
+        title: "Sample Product Title",
+        description: "This is a generated description based on your input and images.",
+        tags: ["electronics", "gadgets"],
+        images: contextImages, // Use uploaded images
+      };
+
+      // Pre-fill form data
+      if (listingType === "buy") {
+        setBuyFormData((prev) => ({
+          ...prev,
+          generatedTitle: mockGeneratedData.title,
+          generatedDescription: mockGeneratedData.description,
+          generatedImages: mockGeneratedData.images,
+          tags: mockGeneratedData.tags,
+        }));
+      } else {
+        setSellFormData((prev) => ({
+          ...prev,
+          generatedTitle: mockGeneratedData.title,
+          generatedDescription: mockGeneratedData.description,
+          uploadedImages: mockGeneratedData.images,
+          tags: mockGeneratedData.tags,
+        }));
+      }
+
+      // Mark context as gathered and show the form
+      setAiContextGathered(true);
+    } catch (error) {
+      console.error("Error generating listing:", error);
+      alert("Failed to generate listing. Please try again.");
+    } finally {
+      setIsGeneratingAll(false);
+    }
+  };
+
   // Sell-specific: Ownership proof
   const handleVerifyOwnershipProof = async (imageUrl: string) => {
     setIsVerifyingOwnership(true);
@@ -576,6 +646,12 @@ export default function CreateListingModal({
     setDescriptionSuggestion("");
     setOwnershipVerified(true);
     setIsVerifyingOwnership(false);
+
+    // Clear AI context states
+    setAiContextGathered(false);
+    setUserInput("");
+    setContextImages([]);
+
     onClose();
   };
 
@@ -858,48 +934,149 @@ export default function CreateListingModal({
               </div>
             )}
 
-            {/* Step 2: Product Details */}
+            {/* Step 2: Product Details OR AI Context Gathering */}
             {currentStep === 2 && listingType && (
-              <ProductDetailsStep
-                listingType={listingType}
-                formData={formData}
-                setFormData={setFormData}
-                isAIModeEnabled={isAIModeEnabled}
-                setIsAIModeEnabled={setIsAIModeEnabled}
-                isGeneratingTitle={isGeneratingTitle}
-                isGeneratingDescription={isGeneratingDescription}
-                isGeneratingPhotos={isGeneratingPhotos}
-                isGeneratingAll={isGeneratingAll}
-                titleSuggestion={titleSuggestion}
-                descriptionSuggestion={descriptionSuggestion}
-                selectedImageIndex={selectedImageIndex}
-                setSelectedImageIndex={setSelectedImageIndex}
-                onGenerateTitle={generateTitleWithAI}
-                onGenerateDescription={generateDescriptionWithAI}
-                onGeneratePhotos={generatePhotosWithAI}
-                onGenerateAll={generateAllWithAI}
-                onTitleChange={generateTitleSuggestion}
-                onDescriptionChange={generateDescriptionSuggestion}
-                onImageUpload={handleImageUpload}
-                onRemoveImage={removeImage}
-                onOwnershipProofUpload={
-                  listingType === "sell"
-                    ? handleOwnershipProofUpload
-                    : undefined
-                }
-                ownershipProofImage={
-                  listingType === "sell"
-                    ? sellFormData.ownershipProofImage
-                    : undefined
-                }
-                isVerifyingOwnership={
-                  listingType === "sell" ? isVerifyingOwnership : undefined
-                }
-                ownershipVerified={
-                  listingType === "sell" ? ownershipVerified : undefined
-                }
-                tagGeneratorRef={tagGeneratorRef}
-              />
+              <>
+                {/* Show AI Context Gathering if AI Mode ON and context not gathered */}
+                {isAIModeEnabled && !aiContextGathered ? (
+                  <div className="space-y-6">
+                    <div className="text-center mb-6">
+                      <h2 className="text-2xl font-bold mb-2 text-accent-700">
+                        AI-Powered Listing
+                      </h2>
+                      <p className="text-sm text-accent-500">
+                        Provide some details to help generate your {listingType} listing
+                      </p>
+                    </div>
+
+                    {/* Image Upload Area */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-accent-700">
+                        Product Images
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        id="context-image-upload"
+                        onChange={handleContextImageUpload}
+                      />
+                      <label
+                        htmlFor="context-image-upload"
+                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Sparkles className="w-10 h-10 mb-3 text-gray-400" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                      </label>
+
+                      {/* Image Previews */}
+                      {contextImages.length > 0 && (
+                        <div className="flex gap-2 flex-wrap mt-4">
+                          {contextImages.map((img, idx) => (
+                            <div key={idx} className="relative w-24 h-24">
+                              <Image src={img} alt={`Context ${idx}`} fill className="object-cover rounded-lg" />
+                              <button
+                                onClick={() => setContextImages(prev => prev.filter((_, i) => i !== idx))}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Description */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-accent-700">
+                        Tell us about the product
+                      </label>
+                      <textarea
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder={`Describe the product you want to ${listingType}...`}
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] resize-none"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Include details like brand, model, condition, etc.
+                      </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        onClick={() => {
+                          setIsAIModeEnabled(false);
+                          setContextImages([]);
+                          setUserInput("");
+                        }}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Exit AI Mode
+                      </Button>
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!userInput.trim() && contextImages.length === 0}
+                        className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Listing
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Show normal Product Details form */
+                  <ProductDetailsStep
+                    listingType={listingType}
+                    formData={formData}
+                    setFormData={setFormData}
+                    isAIModeEnabled={isAIModeEnabled}
+                    setIsAIModeEnabled={setIsAIModeEnabled}
+                    isGeneratingTitle={isGeneratingTitle}
+                    isGeneratingDescription={isGeneratingDescription}
+                    isGeneratingPhotos={isGeneratingPhotos}
+                    isGeneratingAll={isGeneratingAll}
+                    titleSuggestion={titleSuggestion}
+                    descriptionSuggestion={descriptionSuggestion}
+                    selectedImageIndex={selectedImageIndex}
+                    setSelectedImageIndex={setSelectedImageIndex}
+                    onGenerateTitle={generateTitleWithAI}
+                    onGenerateDescription={generateDescriptionWithAI}
+                    onGeneratePhotos={generatePhotosWithAI}
+                    onGenerateAll={generateAllWithAI}
+                    onTitleChange={generateTitleSuggestion}
+                    onDescriptionChange={generateDescriptionSuggestion}
+                    onImageUpload={handleImageUpload}
+                    onRemoveImage={removeImage}
+                    onOwnershipProofUpload={
+                      listingType === "sell"
+                        ? handleOwnershipProofUpload
+                        : undefined
+                    }
+                    ownershipProofImage={
+                      listingType === "sell"
+                        ? sellFormData.ownershipProofImage
+                        : undefined
+                    }
+                    isVerifyingOwnership={
+                      listingType === "sell" ? isVerifyingOwnership : undefined
+                    }
+                    ownershipVerified={
+                      listingType === "sell" ? ownershipVerified : undefined
+                    }
+                    tagGeneratorRef={tagGeneratorRef}
+                  />
+                )}
+              </>
             )}
 
             {/* Step 3: Pricing & Shipping */}
