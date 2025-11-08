@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import {
   Info,
   DollarSign,
@@ -18,6 +19,9 @@ import {
   Sparkles,
   Upload,
   Trash2,
+  Search,
+  Wand2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,6 +84,9 @@ export default function CreateListingModal({
   const [aiContextGathered, setAiContextGathered] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [contextImages, setContextImages] = useState<string[]>([]);
+  const [searchedImages, setSearchedImages] = useState<string[]>([]);
+  const [isSearchingImages, setIsSearchingImages] = useState(false);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [titleSuggestion, setTitleSuggestion] = useState("");
   const [descriptionSuggestion, setDescriptionSuggestion] = useState("");
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -460,6 +467,66 @@ export default function CreateListingModal({
     }
   };
 
+  const handleSearchImages = async () => {
+    if (!userInput.trim()) return;
+
+    setIsSearchingImages(true);
+    try {
+      // TODO: Call backend /api/v1/ai/search_images
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Mock Unsplash results
+      const mockImages = [
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f",
+        "https://images.unsplash.com/photo-1560343090-f0409e92791a",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
+        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77",
+      ];
+      setSearchedImages(mockImages);
+    } catch (error) {
+      console.error("Error searching images:", error);
+      alert("Failed to search images. Please try again.");
+    } finally {
+      setIsSearchingImages(false);
+    }
+  };
+
+  const handleGenerateImages = async () => {
+    if (!userInput.trim()) return;
+
+    setIsGeneratingImages(true);
+    try {
+      // TODO: Call backend /api/v1/ai/generate_images (text-to-image)
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      // Mock generated images
+      const mockGenerated = [
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+        "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
+      ];
+      setSearchedImages(mockGenerated);
+    } catch (error) {
+      console.error("Error generating images:", error);
+      alert("Failed to generate images. Please try again.");
+    } finally {
+      setIsGeneratingImages(false);
+    }
+  };
+
+  const handleSelectSearchedImage = (imageUrl: string) => {
+    if (contextImages.includes(imageUrl)) {
+      // Deselect
+      setContextImages(prev => prev.filter(img => img !== imageUrl));
+    } else {
+      // Select (max 5 images)
+      if (contextImages.length < 5) {
+        setContextImages(prev => [...prev, imageUrl]);
+      }
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!userInput.trim() && contextImages.length === 0) return;
 
@@ -475,7 +542,7 @@ export default function CreateListingModal({
         title: "Sample Product Title",
         description: "This is a generated description based on your input and images.",
         tags: ["electronics", "gadgets"],
-        images: contextImages, // Use uploaded images
+        images: contextImages, // Use uploaded/selected images
       };
 
       // Pre-fill form data
