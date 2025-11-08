@@ -189,7 +189,7 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
         {isAIModeEnabled && (
           <button
             onClick={generateTagsFromContent}
-            disabled={isGeneratingTags}
+            disabled={isGeneratingTags || tags.length === 0}
             className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
             {isGeneratingTags ? (
@@ -200,7 +200,7 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
             ) : (
               <>
                 <RotateCcw className="w-4 h-4" />
-                {tags.length > 0 && <span>Regenerate</span>}
+                <span>Regenerate</span>
               </>
             )}
           </button>

@@ -244,7 +244,7 @@ export default function ProductDetailsStep({
             {isAIModeEnabled && (
               <button
                 onClick={onGenerateTitle}
-                disabled={isGeneratingTitle || !hasAnyInput}
+                disabled={isGeneratingTitle || !formData.generatedTitle}
                 className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {isGeneratingTitle ? (
@@ -255,7 +255,7 @@ export default function ProductDetailsStep({
                 ) : (
                   <>
                     <RotateCcw className="w-4 h-4" />
-                    {formData.generatedTitle && <span>Regenerate</span>}
+                    <span>Regenerate</span>
                   </>
                 )}
               </button>
@@ -322,7 +322,7 @@ export default function ProductDetailsStep({
             {isAIModeEnabled && (
               <button
                 onClick={onGenerateDescription}
-                disabled={isGeneratingDescription || !hasAnyInput}
+                disabled={isGeneratingDescription || !formData.generatedDescription}
                 className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {isGeneratingDescription ? (
@@ -333,7 +333,7 @@ export default function ProductDetailsStep({
                 ) : (
                   <>
                     <RotateCcw className="w-4 h-4" />
-                    {formData.generatedDescription && <span>Regenerate</span>}
+                    <span>Regenerate</span>
                   </>
                 )}
               </button>
