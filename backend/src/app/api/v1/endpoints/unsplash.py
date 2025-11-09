@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 from src.app.core.logging_config import get_logger
-from src.app.services import unsplash_service
+from src.app.services import imagesearch
 
 logger = get_logger("app.api.unsplash")
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 class ImageSearchResponse(BaseModel):
     """Response model for image search."""
-    images: List[unsplash_service.UnsplashImage]
+    images: List[imagesearch.UnsplashImage]
     total: int
 
 
@@ -37,7 +37,7 @@ async def search_images(
         orientation: Filter by orientation
     """
     try:
-        images = await unsplash_service.search_unsplash(
+        images = await imagesearch.search_unsplash(
             query=query,
             per_page=per_page,
             orientation=orientation,
@@ -63,7 +63,7 @@ async def search_backgrounds(
         per_page: Number of results (max 30)
     """
     try:
-        images = await unsplash_service.search_backgrounds(
+        images = await imagesearch.search_backgrounds(
             style=style,
             per_page=per_page,
         )

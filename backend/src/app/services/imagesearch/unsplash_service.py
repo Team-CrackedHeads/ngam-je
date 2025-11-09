@@ -9,9 +9,9 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from src.app.core.logging_config import get_logger
-from src.app.services.unsplash_config import get_unsplash_settings
+from src.app.services.imagesearch.config import get_unsplash_settings
 
-logger = get_logger("app.services.unsplash")
+logger = get_logger("app.services.imagesearch.unsplash")
 
 
 class UnsplashImage(BaseModel):

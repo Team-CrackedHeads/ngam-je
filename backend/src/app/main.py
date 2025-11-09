@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.app.core.config import get_settings
 from src.app.core.logging_config import configure_logging, get_logger
 from src.app.api.v1.api import api_router
-from src.app.services.ai.utils.mcp_manager import cleanup_mcp
 
 # Configure logging BEFORE FastAPI initialization
 settings = get_settings()
@@ -22,9 +21,10 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     """Handle application startup and shutdown events."""
     # Startup
+    logger.info("🚀 Application starting up...")
     yield
     # Shutdown
-    await cleanup_mcp()
+    logger.info("👋 Application shutting down...")
 
 
 # Create FastAPI app
