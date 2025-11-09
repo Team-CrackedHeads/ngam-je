@@ -39,7 +39,8 @@ class RegenerateFieldRequest(BaseModel):
 class GenerateImagesRequest(BaseModel):
     """Request model for image generation."""
     description: str
-    num_images: int = 4
+    num_images: int = 1  # Default to 1 image to avoid quota issues
+    reference_images: List[str] | None = None  # Optional reference images for editing
 
 
 # Endpoints
@@ -141,21 +142,29 @@ async def regenerate_tags_endpoint(request: RegenerateFieldRequest) -> dict:
 @router.post("/images")
 async def generate_images_endpoint(request: GenerateImagesRequest) -> dict:
     """
-    Generate images from text description using AI (Gemini Imagen).
-
-    NOT YET IMPLEMENTED - placeholder for future feature.
+    Generate images from text description using Gemini 2.5 Flash (nano banana).
 
     Args:
         request: GenerateImagesRequest with description and num_images
 
     Returns:
-        dict with generated image URLs
+        dict with generated image URLs (base64 data URLs)
 
     Raises:
-        HTTPException: 501 Not Implemented
+        HTTPException: 422 if validation fails, 500 if generation fails
     """
-    logger.warning(f"⚠️ Image generation requested but not implemented: {request.description}")
-    raise HTTPException(
-        status_code=501,
-        detail="Image generation with Gemini Imagen is not yet implemented. Use Unsplash search instead."
-    )
+    try:
+        mode = "edit" if request.reference_images else "create"
+        logger.info(f"🎨 Generating images ({mode}): {request.description[:50]}...")
+        image_urls = await generation.generate_images(
+            description=request.description,
+            num_images=request.num_images,
+            reference_images=request.reference_images,
+        )
+        return {"images": image_urls}
+    except ValueError as e:
+        logger.error(f"❌ ValueError: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")

@@ -495,23 +495,31 @@ export default function CreateListingModal({
 
     setIsGeneratingImages(true);
     try {
-      // TODO: Call backend /api/v1/ai/generate_images (text-to-image) with imageQuery
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // Call backend /api/v1/generation/images (text-to-image with Gemini nano banana)
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/images`,
+        {
+          description: imageQuery,
+          num_images: 1, // Generate 1 image at a time
+        }
+      );
 
-      // Mock generated image (single image)
-      const mockGenerated = "https://images.unsplash.com/photo-1523275335684-37898b6baf30";
+      const generatedImages = response.data.images || []; // Array of base64 data URLs
+
+      if (generatedImages.length === 0) {
+        throw new Error("No images were generated");
+      }
 
       // Add to externalImages array at the START (prepend)
-      setExternalImages(prev => [mockGenerated, ...prev]);
-      setGeneratedCount(prev => prev + 1);
-
-      // Automatically add to selected if under limit
-      if (selectedExternalImages.length < 3) {
-        setSelectedExternalImages(prev => [mockGenerated, ...prev]);
-      }
+      setExternalImages(prev => [...generatedImages, ...prev]);
+      setGeneratedCount(prev => prev + generatedImages.length);
     } catch (error) {
       console.error("Error generating images:", error);
-      alert("Failed to generate images. Please try again.");
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.detail || "Failed to generate images. Please try again.");
+      } else {
+        alert(error instanceof Error ? error.message : "Failed to generate images. Please try again.");
+      }
     } finally {
       setIsGeneratingImages(false);
     }
