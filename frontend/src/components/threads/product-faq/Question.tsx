@@ -104,33 +104,35 @@ const Question: React.FC<QuestionProps> = ({
       {/* Expanded Body */}
       {isExpanded && (
         <div className="border-t border-[color:var(--color-border)] p-4 space-y-4">
-          {/* New Answer Input */}
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              placeholder="Write your answer..."
-              className="flex-grow p-3 pr-12 rounded-full border border-[color:var(--color-border)]"
-              value={newAnswerInput}
-              onChange={(e) => onNewAnswerChange(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
+          {/* New Answer Input - Only show if no answers yet */}
+          {answers.length === 0 && (
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                placeholder="Write your answer..."
+                className="flex-grow p-3 pr-12 rounded-full border border-[color:var(--color-border)]"
+                value={newAnswerInput}
+                onChange={(e) => onNewAnswerChange(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onSubmitAnswer();
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
                   onSubmitAnswer();
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSubmitAnswer();
-              }}
-              disabled={!newAnswerInput?.trim()}
-              className="absolute right-2 p-2 rounded-full bg-accent-gradient text-white hover:opacity-90 disabled:opacity-50"
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </div>
+                }}
+                disabled={!newAnswerInput?.trim()}
+                className="absolute right-2 p-2 rounded-full bg-accent-gradient text-white hover:opacity-90 disabled:opacity-50"
+              >
+                <Send className="h-5 w-5" />
+              </button>
+            </div>
+          )}
 
           {/* Scrollable Answers Container */}
           <div className="max-h-[500px] overflow-y-auto pr-1 space-y-2">

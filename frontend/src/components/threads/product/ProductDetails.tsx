@@ -88,8 +88,8 @@ export const ProductDetails = ({
     setIsMakeOfferModalOpen(true);
   };
 
-  // Set main image source - use gallery first, then imageUrl fallback
-  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl;
+  // Set main image source - use imageUrl (first uploaded image), gallery contains remaining images
+  const mainImageSrc = listing.imageUrl;
 
   return (
     <>

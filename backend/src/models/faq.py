@@ -42,6 +42,7 @@ class FAQ(Base):
     listing = relationship("Listing", back_populates="faq_questions")
     question_user = relationship("User", foreign_keys=[question_user_id])
     answer_user = relationship("User", foreign_keys=[answer_user_id])
+    replies = relationship("FAQReply", back_populates="faq", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<FAQ(id={self.id}, listing_id={self.listing_id}, question='{self.question[:50]}...')>"

@@ -94,14 +94,7 @@ def answer_question(
             detail="Only the listing owner can answer questions"
         )
 
-    # Check if already answered
-    if faq.is_answered:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This question has already been answered"
-        )
-
-    # Update FAQ with answer
+    # Update FAQ with answer (allow multiple answers/updates)
     faq.answer = answer_in.answer
     faq.answer_user_id = current_user.id
     faq.answer_username = current_user.username

@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Optional
+import re
 
 from src.app.api.deps import get_current_user
 from src.database import get_db
@@ -17,6 +18,55 @@ from src.schemas.listing import (
 )
 
 router = APIRouter()
+
+
+def extract_city_from_address(address: str) -> str:
+    """
+    Extract city name from a full address string.
+    Handles Malaysian addresses like "KL Bird Park, 920, Jalan..., 50480 Kuala Lumpur, ..."
+    Returns just the city name, max 100 characters.
+    Priority: Cities over states, specific locations over general areas.
+    """
+    if not address:
+        return ""
+
+    # Common Malaysian cities (ordered by priority - cities first, states excluded)
+    # Cities in Selangor
+    cities = [
+        "Petaling Jaya", "Shah Alam", "Subang Jaya", "Klang", "Puchong",
+        "Cyberjaya", "Kajang", "Bangi", "Ampang", "Cheras", "Setia Alam",
+        "Seri Kembangan", "Rawang", "Banting", "Sepang",
+        # Federal Territories
+        "Kuala Lumpur", "Putrajaya",
+        # Penang
+        "Georgetown", "George Town", "Butterworth", "Bayan Lepas",
+        # Johor
+        "Johor Bahru", "Skudai", "Iskandar Puteri", "Nusajaya",
+        # Other major cities
+        "Malacca", "Melaka", "Ipoh", "Kota Kinabalu", "Kuching",
+        "Seremban", "Nilai", "Port Dickson",
+    ]
+
+    # Try to find a known city in the address (prioritize longer/more specific names)
+    # Sort by length descending to match "Petaling Jaya" before "Jaya"
+    for city in sorted(cities, key=len, reverse=True):
+        if city.lower() in address.lower():
+            return city
+
+    # Fallback: Try to extract part after postal code (Malaysian format: 5 digits)
+    # Example: "50480 Kuala Lumpur, Wilayah Persekutuan" -> extract "Kuala Lumpur"
+    postal_match = re.search(r'\d{5}\s+([^,]+)', address)
+    if postal_match:
+        extracted = postal_match.group(1).strip()
+        # Remove state names and extra info
+        extracted = re.sub(r',?\s*(Wilayah Persekutuan|Selangor|Penang|Johor|Negeri Sembilan|Melaka|Perak|Sabah|Sarawak).*$', '', extracted, flags=re.IGNORECASE)
+        extracted = extracted.strip()
+        if extracted and len(extracted) <= 100:
+            return extracted
+
+    # Last resort: Take first part before first comma, limited to 100 chars
+    first_part = address.split(',')[0].strip()
+    return first_part[:100]
 
 
 @router.get("/", response_model=ListingListResponse)
@@ -107,6 +157,9 @@ async def create_listing(
     if listing_data.listing_type == "sale" and listing_data.ownership_proof_url:
         creator_verified = True
 
+    # Extract city from full address to fit in 100 char limit
+    city_location = extract_city_from_address(listing_data.creator_location or "")
+
     # Create new listing (without FAQs)
     new_listing = Listing(
         user_id=current_user.id,
@@ -123,7 +176,7 @@ async def create_listing(
         tags=listing_data.tags or [],
         protected=listing_data.protected,
         creator_name=current_user.username,  # From user profile
-        creator_location=listing_data.creator_location,
+        creator_location=city_location,  # Extract just the city
         creator_verified=creator_verified,
         shipping_options=listing_data.shipping_options or [],
         inventory_quantity=listing_data.inventory_quantity,
@@ -143,9 +196,9 @@ async def create_listing(
                 listing_id=new_listing.id,
                 question=faq_item.question,
                 answer=faq_item.answer if faq_item.answer else None,
-                question_user_id=None,  # No specific user for pre-populated FAQs
+                question_user_id=current_user.id,  # Set question user to listing creator
                 answer_user_id=current_user.id if faq_item.answer else None,
-                question_username=None,
+                question_username=current_user.username,  # Show listing creator's username
                 answer_username=current_user.username if faq_item.answer else None,
                 is_answered=bool(faq_item.answer),
                 is_accepted=False,
