@@ -102,15 +102,12 @@ async def create_listing(
             detail=f"Thread {listing_data.thread_id} not found",
         )
 
-    # Convert FAQ objects to dicts for JSONB storage
-    faqs_dict = [faq.model_dump() for faq in listing_data.faqs] if listing_data.faqs else []
-
     # Determine creator_verified: true if KYC verified OR if ownership proof provided (for sell listings)
     creator_verified = current_user.kyc_verified_at is not None
     if listing_data.listing_type == "sale" and listing_data.ownership_proof_url:
         creator_verified = True
 
-    # Create new listing
+    # Create new listing (without FAQs)
     new_listing = Listing(
         user_id=current_user.id,
         thread_id=listing_data.thread_id,
@@ -131,12 +128,33 @@ async def create_listing(
         shipping_options=listing_data.shipping_options or [],
         inventory_quantity=listing_data.inventory_quantity,
         ownership_proof_url=listing_data.ownership_proof_url,
-        faqs=faqs_dict,
     )
 
     db.add(new_listing)
     db.commit()
     db.refresh(new_listing)
+
+    # Create FAQs in the separate faqs table
+    if listing_data.faqs:
+        from src.models.faq import FAQ
+
+        for faq_item in listing_data.faqs:
+            new_faq = FAQ(
+                listing_id=new_listing.id,
+                question=faq_item.question,
+                answer=faq_item.answer if faq_item.answer else None,
+                question_user_id=None,  # No specific user for pre-populated FAQs
+                answer_user_id=current_user.id if faq_item.answer else None,
+                question_username=None,
+                answer_username=current_user.username if faq_item.answer else None,
+                is_answered=bool(faq_item.answer),
+                is_accepted=False,
+                helpful_count=0,
+                not_helpful_count=0,
+            )
+            db.add(new_faq)
+
+        db.commit()
 
     return new_listing
 

@@ -59,8 +59,7 @@ class Listing(Base):
     # Proof of ownership (for sell listings, matches frontend form)
     ownership_proof_url = Column(Text, nullable=True)  # From ownershipProofImage field (sell only)
 
-    # FAQs (matches frontend form fields)
-    faqs = Column(JSONB, nullable=True, default=list)  # From faqs field: Array of {id, question, answer}
+    # FAQs are now in a separate table (see FAQ model and relationship below)
 
     # Status flags
     is_active = Column(Boolean, nullable=False, default=True)
@@ -77,3 +76,4 @@ class Listing(Base):
     # Relationships
     # creator = relationship("User", back_populates="listings")
     # thread = relationship("Thread", back_populates="listings")
+    faq_questions = relationship("FAQ", back_populates="listing", cascade="all, delete-orphan")

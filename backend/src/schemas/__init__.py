@@ -8,7 +8,7 @@ from src.schemas.thread import (
     ThreadListResponse,
 )
 from src.schemas.listing import (
-    FAQ,
+    FAQItem,
     ListingCreate,
     ListingUpdate,
     ListingResponse,
@@ -25,7 +25,7 @@ __all__ = [
     "ThreadResponse",
     "ThreadListResponse",
     # Listing schemas
-    "FAQ",
+    "FAQItem",
     "ListingCreate",
     "ListingUpdate",
     "ListingResponse",

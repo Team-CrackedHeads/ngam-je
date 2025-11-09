@@ -1,33 +1,91 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@clerk/nextjs";
 import AISummary from "@/components/threads/product-faq/AISummary";
 import Question from "@/components/threads/product-faq/Question";
 import { Question as QuestionType, Answer, VoteType } from "@/components/threads/product-faq/types";
-import { mockAiSummary, getListingFAQs } from "@/utils/mock-all-data-used";
-import { getListingById } from "@/utils/mock-all-data-used";
+import { mockAiSummary } from "@/utils/mock-all-data-used";
+import { createClerkApiClient } from "@/lib/clerk-api-client";
+import { fetchListingById } from "@/lib/api/listings";
+import { fetchFAQsByListingId, createQuestion, answerQuestion, voteFAQ, markFAQAsAccepted, FAQ } from "@/lib/api/faqs";
+import type { Listing } from "@/lib/api/listings";
 
 const FAQPage: React.FC = () => {
-  // ADD THESE LINES to get listingId from URL
+  // Get params from URL
   const params = useParams();
   const router = useRouter();
-  const listingId = params.listingId as string;
-  const category = params.threadCategory as string;
+  const { getToken, userId } = useAuth();
+  const listingId = parseInt(params.listingId as string);
+  const threadId = params.threadId as string;
 
-  // Get listing data
-  const listing = getListingById(listingId);
+  // State for listing and FAQs
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<QuestionType[]>([]);
 
-  // CHANGE THIS LINE - use dynamic data instead of mockQuestions
-  const [questions, setQuestions] = useState<QuestionType[]>(
-    getListingFAQs(listingId) // Use listing-specific FAQs
-  );
+  // Convert backend FAQ format to frontend Question format
+  const convertFAQsToQuestions = useCallback((faqList: FAQ[], currentUserId: string | null | undefined): QuestionType[] => {
+    return faqList.map((faq) => {
+      const answers: Answer[] = [];
+
+      // If the FAQ has an answer, add it
+      if (faq.answer && faq.answer_username) {
+        answers.push({
+          id: `answer-${faq.id}`,
+          user: faq.answer_username,
+          text: faq.answer,
+          isAccepted: faq.is_accepted,
+          likes: faq.helpful_count,
+          dislikes: faq.not_helpful_count,
+          replies: [], // Backend doesn't support nested replies yet
+        });
+      }
+
+      return {
+        id: faq.id.toString(),
+        question: faq.question,
+        description: "", // Backend doesn't have separate description
+        answers,
+        isAnsweredByPoster: faq.answer_user_id?.toString() === listing?.creator_id?.toString(),
+      };
+    });
+  }, [listing?.creator_id]);
+
+  // Fetch listing and FAQs
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = await getToken();
+        const apiClient = createClerkApiClient(token);
+
+        // Fetch listing and FAQs in parallel
+        const [listingData, faqData] = await Promise.all([
+          fetchListingById(apiClient.instance, listingId),
+          fetchFAQsByListingId(apiClient.instance, listingId),
+        ]);
+
+        setListing(listingData);
+        setFaqs(faqData);
+        setQuestions(convertFAQsToQuestions(faqData, userId));
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [getToken, listingId, userId, convertFAQsToQuestions]);
 
   const handleBackClick = () => {
-    // CHANGE THIS - go back to the listing page instead of browser history
-    router.push(`/threads/${category}/${listingId}`);
+    // Go back to the listing page
+    router.push(`/threads/${threadId}/listings/${listingId}`);
   };
 
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(
@@ -59,78 +117,98 @@ const FAQPage: React.FC = () => {
     setNewAnswerInputs((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const submitNewAnswer = (questionId: string) => {
+  const submitNewAnswer = async (questionId: string) => {
     const newAnswerText = newAnswerInputs[questionId]?.trim();
     if (!newAnswerText) return;
 
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.id === questionId
-          ? {
-              ...q,
-              answers: [
-                ...q.answers,
-                {
-                  id: `a${q.answers.length + 1}_${Date.now()}`,
-                  user: "You",
-                  text: newAnswerText,
-                  likes: 0,
-                  dislikes: 0,
-                  replies: [],
-                },
-              ],
-            }
-          : q
-      )
-    );
-    setNewAnswerInputs((prev) => ({ ...prev, [questionId]: "" }));
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Call API to submit answer
+      const updatedFAQ = await answerQuestion(apiClient.instance, parseInt(questionId), {
+        answer: newAnswerText,
+      });
+
+      // Update local state with the new answer
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId
+            ? {
+                ...q,
+                answers: [
+                  {
+                    id: `answer-${updatedFAQ.id}`,
+                    user: updatedFAQ.answer_username || "You",
+                    text: updatedFAQ.answer || newAnswerText,
+                    isAccepted: updatedFAQ.is_accepted,
+                    likes: updatedFAQ.helpful_count,
+                    dislikes: updatedFAQ.not_helpful_count,
+                    replies: [],
+                  },
+                ],
+              }
+            : q
+        )
+      );
+      setNewAnswerInputs((prev) => ({ ...prev, [questionId]: "" }));
+    } catch (error) {
+      console.error("Failed to submit answer:", error);
+      alert("Failed to submit answer. Please try again.");
+    }
   };
 
-  const handleLikeDislike = (
+  const handleLikeDislike = async (
     questionId: string,
     answerId: string,
     type: "like" | "dislike"
   ) => {
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== questionId) return q;
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+      const currentVote = userVotes[answerId] || null;
 
-        const updateVotes = (answers: Answer[]): Answer[] =>
-          answers.map((a) => {
-            if (a.id === answerId) {
-              const currentVote = userVotes[answerId] || null;
-              let likes = a.likes || 0;
-              let dislikes = a.dislikes || 0;
+      // Only call API if this is a new vote or changing vote
+      if (currentVote !== type) {
+        await voteFAQ(apiClient.instance, parseInt(questionId), type === "like");
 
-              if (currentVote === type) {
-                if (type === "like") likes--;
-                else dislikes--;
-                setUserVotes((prevVotes) => ({
-                  ...prevVotes,
-                  [answerId]: null,
-                }));
-              } else {
-                if (currentVote === "like") likes--;
-                if (currentVote === "dislike") dislikes--;
-                if (type === "like") likes++;
-                else dislikes++;
-                setUserVotes((prevVotes) => ({
-                  ...prevVotes,
-                  [answerId]: type,
-                }));
-              }
+        // Update local state
+        setQuestions((prev) =>
+          prev.map((q) => {
+            if (q.id !== questionId) return q;
 
-              return { ...a, likes, dislikes };
-            }
-            if (a.replies && a.replies.length > 0) {
-              return { ...a, replies: updateVotes(a.replies) };
-            }
-            return a;
-          });
+            return {
+              ...q,
+              answers: q.answers.map((a) => {
+                if (a.id === answerId) {
+                  let likes = a.likes || 0;
+                  let dislikes = a.dislikes || 0;
 
-        return { ...q, answers: updateVotes(q.answers) };
-      })
-    );
+                  // Remove previous vote
+                  if (currentVote === "like") likes--;
+                  if (currentVote === "dislike") dislikes--;
+
+                  // Add new vote
+                  if (type === "like") likes++;
+                  else dislikes++;
+
+                  setUserVotes((prevVotes) => ({
+                    ...prevVotes,
+                    [answerId]: type,
+                  }));
+
+                  return { ...a, likes, dislikes };
+                }
+                return a;
+              }),
+            };
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Failed to vote:", error);
+      alert("Failed to vote. Please try again.");
+    }
   };
 
   const toggleCollapseAnswer = (answerId: string) => {
@@ -200,17 +278,29 @@ const FAQPage: React.FC = () => {
     activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0
   );
 
-  // ADD ERROR HANDLING for missing listing
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700 mx-auto"></div>
+          <p className="mt-4 text-primary-600">Loading FAQs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error handling for missing listing
   if (!listing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Listing Not Found</h1>
           <button
-            onClick={() => router.push(`/threads/${category}`)}
+            onClick={() => router.push(`/threads/${threadId}`)}
             className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg"
           >
-            Back to {category}
+            Back to Thread
           </button>
         </div>
       </div>

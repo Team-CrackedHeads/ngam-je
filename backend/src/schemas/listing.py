@@ -6,10 +6,10 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class FAQ(BaseModel):
-    """FAQ item schema (matches frontend FAQ interface)."""
-
-    id: str
+# FAQ item for listing creation (simple version - just question/answer pairs)
+class FAQItem(BaseModel):
+    """FAQ item for listing creation."""
+    id: str  # Frontend generates IDs
     question: str
     answer: str
 
@@ -32,7 +32,7 @@ class ListingBase(BaseModel):
     shipping_options: Optional[list[str]] = Field(default_factory=list, description="Shipping methods (from shippingOptions field)")
     inventory_quantity: Optional[int] = Field(None, gt=0, description="Inventory (from inventoryQuantity field, sell only)")
     ownership_proof_url: Optional[str] = Field(None, description="Proof of ownership image (from ownershipProofImage, sell only)")
-    faqs: Optional[list[FAQ]] = Field(default_factory=list, description="FAQs (from faqs field)")
+    faqs: Optional[list[FAQItem]] = Field(default_factory=list, description="FAQs to create with the listing")
 
 
 class ListingCreate(ListingBase):
@@ -61,7 +61,7 @@ class ListingUpdate(BaseModel):
     shipping_options: Optional[list[str]] = None
     inventory_quantity: Optional[int] = Field(None, gt=0)
     ownership_proof_url: Optional[str] = None
-    faqs: Optional[list[FAQ]] = None
+    # FAQs removed - use FAQ endpoints instead
 
 
 class ListingResponse(ListingBase):
