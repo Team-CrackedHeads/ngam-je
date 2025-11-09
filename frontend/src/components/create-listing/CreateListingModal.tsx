@@ -22,6 +22,11 @@ import {
   Search,
   Wand2,
   Loader2,
+  AlertCircle,
+  Clock,
+  Shield,
+  Wrench,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,6 +96,17 @@ export default function CreateListingModal({
   const [generatedCount, setGeneratedCount] = useState(0); // Track how many times generated (max 3)
   const [imageMode, setImageMode] = useState<'upload' | 'search' | 'generate'>('upload');
   const [imageQuery, setImageQuery] = useState("");
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    icon: 'alert' | 'clock' | 'shield' | 'wrench' | 'credit';
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    icon: 'alert',
+  });
   const [titleSuggestion, setTitleSuggestion] = useState("");
   const [descriptionSuggestion, setDescriptionSuggestion] = useState("");
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -468,6 +484,7 @@ export default function CreateListingModal({
             query: imageQuery,
             per_page: 30,
           },
+          timeout: 30000, // 30 second timeout
         }
       );
 
@@ -476,11 +493,35 @@ export default function CreateListingModal({
       setExternalImages(imageUrls);
     } catch (error) {
       console.error("Error searching images:", error);
+
+      let errorTitle = "Image Search Failed";
+      let errorMessage = "Failed to search images. Please try again.";
+      let errorIcon: 'alert' | 'clock' | 'shield' | 'wrench' | 'credit' = 'alert';
+
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.detail || "Failed to search images. Please try again.");
-      } else {
-        alert("Failed to search images. Please try again.");
+        if (error.code === 'ECONNABORTED') {
+          errorIcon = 'clock';
+          errorTitle = "Request Timeout";
+          errorMessage = "The image search is taking too long. Please try again.";
+        } else if (error.response?.status === 429) {
+          errorIcon = 'clock';
+          errorTitle = "Rate Limit Exceeded";
+          errorMessage = "Too many search requests. Please wait a moment and try again.";
+        } else if (error.response?.status === 503 || error.response?.status === 504) {
+          errorIcon = 'wrench';
+          errorTitle = "Service Unavailable";
+          errorMessage = "The image search service is temporarily unavailable. Please try again in a few moments.";
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        }
       }
+
+      setErrorModal({
+        isOpen: true,
+        title: errorTitle,
+        message: errorMessage,
+        icon: errorIcon,
+      });
     } finally {
       setIsSearchingImages(false);
     }
@@ -489,7 +530,12 @@ export default function CreateListingModal({
   const handleGenerateImages = async () => {
     if (!imageQuery.trim()) return;
     if (generatedCount >= 3) {
-      alert("You can only generate up to 3 images per session.");
+      setErrorModal({
+        isOpen: true,
+        title: "Generation Limit Reached",
+        message: "You can only generate up to 3 images per session. Please use the Search tab to find more images.",
+        icon: 'alert',
+      });
       return;
     }
 
@@ -501,6 +547,9 @@ export default function CreateListingModal({
         {
           description: imageQuery,
           num_images: 1, // Generate 1 image at a time
+        },
+        {
+          timeout: 60000, // 60 second timeout
         }
       );
 
@@ -515,11 +564,52 @@ export default function CreateListingModal({
       setGeneratedCount(prev => prev + generatedImages.length);
     } catch (error) {
       console.error("Error generating images:", error);
+
+      let errorTitle = "Image Generation Failed";
+      let errorMessage = "We apologize, but image generation failed. Please try again.";
+      let errorIcon: 'alert' | 'clock' | 'shield' | 'wrench' | 'credit' = 'alert';
+
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.detail || "Failed to generate images. Please try again.");
-      } else {
-        alert(error instanceof Error ? error.message : "Failed to generate images. Please try again.");
+        if (error.code === 'ECONNABORTED') {
+          // Timeout error
+          errorIcon = 'clock';
+          errorTitle = "Request Timeout";
+          errorMessage = "Image generation is taking longer than expected. The AI service might be busy. Please try again in a moment.";
+        } else if (error.response?.status === 429) {
+          // Rate limit error
+          errorIcon = 'clock';
+          errorTitle = "High Demand";
+          errorMessage = "Our AI service is currently experiencing high demand. Please wait a moment and try again.";
+        } else if (error.response?.status === 503 || error.response?.status === 504) {
+          // Service unavailable or gateway timeout
+          errorIcon = 'wrench';
+          errorTitle = "Service Unavailable";
+          errorMessage = "The AI image generation service is temporarily unavailable. Please try again in a few moments.";
+        } else if (error.response?.data?.detail) {
+          // Extract specific error from backend
+          const detail = error.response.data.detail;
+          if (detail.includes("quota") || detail.includes("RESOURCE_EXHAUSTED")) {
+            errorIcon = 'credit';
+            errorTitle = "Quota Exceeded";
+            errorMessage = "We've reached our daily image generation quota. Please try again later or use the Search tab instead.";
+          } else if (detail.includes("safety") || detail.includes("blocked")) {
+            errorIcon = 'shield';
+            errorTitle = "Content Filtered";
+            errorMessage = "This image request was blocked by safety filters. Please try a different description.";
+          } else {
+            errorMessage = detail;
+          }
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+
+      setErrorModal({
+        isOpen: true,
+        title: errorTitle,
+        message: errorMessage,
+        icon: errorIcon,
+      });
     } finally {
       setIsGeneratingImages(false);
     }
@@ -771,8 +861,50 @@ export default function CreateListingModal({
 
   const formData = listingType === "buy" ? buyFormData : sellFormData;
 
+  const getErrorIcon = () => {
+    switch (errorModal.icon) {
+      case 'clock':
+        return <Clock className="w-12 h-12 text-orange-500" />;
+      case 'shield':
+        return <Shield className="w-12 h-12 text-blue-500" />;
+      case 'wrench':
+        return <Wrench className="w-12 h-12 text-gray-500" />;
+      case 'credit':
+        return <CreditCard className="w-12 h-12 text-purple-500" />;
+      default:
+        return <AlertCircle className="w-12 h-12 text-red-500" />;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <>
+      {/* Error Modal */}
+      {errorModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4">
+                {getErrorIcon()}
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {errorModal.title}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {errorModal.message}
+              </p>
+              <Button
+                onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
+                className="w-full bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+              >
+                Okay
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col border border-neutral-200">
         {/* Header */}
         <div className="flex-shrink-0 border-b shadow-sm rounded-t-lg bg-[var(--color-primary-200)]">
@@ -1521,6 +1653,7 @@ export default function CreateListingModal({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
