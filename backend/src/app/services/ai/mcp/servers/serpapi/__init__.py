@@ -1,1 +1,0 @@
-"""SerpAPI MCP Server."""

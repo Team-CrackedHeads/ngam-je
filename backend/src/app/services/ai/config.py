@@ -25,14 +25,6 @@ class AISettings(BaseSettings):
     default_max_tokens: int = 2048
 
     # ========================================
-    # MCP Settings
-    # ========================================
-    mcp_enabled: bool = True
-    mcp_serpapi_url: str = "http://127.0.0.1:8001/sse"
-    mcp_serpapi_transport: Literal["sse", "stdio"] = "sse"
-    serpapi_api_key: str
-
-    # ========================================
     # Rate Limiting
     # ========================================
     rate_limit_enabled: bool = False
@@ -61,6 +53,5 @@ def get_ai_settings() -> AISettings:
         # Fallback to direct env vars if AI_ prefix not found
         _settings = AISettings(
             gemini_api_key=os.getenv("AI_GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY", ""),
-            serpapi_api_key=os.getenv("AI_SERPAPI_API_KEY") or os.getenv("SERPAPI_API_KEY", ""),
         )
     return _settings

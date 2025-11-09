@@ -201,32 +201,11 @@ export default function CreateListingModal({
     return false;
   };
 
+  // TODO: Rebuild with simple LLM calls (no agents)
   // AI Generation functions
   const getProductDataFromAI = async () => {
-    if (!listingType) return;
-    setIsGeneratingAll(true);
-
-    try {
-      const productName =
-        listingType === "buy"
-          ? buyFormData.generatedTitle || "Untitled Product"
-          : sellFormData.generatedTitle || "Untitled Product";
-
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/product_details`,
-        {
-          product_name: productName,
-        }
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error("Error generating product details: ", error);
-      alert("Failed to generate product details.");
-      return null;
-    } finally {
-      setIsGeneratingAll(false);
-    }
+    console.log("AI generation temporarily disabled - will rebuild with simple LLM calls");
+    return null;
   };
 
   const generateTitleWithAI = async () => {
@@ -619,36 +598,9 @@ export default function CreateListingModal({
   };
 
   const fetchPriceRecommendation = async () => {
-    if (!listingType) return;
+    // TODO: Rebuild with simple LLM calls (no agents)
+    console.log("Price recommendation temporarily disabled - will rebuild with simple LLM calls");
     setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
-
-    try {
-      const productName =
-        listingType === "buy"
-          ? buyFormData.generatedTitle
-          : sellFormData.generatedTitle;
-
-      if (!productName) return;
-
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/product_prices`,
-        {
-          product_name: productName,
-        }
-      );
-
-      const prices = response.data;
-      // Backend returns: { min_price, max_price, avg_price, price_history }
-
-      setRecommendedPriceRange({
-        min: prices.min_price || 0,
-        max: prices.max_price || 0,
-        average: prices.avg_price || 0,
-      });
-    } catch (error) {
-      console.error("Error fetching product prices:", error);
-      alert("Failed to fetch price recommendation.");
-    }
   };
 
   const handleNext = () => {
