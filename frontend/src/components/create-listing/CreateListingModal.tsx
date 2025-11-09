@@ -501,13 +501,13 @@ export default function CreateListingModal({
       // Mock generated image (single image)
       const mockGenerated = "https://images.unsplash.com/photo-1523275335684-37898b6baf30";
 
-      // Add to externalImages array (same as search)
-      setExternalImages(prev => [...prev, mockGenerated]);
+      // Add to externalImages array at the START (prepend)
+      setExternalImages(prev => [mockGenerated, ...prev]);
       setGeneratedCount(prev => prev + 1);
 
       // Automatically add to selected if under limit
       if (selectedExternalImages.length < 3) {
-        setSelectedExternalImages(prev => [...prev, mockGenerated]);
+        setSelectedExternalImages(prev => [mockGenerated, ...prev]);
       }
     } catch (error) {
       console.error("Error generating images:", error);
