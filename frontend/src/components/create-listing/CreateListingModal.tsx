@@ -482,19 +482,26 @@ export default function CreateListingModal({
 
     setIsSearchingImages(true);
     try {
-      // TODO: Call backend /api/v1/ai/search_images with imageQuery
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/unsplash/search`,
+        {
+          params: {
+            query: imageQuery,
+            per_page: 30,
+          },
+        }
+      );
 
-      // Mock Unsplash results (3 images) - populates externalImages
-      const mockImages = [
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-        "https://images.unsplash.com/photo-1572635196237-14b3f281503f",
-        "https://images.unsplash.com/photo-1560343090-f0409e92791a",
-      ];
-      setExternalImages(mockImages);
+      // Extract image URLs from Unsplash response
+      const imageUrls = response.data.images.map((img: any) => img.url);
+      setExternalImages(imageUrls);
     } catch (error) {
       console.error("Error searching images:", error);
-      alert("Failed to search images. Please try again.");
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.detail || "Failed to search images. Please try again.");
+      } else {
+        alert("Failed to search images. Please try again.");
+      }
     } finally {
       setIsSearchingImages(false);
     }
@@ -1258,49 +1265,52 @@ export default function CreateListingModal({
 
                           {/* External Images Grid (same array as Search) */}
                           {externalImages.length > 0 && (
-                            <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-white mt-4">
-                              <div className="flex items-center justify-between mb-3">
+                            <div className="border border-[var(--color-primary-200)] rounded-lg bg-white mt-4">
+                              <div className="flex items-center justify-between p-4 border-b border-gray-200">
                                 <h3 className="text-sm font-medium text-accent-700">
-                                  Select up to 3 images from Search/Generate
+                                  Select up to 3 images ({externalImages.length} found)
                                 </h3>
                                 <span className="text-xs text-gray-600">
                                   {selectedExternalImages.length} / 3 selected
                                 </span>
                               </div>
-                              <div className="grid grid-cols-3 gap-3">
-                                {externalImages.map((imageUrl, index) => {
-                                  const isSelected = selectedExternalImages.includes(imageUrl);
-                                  const canSelect = selectedExternalImages.length < 3;
-                                  return (
-                                    <div
-                                      key={index}
-                                      onClick={() => handleSelectExternalImage(imageUrl)}
-                                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                                        isSelected
-                                          ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
-                                          : canSelect
-                                          ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
-                                          : 'border-gray-200 opacity-50 cursor-not-allowed'
-                                      }`}
-                                    >
-                                      <Image
-                                        src={imageUrl}
-                                        alt={`Generated ${index + 1}`}
-                                        fill
-                                        className="object-cover"
-                                      />
-                                      {isSelected && (
-                                        <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
-                                          <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
-                                            <Check className="w-4 h-4 text-black" />
-                                          </div>
+                              <div className="p-4 max-h-[500px] overflow-y-auto">
+                                <ResponsiveMasonry columnsCountBreakPoints={{350: 2, 750: 3, 900: 4}}>
+                                  <Masonry gutter="12px">
+                                    {externalImages.map((imageUrl, index) => {
+                                      const isSelected = selectedExternalImages.includes(imageUrl);
+                                      const canSelect = selectedExternalImages.length < 3;
+                                      return (
+                                        <div
+                                          key={index}
+                                          onClick={() => handleSelectExternalImage(imageUrl)}
+                                          className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                                            isSelected
+                                              ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
+                                              : canSelect
+                                              ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
+                                              : 'border-gray-200 opacity-50 cursor-not-allowed'
+                                          }`}
+                                        >
+                                          <img
+                                            src={imageUrl}
+                                            alt={`Generated ${index + 1}`}
+                                            className="w-full h-auto object-cover"
+                                          />
+                                          {isSelected && (
+                                            <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
+                                              <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
+                                                <Check className="w-4 h-4 text-black" />
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+                                      );
+                                    })}
+                                  </Masonry>
+                                </ResponsiveMasonry>
                               </div>
-                              <div className="mt-4 flex justify-end">
+                              <div className="p-4 border-t border-gray-200 flex justify-end">
                                 <Button
                                   onClick={() => setImageMode('upload')}
                                   disabled={selectedExternalImages.length === 0}
@@ -1316,49 +1326,52 @@ export default function CreateListingModal({
 
                       {/* Shared: Search Results Grid (only for Search tab) */}
                       {imageMode === 'search' && externalImages.length > 0 && (
-                        <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-white mt-4">
-                          <div className="flex items-center justify-between mb-3">
+                        <div className="border border-[var(--color-primary-200)] rounded-lg bg-white mt-4">
+                          <div className="flex items-center justify-between p-4 border-b border-gray-200">
                             <h3 className="text-sm font-medium text-accent-700">
-                              Select up to 3 images from Search/Generate
+                              Select up to 3 images ({externalImages.length} found)
                             </h3>
                             <span className="text-xs text-gray-600">
                               {selectedExternalImages.length} / 3 selected
                             </span>
                           </div>
-                          <div className="grid grid-cols-3 gap-3">
-                            {externalImages.map((imageUrl, index) => {
-                              const isSelected = selectedExternalImages.includes(imageUrl);
-                              const canSelect = selectedExternalImages.length < 3;
-                              return (
-                                <div
-                                  key={index}
-                                  onClick={() => handleSelectExternalImage(imageUrl)}
-                                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                                    isSelected
-                                      ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
-                                      : canSelect
-                                      ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
-                                      : 'border-gray-200 opacity-50 cursor-not-allowed'
-                                  }`}
-                                >
-                                  <Image
-                                    src={imageUrl}
-                                    alt={`Search result ${index + 1}`}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                  {isSelected && (
-                                    <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
-                                      <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
-                                        <Check className="w-4 h-4 text-black" />
-                                      </div>
+                          <div className="p-4 max-h-[500px] overflow-y-auto">
+                            <ResponsiveMasonry columnsCountBreakPoints={{350: 2, 750: 3, 900: 4}}>
+                              <Masonry gutter="12px">
+                                {externalImages.map((imageUrl, index) => {
+                                  const isSelected = selectedExternalImages.includes(imageUrl);
+                                  const canSelect = selectedExternalImages.length < 3;
+                                  return (
+                                    <div
+                                      key={index}
+                                      onClick={() => handleSelectExternalImage(imageUrl)}
+                                      className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                                        isSelected
+                                          ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
+                                          : canSelect
+                                          ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
+                                          : 'border-gray-200 opacity-50 cursor-not-allowed'
+                                      }`}
+                                    >
+                                      <img
+                                        src={imageUrl}
+                                        alt={`Search result ${index + 1}`}
+                                        className="w-full h-auto object-cover"
+                                      />
+                                      {isSelected && (
+                                        <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
+                                          <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
+                                            <Check className="w-4 h-4 text-black" />
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                  );
+                                })}
+                              </Masonry>
+                            </ResponsiveMasonry>
                           </div>
-                          <div className="mt-4 flex justify-end">
+                          <div className="p-4 border-t border-gray-200 flex justify-end">
                             <Button
                               onClick={() => setImageMode('upload')}
                               disabled={selectedExternalImages.length === 0}
