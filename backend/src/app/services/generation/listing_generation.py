@@ -1,7 +1,7 @@
 """
-Simple AI service for direct Gemini LLM calls.
+Listing generation service using Gemini LLM.
 
-No agents, no MCP - just clean functions for listing generation.
+Functions for generating and regenerating listing content.
 """
 
 import json
@@ -9,9 +9,9 @@ import google.generativeai as genai
 from typing import List
 
 from src.app.core.logging_config import get_logger
-from src.app.services.ai.config import get_ai_settings
+from src.app.services.generation.config import get_ai_settings
 
-logger = get_logger("app.services.ai")
+logger = get_logger("app.services.generation.listing")
 
 
 async def generate_listing(

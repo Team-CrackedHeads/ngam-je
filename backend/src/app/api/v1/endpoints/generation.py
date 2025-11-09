@@ -1,7 +1,7 @@
 """
-AI endpoints for listing generation.
+Generation endpoints for listings and images.
 
-Simple endpoints that call Gemini LLM directly - no agents, no MCP.
+Clean endpoints organized by what is being generated.
 """
 
 from fastapi import APIRouter, HTTPException
@@ -9,9 +9,9 @@ from pydantic import BaseModel
 from typing import List
 
 from src.app.core.logging_config import get_logger
-from src.app.services import ai
+from src.app.services import generation
 
-logger = get_logger("app.api.ai")
+logger = get_logger("app.api.generation")
 
 router = APIRouter()
 
@@ -43,8 +43,8 @@ class GenerateImagesRequest(BaseModel):
 
 
 # Endpoints
-@router.post("/generate_listing", response_model=GenerateListingResponse)
-async def generate_listing(request: GenerateListingRequest):
+@router.post("/listing", response_model=GenerateListingResponse)
+async def generate_listing_endpoint(request: GenerateListingRequest):
     """
     Generate listing content (title, description, tags) from images and description.
 
@@ -58,7 +58,7 @@ async def generate_listing(request: GenerateListingRequest):
     """
     try:
         logger.info(f"📝 Generating {request.listing_type} listing")
-        result = await ai.generate_listing(
+        result = await generation.generate_listing(
             images=request.images,
             description=request.description,
             listing_type=request.listing_type,
@@ -72,8 +72,8 @@ async def generate_listing(request: GenerateListingRequest):
         raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
 
 
-@router.post("/regenerate_title")
-async def regenerate_title(request: RegenerateFieldRequest) -> dict:
+@router.post("/title")
+async def regenerate_title_endpoint(request: RegenerateFieldRequest) -> dict:
     """
     Regenerate only the title field based on context.
 
@@ -85,7 +85,7 @@ async def regenerate_title(request: RegenerateFieldRequest) -> dict:
     """
     try:
         logger.info("🔄 Regenerating title")
-        new_title = await ai.regenerate_title(context=request.context)
+        new_title = await generation.regenerate_title(context=request.context)
         return {"title": new_title}
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -94,8 +94,8 @@ async def regenerate_title(request: RegenerateFieldRequest) -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/regenerate_description")
-async def regenerate_description(request: RegenerateFieldRequest) -> dict:
+@router.post("/description")
+async def regenerate_description_endpoint(request: RegenerateFieldRequest) -> dict:
     """
     Regenerate only the description field based on context.
 
@@ -107,7 +107,7 @@ async def regenerate_description(request: RegenerateFieldRequest) -> dict:
     """
     try:
         logger.info("🔄 Regenerating description")
-        new_description = await ai.regenerate_description(context=request.context)
+        new_description = await generation.regenerate_description(context=request.context)
         return {"description": new_description}
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -116,8 +116,8 @@ async def regenerate_description(request: RegenerateFieldRequest) -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/regenerate_tags")
-async def regenerate_tags(request: RegenerateFieldRequest) -> dict:
+@router.post("/tags")
+async def regenerate_tags_endpoint(request: RegenerateFieldRequest) -> dict:
     """
     Regenerate only the tags field based on context.
 
@@ -129,7 +129,7 @@ async def regenerate_tags(request: RegenerateFieldRequest) -> dict:
     """
     try:
         logger.info("🔄 Regenerating tags")
-        new_tags = await ai.regenerate_tags(context=request.context)
+        new_tags = await generation.regenerate_tags(context=request.context)
         return {"tags": new_tags}
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -138,8 +138,8 @@ async def regenerate_tags(request: RegenerateFieldRequest) -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/generate_images")
-async def generate_images(request: GenerateImagesRequest) -> dict:
+@router.post("/images")
+async def generate_images_endpoint(request: GenerateImagesRequest) -> dict:
     """
     Generate images from text description using AI (Gemini Imagen).
 

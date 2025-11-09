@@ -1,11 +1,12 @@
-"""Simple AI services for listing generation."""
+"""Generation services for listings and images."""
 
-from .ai_service import (
+from .listing_generation import (
     generate_listing,
     regenerate_title,
     regenerate_description,
     regenerate_tags,
 )
+from .image_generation import generate_images
 from .config import get_ai_settings
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "regenerate_title",
     "regenerate_description",
     "regenerate_tags",
+    "generate_images",
     "get_ai_settings",
 ]
