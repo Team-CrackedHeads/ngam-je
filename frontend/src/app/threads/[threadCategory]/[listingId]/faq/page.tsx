@@ -1,32 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import AISummary from "@/components/threads/product-faq/AISummary";
+import AIChatbot from "@/components/threads/product-faq/AIChatbot"; // Import the new chatbot component
 import Question from "@/components/threads/product-faq/Question";
 import { Question as QuestionType, Answer, VoteType } from "@/components/threads/product-faq/types";
-import { mockAiSummary, getListingFAQs } from "@/utils/mock-all-data-used";
-import { getListingById } from "@/utils/mock-all-data-used";
+import { getListingFAQs, getListingById } from "@/utils/mock-all-data-used";
 
 const FAQPage: React.FC = () => {
-  // ADD THESE LINES to get listingId from URL
   const params = useParams();
   const router = useRouter();
   const listingId = params.listingId as string;
   const category = params.threadCategory as string;
 
-  // Get listing data
   const listing = getListingById(listingId);
 
-  // CHANGE THIS LINE - use dynamic data instead of mockQuestions
   const [questions, setQuestions] = useState<QuestionType[]>(
-    getListingFAQs(listingId) // Use listing-specific FAQs
+    getListingFAQs(listingId)
   );
 
+  // --- AI Summary State ---
+  const [aiSummaryContent, setAiSummaryContent] = useState<string | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState<boolean>(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  // --- End AI Summary State ---
+
   const handleBackClick = () => {
-    // CHANGE THIS - go back to the listing page instead of browser history
     router.push(`/threads/${category}/${listingId}`);
   };
 
@@ -48,7 +50,40 @@ const FAQPage: React.FC = () => {
     {}
   );
 
-  const aiSummary = mockAiSummary;
+  // --- AI Summary Generation Function ---
+  const generateAiSummary = useCallback(async () => {
+    if (!listing) return;
+
+    setIsSummaryLoading(true);
+    setSummaryError(null);
+
+    try {
+      const response = await fetch("/api/gemini/summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          faqs: questions,
+          listingTitle: listing.title,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch AI summary.");
+      }
+
+      const data = await response.json();
+      setAiSummaryContent(data.summary);
+    } catch (error: any) {
+      console.error("Error generating AI summary:", error);
+      setSummaryError(error.message || "An unexpected error occurred.");
+      setAiSummaryContent(null);
+    } finally {
+      setIsSummaryLoading(false);
+    }
+  }, [listing, questions]);
 
   // ... rest of your existing handler functions stay exactly the same ...
   const toggleQuestion = (questionId: string) => {
@@ -200,7 +235,6 @@ const FAQPage: React.FC = () => {
     activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0
   );
 
-  // ADD ERROR HANDLING for missing listing
   if (!listing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -233,12 +267,22 @@ const FAQPage: React.FC = () => {
         </h1>
       </div>
 
-      {/* Rest of your existing JSX stays exactly the same */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ... everything else stays the same ... */}
+        {/* Left Column (Main Content) */}
         <div className="md:col-span-2 space-y-6">
+          {/* Mobile AI Summary */}
           <div className="lg:hidden">
-            <AISummary content={aiSummary} />
+            <AISummary
+              content={aiSummaryContent}
+              isLoading={isSummaryLoading}
+              error={summaryError}
+              onGenerateSummary={generateAiSummary}
+            />
+          </div>
+
+          {/* Mobile AI Chatbot */}
+          <div className="lg:hidden">
+            <AIChatbot listingId={listingId} listingTitle={listing.title} />
           </div>
 
           <div className="flex justify-center border-[color:var(--color-border)] mt-4 space-x-6">
@@ -320,8 +364,15 @@ const FAQPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="hidden lg:block">
-          <AISummary content={aiSummary} />
+        {/* Right Column (Desktop AI Summary & Chatbot) */}
+        <div className="hidden lg:block space-y-6"> {/* Added space-y-6 for spacing between components */}
+          <AISummary
+            content={aiSummaryContent}
+            isLoading={isSummaryLoading}
+            error={summaryError}
+            onGenerateSummary={generateAiSummary}
+          />
+          <AIChatbot listingId={listingId} listingTitle={listing.title} />
         </div>
       </div>
     </div>

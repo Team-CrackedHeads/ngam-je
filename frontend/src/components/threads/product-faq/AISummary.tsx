@@ -6,9 +6,11 @@ import { Puzzle, Send, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 
 export interface AISummaryProps {
   /** Original full content (fallback for long mode and truncation source for short mode). */
-  content?: string;
+  content?: string | null; // Can be null if not yet generated or failed
   /** Loading state for the summary/long content generation */
-  isLoading?: boolean;
+  isLoading: boolean; // True when fetching/generating
+  error?: string | null; // Error message if generation failed
+  onGenerateSummary: () => void; // Callback to trigger summary generation from parent
 }
 
 /** Truncate plain text to ~N words. */
@@ -19,12 +21,20 @@ function truncateWords(text: string, min = 100, max = 250): string {
   return words.slice(0, target).join(" ") + "…";
 }
 
-export default function AISummary({ content, isLoading }: AISummaryProps) {
+export default function AISummary({
+  content,
+  isLoading,
+  error,
+  onGenerateSummary, // Destructure the new prop
+}: AISummaryProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [question, setQuestion] = useState("");
-  // IMPORTANT: start false so the initial UI shows the Generate button
-  const [hasGenerated, setHasGenerated] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Determine if the summary content area should be visible.
+  // It's visible if content exists, or if we are currently loading, or if there was an error.
+  // It's NOT visible only if no content, not loading, and no error (meaning the "Generate" button should be shown).
+  const showContentArea = content || isLoading || error;
 
   const shortContent = useMemo(() => {
     return content ? truncateWords(content, 100, 250) : "";
@@ -32,7 +42,7 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
 
   const handleSendQuestion = () => {
     if (question.trim()) {
-      // TODO: Implement the logic to send the question to AI
+      // TODO: Implement the logic to send the question to AI (for AI FAQ Correspondent)
       console.log("Question sent:", question);
       setQuestion("");
     }
@@ -55,13 +65,6 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
     });
   };
 
-  const handleGenerateAI = () => {
-    // mark that user asked to generate — parent can start isLoading and then supply `content`
-    setHasGenerated(true);
-    console.log("Generate AI Summary triggered");
-    // TODO: trigger parent's generation action (via prop callback) if needed
-  };
-
   return (
     <div
       ref={containerRef}
@@ -77,11 +80,11 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
         </div>
       </div>
 
-      {/* Initial state: Generate button (shown only when not generated and not loading) */}
-      {!hasGenerated && !isLoading && (
+      {/* Initial state: Generate button (shown only when no content, not loading, and no error) */}
+      {!showContentArea && (
         <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center">
           <button
-            onClick={handleGenerateAI}
+            onClick={onGenerateSummary} // Use the prop callback
             className="flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary-500 text-white hover:bg-secondary-600 transition-all shadow-md hover:shadow-lg font-medium"
           >
             <Sparkles className="w-5 h-5" />
@@ -101,8 +104,17 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
         </div>
       )}
 
-      {/* After user clicked Generate (hasGenerated) and not loading -> show collapsible content area */}
-      {hasGenerated && !isLoading && (
+      {/* Error state (shown when error is present and not loading) */}
+      {error && !isLoading && (
+        <div className="p-4 md:p-6 lg:p-8 text-red-600 bg-red-50 border border-red-200 rounded-b-lg">
+          <p className="font-medium">Error generating AI summary:</p>
+          <p>{error}</p>
+          <p className="text-sm mt-2">Please try again or contact support if the issue persists.</p>
+        </div>
+      )}
+
+      {/* After content is available (or was available and now error/loading is gone) */}
+      {showContentArea && !isLoading && !error && (
         <>
           <div className="relative">
             <div
@@ -179,9 +191,9 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
                   </ReactMarkdown>
                 </div>
               ) : (
-                // If there's no content yet (parent might generate later), show a small placeholder
+                // If there's no content yet (e.g., after an error, or if the AI returned nothing)
                 <div className="text-center text-muted-foreground">
-                  <p>No summary available yet. Click “Generate AI Summary” to create one.</p>
+                  <p>No summary available. Click “Generate AI Summary” to create one.</p>
                 </div>
               )}
             </div>
@@ -223,24 +235,26 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
           {/* Bottom controls */}
           <div className="px-4 md:px-6 lg:px-8 pb-4 md:pb-6">
             {/* Expand/Collapse */}
-            <div className="flex justify-center mb-3">
-              <button
-                onClick={handleExpandToggle}
-                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium border border-border bg-card hover:bg-secondary/60"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    Show Less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    Show More
-                  </>
-                )}
-              </button>
-            </div>
+            {content && ( // Only show expand/collapse if there's content to expand/collapse
+              <div className="flex justify-center mb-3">
+                <button
+                  onClick={handleExpandToggle}
+                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium border border-border bg-card hover:bg-secondary/60"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Show More
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Disclaimer */}
             <p className="mt-3 text-[11px] text-muted-foreground text-center">
