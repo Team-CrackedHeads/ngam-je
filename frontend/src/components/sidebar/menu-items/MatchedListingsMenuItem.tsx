@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Clock, Handshake } from "lucide-react";
 import {
@@ -10,31 +10,97 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
-import { MatchedListing } from "@/components/matching/types";
-import { AnimatePresence } from "motion/react";
-import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { useUser } from "@clerk/nextjs";
+import { fetchUserListings } from "@/lib/api/listings";
+import { fetchListingRecommendations } from "@/lib/api/recommendations";
+import type { Listing } from "@/types/listing";
 
-export default function BuyListingsMenuItem() {
+export default function MatchedListingsMenuItem() {
   const router = useRouter();
+  const { user } = useUser();
+  const getApiClient = useClerkApiClient();
+
   const [isOpen, setIsOpen] = useState(false);
   const [visibleListings, setVisibleListings] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [matchedListings, setMatchedListings] = useState<Listing[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
   const KEEP_RECENT_COUNT = 10;
   const MAX_LOADED_COUNT = 25;
   const DELOAD_TO_COUNT = 15;
-  const [selectedListing, setSelectedListing] = useState<Listing | MatchedListing | null>(null);
 
-  // const handleListingClick = (listingId: number) => {
-  //   router.push(`/listings/${listingId}/matches?type=matched`);
-  // };
+  // Fetch user's matched listings
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const apiClient = await getApiClient();
+
+        // Get current user profile
+        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
+
+        // Fetch all user's listings (both sale and wanted)
+        const saleListings = await fetchUserListings(apiClient.instance, userProfile.id, {
+          listing_type: "sale",
+          limit: 100,
+        });
+
+        const wantedListings = await fetchUserListings(apiClient.instance, userProfile.id, {
+          listing_type: "wanted",
+          limit: 100,
+        });
+
+        const allUserListings = [...saleListings.listings, ...wantedListings.listings];
+
+        // For each listing, fetch its matched recommendations
+        const matchedListingsData: Listing[] = [];
+
+        for (const listing of allUserListings) {
+          try {
+            const recommendations = await fetchListingRecommendations(
+              apiClient.instance,
+              listing.id,
+              "matched" // Only fetch matched recommendations
+            );
+
+            if (recommendations.recommendations.length > 0) {
+              // This listing has matches, add it to the list
+              matchedListingsData.push(listing);
+            }
+          } catch (err) {
+            console.error(`Error fetching recommendations for listing ${listing.id}:`, err);
+          }
+        }
+
+        setMatchedListings(matchedListingsData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching matched listings:", err);
+        setError("Failed to load matched listings");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only depend on user, not getApiClient
+
+  const handleListingClick = (listingId: number) => {
+    // Navigate to the listing page instead of opening modal
+    router.push(`/listings/${listingId}/matches?type=matched`);
+  };
 
   const loadMoreListings = () => {
-    if (loading || visibleListings >= getMockMatchedListings().length) return;
+    if (loading || visibleListings >= matchedListings.length) return;
 
     setLoading(true);
     setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, getMockMatchedListings().length);
+      const newCount = Math.min(visibleListings + 5, matchedListings.length);
 
       if (newCount > MAX_LOADED_COUNT) {
         setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
@@ -64,18 +130,7 @@ export default function BuyListingsMenuItem() {
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {selectedListing && (
-          <ListingDetailsModal
-            listing={selectedListing}
-            type="matched"
-            onClose={() => setSelectedListing(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <SidebarMenuItem>
+    <SidebarMenuItem>
         <SidebarMenuButton
           onClick={() => setIsOpen(!isOpen)}
           className="group/menu-item text-accent-700 font-semibold"
@@ -112,17 +167,26 @@ export default function BuyListingsMenuItem() {
                 className="max-h-32 overflow-y-auto space-y-1 px-2"
                 onScroll={handleScroll}
               >
-                {getMockMatchedListings().slice(0, visibleListings).map((listing) => (
+                {error && (
+                  <div className="p-2 text-xs text-red-500">{error}</div>
+                )}
+
+                {!error && matchedListings.length === 0 && !loading && (
+                  <div className="p-2 text-xs text-accent-400 text-center">
+                    No matched listings yet
+                  </div>
+                )}
+
+                {matchedListings.slice(0, visibleListings).map((listing) => (
                   <div
                     key={listing.id}
-                    onClick={() => setSelectedListing(listing)}
-                    // onClick={() => handleListingClick(listing.id)}
+                    onClick={() => handleListingClick(listing.id)}
                     className="p-2 rounded cursor-pointer transition-colors text-xs text-accent-500 hover:bg-primary-200 hover:text-accent-700"
                   >
                     <div className="truncate font-medium">{listing.title}</div>
                     <div className="flex justify-between text-[10px] text-accent-400">
-                      <span>{listing.price || listing.budget}</span>
-                      <span>{listing.timestamp}</span>
+                      <span>{listing.currency} {listing.price}</span>
+                      <span>{new Date(listing.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                 ))}
@@ -133,8 +197,8 @@ export default function BuyListingsMenuItem() {
                   </div>
                 )}
 
-                {visibleListings >= getMockMatchedListings().length &&
-                  getMockMatchedListings().length > 5 && (
+                {visibleListings >= matchedListings.length &&
+                  matchedListings.length > 5 && (
                     <div className="flex justify-center py-2">
                       <div className="text-xs text-accent-400">
                         No more listings
@@ -142,11 +206,11 @@ export default function BuyListingsMenuItem() {
                     </div>
                   )}
 
-                {visibleListings < getMockMatchedListings().length &&
+                {visibleListings < matchedListings.length &&
                   visibleListings >= MAX_LOADED_COUNT && (
                     <div className="flex justify-center py-2">
                       <div className="text-xs text-accent-300">
-                        {getMockMatchedListings().length - visibleListings} older listings
+                        {matchedListings.length - visibleListings} older listings
                         hidden
                       </div>
                     </div>
@@ -156,6 +220,5 @@ export default function BuyListingsMenuItem() {
           </SidebarMenuSub>
         </div>
       </SidebarMenuItem>
-    </>
   );
 }
