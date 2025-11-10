@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
+import { ShoppingCart, Package, Clock, MapPin, Eye, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { LISTINGS_TABS } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -626,7 +626,7 @@ function ListingsPageContent() {
                   "matched"
                 );
                 uiListings.push(convertApiListingToUiListing(listing, 0, recommendations.recommendations.length));
-              } catch (recErr) {
+              } catch (_recErr) {
                 uiListings.push(convertApiListingToUiListing(listing, 0, 0));
               }
             }

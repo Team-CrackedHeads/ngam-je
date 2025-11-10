@@ -22,7 +22,7 @@ import { verifyOwnershipProofWithAI } from '@/components/create-listing/ai-photo
 interface MakeOfferSellProps {
   isOpen: boolean;
   onClose: () => void;
-  sourceListingId: string;
+  sourceListingId: string | number; // Support both during migration
   sourceTitle: string;
   sourcePrice: number;
   category: string;

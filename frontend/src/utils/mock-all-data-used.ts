@@ -1,8 +1,12 @@
 //MARYAM
 import { ThreadDisplay } from '@/types/thread';
+import { UnifiedListingData } from '@/types/listing-form';
 
 // Type alias for backward compatibility
 export type ThreadData = ThreadDisplay;
+
+// Re-export UnifiedListingData from the new types file for backward compatibility
+export type { UnifiedListingData };
 
 // community data (level 1) - updated with category
 export const MOCK_THREADS: ThreadDisplay[] = [
@@ -380,44 +384,8 @@ export const MOCK_THREADS: ThreadDisplay[] = [
     totalUsers: 840,
   },
 ];
-// Unified listing data type that works for both category listing and detail pages
-export type UnifiedListingData = {
-  // Core fields
-  id: string;
-  title: string;
-  subtitle?: string;
-  description: string;
 
-  // Price (better for calculations)
-  price: number;
-  currency: string;
-
-  // Owner (foreign key to users table)
-  userId: string; // FK to users.id (user-1 = Fitri, user-2 = Sani)
-
-  // Enhanced seller info (denormalized for display, but userId is the source of truth)
-  seller: {
-    name: string;
-    location: string;
-    verified: boolean;
-    timePosted: string;
-  };
-
-  // Images (support both single + gallery)
-  imageUrl: string; // main image for cards
-  gallery?: string[]; // additional images for detail view
-
-  // Categories & types
-  category: string;
-  listingType: "sale" | "wanted";
-
-  // Enhanced metadata
-  tags: string[];
-  views: number;
-  protected: boolean;
-  faqs?: Array<{ id: string; question: string; answer: string }>;
-};
-
+// Mock listing data (now uses the UnifiedListingData type from @/types/listing-form)
 export const UNIFIED_LISTINGS: UnifiedListingData[] = [
   {
     id: "sale-53",

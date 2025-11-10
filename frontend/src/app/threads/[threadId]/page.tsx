@@ -126,7 +126,7 @@ const ThreadDetailPage: React.FC = () => {
   }, [fetchThread, fetchThreadListings, fetchCurrentUser]);
 
   // NEW: Convert API Listing to UnifiedListingData for compatibility
-  const convertToUnified = (listing: Listing): UnifiedListingData => {
+  const convertToUnified = useCallback((listing: Listing): UnifiedListingData => {
     const timeAgo = (date: string) => {
       const now = new Date();
       const created = new Date(date);
@@ -162,7 +162,7 @@ const ThreadDetailPage: React.FC = () => {
       views: listing.views,
       protected: listing.protected,
     };
-  };
+  }, [thread, currentUserId]);
 
   const handleSortingFiltersChange = useCallback((filters: SortingFilters) => {
     setSortingFilters(filters);
@@ -295,7 +295,7 @@ const ThreadDetailPage: React.FC = () => {
     }
 
     return filtered;
-  }, [listings, activeType, appliedFilters, sortingFilters, thread, currentUserId]);
+  }, [listings, activeType, appliedFilters, sortingFilters, convertToUnified]);
 
   const filteredListings = getFilteredListings();
 
@@ -336,7 +336,7 @@ const ThreadDetailPage: React.FC = () => {
       <div className="min-h-screen bg-primary-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-accent-700 mb-2">Thread Not Found</h2>
-          <p className="text-accent-600 mb-4">The thread you're looking for doesn't exist.</p>
+          <p className="text-accent-600 mb-4">The thread you&apos;re looking for doesn&apos;t exist.</p>
           <button
             onClick={() => router.push("/threads")}
             className="px-4 py-2 bg-secondary-500 text-accent-700 rounded-lg font-semibold"

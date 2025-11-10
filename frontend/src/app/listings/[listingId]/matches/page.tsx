@@ -1,37 +1,109 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Package, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake } from "lucide-react";
-import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
+import { type Listing } from "@/utils/mock-all-data-used";
 import { MatchedListing } from "@/components/matching/types";
-import { generateMatchesForListing } from "@/utils/mock-all-data-used";
 import { AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
 import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";
 import { MatchesHeader } from "@/components/matching/MatchesHeader";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { fetchListingById } from "@/lib/api/listings";
+import { fetchListingRecommendations } from "@/lib/api/recommendations";
+import type { Listing as ApiListing } from "@/types/listing";
+import type { Recommendation } from "@/lib/api/recommendations";
 
 export default function ListingMatchesPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
+  const getApiClient = useClerkApiClient();
+
   const [selectedListing, setSelectedListing] = useState<Listing | MatchedListing | null>(null);
+  const [yourListing, setYourListing] = useState<ApiListing | null>(null);
+  const [matchedListings, setMatchedListings] = useState<ApiListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const listingId = parseInt(params.listingId as string);
   const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted" | "matched";
 
-  // Get the current listing
-  const yourListing: Listing | undefined =
-    listingType === "sale" ? mockSaleListings.find(l => l.id === listingId) :
-      listingType === "wanted" ? mockWantedListings.find(l => l.id === listingId) :
-        getMockMatchedListings().find(l => l.id === listingId);
+  // Fetch listing and its recommendations from database
+  useEffect(() => {
+    let isMounted = true;
 
-  // Get matches for this listing
-  const matches = yourListing && listingType !== "matched" ? generateMatchesForListing(listingId, listingType) : [];
-  const matchedListings = matches.map(match => match.matchedListing);
+    const fetchData = async () => {
+      try {
+        // Get API client inside the effect to avoid dependency issues
+        const apiClient = await getApiClient();
 
+        if (!isMounted) return;
+
+        // Fetch the current listing
+        const listing = await fetchListingById(apiClient.instance, listingId);
+
+        if (!isMounted) return;
+        setYourListing(listing);
+
+        // Fetch recommendations for this listing
+        const recommendations = await fetchListingRecommendations(
+          apiClient.instance,
+          listingId,
+          "matched" // Only get matched recommendations
+        );
+
+        if (!isMounted) return;
+
+        // Fetch the actual matched listings
+        const matches: ApiListing[] = [];
+        for (const rec of recommendations.recommendations) {
+          try {
+            // Get the other listing (if this is source, get target; if target, get source)
+            const matchedListingId = rec.source_listing_id === listingId
+              ? rec.target_listing_id
+              : rec.source_listing_id;
+            const matchedListing = await fetchListingById(apiClient.instance, matchedListingId);
+            matches.push(matchedListing);
+          } catch (err) {
+            console.error(`Failed to fetch matched listing:`, err);
+          }
+        }
+
+        if (!isMounted) return;
+        setMatchedListings(matches);
+      } catch (error) {
+        console.error("Error fetching listing data:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingId]); // Only depend on listingId, not getApiClient
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-primary-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-500 mx-auto mb-4"></div>
+          <p className="text-accent-600">Loading matches...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
   if (!yourListing) {
     return (
       <div className="min-h-screen bg-primary-100 flex items-center justify-center">
@@ -53,11 +125,19 @@ export default function ListingMatchesPage() {
   const ListingCard = () => (
     <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-neutral-200">
       <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-        {/* Image Placeholder */}
+        {/* Image */}
         <div className="flex-shrink-0 w-full md:w-auto">
-          <div className="w-full aspect-square md:w-40 md:h-40 bg-primary-100 rounded-xl flex items-center justify-center">
-            <span className="text-accent-400 text-sm">Image</span>
-          </div>
+          {yourListing.image_url ? (
+            <img
+              src={yourListing.image_url}
+              alt={yourListing.title}
+              className="w-full aspect-square md:w-40 md:h-40 object-cover rounded-xl"
+            />
+          ) : (
+            <div className="w-full aspect-square md:w-40 md:h-40 bg-primary-100 rounded-xl flex items-center justify-center">
+              <span className="text-accent-400 text-sm">No Image</span>
+            </div>
+          )}
         </div>
 
         {/* Listing Details */}
@@ -68,15 +148,17 @@ export default function ListingMatchesPage() {
               {yourListing.title}
             </h1>
             <span className="text-xl md:text-2xl font-bold text-secondary-600 whitespace-nowrap">
-              {listingType === "sale" ? yourListing.price : yourListing.budget}
+              {yourListing.currency} {yourListing.price}
             </span>
           </div>
 
-          {/* Category Badge */}
-          <div className="mb-3">
-            <span className="inline-block px-3 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium">
-              {yourListing.category}
-            </span>
+          {/* Tags */}
+          <div className="mb-3 flex flex-wrap gap-2">
+            {yourListing.tags.map((tag, i) => (
+              <span key={i} className="inline-block px-3 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium">
+                {tag}
+              </span>
+            ))}
           </div>
 
           {/* Description */}
@@ -89,13 +171,13 @@ export default function ListingMatchesPage() {
             {/* Location */}
             <div className="flex items-center gap-2 text-sm text-accent-500">
               <MapPin className="w-4 h-4" />
-              <span>{yourListing.location}</span>
+              <span>{yourListing.creator_location || "Location not specified"}</span>
             </div>
 
             {/* Time Posted */}
             <div className="flex items-center gap-2 text-sm text-accent-500">
               <Clock className="w-4 h-4" />
-              <span>{yourListing.timestamp}</span>
+              <span>{new Date(yourListing.created_at).toLocaleDateString()}</span>
             </div>
 
             {/* Stats */}
@@ -103,10 +185,6 @@ export default function ListingMatchesPage() {
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
                 <span>{yourListing.views} views</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
-                <span>{yourListing.likes} likes</span>
               </div>
             </div>
           </div>
@@ -194,9 +272,17 @@ export default function ListingMatchesPage() {
 
               <div className="flex items-center gap-3">
                 {/* Small Image */}
-                <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <span className="text-accent-400 text-xs">Image</span>
-                </div>
+                {yourListing.image_url ? (
+                  <img
+                    src={yourListing.image_url}
+                    alt={yourListing.title}
+                    className="flex-shrink-0 w-16 h-16 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
+                    <span className="text-accent-400 text-xs">Image</span>
+                  </div>
+                )}
 
                 {/* Listing Info */}
                 <div className="flex-1 min-w-0">
@@ -204,7 +290,7 @@ export default function ListingMatchesPage() {
                     {yourListing.title}
                   </h3>
                   <span className="text-lg font-bold text-secondary-600">
-                    {listingType === "sale" ? yourListing.price : yourListing.budget}
+                    {yourListing.currency} {yourListing.price}
                   </span>
                 </div>
               </div>

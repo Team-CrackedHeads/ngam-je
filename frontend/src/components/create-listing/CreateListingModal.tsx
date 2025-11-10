@@ -46,7 +46,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
   const { getToken } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [listingType, setListingType] = useState<ListingType>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_isSubmitting, setIsSubmitting] = useState(false);
 
   // Common states
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
@@ -428,9 +428,9 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
 
       // Navigate to the new listing
       router.push(`/threads/${threadId}/listings/${createdListing.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create listing:', error);
-      const errorMessage = error?.detail || error?.message || 'Failed to create listing. Please try again.';
+      const errorMessage = (error as { detail?: string; message?: string })?.detail || (error as { detail?: string; message?: string })?.message || 'Failed to create listing. Please try again.';
       console.error('Error details:', errorMessage);
       alert(errorMessage);
     } finally {

@@ -46,7 +46,7 @@ function CreateThreadsSection({ isOpen, onClose, onThreadCreated }: CreateThread
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;

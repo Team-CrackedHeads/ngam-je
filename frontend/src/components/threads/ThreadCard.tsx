@@ -14,16 +14,6 @@ import { ThreadDisplay } from "@/types/thread";
 // import { motion } from "framer-motion";
 import TierBadge from "@/components/threads/TierBadge";
 
-/* ---------------- Helper Functions ---------------- */
-function getTierLevel(current: number, goal: number): number {
-  if (goal <= 0) return 0;
-  const progress = (current / goal) * 100;
-  if (progress >= 75) return 3;
-  if (progress >= 50) return 2;
-  if (progress >= 25) return 1;
-  return 0;
-}
-
 /* ---------------- Props ---------------- */
 type ThreadCardProps = {
   thread: ThreadDisplay;
@@ -32,8 +22,8 @@ type ThreadCardProps = {
 /* ---------------- Component ---------------- */
 export default function ThreadCard({ thread }: ThreadCardProps) {
   const router = useRouter();
-  // Use tier directly from the API/database
-  const tierLevel = thread.tier;
+  // Use tier directly from the API/database, default to 0 if not set
+  const tierLevel: number = thread.tier ?? 0;
 
   return (
     <Card

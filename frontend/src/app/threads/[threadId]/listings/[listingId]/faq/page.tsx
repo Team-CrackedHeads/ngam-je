@@ -20,7 +20,6 @@ import {
   createQuestion,
   answerQuestion,
   voteFAQ,
-  markFAQAsAccepted,
   FAQ,
 } from "@/lib/api/faqs";
 import {
@@ -36,13 +35,13 @@ const FAQPage: React.FC = () => {
   // Get params from URL
   const params = useParams();
   const router = useRouter();
-  const { getToken, userId } = useAuth();
+  const { getToken } = useAuth();
   const listingId = parseInt(params.listingId as string);
   const threadId = params.threadId as string;
 
   // State for listing and FAQs
   const [listing, setListing] = useState<Listing | null>(null);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [_faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<QuestionType[]>([]);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);

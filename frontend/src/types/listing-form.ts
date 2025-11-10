@@ -40,3 +40,29 @@ export type ListingFormData = BuyFormData | SellFormData;
 
 // Partial version for step components that only use subset of fields
 export type PartialFormData = Partial<BuyFormData & SellFormData>;
+
+// Unified listing data for display (used in ProductDetails component)
+export interface UnifiedListingData {
+  id: number | string; // Support both during migration
+  userId: string;
+  title: string;
+  subtitle?: string;
+  description: string;
+  price: number;
+  currency: string;
+  seller: {
+    name: string;
+    location: string;
+    verified: boolean;
+    timePosted: string;
+  };
+  imageUrl: string;
+  gallery: string[];
+  category: string;
+  listingType: "sale" | "wanted";
+  tags: string[];
+  views: number;
+  protected: boolean; // Listing protection status
+  faqs?: FAQ[]; // Optional during migration
+  shippingOptions?: string[]; // Optional during migration
+}

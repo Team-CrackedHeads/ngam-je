@@ -14,7 +14,7 @@ import { MOCK_LOCATION, MOCK_FAQ_BUY } from '@/utils/mock-all-data-used';
 interface MakeOfferBuyProps {
   isOpen: boolean;
   onClose: () => void;
-  sourceListingId: string;
+  sourceListingId: string | number; // Support both during migration
   sourceTitle: string;
   sourceDescription: string;
   sourceImages: string[];

@@ -133,6 +133,7 @@ export default function ProductListingScreen() {
       listingType: listing.listing_type,
       tags: listing.tags,
       views: listing.views,
+      protected: listing.protected,
       faqs: listing.faqs,
       shippingOptions: listing.shipping_options,
     };
