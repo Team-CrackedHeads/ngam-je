@@ -17,6 +17,13 @@ dependencies = [
     "uvicorn>=0.38.0", # For fetching Clerk JWKS
     "clerk-backend-api>=3.3.1",
     "httpx>=0.28.1",
+    "google-search-results>=2.4.2",
+    "cachetools>=6.2.1",
+    "google-generativeai>=0.8.5",
+    "langchain>=1.0.5",
+    "google-genai>=1.49.0",
+    "pillow>=12.0.0",
+    "parlant",
 ]
 
 [dependency-groups]
@@ -47,3 +54,6 @@ target-version = "py312"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.uv.sources]
+parlant = { git = "https://github.com/emcie-co/parlant", rev = "develop" }

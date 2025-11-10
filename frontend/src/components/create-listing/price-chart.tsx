@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { TrendingUp, Sparkles } from 'lucide-react';
+import { TrendingUp, Sparkles, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PriceDataPoint {
@@ -24,6 +24,8 @@ interface HistoricalPriceTrendProps {
   recommendedRange?: { min: number; average: number; max: number };
   currency: string;
   onQuickSelect?: (selection: 'low' | 'average' | 'high') => void;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 }
 
 const formatMoney = (currency: string) => (value: number) =>
@@ -61,6 +63,8 @@ export function HistoricalPriceTrend({
   recommendedRange,
   currency,
   onQuickSelect,
+  onRegenerate,
+  isRegenerating = false,
 }: HistoricalPriceTrendProps) {
   // All hooks must be called before any early returns
   const displayCurrency = currency || 'MYR';
@@ -159,7 +163,7 @@ export function HistoricalPriceTrend({
     <div className="rounded-xl border border-[var(--color-primary-200)] bg-white shadow-sm">
       <div className="px-4 py-4 sm:px-5 sm:py-5 border-b border-[var(--color-primary-200)]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-secondary-500)]/10 text-[var(--color-secondary-600)]">
               <TrendingUp className="w-5 h-5" />
             </span>
@@ -169,7 +173,20 @@ export function HistoricalPriceTrend({
             </div>
           </div>
 
-          {hasYearData && yearlySeries.length > 0 && (
+          <div className="flex items-center gap-2">
+            {onRegenerate && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={onRegenerate}
+                disabled={isRegenerating}
+                className="h-9 px-3 border-[var(--color-primary-300)] hover:bg-[var(--color-secondary-500)]/10 hover:border-[var(--color-secondary-500)]"
+              >
+                <RotateCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+            {hasYearData && yearlySeries.length > 0 && (
             <div className="inline-flex items-center rounded-xl border border-[var(--color-secondary-400)] bg-white px-1.5 py-1">
               <Button
                 type="button"
@@ -198,7 +215,8 @@ export function HistoricalPriceTrend({
                 Yearly
               </Button>
             </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

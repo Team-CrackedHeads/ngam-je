@@ -7,7 +7,7 @@ When adding new endpoints, import them here and include them in the api_router.
 
 from fastapi import APIRouter
 
-from src.app.api.v1.endpoints import health, users, kyc
+from src.app.api.v1.endpoints import health, users, kyc, unsplash, generation
 
 api_router = APIRouter()
 
@@ -16,7 +16,5 @@ api_router = APIRouter()
 api_router.include_router(health.router, prefix="/health", tags=["health"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(kyc.router, prefix="/kyc", tags=["kyc"])
-
-# Future routers can be added here:
-# api_router.include_router(items.router, prefix="/items", tags=["items"])
-# api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
+api_router.include_router(generation.router, prefix="/generation", tags=["generation"])
+api_router.include_router(unsplash.router, prefix="/unsplash", tags=["unsplash"])

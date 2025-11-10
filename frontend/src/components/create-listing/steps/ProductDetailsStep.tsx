@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Sparkles, Loader2, Upload, Trash2, Check } from 'lucide-react';
+import { Sparkles, Loader2, Upload, Trash2, Check, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -83,45 +83,23 @@ export default function ProductDetailsStep({
 
       {/* AI Action Bar */}
       <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="ai-mode"
-                checked={isAIModeEnabled}
-                onCheckedChange={setIsAIModeEnabled}
-                className="data-[state=checked]:bg-[var(--color-secondary-500)]"
-              />
-              <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[var(--color-secondary-600)]" />
-                AI Mode
-              </Label>
-            </div>
-            {isAIModeEnabled && (
-              <p className="text-xs text-[var(--color-primary-900)] italic hidden sm:block">
-                Upload photo or type to enable AI generation
-              </p>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="ai-mode"
+              checked={isAIModeEnabled}
+              onCheckedChange={setIsAIModeEnabled}
+              className="data-[state=checked]:bg-[var(--color-secondary-500)]"
+            />
+            <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[var(--color-secondary-600)]" />
+              AI Mode
+            </Label>
           </div>
           {isAIModeEnabled && (
-            <Button
-              size="sm"
-              className="text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
-              onClick={onGenerateAll}
-              disabled={isGeneratingAll || !hasAnyInput}
-            >
-              {isGeneratingAll ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--color-secondary-900)]" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2 text-[var(--color-secondary-900)]" />
-                  Generate All
-                </>
-              )}
-            </Button>
+            <p className="text-xs text-[var(--color-primary-900)] italic">
+              Click the regenerate icon next to any field to update it
+            </p>
           )}
         </div>
       </div>
@@ -129,31 +107,9 @@ export default function ProductDetailsStep({
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Images Section */}
         <div>
-          <div className="flex justify-between items-center mb-3">
-            <Label className="text-base font-medium text-[var(--color-accent-700)]">
-              Product Images
-            </Label>
-            {isAIModeEnabled && (
-              <Button
-                size="sm"
-                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
-                onClick={onGeneratePhotos}
-                disabled={isGeneratingPhotos || !hasAnyInput || (listingType === 'sell' && images?.length === 0)}
-              >
-                {isGeneratingPhotos ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                    {listingType === 'buy' ? 'Generate Photos' : 'Enhance Photos'}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          <Label className="text-base font-medium text-[var(--color-accent-700)] mb-3 block">
+            Product Images
+          </Label>
 
           <input
             type="file"
@@ -286,24 +242,23 @@ export default function ProductDetailsStep({
               Title
             </Label>
             {isAIModeEnabled && (
-              <Button
-                size="sm"
-                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+              <button
                 onClick={onGenerateTitle}
-                disabled={isGeneratingTitle || !hasAnyInput}
+                disabled={isGeneratingTitle || !formData.generatedTitle}
+                className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {isGeneratingTitle ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                    Generating...
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                    Generate Title
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Regenerate</span>
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
           <div className="relative">
@@ -365,24 +320,23 @@ export default function ProductDetailsStep({
               Description
             </Label>
             {isAIModeEnabled && (
-              <Button
-                size="sm"
+              <button
                 onClick={onGenerateDescription}
-                disabled={isGeneratingDescription || !hasAnyInput}
-                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+                disabled={isGeneratingDescription || !formData.generatedDescription}
+                className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {isGeneratingDescription ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                    Generating...
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                    Generate Description
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Regenerate</span>
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
           <div className="relative">

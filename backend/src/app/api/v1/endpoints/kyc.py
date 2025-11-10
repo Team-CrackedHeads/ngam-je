@@ -16,7 +16,7 @@ from src.app.api.deps import get_current_user, get_db
 # ============================================================================
 from src.app.core.config import get_settings
 # ============================================================================
-from src.app.services import didit_service
+from src.app.services.kyc import didit_service
 from src.models.user import User
 
 router = APIRouter()

@@ -1,10 +1,31 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.app.core.config import get_settings
+from src.app.core.logging_config import configure_logging, get_logger
 from src.app.api.v1.api import api_router
 
+# Configure logging BEFORE FastAPI initialization
 settings = get_settings()
+configure_logging(
+    log_level="DEBUG" if settings.debug else "INFO",
+    log_to_file=settings.env == "production"
+)
+
+# Get logger for this module
+logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown events."""
+    # Startup
+    logger.info("🚀 Application starting up...")
+    yield
+    # Shutdown
+    logger.info("👋 Application shutting down...")
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -12,6 +33,7 @@ app = FastAPI(
     description="Backend API for Ngam-je application",
     version="0.1.0",
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 # Configure CORS
