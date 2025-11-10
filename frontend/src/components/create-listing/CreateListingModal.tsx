@@ -27,6 +27,7 @@ import {
   Shield,
   Wrench,
   CreditCard,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +55,7 @@ import ProductDetailsStep from "./steps/ProductDetailsStep";
 import PricingShippingStep from "./steps/PricingShippingStep";
 import FAQsStep from "./steps/FAQsStep";
 import PreviewStep from "./steps/PreviewStep";
+import ParlantChat from "./ParlantChat";
 import axios, { AxiosError } from "axios";
 
 interface CreateListingModalProps {
@@ -94,7 +96,7 @@ export default function CreateListingModal({
   const [isSearchingImages, setIsSearchingImages] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [generatedCount, setGeneratedCount] = useState(0); // Track how many times generated (max 3)
-  const [imageMode, setImageMode] = useState<'upload' | 'search' | 'generate'>('upload');
+  const [imageMode, setImageMode] = useState<'upload' | 'search' | 'generate' | 'chat'>('chat');
   const [imageQuery, setImageQuery] = useState("");
   const [errorModal, setErrorModal] = useState<{
     isOpen: boolean;
@@ -1225,6 +1227,17 @@ export default function CreateListingModal({
                       {/* Tab Buttons */}
                       <div className="flex gap-2 border-b border-gray-200">
                         <button
+                          onClick={() => setImageMode('chat')}
+                          className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                            imageMode === 'chat'
+                              ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
+                              : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                          }`}
+                        >
+                          <Bot className="w-4 h-4 inline-block mr-2" />
+                          Chat
+                        </button>
+                        <button
                           onClick={() => setImageMode('upload')}
                           className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
                             imageMode === 'upload'
@@ -1262,6 +1275,22 @@ export default function CreateListingModal({
                           </>
                         )}
                       </div>
+
+                      {/* Chat Tab Content */}
+                      {imageMode === 'chat' && (
+                        <div className="h-[500px]">
+                          <ParlantChat
+                            listingType={listingType}
+                            agentId="W6bc5axcqN"
+                            onComplete={(gatheredInfo) => {
+                              // Handle completion - populate form data
+                              console.log("Chat completed with info:", gatheredInfo);
+                              // TODO: Map gatheredInfo to formData
+                              setAiContextGathered(true);
+                            }}
+                          />
+                        </div>
+                      )}
 
                       {/* Upload Tab Content */}
                       {imageMode === 'upload' && (

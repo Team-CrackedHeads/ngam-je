@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 interface Message {
@@ -12,21 +13,24 @@ interface Message {
 
 interface ParlantChatProps {
   listingType: "buy" | "sell";
-  sessionId: string;
-  onComplete: (gatheredInfo: any) => void;
+  agentId: string;
+  onComplete?: (gatheredInfo: any) => void;
 }
+
+const PARLANT_SERVER_URL = "http://localhost:8800";
 
 export default function ParlantChat({
   listingType,
-  sessionId,
+  agentId,
   onComplete,
 }: ParlantChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStage, setCurrentStage] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [lastOffset, setLastOffset] = useState<number>(0);
+  const [agentStatus, setAgentStatus] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,52 +40,109 @@ export default function ParlantChat({
     scrollToBottom();
   }, [messages]);
 
-  // Send initial greeting
+  // Initialize session when component mounts
   useEffect(() => {
-    if (messages.length === 0) {
-      handleSendMessage("Hi");
+    const initializeSession = async () => {
+      try {
+        const response = await axios.post(`${PARLANT_SERVER_URL}/sessions`, {
+          agent_id: agentId,
+          title: `${listingType} Listing - ${new Date().toLocaleString()}`,
+        });
+
+        setSessionId(response.data.id);
+      } catch (error) {
+        console.error("Failed to create session:", error);
+        setMessages([{
+          role: "agent",
+          content: "Failed to connect to chat. Please try again.",
+        }]);
+      }
+    };
+
+    initializeSession();
+  }, [agentId, listingType]);
+
+  // Use React Query for polling events (like parlant-chat-react does)
+  const { data: eventsData } = useQuery({
+    queryKey: ['events', sessionId, lastOffset],
+    queryFn: async () => {
+      if (!sessionId) return [];
+      const response = await axios.get(`${PARLANT_SERVER_URL}/sessions/${sessionId}/events`, {
+        params: {
+          min_offset: lastOffset,
+          wait_for_data: 60, // Long polling like parlant-chat-react
+        },
+      });
+      return response.data;
+    },
+    enabled: !!sessionId,
+    refetchInterval: 2000, // Poll every 2 seconds
+  });
+
+  // Process new events
+  useEffect(() => {
+    if (!eventsData || eventsData.length === 0) return;
+
+    const lastEvent = eventsData[eventsData.length - 1];
+    if (lastEvent?.offset !== undefined) {
+      setLastOffset(lastEvent.offset + 1);
     }
-  }, []);
+
+    // Find the last status event
+    const lastStatusEvent = eventsData.findLast((e: any) => e.kind === "status");
+    if (lastStatusEvent) {
+      const status = lastStatusEvent.data?.status;
+      if (status === "processing") {
+        const stage = lastStatusEvent.data?.data?.stage || "Thinking";
+        setAgentStatus(`${stage}...`);
+      } else if (status === "typing") {
+        setAgentStatus("Typing...");
+      } else if (status === "ready") {
+        setAgentStatus("");
+      }
+    }
+
+    // Filter and add agent messages
+    eventsData.forEach((event: any) => {
+      if (event.kind === "message" && event.source === "ai_agent") {
+        setMessages((prev) => {
+          // Check if message already exists
+          const exists = prev.some(m => m.content === event.data.message);
+          if (exists) return prev;
+
+          // Clear status when message arrives
+          setAgentStatus("");
+
+          return [
+            ...prev,
+            {
+              role: "agent",
+              content: event.data.message,
+            },
+          ];
+        });
+      }
+    });
+  }, [eventsData]);
 
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
-    if (!text && !messageText) return;
+    if (!text || !sessionId) return;
 
-    // Add user message to chat
-    if (!messageText) {
-      setMessages((prev) => [...prev, { role: "user", content: text }]);
-      setInput("");
-    }
-
+    // Add user message to chat immediately
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setInput("");
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/parlant/chat`,
-        {
-          session_id: sessionId,
-          message: text,
-          listing_type: listingType,
-        },
-        {
-          timeout: 30000,
-        }
-      );
-
-      // Add agent response to chat
-      setMessages((prev) => [
-        ...prev,
-        { role: "agent", content: response.data.agent_response },
-      ]);
-
-      setCurrentStage(response.data.current_stage);
-
-      // Check if conversation is complete
-      if (response.data.is_complete) {
-        onComplete(response.data.gathered_info);
-      }
+      // Send message event to Parlant (using their exact format)
+      await axios.post(`${PARLANT_SERVER_URL}/sessions/${sessionId}/events`, {
+        kind: "message",
+        source: "customer",
+        message: text, // They use "message" directly, not "data.message"
+      });
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Failed to send message:", error);
       setMessages((prev) => [
         ...prev,
         {
@@ -140,14 +201,17 @@ export default function ParlantChat({
           </div>
         ))}
 
-        {/* Loading indicator */}
-        {isLoading && (
+        {/* Agent status indicator */}
+        {agentStatus && (
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-secondary-500)]">
               <Bot className="w-5 h-5 text-black" />
             </div>
             <div className="bg-white text-gray-900 border border-gray-200 rounded-lg px-4 py-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm text-gray-600">{agentStatus}</span>
+              </div>
             </div>
           </div>
         )}
@@ -155,18 +219,10 @@ export default function ParlantChat({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Current Stage Indicator */}
-      {currentStage && (
-        <div className="px-4 py-2 bg-gray-100 border-t border-gray-200 text-xs text-gray-600">
-          Stage: {currentStage.replace("_", " ")}
-        </div>
-      )}
-
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-gray-200 rounded-b-lg">
         <div className="flex gap-2">
           <input
-            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
