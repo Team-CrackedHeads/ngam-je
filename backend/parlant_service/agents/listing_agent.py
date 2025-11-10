@@ -82,11 +82,11 @@ async def add_domain_glossary(agent: p.Agent) -> None:
 
 
 async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Journey:
-    """Create the journey for helping users create buy listings."""
+    """Create the journey for helping users create buy listings - PRODUCT DETAILS ONLY."""
     # Create the journey
     journey = await agent.create_journey(
-        title="Create Buy Listing",
-        description="Helps the user create a buy listing by gathering product details and proactively finding reference images. This is for users who want to FIND or PURCHASE a product.",
+        title="Create Buy Listing - Product Details",
+        description="Helps the user gather ONLY product details (title, description, reference images) for a buy listing. Does NOT gather price, location, or shipping - those come in later steps. This is for users who want to FIND or PURCHASE a product.",
         conditions=["The user wants to create a buy listing", "The user wants to find or purchase a product"],
     )
 
@@ -101,23 +101,16 @@ async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Jour
         condition="The user has described the product"
     )
 
-    # Ask about budget
+    # Ask about features and specifications
     t2 = await t1.target.transition_to(
-        chat_state="Ask about their budget range - minimum and maximum they're willing to spend"
+        chat_state="Ask what specific features, specifications, or condition they're looking for in this product",
     )
 
-    # Ask about features
+    # Wrap up - NO price or location questions
     t3 = await t2.target.transition_to(
-        chat_state="Ask what specific features or specifications are important to them",
+        chat_state="Summarize the product details (what they're looking for, features, and reference images). Let them know that price and location will be handled in the next step of the form."
     )
-
-    # Ask about location
-    t4 = await t3.target.transition_to(
-        chat_state="Ask where they're located or willing to receive items from"
-    )
-
-    t5 = await t4.target.transition_to(chat_state="Summarize all gathered details and confirm they're ready to create the listing")
-    await t5.target.transition_to(state=p.END_JOURNEY)
+    await t3.target.transition_to(state=p.END_JOURNEY)
 
     # Guidelines for proactive behavior
     await journey.create_guideline(
@@ -127,14 +120,14 @@ async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Jour
     )
 
     await journey.create_guideline(
-        condition="The user is unsure about budget",
-        action="Reassure them it's okay to give a rough estimate or range",
-    )
-
-    await journey.create_guideline(
         condition="The user explicitly asks to generate custom images or isn't satisfied with search results",
         action="Offer to use generate_images_with_ai tool to create custom images, or search again with different terms",
         tools=[search_unsplash_images, generate_images_with_ai],
+    )
+
+    await journey.create_guideline(
+        condition="The user asks about price, budget, location, or shipping",
+        action="Politely let them know that you're only helping with product details right now. Price, location, and shipping information will be collected in the next step of the form.",
     )
 
     await journey.create_guideline(
@@ -146,11 +139,11 @@ async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Jour
 
 
 async def create_sell_listing_journey(server: p.Server, agent: p.Agent) -> p.Journey:
-    """Create the journey for helping users create sell listings."""
+    """Create the journey for helping users create sell listings - PRODUCT DETAILS ONLY."""
     # Create the journey
     journey = await agent.create_journey(
-        title="Create Sell Listing",
-        description="Helps the user create a sell listing by gathering product details, photos, and pricing information. This is for users who want to SELL their OWN product.",
+        title="Create Sell Listing - Product Details",
+        description="Helps the user gather ONLY product details (title, description, condition, photos) for a sell listing. Does NOT gather price, location, or shipping - those come in later steps. This is for users who want to SELL their OWN product.",
         conditions=["The user wants to create a sell listing", "The user wants to sell their own product"],
     )
 
@@ -166,44 +159,34 @@ async def create_sell_listing_journey(server: p.Server, agent: p.Agent) -> p.Jou
 
     # Ask for photos EARLY (important for sell listings)
     t2 = await t1.target.transition_to(
-        chat_state="Request they upload clear photos of their product. Explain that actual product photos are required for sell listings, not stock images. Ask them to click the upload button in the chat.",
+        chat_state="Guide them to upload clear photos of their actual product using the form's upload feature. Remind them that actual product photos are important for sell listings.",
     )
 
     # Ask what's included
     t3 = await t2.target.transition_to(
-        chat_state="Ask what features the product has and what accessories/items are included with it",
-        condition="The user has uploaded photos or acknowledged they will upload them"
+        chat_state="Ask what features the product has and what accessories/items are included with it"
     )
 
-    # Ask about price
+    # Wrap up - NO price or location questions
     t4 = await t3.target.transition_to(
-        chat_state="Ask what price they'd like to sell for. If they're unsure, offer to search for similar listings to suggest a competitive price.",
+        chat_state="Summarize the product details (what they're selling, condition, features, and photos). Let them know that price, location, and shipping will be handled in the next step of the form."
     )
-
-    # Ask about location
-    t5 = await t4.target.transition_to(
-        chat_state="Ask where they're located for shipping/local pickup purposes"
-    )
-
-    t6 = await t5.target.transition_to(
-        chat_state="Summarize all gathered details including photos, condition, price, and location. Confirm they're ready to create the listing."
-    )
-    await t6.target.transition_to(state=p.END_JOURNEY)
+    await t4.target.transition_to(state=p.END_JOURNEY)
 
     # Guidelines for sell listings
     await journey.create_guideline(
-        condition="The user is unsure about pricing",
-        action="Suggest they research similar items online to get an idea of market value. Emphasize competitive pricing based on condition.",
-    )
-
-    await journey.create_guideline(
         condition="The user hasn't uploaded photos yet",
-        action="Gently remind them that actual product photos are essential for sell listings and guide them to upload",
+        action="Gently remind them that actual product photos are essential for sell listings and guide them to use the upload feature in the form",
     )
 
     await journey.create_guideline(
         condition="The user describes their product in detail",
         action="Be enthusiastic and help them highlight the best features and selling points",
+    )
+
+    await journey.create_guideline(
+        condition="The user asks about price, pricing, location, or shipping",
+        action="Politely let them know that you're only helping with product details right now. Price, location, and shipping information will be collected in the next step of the form.",
     )
 
     await journey.create_guideline(
