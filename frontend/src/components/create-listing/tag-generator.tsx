@@ -95,11 +95,36 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
 
   const generateTagsFromContent = async () => {
     setIsGeneratingTags(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    onTagsChange(suggestedTags);
+    try {
+      // TODO: Get context from parent (title, description) for better tag generation
+      // For now, generate with empty context
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: {
+            title: '',
+            description: '',
+            tags: tags,
+          },
+        }),
+      });
 
-    setIsGeneratingTags(false);
+      if (response.ok) {
+        const data = await response.json();
+        onTagsChange(data.tags);
+      } else {
+        // Fallback to suggested tags
+        onTagsChange(suggestedTags);
+      }
+    } catch (error) {
+      console.error('Error generating tags:', error);
+      // Fallback to suggested tags
+      onTagsChange(suggestedTags);
+    } finally {
+      setIsGeneratingTags(false);
+    }
   };
 
   // Expose generateTagsFromContent to parent via ref

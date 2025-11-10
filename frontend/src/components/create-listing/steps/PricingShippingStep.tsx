@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShippingPreferences } from '@/components/create-listing/shipping-options';
 import { HistoricalPriceTrend } from '@/components/create-listing/price-chart';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-all-data-used';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import dynamic from 'next/dynamic';
 
@@ -26,6 +25,11 @@ interface PricingShippingStepProps {
   formData: PartialFormData;
   setFormData: React.Dispatch<React.SetStateAction<PartialFormData>>;
   recommendedPriceRange: { min: number; max: number; average: number };
+  priceHistory?: Array<{ month: string; year: number; price: number }>;
+  isFetchingPrice?: boolean;
+  onRegeneratePrice?: () => void;
+  priceRegenerateCount?: number;
+  maxPriceRegenerations?: number;
   showLocationDropdown: boolean;
   setShowLocationDropdown: (show: boolean) => void;
   filteredLocations: string[];
@@ -45,6 +49,11 @@ function PricingShippingContent({
   formData,
   setFormData,
   recommendedPriceRange,
+  priceHistory,
+  isFetchingPrice = false,
+  onRegeneratePrice,
+  priceRegenerateCount = 0,
+  maxPriceRegenerations = 3,
   showLocationDropdown,
   setShowLocationDropdown,
   filteredLocations: _filteredLocations,
@@ -183,12 +192,28 @@ function PricingShippingContent({
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
-        <HistoricalPriceTrend
-          priceHistory={MOCK_PRICE_HISTORY}
-          recommendedRange={recommendedPriceRange}
-          currency={formData.currency || 'MYR'}
-          onQuickSelect={handleRecommendedClick}
-        />
+        {isFetchingPrice ? (
+          <div className="flex items-center justify-center py-12 bg-[var(--color-primary-50)] rounded-lg border-2 border-[var(--color-primary-200)]">
+            <div className="text-center space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin text-[var(--color-secondary-500)] mx-auto" />
+              <p className="text-[var(--color-primary-700)] font-medium">
+                Analyzing market prices...
+              </p>
+              <p className="text-sm text-[var(--color-primary-600)]">
+                Searching similar products to get you the best price estimate
+              </p>
+            </div>
+          </div>
+        ) : priceHistory && priceHistory.length > 0 ? (
+          <HistoricalPriceTrend
+            priceHistory={priceHistory}
+            recommendedRange={recommendedPriceRange}
+            currency={formData.currency || 'MYR'}
+            onQuickSelect={handleRecommendedClick}
+            onRegenerate={priceRegenerateCount < maxPriceRegenerations ? onRegeneratePrice : undefined}
+            isRegenerating={isFetchingPrice}
+          />
+        ) : null}
 
         {/* Separator */}
         <div className="border-t border-[var(--color-primary-200)]"></div>

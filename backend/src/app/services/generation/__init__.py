@@ -7,6 +7,7 @@ from .listing_generation import (
     regenerate_tags,
 )
 from .image_generation import generate_images
+from .price_intelligence import get_price_intelligence
 from .config import get_ai_settings
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "regenerate_description",
     "regenerate_tags",
     "generate_images",
+    "get_price_intelligence",
     "get_ai_settings",
 ]

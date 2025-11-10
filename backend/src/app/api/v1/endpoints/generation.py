@@ -168,3 +168,46 @@ async def generate_images_endpoint(request: GenerateImagesRequest) -> dict:
     except Exception as e:
         logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")
+
+
+class PriceIntelligenceRequest(BaseModel):
+    """Request model for price intelligence."""
+    product_title: str
+    product_description: str
+    listing_type: str  # "buy" or "sell"
+    location: str = "Malaysia"
+    use_cache: bool = True
+
+
+@router.post("/price-intelligence")
+async def get_price_intelligence_endpoint(request: PriceIntelligenceRequest) -> dict:
+    """
+    Get intelligent price recommendations using SerpAPI + Gemini.
+
+    Searches for similar products and analyzes pricing patterns.
+
+    Args:
+        request: PriceIntelligenceRequest with product details
+
+    Returns:
+        dict with price analysis (min, max, average, recommended range, confidence)
+
+    Raises:
+        HTTPException: 422 if validation fails, 500 if analysis fails
+    """
+    try:
+        logger.info(f"💰 Getting price intelligence for: {request.product_title[:50]}... (cache: {request.use_cache})")
+        price_data = await generation.get_price_intelligence(
+            product_title=request.product_title,
+            product_description=request.product_description,
+            listing_type=request.listing_type,
+            location=request.location,
+            use_cache=request.use_cache,
+        )
+        return price_data
+    except ValueError as e:
+        logger.error(f"❌ ValueError: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Price intelligence error: {str(e)}")

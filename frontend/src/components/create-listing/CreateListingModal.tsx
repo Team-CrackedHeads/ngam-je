@@ -166,6 +166,10 @@ export default function CreateListingModal({
     max: 0,
     average: 0,
   });
+  const [priceHistory, setPriceHistory] = useState<Array<{ month: string; year: number; price: number }>>([]);
+  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
+  const [priceRegenerateCount, setPriceRegenerateCount] = useState(0);
+  const MAX_PRICE_REGENERATIONS = 3;
 
   // Wrapper function to handle setState properly for both types
   const setFormData = useCallback(
@@ -226,42 +230,72 @@ export default function CreateListingModal({
 
   const generateTitleWithAI = async () => {
     setIsGeneratingTitle(true);
-    // await new Promise((resolve) => setTimeout(resolve, 1500));
-    const productData = await getProductDataFromAI();
 
-    if (productData && listingType === "buy") {
-      setBuyFormData((prev) => ({
-        ...prev,
-        generatedTitle: productData.title,
-      }));
-    } else if (productData) {
-      setSellFormData((prev) => ({
-        ...prev,
-        generatedTitle: productData.title,
-      }));
+    try {
+      const currentData = listingType === "buy" ? buyFormData : sellFormData;
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/title`,
+        {
+          context: {
+            title: currentData.generatedTitle || "",
+            description: currentData.generatedDescription || "",
+            tags: currentData.tags || [],
+          },
+        }
+      );
+
+      if (listingType === "buy") {
+        setBuyFormData((prev) => ({
+          ...prev,
+          generatedTitle: response.data.title,
+        }));
+      } else {
+        setSellFormData((prev) => ({
+          ...prev,
+          generatedTitle: response.data.title,
+        }));
+      }
+    } catch (error) {
+      console.error("Error regenerating title:", error);
+      alert("Failed to regenerate title. Please try again.");
+    } finally {
+      setIsGeneratingTitle(false);
     }
-
-    setIsGeneratingTitle(false);
   };
 
   const generateDescriptionWithAI = async () => {
     setIsGeneratingDescription(true);
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
-    const productData = await getProductDataFromAI();
 
-    if (productData && listingType === "buy") {
-      setBuyFormData((prev) => ({
-        ...prev,
-        generatedDescription: productData.description,
-      }));
-    } else if (productData) {
-      setSellFormData((prev) => ({
-        ...prev,
-        generatedDescription: productData.description,
-      }));
+    try {
+      const currentData = listingType === "buy" ? buyFormData : sellFormData;
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/description`,
+        {
+          context: {
+            title: currentData.generatedTitle || "",
+            description: currentData.generatedDescription || "",
+            tags: currentData.tags || [],
+          },
+        }
+      );
+
+      if (listingType === "buy") {
+        setBuyFormData((prev) => ({
+          ...prev,
+          generatedDescription: response.data.description,
+        }));
+      } else {
+        setSellFormData((prev) => ({
+          ...prev,
+          generatedDescription: response.data.description,
+        }));
+      }
+    } catch (error) {
+      console.error("Error regenerating description:", error);
+      alert("Failed to regenerate description. Please try again.");
+    } finally {
+      setIsGeneratingDescription(false);
     }
-
-    setIsGeneratingDescription(false);
   };
 
   const generatePhotosWithAI = async () => {
@@ -634,34 +668,34 @@ export default function CreateListingModal({
     setIsGeneratingAll(true);
 
     try {
-      // TODO: Call backend API with context (images + text)
-      // For now, simulate AI generation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Call backend API to generate listing content
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/listing`,
+        {
+          images: allImages,
+          description: userInput,
+          listing_type: listingType,
+        }
+      );
 
-      // Mock data - will be replaced with real API response
-      const mockGeneratedData = {
-        title: "Sample Product Title",
-        description: "This is a generated description based on your input and images.",
-        tags: ["electronics", "gadgets"],
-        images: allImages, // Use combined images (searched/generated + uploaded)
-      };
+      const generatedData = response.data;
 
       // Pre-fill form data
       if (listingType === "buy") {
         setBuyFormData((prev) => ({
           ...prev,
-          generatedTitle: mockGeneratedData.title,
-          generatedDescription: mockGeneratedData.description,
-          generatedImages: mockGeneratedData.images,
-          tags: mockGeneratedData.tags,
+          generatedTitle: generatedData.title,
+          generatedDescription: generatedData.description,
+          generatedImages: allImages, // Use combined images (searched/generated + uploaded)
+          tags: generatedData.tags,
         }));
       } else {
         setSellFormData((prev) => ({
           ...prev,
-          generatedTitle: mockGeneratedData.title,
-          generatedDescription: mockGeneratedData.description,
-          uploadedImages: mockGeneratedData.images,
-          tags: mockGeneratedData.tags,
+          generatedTitle: generatedData.title,
+          generatedDescription: generatedData.description,
+          uploadedImages: allImages,
+          tags: generatedData.tags,
         }));
       }
 
@@ -695,10 +729,56 @@ export default function CreateListingModal({
     }
   };
 
-  const fetchPriceRecommendation = async () => {
-    // TODO: Rebuild with simple LLM calls (no agents)
-    console.log("Price recommendation temporarily disabled - will rebuild with simple LLM calls");
-    setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
+  const fetchPriceRecommendation = async (useCache: boolean = true) => {
+    setIsFetchingPrice(true);
+    try {
+      const currentData = listingType === "buy" ? buyFormData : sellFormData;
+      const productTitle = currentData.generatedTitle || "Unknown Product";
+      const productDescription = currentData.generatedDescription || "";
+
+      console.log(`💰 Fetching price intelligence for: ${productTitle}${!useCache ? ' (fresh data)' : ''}`);
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/price-intelligence`,
+        {
+          product_title: productTitle,
+          product_description: productDescription,
+          listing_type: listingType,
+          location: "Malaysia",
+          use_cache: useCache,
+        }
+      );
+
+      const priceData = response.data;
+      setRecommendedPriceRange({
+        min: priceData.recommended_min || priceData.min,
+        max: priceData.recommended_max || priceData.max,
+        average: priceData.average,
+      });
+
+      // Set price history for the chart
+      if (priceData.price_history && priceData.price_history.length > 0) {
+        setPriceHistory(priceData.price_history);
+      }
+
+      console.log(`✅ Price range: MYR ${priceData.recommended_min}-${priceData.recommended_max}`);
+    } catch (error) {
+      console.error("Error fetching price recommendation:", error);
+      // Set default range on error
+      setRecommendedPriceRange({ min: 0, max: 0, average: 0 });
+    } finally {
+      setIsFetchingPrice(false);
+    }
+  };
+
+  const handleRegeneratePrices = async () => {
+    if (priceRegenerateCount >= MAX_PRICE_REGENERATIONS) {
+      alert(`You've reached the maximum of ${MAX_PRICE_REGENERATIONS} price regenerations. Please continue with your listing.`);
+      return;
+    }
+
+    setPriceRegenerateCount(prev => prev + 1);
+    await fetchPriceRecommendation(false); // Don't use cache
   };
 
   const handleNext = () => {
@@ -793,7 +873,9 @@ export default function CreateListingModal({
     // Clear AI context states
     setAiContextGathered(false);
     setUserInput("");
-    setContextImages([]);
+    setUploadedImages([]);
+    setExternalImages([]);
+    setSelectedExternalImages([]);
 
     onClose();
   };
@@ -1572,6 +1654,11 @@ export default function CreateListingModal({
                 formData={formData}
                 setFormData={setFormData}
                 recommendedPriceRange={recommendedPriceRange}
+                priceHistory={priceHistory}
+                isFetchingPrice={isFetchingPrice}
+                onRegeneratePrice={handleRegeneratePrices}
+                priceRegenerateCount={priceRegenerateCount}
+                maxPriceRegenerations={MAX_PRICE_REGENERATIONS}
                 showLocationDropdown={showLocationDropdown}
                 setShowLocationDropdown={setShowLocationDropdown}
                 filteredLocations={filteredLocations}
