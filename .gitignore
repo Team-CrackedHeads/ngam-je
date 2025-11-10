@@ -188,6 +188,10 @@ models/
 *.pkl
 *.model
 
+# Parlant Data (runtime state, embeddings, sessions)
+parlant-data/
+**/parlant-data/
+
 # Temporary files
 tmp/
 temp/
