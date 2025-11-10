@@ -168,9 +168,17 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListin
       </div>
 
       <div onClick={handleCardClick} className={`rounded-xl shadow p-3 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
-        {/* Image placeholder */}
-        <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2 flex items-center justify-center relative">
-          <span className="text-gray-400 text-xs">Image</span>
+        {/* Listing Image */}
+        <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2 flex items-center justify-center relative overflow-hidden">
+          {listing.image_url ? (
+            <img
+              src={listing.image_url}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-gray-400 text-xs">No Image</span>
+          )}
 
           {/* Extension overlay for urgent/expired listings */}
           {(timeRemaining.urgent || timeRemaining.expired) && (
@@ -415,9 +423,17 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
 
       <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
 
-      {/* Image placeholder */}
-      <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative">
-        <span className="text-gray-400 text-sm">Image placeholder</span>
+      {/* Listing Image */}
+      <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
+        {listing.image_url ? (
+          <img
+            src={listing.image_url}
+            alt={listing.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-gray-400 text-sm">No Image</span>
+        )}
 
         {/* Extension overlay for urgent/expired listings */}
         {(timeRemaining.urgent || timeRemaining.expired) && (

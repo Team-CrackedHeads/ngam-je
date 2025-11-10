@@ -4,20 +4,66 @@ import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Package, Handshake, X, MapPin, Clock, Eye, Heart, Tag, BadgeCheck, TrendingUp, User } from "lucide-react";
-import { type Listing } from "@/utils/mock-all-data-used";
+import { type Listing as MockListing } from "@/utils/mock-all-data-used";
+import { type Listing as ApiListing } from "@/types/listing";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
 
 interface ListingDetailsModalProps {
-  listing: Listing | MatchedListing;
+  listing: MockListing | MatchedListing | ApiListing;
   type: "sale" | "wanted" | "matched";
   onClose: () => void;
 }
 
 export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsModalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
+
+  // Helper function to check if listing is from API (has snake_case properties)
+  const isApiListing = (l: typeof listing): l is ApiListing => {
+    return 'creator_location' in l || 'created_at' in l;
+  };
+
+  // Helper to get location regardless of format
+  const getLocation = () => {
+    if (isApiListing(listing)) {
+      return listing.creator_location || "Location not specified";
+    }
+    return 'location' in listing ? listing.location : "Location not specified";
+  };
+
+  // Helper to get timestamp/time ago
+  const getTimePosted = () => {
+    if (isApiListing(listing)) {
+      return new Date(listing.created_at).toLocaleDateString();
+    }
+    if ('timestamp' in listing) return listing.timestamp;
+    if ('timeAgo' in listing) return listing.timeAgo;
+    return "N/A";
+  };
+
+  // Helper to get price (handle budget for wanted listings)
+  const getPrice = () => {
+    if (type === "sale") {
+      return `${listing.currency || 'MYR'} ${listing.price}`;
+    }
+    if ('budget' in listing) {
+      return listing.budget;
+    }
+    if (isApiListing(listing) && listing.max_price) {
+      return `${listing.currency} ${listing.max_price}`;
+    }
+    return `${listing.currency || 'MYR'} ${listing.price}`;
+  };
+
+  // Helper to get image URL
+  const getImageUrl = () => {
+    if (isApiListing(listing)) {
+      return listing.image_url;
+    }
+    return 'imageUrl' in listing ? listing.imageUrl : null;
+  };
 
   const handleCheckout = () => {
     setShowCheckout(true);
@@ -84,16 +130,24 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="w-full h-48 bg-primary-100 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-accent-400 text-sm">Image</span>
-            </div>
+            {getImageUrl() ? (
+              <img
+                src={getImageUrl()!}
+                alt={listing.title}
+                className="w-full h-48 object-cover rounded-lg mb-3"
+              />
+            ) : (
+              <div className="w-full h-48 bg-primary-100 rounded-lg flex items-center justify-center mb-3">
+                <span className="text-accent-400 text-sm">No Image</span>
+              </div>
+            )}
 
             <div className="mb-3">
               <h1 className="text-xl font-bold text-accent-700 mb-1">
                 {listing.title}
               </h1>
               <span className="text-2xl font-bold text-secondary-600">
-                {type === "sale" ? listing.price : "budget" in listing ? listing.budget : listing.price}
+                {getPrice()}
               </span>
             </div>
 
@@ -113,12 +167,12 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 </span>
               )}
               {/* Verified Badge */}
-              {"seller" in listing && listing.seller && (
+              {(isApiListing(listing) && listing.creator_verified) || ("seller" in listing && listing.seller) ? (
                 <span className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full bg-success-500 text-white font-medium">
                   <BadgeCheck className="w-3.5 h-3.5" />
                   Verified
                 </span>
-              )}
+              ) : null}
             </div>
 
             {/* Tags Section */}
@@ -149,7 +203,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <MapPin className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-[10px] font-medium text-accent-500">Location</div>
-                  <div className="text-xs font-semibold text-accent-700">{listing.location}</div>
+                  <div className="text-xs font-semibold text-accent-700">{getLocation()}</div>
                 </div>
               </div>
 
@@ -158,11 +212,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <div>
                   <div className="text-[10px] font-medium text-accent-500">Posted</div>
                   <div className="text-xs font-semibold text-accent-700">
-                    {"timestamp" in listing
-                      ? listing.timestamp
-                      : "timeAgo" in listing
-                      ? listing.timeAgo
-                      : "N/A"}
+                    {getTimePosted()}
                   </div>
                 </div>
               </div>
@@ -191,18 +241,18 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 </div>
               )}
 
-              {/* Seller Info */}
-              {"seller" in listing && listing.seller && (
+              {/* Seller/Creator Info */}
+              {(isApiListing(listing) && listing.creator_name) || ("seller" in listing && listing.seller) ? (
                 <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
                   <User className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-[10px] font-medium text-accent-500">Seller</div>
+                    <div className="text-[10px] font-medium text-accent-500">{type === "sale" ? "Seller" : "Buyer"}</div>
                     <div className="text-xs font-semibold text-accent-700">
-                      {listing.seller}
+                      {isApiListing(listing) ? listing.creator_name : 'seller' in listing ? listing.seller : 'Unknown'}
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Match Reasons for Matched Listings */}

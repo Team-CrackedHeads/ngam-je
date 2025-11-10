@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Package, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake } from "lucide-react";
-import { type Listing } from "@/utils/mock-all-data-used";
-import { MatchedListing } from "@/components/matching/types";
+import { Package, MapPin, Clock, Eye, ShoppingCart, Handshake } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
@@ -23,7 +21,7 @@ export default function ListingMatchesPage() {
   const isMobile = useIsMobile();
   const getApiClient = useClerkApiClient();
 
-  const [selectedListing, setSelectedListing] = useState<Listing | MatchedListing | null>(null);
+  const [selectedListing, setSelectedListing] = useState<ApiListing | null>(null);
   const [yourListing, setYourListing] = useState<ApiListing | null>(null);
   const [matchedListings, setMatchedListings] = useState<ApiListing[]>([]);
   const [loading, setLoading] = useState(true);

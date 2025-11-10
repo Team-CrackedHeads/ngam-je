@@ -4563,6 +4563,7 @@ export const KANBAN_COLUMNS = [
 export const LISTINGS_TABS = [
   { label: "Sale Listings", value: "sale", iconName: "ShoppingCart" },
   { label: "Want Listings", value: "wanted", iconName: "Package" },
+  { label: "Matched Listings", value: "matched", iconName: "Handshake" },
 ];
 
 // Profile Page - Tab Configuration

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronRight, Clock, Package } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, ShoppingCart } from "lucide-react";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
@@ -30,7 +30,7 @@ export default function SellListingsMenuItem() {
   const MAX_LOADED_COUNT = 25;
   const DELOAD_TO_COUNT = 15;
 
-  // Fetch user's wanted listings
+  // Fetch user's sale listings (sell listings = WTS)
   useEffect(() => {
     if (!user) return;
 
@@ -42,16 +42,16 @@ export default function SellListingsMenuItem() {
         // Get current user profile to fetch user ID
         const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
 
-        // Fetch user's wanted listings
+        // Fetch user's sale listings (WTS = want to sell)
         const response = await fetchUserListings(apiClient.instance, userProfile.id, {
-          listing_type: "wanted",
+          listing_type: "sale",
           limit: 50, // Fetch more for sidebar scrolling
         });
 
         setListings(response.listings);
         setError(null);
       } catch (err) {
-        console.error("Error fetching wanted listings:", err);
+        console.error("Error fetching sale listings:", err);
         setError("Failed to load listings");
       } finally {
         setLoading(false);
@@ -63,7 +63,7 @@ export default function SellListingsMenuItem() {
   }, [user]); // Only depend on user, not getApiClient
 
   const handleListingClick = (listingId: number) => {
-    router.push(`/listings/${listingId}/matches?type=wanted`);
+    router.push(`/listings/${listingId}/matches?type=sale`);
   };
 
   const loadMoreListings = () => {
@@ -106,8 +106,8 @@ export default function SellListingsMenuItem() {
         onClick={() => setIsOpen(!isOpen)}
         className="group/menu-item text-accent-700 font-semibold"
       >
-        <Package className="w-5 h-5" />
-        <span>Want Listings</span>
+        <ShoppingCart className="w-5 h-5" />
+        <span>Sale Listings</span>
         {isOpen ? (
           <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
         ) : (
@@ -124,7 +124,7 @@ export default function SellListingsMenuItem() {
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
               onClick={() =>
-                router.push("/listings?type=wanted", { scroll: false })
+                router.push("/listings?type=sale", { scroll: false })
               }
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
             >
@@ -144,7 +144,7 @@ export default function SellListingsMenuItem() {
 
               {!error && listings.length === 0 && !loading && (
                 <div className="p-2 text-xs text-accent-400 text-center">
-                  No wanted listings yet
+                  No sale listings yet
                 </div>
               )}
 
