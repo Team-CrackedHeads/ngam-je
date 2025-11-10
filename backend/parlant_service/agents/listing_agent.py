@@ -86,8 +86,8 @@ async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Jour
     # Create the journey
     journey = await agent.create_journey(
         title="Create Buy Listing",
-        description="Helps the user create a buy listing by gathering product details and proactively finding reference images.",
-        conditions=["The user wants to create a buy listing"],
+        description="Helps the user create a buy listing by gathering product details and proactively finding reference images. This is for users who want to FIND or PURCHASE a product.",
+        conditions=["The user wants to create a buy listing", "The user wants to find or purchase a product"],
     )
 
     # First, determine what product they want
@@ -137,6 +137,11 @@ async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Jour
         tools=[search_unsplash_images, generate_images_with_ai],
     )
 
+    await journey.create_guideline(
+        condition="The user mentions wanting to sell a product while in the buy listing flow",
+        action="Politely explain that they are currently in the BUY listing page, which is for finding products to purchase. If they want to sell a product, they need to use the SELL listing page instead. Ask if they'd like to continue with the buy listing or if they need to switch to creating a sell listing.",
+    )
+
     return journey
 
 
@@ -145,8 +150,8 @@ async def create_sell_listing_journey(server: p.Server, agent: p.Agent) -> p.Jou
     # Create the journey
     journey = await agent.create_journey(
         title="Create Sell Listing",
-        description="Helps the user create a sell listing by gathering product details, photos, and pricing information.",
-        conditions=["The user wants to create a sell listing"],
+        description="Helps the user create a sell listing by gathering product details, photos, and pricing information. This is for users who want to SELL their OWN product.",
+        conditions=["The user wants to create a sell listing", "The user wants to sell their own product"],
     )
 
     # Ask about product
@@ -199,6 +204,11 @@ async def create_sell_listing_journey(server: p.Server, agent: p.Agent) -> p.Jou
     await journey.create_guideline(
         condition="The user describes their product in detail",
         action="Be enthusiastic and help them highlight the best features and selling points",
+    )
+
+    await journey.create_guideline(
+        condition="The user mentions wanting to buy or find a product while in the sell listing flow",
+        action="Politely explain that they are currently in the SELL listing page, which is for selling products they own. If they want to find or purchase a product, they need to use the BUY listing page instead. Ask if they'd like to continue with the sell listing or if they need to switch to creating a buy listing.",
     )
 
     return journey

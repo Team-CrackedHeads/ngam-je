@@ -5,6 +5,7 @@ import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "agent";
@@ -13,7 +14,6 @@ interface Message {
 
 interface ParlantChatProps {
   listingType: "buy" | "sell";
-  agentId: string;
   onComplete?: (gatheredInfo: any) => void;
 }
 
@@ -21,7 +21,6 @@ const PARLANT_SERVER_URL = "http://localhost:8800";
 
 export default function ParlantChat({
   listingType,
-  agentId,
   onComplete,
 }: ParlantChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,18 +29,50 @@ export default function ParlantChat({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [lastOffset, setLastOffset] = useState<number>(0);
   const [agentStatus, setAgentStatus] = useState<string>("");
+  const [agentId, setAgentId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, agentStatus]);
 
-  // Initialize session when component mounts
+  // Fetch available agent ID when component mounts
   useEffect(() => {
+    const fetchAgent = async () => {
+      try {
+        const response = await axios.get(`${PARLANT_SERVER_URL}/agents`);
+        const agents = response.data;
+        if (agents && agents.length > 0) {
+          setAgentId(agents[0].id);
+        } else {
+          setMessages([{
+            role: "agent",
+            content: "No agents available. Please start the Parlant server.",
+          }]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch agents:", error);
+        setMessages([{
+          role: "agent",
+          content: "Failed to connect to Parlant server.",
+        }]);
+      }
+    };
+
+    fetchAgent();
+  }, []);
+
+  // Initialize session when agent ID is available
+  useEffect(() => {
+    if (!agentId) return;
+
     const initializeSession = async () => {
       try {
         const response = await axios.post(`${PARLANT_SERVER_URL}/sessions`, {
@@ -49,7 +80,15 @@ export default function ParlantChat({
           title: `${listingType} Listing - ${new Date().toLocaleString()}`,
         });
 
-        setSessionId(response.data.id);
+        const newSessionId = response.data.id;
+        setSessionId(newSessionId);
+
+        // Send initial context message to guide the agent
+        await axios.post(`${PARLANT_SERVER_URL}/sessions/${newSessionId}/events`, {
+          kind: "message",
+          source: "customer",
+          message: `I want to create a ${listingType} listing`,
+        });
       } catch (error) {
         console.error("Failed to create session:", error);
         setMessages([{
@@ -165,8 +204,23 @@ export default function ParlantChat({
   return (
     <div className="flex flex-col h-full">
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 rounded-t-lg">
-        {messages.map((message, index) => (
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 rounded-t-lg">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <img
+              src="/listing-chat-placeholder.svg"
+              alt="Chat placeholder"
+              className="w-48 h-48 mb-6"
+            />
+            <h3 className="text-xl font-semibold text-[var(--color-accent-700)] mb-2">
+              Say Hi to Our Listing Assistant! 👋
+            </h3>
+            <p className="text-sm text-gray-600 max-w-md">
+              Tell me what you're looking for or selling!
+            </p>
+          </div>
+        ) : (
+          messages.map((message, index) => (
           <div
             key={index}
             className={`flex items-start gap-3 ${
@@ -196,10 +250,29 @@ export default function ParlantChat({
                   : "bg-[var(--color-primary-600)] text-white"
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              {message.role === "agent" ? (
+                <div className="text-sm prose prose-sm max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      img: ({ node, ...props }) => (
+                        <img
+                          {...props}
+                          className="rounded-lg my-2 max-w-full h-auto"
+                          style={{ maxHeight: "200px", objectFit: "cover" }}
+                        />
+                      ),
+                      p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0" />,
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              )}
             </div>
           </div>
-        ))}
+        )))}
 
         {/* Agent status indicator */}
         {agentStatus && (
