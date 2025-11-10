@@ -8,14 +8,68 @@ from ..config import BACKEND_API_URL
 
 
 @p.tool
+async def generate_listing_content(
+    context: p.ToolContext,
+    product_description: str,
+    listing_type: str,
+    images: Optional[list[str]] = None
+) -> p.ToolResult:
+    """
+    Generate title, description, and tags for a listing using AI.
+    This tool calls the backend generation endpoint and populates the form fields.
+
+    Args:
+        product_description: User's description of the product
+        listing_type: "buy" or "sell"
+        images: Optional list of image URLs
+
+    Returns: Confirmation that content was generated and added to the form
+    """
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{BACKEND_API_URL}/api/v1/generation/listing",
+                json={
+                    "images": images or [],
+                    "description": product_description,
+                    "listing_type": listing_type
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            # Emit event with generated content for frontend
+            await context.emit_event({
+                "kind": "tool_result",
+                "tool": "generate_listing_content",
+                "data": {
+                    "title": data.get("title"),
+                    "description": data.get("description"),
+                    "tags": data.get("tags", [])
+                }
+            })
+
+            return p.ToolResult(
+                f"✅ Generated listing content!\n- Title: {data.get('title')}\n- Description: {len(data.get('description', ''))} characters\n- Tags: {len(data.get('tags', []))} tags added"
+            )
+    except Exception as e:
+        return p.ToolResult(f"❌ Failed to generate listing content: {str(e)}")
+
+
+@p.tool
 async def get_listing_type_options(context: p.ToolContext) -> p.ToolResult:
     """Returns available listing types."""
     return p.ToolResult(["Buy", "Sell"])
 
 
 @p.tool
-async def search_unsplash_images(context: p.ToolContext, query: str, per_page: int = 6) -> p.ToolResult:
-    """Search for product images on Unsplash based on a query. Returns markdown-formatted images to display."""
+async def search_product_images(context: p.ToolContext, query: str, per_page: int = 6) -> p.ToolResult:
+    """
+    Search for product images on Unsplash and populate the form's image field.
+    This tool actually calls the backend and updates the listing form with images.
+
+    Returns a confirmation message - the images are added to the form automatically.
+    """
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -25,25 +79,37 @@ async def search_unsplash_images(context: p.ToolContext, query: str, per_page: i
             response.raise_for_status()
             data = response.json()
 
-            # Return markdown-formatted images for display
-            image_urls = [img.get("url") for img in data.get("images", [])]
+            image_urls = [img.get("url") for img in data.get("images", [])][:6]
 
-            # Format as markdown images in a grid (2 columns)
-            markdown_images = "\n\n".join([
-                f"![{query} {i+1}]({url})"
-                for i, url in enumerate(image_urls[:6])  # Show max 6 images
-            ])
+            # Store the images in context for the frontend to pick up
+            await context.emit_event({
+                "kind": "tool_result",
+                "tool": "search_product_images",
+                "data": {
+                    "images": image_urls,
+                    "query": query
+                }
+            })
 
             return p.ToolResult(
-                f"Here are some images of '{query}' I found:\n\n{markdown_images}\n\nDo any of these match what you're looking for?"
+                f"✅ Found {len(image_urls)} images for '{query}' and added them to your listing!"
             )
     except Exception as e:
-        return p.ToolResult(f"I had trouble searching for images: {str(e)}")
+        return p.ToolResult(f"❌ I had trouble searching for images: {str(e)}")
 
 
 @p.tool
-async def generate_images_with_ai(context: p.ToolContext, description: str, num_images: int = 3) -> p.ToolResult:
-    """Generate custom product images using AI based on a detailed text description. Use only when user asks for custom/generated images."""
+async def generate_custom_images(context: p.ToolContext, description: str, num_images: int = 3) -> p.ToolResult:
+    """
+    Generate custom product images using AI and add them to the form.
+    Use only when user asks for custom/generated images or isn't satisfied with search results.
+
+    Args:
+        description: Detailed description of the product/image to generate
+        num_images: Number of images to generate (default 3)
+
+    Returns: Confirmation that images were generated and added
+    """
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
@@ -55,17 +121,21 @@ async def generate_images_with_ai(context: p.ToolContext, description: str, num_
 
             image_urls = data.get("images", [])
 
-            # Format as markdown images
-            markdown_images = "\n\n".join([
-                f"![Generated {description} {i+1}]({url})"
-                for i, url in enumerate(image_urls)
-            ])
+            # Emit event with generated images
+            await context.emit_event({
+                "kind": "tool_result",
+                "tool": "generate_custom_images",
+                "data": {
+                    "images": image_urls,
+                    "description": description
+                }
+            })
 
             return p.ToolResult(
-                f"I've generated {len(image_urls)} custom images based on your description:\n\n{markdown_images}\n\nWhat do you think of these?"
+                f"✅ Generated {len(image_urls)} custom images and added them to your listing!"
             )
     except Exception as e:
-        return p.ToolResult(f"I had trouble generating images: {str(e)}")
+        return p.ToolResult(f"❌ Failed to generate images: {str(e)}")
 
 
 async def add_domain_glossary(agent: p.Agent) -> None:
@@ -97,32 +167,37 @@ async def create_buy_listing_journey(server: p.Server, agent: p.Agent) -> p.Jour
 
     # Proactively search for images based on product description
     t1 = await t0.target.transition_to(
-        chat_state="Use search_unsplash_images tool to find reference images based on the product they described. Show them the images and ask if these look like what they're searching for.",
+        chat_state="Use search_product_images tool to find reference images and add them to the form. Confirm the images were added.",
         condition="The user has described the product"
     )
 
-    # Ask about features and specifications
+    # Ask about features and generate listing content
     t2 = await t1.target.transition_to(
         chat_state="Ask what specific features, specifications, or condition they're looking for in this product",
     )
 
-    # Wrap up - NO price or location questions
+    # Generate listing content with gathered information
     t3 = await t2.target.transition_to(
-        chat_state="Summarize the product details (what they're looking for, features, and reference images). Let them know that price and location will be handled in the next step of the form."
+        chat_state="Use generate_listing_content tool to create title, description, and tags based on all the information gathered. Confirm what was generated."
     )
-    await t3.target.transition_to(state=p.END_JOURNEY)
+
+    # Wrap up
+    t4 = await t3.target.transition_to(
+        chat_state="Show a summary of what was completed: ✅ Images, ✅ Title, ✅ Description, ✅ Tags. Let them know they can now proceed to the next step for price and location."
+    )
+    await t4.target.transition_to(state=p.END_JOURNEY)
 
     # Guidelines for proactive behavior
     await journey.create_guideline(
         condition="The user describes a product",
-        action="Immediately search for reference images using search_unsplash_images tool to show them visual examples",
-        tools=[search_unsplash_images],
+        action="Immediately use search_product_images tool to find and add reference images to the form",
+        tools=[search_product_images],
     )
 
     await journey.create_guideline(
         condition="The user explicitly asks to generate custom images or isn't satisfied with search results",
-        action="Offer to use generate_images_with_ai tool to create custom images, or search again with different terms",
-        tools=[search_unsplash_images, generate_images_with_ai],
+        action="Use generate_custom_images tool to create custom images and add them to the form",
+        tools=[generate_custom_images],
     )
 
     await journey.create_guideline(
@@ -167,11 +242,16 @@ async def create_sell_listing_journey(server: p.Server, agent: p.Agent) -> p.Jou
         chat_state="Ask what features the product has and what accessories/items are included with it"
     )
 
-    # Wrap up - NO price or location questions
+    # Generate listing content with gathered information
     t4 = await t3.target.transition_to(
-        chat_state="Summarize the product details (what they're selling, condition, features, and photos). Let them know that price, location, and shipping will be handled in the next step of the form."
+        chat_state="Use generate_listing_content tool to create title, description, and tags based on all the information gathered (product details, condition, features). Confirm what was generated."
     )
-    await t4.target.transition_to(state=p.END_JOURNEY)
+
+    # Wrap up
+    t5 = await t4.target.transition_to(
+        chat_state="Show a summary of what was completed: ✅ Photos (uploaded), ✅ Title, ✅ Description, ✅ Tags. Let them know they can now proceed to the next step for price and location."
+    )
+    await t5.target.transition_to(state=p.END_JOURNEY)
 
     # Guidelines for sell listings
     await journey.create_guideline(
