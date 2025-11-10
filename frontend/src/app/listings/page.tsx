@@ -3,10 +3,41 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingCart, Package, Clock, MapPin, Eye, Heart, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
-import { mockSaleListings, mockWantedListings, getMockMatchedListings, getMatchCount, LISTINGS_TABS, type Listing } from "@/utils/mock-all-data-used";
+import { LISTINGS_TABS } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import CategoryDropdown from "@/components/ui/CategoryDropdown";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { useUser } from "@clerk/nextjs";
+import { fetchUserListings } from "@/lib/api/listings";
+import { fetchListingRecommendations } from "@/lib/api/recommendations";
+import { fetchThreadById } from "@/lib/api/threads";
+import type { Listing as ApiListing } from "@/types/listing";
+
+// Helper functions for calculating listing expiration based on thread tier
+// Assuming all users are premium for now
+function getListingDurationByTier(threadTier: number): number {
+  // Premium user durations (in days)
+  switch (threadTier) {
+    case 0:
+      return 7;
+    case 1:
+      return 14;
+    case 2:
+      return 30;
+    case 3:
+      return 60;
+    default:
+      return 7;
+  }
+}
+
+function calculateExpiresAt(createdAt: string, threadTier: number): string {
+  const created = new Date(createdAt);
+  const durationDays = getListingDurationByTier(threadTier);
+  const expires = new Date(created.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  return expires.toISOString();
+}
 
 // Helper functions for timer calculations
 function getTimeRemaining(expiresAt: string) {
@@ -41,17 +72,40 @@ function getTimeRemaining(expiresAt: string) {
   }
 }
 
-function getExtensionPrice(subscriptionTier: string): string {
-  switch (subscriptionTier) {
-    case "basic":
-      return "RM 4.25"; // $1 = ~RM 4.25
-    case "pro":
-      return "RM 2.15"; // $0.50 = ~RM 2.15
-    case "enterprise":
-      return "RM 1.70"; // Bulk discount
+function getExtensionPrice(tier: number): string {
+  // Extension price based on thread tier (assuming premium users)
+  switch (tier) {
+    case 0:
+      return "RM 4.25"; // Tier 0
+    case 1:
+      return "RM 3.50"; // Tier 1
+    case 2:
+      return "RM 2.15"; // Tier 2
+    case 3:
+      return "RM 1.70"; // Tier 3
     default:
       return "RM 4.25";
   }
+}
+
+// Convert API listing to UI listing format
+interface UiListing extends ApiListing {
+  expiresAt: string;
+  matchCount: number;
+  threadTier: number; // Store the thread tier with the listing
+}
+
+function convertApiListingToUiListing(
+  apiListing: ApiListing,
+  threadTier: number,
+  matchCount: number
+): UiListing {
+  return {
+    ...apiListing,
+    expiresAt: calculateExpiresAt(apiListing.created_at, threadTier),
+    matchCount,
+    threadTier,
+  };
 }
 
 
@@ -62,11 +116,11 @@ const tabs = LISTINGS_TABS.map(tab => ({
 }));
 
 // Mobile-specific compact card component
-function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {
+function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
-  const extensionPrice = getExtensionPrice(listing.subscriptionTier);
-  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
+  const extensionPrice = getExtensionPrice(listing.threadTier);
+  const matchCount = listing.matchCount;
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -139,37 +193,37 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing;
             {listing.title}
           </h3>
 
-          {/* Price/Budget */}
+          {/* Price */}
           <div className="mb-2">
             <span className="font-bold text-base text-secondary-700">
-              {type === "sale" ? listing.price : listing.budget}
+              {listing.currency} {listing.price}
             </span>
           </div>
 
-          {/* Category badge */}
-          <div className="mb-2">
-            <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary-200 text-accent-600">
-              {listing.category}
-            </span>
-          </div>
+          {/* Category badge - using tags */}
+          {listing.tags && listing.tags.length > 0 && (
+            <div className="mb-2">
+              <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary-200 text-accent-600">
+                {listing.tags[0]}
+              </span>
+            </div>
+          )}
 
           {/* Footer - compact */}
           <div className="space-y-1 mt-auto">
             {/* Location */}
-            <div className="flex items-center gap-1 text-[10px] text-accent-400">
-              <MapPin className="w-[11px] h-[11px]" />
-              <span className="truncate">{listing.location}</span>
-            </div>
+            {listing.creator_location && (
+              <div className="flex items-center gap-1 text-[10px] text-accent-400">
+                <MapPin className="w-[11px] h-[11px]" />
+                <span className="truncate">{listing.creator_location}</span>
+              </div>
+            )}
 
-            {/* Views and Likes */}
+            {/* Views */}
             <div className="flex items-center gap-3 text-[11px] text-accent-400">
               <div className="flex items-center gap-1">
                 <Eye size={12} />
-                <span>{listing.views}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Heart size={12} />
-                <span>{listing.likes}</span>
+                <span>{listing.views || 0}</span>
               </div>
             </div>
           </div>
@@ -179,12 +233,12 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: Listing;
   );
 }
 
-function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: Listing; type: "sale" | "wanted" | "matched"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiListing; type: "sale" | "wanted" | "matched"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
-  const extensionPrice = getExtensionPrice(listing.subscriptionTier);
-  const matchCount = getMatchCount(listing.id, type === "sale" ? "sell" : "buy");
+  const extensionPrice = getExtensionPrice(listing.threadTier);
+  const matchCount = listing.matchCount;
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -275,16 +329,18 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
                   {listing.title}
                 </h3>
                 <span className="font-bold text-sm text-secondary-700 ml-2 whitespace-nowrap">
-                  {type === "sale" ? listing.price : listing.budget}
+                  {listing.currency} {listing.price}
                 </span>
               </div>
 
-              {/* Category badge */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
-                  {listing.category}
-                </span>
-              </div>
+              {/* Category badge - using tags */}
+              {listing.tags && listing.tags.length > 0 && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
+                    {listing.tags[0]}
+                  </span>
+                </div>
+              )}
 
               {/* Description */}
               <div className="mb-2">
@@ -297,26 +353,24 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
             {/* Footer - always at bottom */}
             <div className="space-y-1 mt-auto">
               {/* Location */}
-              <div className="flex items-center gap-1 text-xs text-accent-400">
-                <MapPin size={12} />
-                <span>{listing.location}</span>
-              </div>
+              {listing.creator_location && (
+                <div className="flex items-center gap-1 text-xs text-accent-400">
+                  <MapPin size={12} />
+                  <span>{listing.creator_location}</span>
+                </div>
+              )}
 
               {/* Post Time */}
               <div className="flex items-center gap-1 text-xs text-accent-400">
                 <Clock size={12} />
-                <span>{listing.timestamp}</span>
+                <span>{new Date(listing.created_at).toLocaleDateString()}</span>
               </div>
 
-              {/* Views and Likes */}
+              {/* Views */}
               <div className="flex items-center gap-4 text-xs text-accent-400">
                 <div className="flex items-center gap-1">
                   <Eye size={12} />
-                  <span>{listing.views} views</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Heart size={12} />
-                  <span>{listing.likes} likes</span>
+                  <span>{listing.views || 0} views</span>
                 </div>
               </div>
             </div>
@@ -393,17 +447,19 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
           </h3>
         </div>
 
-        {/* Category badge */}
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
-            {listing.category}
-          </span>
-        </div>
+        {/* Category badge - using tags */}
+        {listing.tags && listing.tags.length > 0 && (
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
+              {listing.tags[0]}
+            </span>
+          </div>
+        )}
 
-        {/* Price/Budget */}
+        {/* Price */}
         <div className="mb-2">
           <span className="font-bold text-lg text-secondary-700">
-            {type === "sale" ? listing.price : listing.budget}
+            {listing.currency} {listing.price}
           </span>
         </div>
 
@@ -415,26 +471,24 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
         {/* Footer - always at bottom */}
         <div className="space-y-1 mt-auto">
           {/* Location */}
-          <div className="flex items-center gap-1 text-xs text-accent-400">
-            <MapPin size={12} />
-            <span className="truncate">{listing.location}</span>
-          </div>
+          {listing.creator_location && (
+            <div className="flex items-center gap-1 text-xs text-accent-400">
+              <MapPin size={12} />
+              <span className="truncate">{listing.creator_location}</span>
+            </div>
+          )}
 
           {/* Post Time */}
           <div className="flex items-center gap-1 text-xs text-accent-400">
             <Clock size={12} />
-            <span>{listing.timestamp}</span>
+            <span>{new Date(listing.created_at).toLocaleDateString()}</span>
           </div>
 
-          {/* Views and Likes */}
+          {/* Views */}
           <div className="flex items-center gap-4 text-xs text-accent-400">
             <div className="flex items-center gap-1">
               <Eye size={12} />
-              <span>{listing.views} views</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Heart size={12} />
-              <span>{listing.likes} likes</span>
+              <span>{listing.views || 0} views</span>
             </div>
           </div>
         </div>
@@ -447,11 +501,17 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: List
 function ListingsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useUser();
+  const getApiClient = useClerkApiClient();
+
   const [activeTab, setActiveTab] = useState<"sale" | "wanted" | "matched">("sale");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [listings, setListings] = useState<UiListing[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const type = searchParams.get("type") as "sale" | "wanted" | "matched";
@@ -469,20 +529,137 @@ function ListingsPageContent() {
     }
   }, [searchParams]);
 
-  // Filter to show only the user's own listings
-  const allListings = activeTab === "sale" ? mockSaleListings : activeTab === "wanted" ? mockWantedListings : getMockMatchedListings();
-  const userListings = allListings.filter(listing => listing.isOwner === true);
-  const categories = [...new Set(userListings.map(listing => listing.category))];
+  // Fetch user's listings
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const apiClient = await getApiClient();
+
+        // Get current user profile to fetch user ID
+        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
+
+        if (activeTab === "matched") {
+          // For matched tab, fetch all user listings and filter for those with matches
+          const saleListings = await fetchUserListings(apiClient.instance, userProfile.id, {
+            listing_type: "sale",
+            limit: 100,
+          });
+
+          const wantedListings = await fetchUserListings(apiClient.instance, userProfile.id, {
+            listing_type: "wanted",
+            limit: 100,
+          });
+
+          const allUserListings = [...saleListings.listings, ...wantedListings.listings];
+          const matchedListingsData: UiListing[] = [];
+
+          for (const listing of allUserListings) {
+            try {
+              const recommendations = await fetchListingRecommendations(
+                apiClient.instance,
+                listing.id,
+                "matched"
+              );
+
+              if (recommendations.recommendations.length > 0) {
+                // Fetch thread tier from thread API
+                try {
+                  const thread = await fetchThreadById(apiClient.instance, listing.thread_id);
+                  matchedListingsData.push(
+                    convertApiListingToUiListing(listing, thread.tier, recommendations.recommendations.length)
+                  );
+                } catch (threadErr) {
+                  console.error(`Error fetching thread ${listing.thread_id}:`, threadErr);
+                  // Fallback to tier 0 if thread fetch fails
+                  matchedListingsData.push(
+                    convertApiListingToUiListing(listing, 0, recommendations.recommendations.length)
+                  );
+                }
+              }
+            } catch (err) {
+              console.error(`Error fetching recommendations for listing ${listing.id}:`, err);
+            }
+          }
+
+          setListings(matchedListingsData);
+        } else {
+          // For sale/wanted tabs, fetch listings of that type
+          const response = await fetchUserListings(apiClient.instance, userProfile.id, {
+            listing_type: activeTab === "sale" ? "sale" : "wanted",
+            limit: 100,
+          });
+
+          // Convert API listings to UI listings
+          const uiListings: UiListing[] = [];
+          for (const listing of response.listings) {
+            try {
+              // Fetch thread tier from thread API
+              const thread = await fetchThreadById(apiClient.instance, listing.thread_id);
+
+              // Fetch match count for this listing
+              try {
+                const recommendations = await fetchListingRecommendations(
+                  apiClient.instance,
+                  listing.id,
+                  "matched"
+                );
+
+                uiListings.push(
+                  convertApiListingToUiListing(listing, thread.tier, recommendations.recommendations.length)
+                );
+              } catch (recErr) {
+                console.error(`Error fetching recommendations for listing ${listing.id}:`, recErr);
+                // Still add the listing even if recommendations fetch fails
+                uiListings.push(convertApiListingToUiListing(listing, thread.tier, 0));
+              }
+            } catch (threadErr) {
+              console.error(`Error fetching thread ${listing.thread_id}:`, threadErr);
+              // Fallback to tier 0 if thread fetch fails
+              try {
+                const recommendations = await fetchListingRecommendations(
+                  apiClient.instance,
+                  listing.id,
+                  "matched"
+                );
+                uiListings.push(convertApiListingToUiListing(listing, 0, recommendations.recommendations.length));
+              } catch (recErr) {
+                uiListings.push(convertApiListingToUiListing(listing, 0, 0));
+              }
+            }
+          }
+
+          setListings(uiListings);
+        }
+      } catch (err) {
+        console.error("Error fetching listings:", err);
+        setError("Failed to load listings");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeTab]); // Re-fetch when user or activeTab changes
+
+  // Extract unique categories from tags
+  const categories = [...new Set(listings.flatMap(listing => listing.tags || []))];
 
   // Apply category and search filters
-  let currentListings = selectedCategory ? userListings.filter(listing => listing.category === selectedCategory) : userListings;
+  let currentListings = selectedCategory
+    ? listings.filter(listing => listing.tags?.includes(selectedCategory))
+    : listings;
 
   // Apply search filter
   if (searchQuery.trim()) {
     currentListings = currentListings.filter(listing =>
       listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.location.toLowerCase().includes(searchQuery.toLowerCase())
+      (listing.creator_location && listing.creator_location.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }
 
@@ -588,21 +765,37 @@ function ListingsPageContent() {
           )}
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="text-accent-500">Loading listings...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <div className="text-red-500">{error}</div>
+          </div>
+        )}
+
         {/* Listings Grid */}
-        <div className={viewMode === "grid" ? "grid gap-4 grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-          {currentListings.map((listing) => (
-            <ProductCard
-              key={listing.id}
-              listing={listing}
-              type={activeTab}
-              viewMode={viewMode}
-              isHighlighted={highlightId === listing.id}
-            />
-          ))}
-        </div>
+        {!loading && !error && (
+          <div className={viewMode === "grid" ? "grid gap-4 grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+            {currentListings.map((listing) => (
+              <ProductCard
+                key={listing.id}
+                listing={listing}
+                type={activeTab}
+                viewMode={viewMode}
+                isHighlighted={highlightId === listing.id}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
-        {currentListings.length === 0 && (
+        {!loading && !error && currentListings.length === 0 && (
           <div className="text-center py-12">
             <ActiveIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-accent-600 mb-2">
