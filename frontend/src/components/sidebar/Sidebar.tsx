@@ -45,13 +45,14 @@ const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/profile", label: "Profile", icon: User },
-  { href: "/settings", label: "Settings", icon: Settings },
+  // { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+import { SignedIn } from '@clerk/nextjs'
 
 // Mock chat history data - 2nd hand marketplace purchase decisions
 // Use centralized chat history data
 const mockChatHistory = SIDEBAR_CHAT_HISTORY;
-
 
 function FollowingMenuItem() {
   const [isOpen, setIsOpen] = useState(false);
@@ -486,17 +487,19 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
+          <SignedIn>
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <FollowingMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <FollowingMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SignedIn>
 
           <div className="ml-1 mr-5">
             <SidebarSeparator />
@@ -522,17 +525,19 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
+          <SignedIn>
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <MatchedListingsMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <MatchedListingsMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SignedIn>
 
         </SidebarContent>{" "}
         {/* <-- This closes SidebarContent */}
