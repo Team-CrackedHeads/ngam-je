@@ -124,12 +124,13 @@ Create a DIFFERENT title that's more engaging. Respond with ONLY the new title t
         raise ValueError(f"Failed to regenerate title: {str(e)}")
 
 
-async def regenerate_description(context: dict) -> str:
+async def regenerate_description(context: dict, listing_type: str = "sell") -> str:
     """
     Regenerate only the description.
 
     Args:
         context: Current listing data (title, description, tags)
+        listing_type: "buy" or "sell" - determines the perspective of the description
 
     Returns:
         New description string
@@ -138,24 +139,49 @@ async def regenerate_description(context: dict) -> str:
     if not settings.gemini_api_key:
         raise ValueError("Gemini API key not configured")
 
-    logger.info("🔄 Regenerating description")
+    logger.info(f"🔄 Regenerating description for {listing_type} listing")
 
     genai.configure(api_key=settings.gemini_api_key)
     model = genai.GenerativeModel(settings.default_model)
 
-    prompt = f"""Generate a detailed, compelling marketplace listing description (200-400 characters).
+    # Different prompts for buy vs sell
+    if listing_type == "buy":
+        prompt = f"""Generate a detailed, compelling BUY listing description (200-400 characters).
+
+This is a WANTED/LOOKING TO BUY listing - the user wants to PURCHASE this product from someone else.
+
+Context:
+- Title: {context.get('title', '')}
+- User's description of what they want: {context.get('description', '')}
+- Tags: {', '.join(context.get('tags', []))}
+
+Write from the buyer's perspective. Focus on:
+- What condition they're looking for
+- What features they need
+- Why they want it
+- Their budget/timeline preferences
+
+DO NOT write as if you're selling the product. Write as if you're looking to BUY it.
+
+Respond with ONLY the description text, nothing else."""
+    else:
+        prompt = f"""Generate a detailed, compelling SELL listing description (200-400 characters).
+
+This is a FOR SALE listing - the user is SELLING their product to potential buyers.
 
 Context:
 - Title: {context.get('title', '')}
 - Current description: {context.get('description', '')}
 - Tags: {', '.join(context.get('tags', []))}
 
-Create a DIFFERENT description that's more compelling. Respond with ONLY the new description text, nothing else."""
+Write from the seller's perspective. Highlight the product's features, condition, and value.
+
+Respond with ONLY the description text, nothing else."""
 
     try:
         response = model.generate_content(prompt)
         new_description = response.text.strip().strip('"').strip("'")
-        logger.info(f"✅ Regenerated description")
+        logger.info(f"✅ Regenerated {listing_type} description")
         return new_description
     except Exception as e:
         logger.error(f"❌ Failed to regenerate description: {e}", exc_info=True)

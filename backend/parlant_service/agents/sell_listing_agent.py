@@ -63,18 +63,21 @@ async def generate_title(context: p.ToolContext, product_context: str) -> p.Tool
 @p.tool
 async def generate_description(context: p.ToolContext, product_context: str) -> p.ToolResult:
     """
-    Generate a listing description using AI based on the product context.
+    Generate a SELL listing description using AI based on the product context.
 
     Args:
         product_context: Context about the product (condition, features, accessories)
 
-    Returns: Generated description
+    Returns: Generated description for a sell listing
     """
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 f"{BACKEND_API_URL}/api/v1/generation/description",
-                json={"context": {"description": product_context}}
+                json={
+                    "context": {"description": product_context},
+                    "listing_type": "sell"  # Explicitly tell the API this is a SELL listing
+                }
             )
             response.raise_for_status()
             data = response.json()
@@ -91,7 +94,7 @@ async def generate_tags(context: p.ToolContext, product_context: str) -> p.ToolR
     Args:
         product_context: Context about the product (title, description, features)
 
-    Returns: Generated tags
+    Returns: Generated tags in structured format for preview
     """
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -102,7 +105,23 @@ async def generate_tags(context: p.ToolContext, product_context: str) -> p.ToolR
             response.raise_for_status()
             data = response.json()
             tags = data.get('tags', [])
-            return p.ToolResult(f"Generated tags: {', '.join(tags)}")
+
+            return p.ToolResult(
+                data={
+                    "action": "show_tags_preview",
+                    "tags": tags,
+                },
+                metadata={
+                    "step": "tags",
+                    "tag_count": len(tags),
+                    "timestamp": datetime.now().isoformat()
+                },
+                canned_response_fields={
+                    "tags": tags,
+                    "tags_list": ", ".join(tags),
+                    "tag_count": len(tags)
+                }
+            )
     except Exception as e:
         return p.ToolResult(f"Failed to generate tags: {str(e)}")
 
@@ -141,7 +160,7 @@ async def generate_images(context: p.ToolContext, description: str, num_images: 
 
 @p.tool
 async def search_product_images(context: p.ToolContext, query: str, per_page: int = 6) -> p.ToolResult:
-    """Search for product images on Unsplash."""
+    """Search for product images on Unsplash and set them in the form."""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -152,10 +171,17 @@ async def search_product_images(context: p.ToolContext, query: str, per_page: in
             data = response.json()
             image_urls = [img.get("url") for img in data.get("images", [])][:6]
 
-            return p.ToolResult({
-                "action": "set_images",
-                "images": image_urls,
-            })
+            return p.ToolResult(
+                data={
+                    "action": "set_images",
+                    "images": image_urls,
+                },
+                metadata={
+                    "step": "images",
+                    "image_count": len(image_urls),
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
     except Exception as e:
         return p.ToolResult(f"I had trouble searching for images: {str(e)}")
 
@@ -315,20 +341,32 @@ async def create_sell_listing_agent(server: p.Server) -> p.Agent:
         chat_state="Offer to generate relevant tags based on the product. Ask if they'd like that."
     )
 
+    # Generate tags
     t13 = await t12.target.transition_to(
-        tool_state=set_listing_tags,
+        tool_state=generate_tags,
         condition="User wants tags"
     )
 
+    # Show generated tags in chat and ask for approval
     t14 = await t13.target.transition_to(
+        chat_state="Ask if they want to use the generated tags shown above."
+    )
+
+    # Set tags when approved
+    t15 = await t14.target.transition_to(
+        tool_state=set_listing_tags,
+        condition="User approves the tags"
+    )
+
+    t16 = await t15.target.transition_to(
         tool_state=show_checklist
     )
 
-    t15 = await t14.target.transition_to(
+    t17 = await t16.target.transition_to(
         chat_state="Perfect! All product details complete. They can now proceed to pricing and location."
     )
 
-    await t15.target.transition_to(state=p.END_JOURNEY)
+    await t17.target.transition_to(state=p.END_JOURNEY)
 
     # Guidelines for edge cases
     await journey.create_guideline(
@@ -344,6 +382,21 @@ async def create_sell_listing_agent(server: p.Server) -> p.Agent:
     await journey.create_guideline(
         condition="User asks about price, location, or shipping",
         action="Explain you're only helping with product details - price, location, and shipping come in the next step.",
+    )
+
+    await journey.create_guideline(
+        condition="Images have been searched/set via search_product_images tool",
+        action="DO NOT show or list the image URLs in your message. The images are displayed in a preview card automatically. Just acknowledge that you've added them and move forward.",
+    )
+
+    await journey.create_guideline(
+        condition="Tags have been generated via generate_tags tool",
+        action="DO NOT list out the tags in your message as text. The tags are shown in a preview card. Just ask if they want to use the generated tags.",
+    )
+
+    await journey.create_guideline(
+        condition="Image search returned 0 results or failed",
+        action="Acknowledge that no images were found and reassure them that they can upload their own actual product photos through the form. Remind them that real photos of their item are important for sell listings. Keep it friendly and move forward.",
     )
 
     await agent.create_guideline(

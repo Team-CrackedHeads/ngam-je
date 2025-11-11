@@ -122,18 +122,21 @@ async def generate_title(context: p.ToolContext, product_context: str) -> p.Tool
 @p.tool
 async def generate_description(context: p.ToolContext, product_context: str) -> p.ToolResult:
     """
-    Generate a listing description using AI based on the product context.
+    Generate a BUY listing description using AI based on the product context.
 
     Args:
         product_context: Context about the product and what user is looking for
 
-    Returns: Generated description
+    Returns: Generated description for a buy listing
     """
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 f"{BACKEND_API_URL}/api/v1/generation/description",
-                json={"context": {"description": product_context}}
+                json={
+                    "context": {"description": product_context},
+                    "listing_type": "buy"  # Explicitly tell the API this is a BUY listing
+                }
             )
             response.raise_for_status()
             data = response.json()
@@ -194,7 +197,7 @@ async def generate_images(context: p.ToolContext, description: str, num_images: 
 
 @p.tool
 async def search_product_images(context: p.ToolContext, query: str, per_page: int = 6) -> p.ToolResult:
-    """Search for product images on Unsplash."""
+    """Search for product images on Unsplash and set them in the form."""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -205,10 +208,17 @@ async def search_product_images(context: p.ToolContext, query: str, per_page: in
             data = response.json()
             image_urls = [img.get("url") for img in data.get("images", [])][:6]
 
-            return p.ToolResult({
-                "action": "set_images",
-                "images": image_urls,
-            })
+            return p.ToolResult(
+                data={
+                    "action": "set_images",
+                    "images": image_urls,
+                },
+                metadata={
+                    "step": "images",
+                    "image_count": len(image_urls),
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
     except Exception as e:
         return p.ToolResult(f"I had trouble searching for images: {str(e)}")
 
@@ -221,7 +231,7 @@ async def generate_tags(context: p.ToolContext, product_context: str) -> p.ToolR
     Args:
         product_context: Context about the product (title, description, features)
 
-    Returns: Generated tags
+    Returns: Generated tags in structured format for preview
     """
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -232,7 +242,23 @@ async def generate_tags(context: p.ToolContext, product_context: str) -> p.ToolR
             response.raise_for_status()
             data = response.json()
             tags = data.get('tags', [])
-            return p.ToolResult(f"Generated tags: {', '.join(tags)}")
+
+            return p.ToolResult(
+                data={
+                    "action": "show_tags_preview",
+                    "tags": tags,
+                },
+                metadata={
+                    "step": "tags",
+                    "tag_count": len(tags),
+                    "timestamp": datetime.now().isoformat()
+                },
+                canned_response_fields={
+                    "tags": tags,
+                    "tags_list": ", ".join(tags),
+                    "tag_count": len(tags)
+                }
+            )
     except Exception as e:
         return p.ToolResult(f"Failed to generate tags: {str(e)}")
 
@@ -505,9 +531,9 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
         tool_state=show_checklist
     )
 
-    # Tell user they need a description next
+    # Tell user they need a description next and ASK if they want helpful research
     t6 = await t5.target.transition_to(
-        chat_state="Tell them the next step is the description. Explain that you'll show them some helpful research first, then they just need to type a short description of what they're looking for (condition, features, etc)."
+        chat_state="Tell them the next step is the description. Offer to show them some helpful product research to make it easier. Ask in a friendly way: 'Would you like me to show you some helpful info about this product first? It might make writing your description easier!'"
     )
 
     # Show product research card as helper
@@ -517,7 +543,7 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
 
     # Ask for their short description
     t8 = await t7.target.transition_to(
-        chat_state="Now ask them to type a brief description - what condition? any specific features they need? Keep it short and simple."
+        chat_state="Great! Now, please type a brief description of what you're looking for - what condition? any specific features you need? Keep it short and simple."
     )
 
     # Generate full description from their input
@@ -554,6 +580,7 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
         condition="User wants help finding reference images"
     )
 
+    # After images are set, just move to checklist (no need to show URLs)
     t15 = await t14.target.transition_to(
         tool_state=show_checklist
     )
@@ -581,9 +608,9 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
         condition="User wants tags"
     )
 
-    # Show generated tags in chat and ask for approval
+    # Ask for approval (tags are already shown in preview card)
     t20 = await t19.target.transition_to(
-        chat_state="Present the generated tags in your message (show them as a list). Ask if they want to use these tags."
+        chat_state="Ask if they want to use the generated tags shown above."
     )
 
     # Set tags when approved
@@ -628,6 +655,21 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
     await journey.create_guideline(
         condition="User wants to skip a step or come back to it later",
         action="Be accommodating and flexible. Allow them to skip the current step and move forward, reminding them they can always update details later through the form.",
+    )
+
+    await journey.create_guideline(
+        condition="Images have been searched/set via search_product_images tool",
+        action="DO NOT show or list the image URLs in your message. The images are displayed in the form automatically. Just acknowledge that you've added them and move forward.",
+    )
+
+    await journey.create_guideline(
+        condition="Tags have been generated via generate_tags tool",
+        action="DO NOT list out the tags in your message as text. The tags are shown in a preview component. Just ask if they want to use the generated tags.",
+    )
+
+    await journey.create_guideline(
+        condition="Image search returned 0 results or failed",
+        action="Acknowledge that no images were found and reassure them that they can upload their own photos later through the form, or skip images for now. Keep it friendly and move forward.",
     )
 
     # Agent-level guidelines (active across all contexts)

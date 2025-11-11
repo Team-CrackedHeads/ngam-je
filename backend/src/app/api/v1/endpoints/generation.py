@@ -20,6 +20,7 @@ router = APIRouter()
 class RegenerateFieldRequest(BaseModel):
     """Request model for regenerating a specific field."""
     context: dict  # Contains current title, description, tags
+    listing_type: str | None = None  # "buy" or "sell" - optional for backwards compatibility
 
 
 class GenerateImagesRequest(BaseModel):
@@ -58,14 +59,18 @@ async def regenerate_description_endpoint(request: RegenerateFieldRequest) -> di
     Regenerate only the description field based on context.
 
     Args:
-        request: RegenerateFieldRequest with context (title, description, tags)
+        request: RegenerateFieldRequest with context (title, description, tags) and optional listing_type
 
     Returns:
         dict with new description string
     """
     try:
-        logger.info("🔄 Regenerating description")
-        new_description = await generation.regenerate_description(context=request.context)
+        listing_type = request.listing_type or "sell"  # Default to sell for backwards compatibility
+        logger.info(f"🔄 Regenerating description for {listing_type} listing")
+        new_description = await generation.regenerate_description(
+            context=request.context,
+            listing_type=listing_type
+        )
         return {"description": new_description}
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

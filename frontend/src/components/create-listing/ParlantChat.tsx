@@ -9,13 +9,15 @@ import ReactMarkdown from "react-markdown";
 import ChatTodoList, { TodoItem } from "./ChatTodoList";
 
 interface Message {
-  role: "user" | "agent" | "checklist" | "product_research";
+  role: "user" | "agent" | "checklist" | "product_research" | "images_preview" | "tags_preview";
   content: string;
   todoList?: TodoItem[];
   productResearch?: {
     productName: string;
     research: string;
   };
+  imagesPreview?: string[];
+  tagsPreview?: string[];
 }
 
 interface ParlantChatProps {
@@ -268,10 +270,33 @@ export default function ParlantChat({
         }
         break;
 
-      case "add_images":
+      case "set_images":
         if (result.images && onFieldUpdate) {
           onFieldUpdate("images", result.images);
           markTodoComplete("images");
+          // Show images preview in chat
+          setMessages(prev => [
+            ...prev,
+            {
+              role: "images_preview",
+              content: "",
+              imagesPreview: result.images,
+            }
+          ]);
+        }
+        break;
+
+      case "show_tags_preview":
+        // Show tags preview without setting them yet
+        if (result.tags) {
+          setMessages(prev => [
+            ...prev,
+            {
+              role: "tags_preview",
+              content: "",
+              tagsPreview: result.tags,
+            }
+          ]);
         }
         break;
 
@@ -413,7 +438,7 @@ export default function ParlantChat({
               className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                 message.role === "checklist"
                   ? "bg-[var(--color-accent-700)]"
-                  : message.role === "product_research"
+                  : message.role === "product_research" || message.role === "images_preview" || message.role === "tags_preview"
                   ? "bg-[var(--color-primary-600)]"
                   : message.role === "agent"
                   ? "bg-[var(--color-secondary-500)]"
@@ -422,7 +447,7 @@ export default function ParlantChat({
             >
               {message.role === "checklist" ? (
                 <ClipboardList className="w-5 h-5 text-[var(--color-secondary-500)]" />
-              ) : message.role === "product_research" ? (
+              ) : message.role === "product_research" || message.role === "images_preview" || message.role === "tags_preview" ? (
                 <Bot className="w-5 h-5 text-white" />
               ) : message.role === "agent" ? (
                 <Bot className="w-5 h-5 text-black" />
@@ -460,6 +485,50 @@ export default function ParlantChat({
                     >
                       {message.productResearch.research}
                     </ReactMarkdown>
+                  </div>
+                </div>
+              )
+            ) : message.role === "images_preview" ? (
+              /* Images Preview Card */
+              message.imagesPreview && message.imagesPreview.length > 0 && (
+                <div className="max-w-[80%] bg-gradient-to-br from-[var(--color-primary-50)] to-[var(--color-primary-100)] border-2 border-[var(--color-primary-300)] rounded-xl p-4 shadow-md">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[var(--color-primary-300)]">
+                    <Bot className="w-5 h-5 text-[var(--color-primary-700)]" />
+                    <h3 className="font-semibold text-[var(--color-primary-900)]">
+                      Found {message.imagesPreview.length} Images
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {message.imagesPreview.slice(0, 6).map((url, idx) => (
+                      <img
+                        key={idx}
+                        src={url}
+                        alt={`Product ${idx + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border border-[var(--color-primary-200)]"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : message.role === "tags_preview" ? (
+              /* Tags Preview Card */
+              message.tagsPreview && (
+                <div className="max-w-[80%] bg-gradient-to-br from-[var(--color-primary-50)] to-[var(--color-primary-100)] border-2 border-[var(--color-primary-300)] rounded-xl p-4 shadow-md">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[var(--color-primary-300)]">
+                    <Bot className="w-5 h-5 text-[var(--color-primary-700)]" />
+                    <h3 className="font-semibold text-[var(--color-primary-900)]">
+                      Generated Tags
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {message.tagsPreview.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-[var(--color-primary-200)] text-[var(--color-primary-900)] rounded-full text-sm font-medium"
+                      >
+                        {tag}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )
