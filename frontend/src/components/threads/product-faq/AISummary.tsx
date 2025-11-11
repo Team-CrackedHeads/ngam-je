@@ -197,6 +197,40 @@ export default function AISummary({
                 </div>
               )}
             </div>
+            
+            {/* Teaser fade when collapsed */}
+            {!isExpanded && content && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute left-0 right-0 bottom-0 h-16"
+                style={{ background: "linear-gradient(to top, var(--color-card) 60%, transparent)" }}
+              />
+            )}
+          </div>
+
+          {/* Bottom controls */}
+          <div className="px-4 md:px-6 lg:px-8 pb-4 md:pb-6">
+            {/* Expand/Collapse */}
+            {content && ( // Only show expand/collapse if there's content to expand/collapse
+              <div className="flex justify-center mb-3">
+                <button
+                  onClick={handleExpandToggle}
+                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium border border-border bg-card hover:bg-secondary/60"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Show More
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Disclaimer */}
             <p className="mt-3 text-[11px] text-muted-foreground text-center">
