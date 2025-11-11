@@ -114,7 +114,18 @@ async def generate_title(context: p.ToolContext, product_context: str) -> p.Tool
             )
             response.raise_for_status()
             data = response.json()
-            return p.ToolResult(f"Generated title: {data.get('title')}")
+            title = data.get('title', '')
+            return p.ToolResult(
+                data={
+                    "action": "show_title_preview",
+                    "title": title
+                },
+                metadata={
+                    "step": "title",
+                    "timestamp": datetime.now().isoformat()
+                }
+                # Removed canned_response_fields to prevent auto-extraction
+            )
     except Exception as e:
         return p.ToolResult(f"Failed to generate title: {str(e)}")
 
@@ -140,7 +151,18 @@ async def generate_description(context: p.ToolContext, product_context: str) -> 
             )
             response.raise_for_status()
             data = response.json()
-            return p.ToolResult(f"Generated description: {data.get('description')}")
+            description = data.get('description', '')
+            return p.ToolResult(
+                data={
+                    "action": "show_description_preview",
+                    "description": description
+                },
+                metadata={
+                    "step": "description",
+                    "timestamp": datetime.now().isoformat()
+                }
+                # Removed canned_response_fields to prevent auto-extraction
+            )
     except Exception as e:
         return p.ToolResult(f"Failed to generate description: {str(e)}")
 
@@ -294,6 +316,37 @@ async def show_checklist(context: p.ToolContext) -> p.ToolResult:
         },
         metadata={
             "ui_action": "show_checklist",
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+
+
+@p.tool
+async def ask_approval(
+    context: p.ToolContext,
+    content_type: str,
+    content: str,
+    question: str = "Would you like to use this?"
+) -> p.ToolResult:
+    """
+    Ask user to approve generated content with Y/n buttons.
+
+    Args:
+        content_type: Type of content being approved ("title", "description", "tags")
+        content: The actual content to show/approve
+        question: Optional custom question to ask (default: "Would you like to use this?")
+
+    Returns: Structured approval request that triggers Y/n buttons in UI
+    """
+    return p.ToolResult(
+        data={
+            "action": "show_approval",
+            "content_type": content_type,
+            "content": content,
+            "question": question
+        },
+        metadata={
+            "ui_action": "approval_request",
             "timestamp": datetime.now().isoformat()
         }
     )
@@ -515,30 +568,51 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
         condition="Product and variant are clear"
     )
 
-    # Show generated title and ask for approval
+    # Show generated title and ask for approval via tool - WAIT for user response
     t3 = await t2.target.transition_to(
-        chat_state="Present the generated title and ask if they'd like to use it or adjust it."
+        tool_state=ask_approval,
+        chat_state="Show the generated title and ask 'Would you like to use this title?' - WAIT for user response. Do NOT proceed until they respond."
     )
 
-    # Set title when approved
+    # Set title when approved (tool + chat in same state)
     t4 = await t3.target.transition_to(
         tool_state=set_listing_title,
-        condition="User approves the title"
+        chat_state="Perfect! I've set your listing title. Now let's move on to the description.",
+        condition="User approves (says yes)"
     )
 
-    # Show checklist
-    t5 = await t4.target.transition_to(
-        tool_state=show_checklist
+    # Handle title rejection - ask what to change
+    t3_reject = await t3.target.transition_to(
+        chat_state="Ask: 'What would you like to change about the title?' - Be ready to regenerate with their feedback.",
+        condition="User rejects (says no, n, change, or provides specific feedback)"
     )
+
+    # Regenerate title with feedback
+    t3_regen = await t3_reject.target.transition_to(
+        tool_state=generate_title,
+        condition="User provided feedback on what to change"
+    )
+
+    # Loop back to approval after regeneration
+    await t3_regen.target.transition_to(state=t3.target)
 
     # Tell user they need a description next and ASK if they want helpful research
-    t6 = await t5.target.transition_to(
-        chat_state="Tell them the next step is the description. Offer to show them some helpful product research to make it easier. Ask in a friendly way: 'Would you like me to show you some helpful info about this product first? It might make writing your description easier!'"
+    # (checklist will auto-update when title is set)
+    t6 = await t4.target.transition_to(
+        tool_state=ask_approval,
+        chat_state="Tell them the next step is the description. Then call ask_approval with content_type='product_research', content='Show helpful product information', and question='Would you like me to show you some helpful info about this product first? It might make writing your description easier!'"
     )
 
     # Show product research card as helper
     t7 = await t6.target.transition_to(
-        tool_state=show_product_research
+        tool_state=show_product_research,
+        condition="User approves (says yes)"
+    )
+
+    # Skip product research if user declines
+    t6_skip = await t6.target.transition_to(
+        chat_state="No problem! Let's move straight to the description.",
+        condition="User declines (says no)"
     )
 
     # Ask for their short description
@@ -546,32 +620,45 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
         chat_state="Great! Now, please type a brief description of what you're looking for - what condition? any specific features you need? Keep it short and simple."
     )
 
+    # Skip path also leads to description
+    await t6_skip.target.transition_to(state=t8.target)
+
     # Generate full description from their input
     t9 = await t8.target.transition_to(
         tool_state=generate_description,
         condition="User provided their short description"
     )
 
-    # Show generated description in chat and ask for approval
+    # Show generated description and ask for approval via tool - WAIT for user response
     t10 = await t9.target.transition_to(
-        chat_state="Present the generated description in your message. Ask if they want to use it or make changes."
+        tool_state=ask_approval,
+        chat_state="Show the generated description and ask 'Would you like to use this description?' - WAIT for user response. Do NOT proceed until they respond."
     )
 
-    # Set description when approved
+    # Set description when approved (tool + chat in same state)
     t11 = await t10.target.transition_to(
         tool_state=set_listing_description,
-        condition="User approves"
+        chat_state="Perfect! Description saved. Now let's handle images for your listing.",
+        condition="User approves (says yes)"
     )
 
-    # Show checklist
-    t12 = await t11.target.transition_to(
-        tool_state=show_checklist
+    # Handle description rejection - ask what to change
+    t10_reject = await t10.target.transition_to(
+        chat_state="Ask: 'What would you like to change about the description?' - Collect their feedback to regenerate.",
+        condition="User rejects (says no, n, change, or provides specific feedback)"
     )
 
-    # Handle images - branch based on user preference
-    t13 = await t12.target.transition_to(
-        chat_state="Explain that they can either upload their own reference images or you can search for product images to illustrate their listing. Ask which they prefer.",
-        canned_responses=[images_choice_response]
+    # Regenerate description with feedback (loop back to t8 to get new input)
+    await t10_reject.target.transition_to(
+        state=t8.target,
+        condition="User wants to provide new description input"
+    )
+
+    # Handle images - branch based on user preference (use approval tool with custom context)
+    # (checklist will auto-update when description is set)
+    t13 = await t11.target.transition_to(
+        tool_state=ask_approval,
+        chat_state="Call ask_approval with content_type='image_choice', content='Search for images or upload your own', and question='For images, you can either upload your own reference images or I can search for product photos online. Which would you prefer?'"
     )
 
     # Branch: Search for images
@@ -608,23 +695,36 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
         condition="User wants tags"
     )
 
-    # Ask for approval (tags are already shown in preview card)
+    # Ask for approval via tool (tags are already shown in preview card) - WAIT for user response
     t20 = await t19.target.transition_to(
-        chat_state="Ask if they want to use the generated tags shown above."
+        tool_state=ask_approval,
+        chat_state="The tags are shown in the preview card above. Now show them and ask 'Would you like to use these tags?' - WAIT for user response. Do NOT proceed until they respond."
     )
 
-    # Set tags when approved
+    # Set tags when approved (tool + chat in same state)
     t21 = await t20.target.transition_to(
         tool_state=set_listing_tags,
-        condition="User approves the tags"
+        chat_state="Excellent! Tags are set. You've completed all the product details!",
+        condition="User approves (says yes)"
     )
 
-    t22 = await t21.target.transition_to(
-        tool_state=show_checklist
+    # Handle tags rejection - ask what to change
+    t20_reject = await t20.target.transition_to(
+        chat_state="Ask: 'What tags would you like instead?' - Collect their feedback and regenerate.",
+        condition="User rejects (says no, n, or provides specific tag suggestions)"
     )
+
+    # Regenerate tags with feedback
+    t20_regen = await t20_reject.target.transition_to(
+        tool_state=generate_tags,
+        condition="User provided feedback on tags"
+    )
+
+    # Loop back to approval after regeneration
+    await t20_regen.target.transition_to(state=t20.target)
 
     # Journey completion
-    t23 = await t22.target.transition_to(
+    t23 = await t21.target.transition_to(
         chat_state="Congratulate them on completing the product details. Let them know the next steps are pricing and location.",
         canned_responses=[completion_response]
     )
@@ -670,6 +770,36 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
     await journey.create_guideline(
         condition="Image search returned 0 results or failed",
         action="Acknowledge that no images were found and reassure them that they can upload their own photos later through the form, or skip images for now. Keep it friendly and move forward.",
+    )
+
+    # CRITICAL: Approval Tool Usage Guidelines
+    await journey.create_guideline(
+        condition="A title has just been generated via generate_title tool",
+        action="You MUST immediately call the ask_approval tool with content_type='title', content=<the exact title that was generated>, and question='Would you like to use this title?'. DO NOT just ask in chat - you must use the ask_approval tool.",
+        tools=[ask_approval],
+    )
+
+    await journey.create_guideline(
+        condition="A description has just been generated via generate_description tool",
+        action="You MUST immediately call the ask_approval tool with content_type='description', content=<the exact description that was generated>, and question='Would you like to use this description?'. DO NOT just ask in chat - you must use the ask_approval tool.",
+        tools=[ask_approval],
+    )
+
+    await journey.create_guideline(
+        condition="Tags have just been generated via generate_tags tool",
+        action="You MUST immediately call the ask_approval tool with content_type='tags', content=<comma-separated list of all the tags>, and question='Would you like to use these tags?'. DO NOT just ask in chat - you must use the ask_approval tool.",
+        tools=[ask_approval],
+    )
+
+    # Approval Response Guidelines (simplified - frontend sends "yes" or "no" via buttons)
+    await journey.create_guideline(
+        condition="User responds with 'yes'",
+        action="Treat this as approval and proceed to set the content (title/description/tags) immediately.",
+    )
+
+    await journey.create_guideline(
+        condition="User responds with 'no'",
+        action="Treat this as rejection. Ask what they'd like to change and collect their feedback to regenerate.",
     )
 
     # Agent-level guidelines (active across all contexts)
