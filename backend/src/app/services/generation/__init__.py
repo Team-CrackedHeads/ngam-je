@@ -8,6 +8,7 @@ from .listing_generation import (
 )
 from .image_generation import generate_images
 from .price_intelligence import get_price_intelligence
+from .product_info import get_product_information
 from .config import get_ai_settings
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "regenerate_tags",
     "generate_images",
     "get_price_intelligence",
+    "get_product_information",
     "get_ai_settings",
 ]

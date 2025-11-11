@@ -1,20 +1,23 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import ChatTodoList, { TodoItem } from "./ChatTodoList";
 
 interface Message {
-  role: "user" | "agent";
+  role: "user" | "agent" | "checklist";
   content: string;
+  todoList?: TodoItem[];
 }
 
 interface ParlantChatProps {
   listingType: "buy" | "sell";
   onComplete?: (gatheredInfo: any) => void;
+  onFieldUpdate?: (field: string, value: any) => void;
 }
 
 const PARLANT_SERVER_URL = "http://localhost:8800";
@@ -22,6 +25,7 @@ const PARLANT_SERVER_URL = "http://localhost:8800";
 export default function ParlantChat({
   listingType,
   onComplete,
+  onFieldUpdate,
 }: ParlantChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -30,8 +34,17 @@ export default function ParlantChat({
   const [lastOffset, setLastOffset] = useState<number>(0);
   const [agentStatus, setAgentStatus] = useState<string>("");
   const [agentId, setAgentId] = useState<string | null>(null);
+  const [pendingChecklistUpdate, setPendingChecklistUpdate] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Todo list state
+  const [todoItems, setTodoItems] = useState<TodoItem[]>([
+    { id: "title", label: "Title", completed: false },
+    { id: "description", label: "Description", completed: false },
+    { id: "images", label: "Images", completed: false },
+    { id: "tags", label: "Tags", completed: false },
+  ]);
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -83,11 +96,11 @@ export default function ParlantChat({
         const newSessionId = response.data.id;
         setSessionId(newSessionId);
 
-        // Send initial context message to guide the agent
-        await axios.post(`${PARLANT_SERVER_URL}/sessions/${newSessionId}/events`, {
-          kind: "message",
-          source: "customer",
-          message: `I want to create a ${listingType} listing`,
+        // Register the listing type context with the backend
+        // This allows the agent's get_current_listing_type tool to work
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/parlant/context`, {
+          session_id: newSessionId,
+          listing_type: listingType,
         });
       } catch (error) {
         console.error("Failed to create session:", error);
@@ -129,6 +142,8 @@ export default function ParlantChat({
 
     // Find the last status event
     const lastStatusEvent = eventsData.findLast((e: any) => e.kind === "status");
+    const isAgentReady = lastStatusEvent?.data?.status === "ready";
+
     if (lastStatusEvent) {
       const status = lastStatusEvent.data?.status;
       if (status === "processing") {
@@ -141,6 +156,8 @@ export default function ParlantChat({
       }
     }
 
+    let shouldShowChecklist = false;
+
     // Filter and add agent messages
     eventsData.forEach((event: any) => {
       if (event.kind === "message" && event.source === "ai_agent") {
@@ -152,17 +169,161 @@ export default function ParlantChat({
           // Clear status when message arrives
           setAgentStatus("");
 
+          const message = event.data.message;
+
           return [
             ...prev,
             {
               role: "agent",
-              content: event.data.message,
+              content: message,
             },
           ];
         });
       }
+
+      // Handle tool events (Parlant uses "tool" not "tool_execution")
+      if (event.kind === "tool") {
+        // Check for tool_calls array
+        if (event.data?.tool_calls && Array.isArray(event.data.tool_calls)) {
+          event.data.tool_calls.forEach((toolCall: any) => {
+            // Check if there's a result
+            if (toolCall.result) {
+              // Parse result if it's a string
+              let resultData = toolCall.result;
+              if (typeof resultData === 'string') {
+                try {
+                  resultData = JSON.parse(resultData);
+                } catch (e) {
+                  return;
+                }
+              }
+
+              // Parlant wraps the actual data in result.data
+              if (resultData && typeof resultData === 'object' && resultData.data) {
+                resultData = resultData.data;
+              }
+
+              // Check if it's a dict/object with action field
+              if (typeof resultData === 'object' && resultData !== null && resultData.action) {
+                // Don't immediately handle show_checklist, just mark it
+                if (resultData.action === 'show_checklist') {
+                  shouldShowChecklist = true;
+                } else {
+                  handleToolResult(resultData);
+                  shouldShowChecklist = true;
+                }
+              }
+            }
+          });
+        }
+      }
     });
-  }, [eventsData]);
+
+    // Set pending state if tools were called
+    if (shouldShowChecklist) {
+      setPendingChecklistUpdate(true);
+    }
+
+    // Only update checklist when agent is ready (done sending all messages)
+    console.log("Checklist update check:", { pendingChecklistUpdate, isAgentReady, lastStatus: lastStatusEvent?.data?.status });
+    if (pendingChecklistUpdate && isAgentReady) {
+      console.log("✅ Updating checklist!");
+      updateChecklistInMessages();
+      setPendingChecklistUpdate(false);
+    }
+  }, [eventsData, todoItems, pendingChecklistUpdate]);
+
+  // Handle tool results to update form and checklist
+  const handleToolResult = (result: any) => {
+    const { action } = result;
+
+    switch (action) {
+      case "show_checklist":
+        // Add checklist message to chat
+        setMessages(prev => [
+          ...prev,
+          {
+            role: "checklist",
+            content: "",
+            todoList: [...todoItems],
+          }
+        ]);
+        break;
+
+      case "set_title":
+        if (result.title && onFieldUpdate) {
+          onFieldUpdate("title", result.title);
+          markTodoComplete("title");
+        }
+        break;
+
+      case "set_description":
+        if (result.description && onFieldUpdate) {
+          onFieldUpdate("description", result.description);
+          markTodoComplete("description");
+        }
+        break;
+
+      case "add_images":
+        if (result.images && onFieldUpdate) {
+          onFieldUpdate("images", result.images);
+          markTodoComplete("images");
+        }
+        break;
+
+      case "set_tags":
+        if (result.tags && onFieldUpdate) {
+          onFieldUpdate("tags", result.tags);
+          markTodoComplete("tags");
+        }
+        break;
+    }
+  };
+
+  // Mark a todo item as complete and update checklist
+  const markTodoComplete = (id: string) => {
+    setTodoItems(prev => {
+      const updated = prev.map(item =>
+        item.id === id ? { ...item, completed: true } : item
+      );
+
+      // Update checklist in messages with the new state
+      setMessages(msgs => {
+        // Remove any existing checklist
+        const withoutChecklist = msgs.filter(msg => msg.role !== "checklist");
+
+        // Add updated checklist at the end
+        return [
+          ...withoutChecklist,
+          {
+            role: "checklist",
+            content: "",
+            todoList: updated,
+          }
+        ];
+      });
+
+      return updated;
+    });
+  };
+
+  // Update checklist in messages - removes old checklist and adds new one after last agent message
+  const updateChecklistInMessages = () => {
+    setMessages(prev => {
+      // Remove any existing checklist
+      const withoutChecklist = prev.filter(msg => msg.role !== "checklist");
+
+      // Add updated checklist at the end
+      return [
+        ...withoutChecklist,
+        {
+          role: "checklist",
+          content: "",
+          todoList: [...todoItems],
+        }
+      ];
+    });
+  };
 
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
@@ -230,26 +391,35 @@ export default function ParlantChat({
             {/* Avatar */}
             <div
               className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                message.role === "agent"
+                message.role === "checklist"
+                  ? "bg-[var(--color-accent-700)]"
+                  : message.role === "agent"
                   ? "bg-[var(--color-secondary-500)]"
                   : "bg-[var(--color-primary-500)]"
               }`}
             >
-              {message.role === "agent" ? (
+              {message.role === "checklist" ? (
+                <ClipboardList className="w-5 h-5 text-[var(--color-secondary-500)]" />
+              ) : message.role === "agent" ? (
                 <Bot className="w-5 h-5 text-black" />
               ) : (
                 <User className="w-5 h-5 text-white" />
               )}
             </div>
 
-            {/* Message Bubble */}
-            <div
-              className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                message.role === "agent"
-                  ? "bg-white text-gray-900 border border-gray-200"
-                  : "bg-[var(--color-primary-600)] text-white"
-              }`}
-            >
+            {/* Message Content */}
+            {message.role === "checklist" ? (
+              /* Checklist message - just show the checklist */
+              message.todoList && <ChatTodoList items={message.todoList} />
+            ) : (
+              /* Regular message bubble */
+              <div
+                className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                  message.role === "agent"
+                    ? "bg-white text-gray-900 border border-gray-200"
+                    : "bg-[var(--color-primary-600)] text-white"
+                }`}
+              >
               {message.role === "agent" ? (
                 <div className="text-sm prose prose-sm max-w-none">
                   <ReactMarkdown
@@ -270,7 +440,8 @@ export default function ParlantChat({
               ) : (
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               )}
-            </div>
+              </div>
+            )}
           </div>
         )))}
 
@@ -294,7 +465,7 @@ export default function ParlantChat({
 
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-gray-200 rounded-b-lg">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-stretch">
           <input
             type="text"
             value={input}
@@ -302,12 +473,12 @@ export default function ParlantChat({
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] disabled:bg-gray-100 disabled:cursor-not-allowed h-10"
           />
           <Button
             onClick={() => handleSendMessage()}
             disabled={!input.trim() || isLoading}
-            className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black px-4"
+            className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black px-4 h-10"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

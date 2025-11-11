@@ -211,3 +211,29 @@ async def get_price_intelligence_endpoint(request: PriceIntelligenceRequest) -> 
     except Exception as e:
         logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Price intelligence error: {str(e)}")
+
+
+class ProductInfoRequest(BaseModel):
+    """Request model for product information lookup."""
+    product_name: str
+
+
+@router.post("/product-info")
+async def get_product_info_endpoint(request: ProductInfoRequest) -> dict:
+    """
+    Search for helpful product information including specs, pros/cons, known issues, and interesting facts.
+    This is used by the AI assistant to help users write better listings.
+
+    Args:
+        request: ProductInfoRequest with product name
+
+    Returns:
+        dict with product information
+    """
+    try:
+        logger.info(f"🔍 Searching for product info: {request.product_name}")
+        info = await generation.get_product_information(product_name=request.product_name)
+        return {"info": info}
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Product info search error: {str(e)}")
