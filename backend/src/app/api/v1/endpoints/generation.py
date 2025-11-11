@@ -17,20 +17,6 @@ router = APIRouter()
 
 
 # Request/Response Models
-class GenerateListingRequest(BaseModel):
-    """Request model for listing generation."""
-    images: List[str]
-    description: str
-    listing_type: str
-
-
-class GenerateListingResponse(BaseModel):
-    """Response model for generated listing."""
-    title: str
-    description: str
-    tags: List[str]
-
-
 class RegenerateFieldRequest(BaseModel):
     """Request model for regenerating a specific field."""
     context: dict  # Contains current title, description, tags
@@ -44,35 +30,6 @@ class GenerateImagesRequest(BaseModel):
 
 
 # Endpoints
-@router.post("/listing", response_model=GenerateListingResponse)
-async def generate_listing_endpoint(request: GenerateListingRequest):
-    """
-    Generate listing content (title, description, tags) from images and description.
-
-    Uses Gemini LLM with vision to analyze images and user description.
-
-    Args:
-        request: GenerateListingRequest with images, description, listing_type
-
-    Returns:
-        GenerateListingResponse with title, description, tags
-    """
-    try:
-        logger.info(f"📝 Generating {request.listing_type} listing")
-        result = await generation.generate_listing(
-            images=request.images,
-            description=request.description,
-            listing_type=request.listing_type,
-        )
-        return GenerateListingResponse(**result)
-    except ValueError as e:
-        logger.error(f"❌ ValueError: {e}")
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
-
-
 @router.post("/title")
 async def regenerate_title_endpoint(request: RegenerateFieldRequest) -> dict:
     """

@@ -9,9 +9,13 @@ import ReactMarkdown from "react-markdown";
 import ChatTodoList, { TodoItem } from "./ChatTodoList";
 
 interface Message {
-  role: "user" | "agent" | "checklist";
+  role: "user" | "agent" | "checklist" | "product_research";
   content: string;
   todoList?: TodoItem[];
+  productResearch?: {
+    productName: string;
+    research: string;
+  };
 }
 
 interface ParlantChatProps {
@@ -56,18 +60,23 @@ export default function ParlantChat({
     scrollToBottom();
   }, [messages, agentStatus]);
 
-  // Fetch available agent ID when component mounts
+  // Fetch the correct agent based on listing type
   useEffect(() => {
     const fetchAgent = async () => {
       try {
         const response = await axios.get(`${PARLANT_SERVER_URL}/agents`);
         const agents = response.data;
-        if (agents && agents.length > 0) {
-          setAgentId(agents[0].id);
+
+        // Select agent based on listing type
+        const agentName = listingType === "buy" ? "Buy Listing Assistant" : "Sell Listing Assistant";
+        const agent = agents.find((a: any) => a.name === agentName);
+
+        if (agent) {
+          setAgentId(agent.id);
         } else {
           setMessages([{
             role: "agent",
-            content: "No agents available. Please start the Parlant server.",
+            content: `${agentName} not found. Please restart the Parlant server.`,
           }]);
         }
       } catch (error) {
@@ -80,7 +89,7 @@ export default function ParlantChat({
     };
 
     fetchAgent();
-  }, []);
+  }, [listingType]);
 
   // Initialize session when agent ID is available
   useEffect(() => {
@@ -96,12 +105,7 @@ export default function ParlantChat({
         const newSessionId = response.data.id;
         setSessionId(newSessionId);
 
-        // Register the listing type context with the backend
-        // This allows the agent's get_current_listing_type tool to work
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/parlant/context`, {
-          session_id: newSessionId,
-          listing_type: listingType,
-        });
+        // Agent is already selected based on listing type - no context registration needed
       } catch (error) {
         console.error("Failed to create session:", error);
         setMessages([{
@@ -277,6 +281,22 @@ export default function ParlantChat({
           markTodoComplete("tags");
         }
         break;
+
+      case "show_product_research":
+        if (result.found && result.research) {
+          setMessages(prev => [
+            ...prev,
+            {
+              role: "product_research",
+              content: "",
+              productResearch: {
+                productName: result.product_name,
+                research: result.research,
+              }
+            }
+          ]);
+        }
+        break;
     }
   };
 
@@ -393,6 +413,8 @@ export default function ParlantChat({
               className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                 message.role === "checklist"
                   ? "bg-[var(--color-accent-700)]"
+                  : message.role === "product_research"
+                  ? "bg-[var(--color-primary-600)]"
                   : message.role === "agent"
                   ? "bg-[var(--color-secondary-500)]"
                   : "bg-[var(--color-primary-500)]"
@@ -400,6 +422,8 @@ export default function ParlantChat({
             >
               {message.role === "checklist" ? (
                 <ClipboardList className="w-5 h-5 text-[var(--color-secondary-500)]" />
+              ) : message.role === "product_research" ? (
+                <Bot className="w-5 h-5 text-white" />
               ) : message.role === "agent" ? (
                 <Bot className="w-5 h-5 text-black" />
               ) : (
@@ -411,6 +435,34 @@ export default function ParlantChat({
             {message.role === "checklist" ? (
               /* Checklist message - just show the checklist */
               message.todoList && <ChatTodoList items={message.todoList} />
+            ) : message.role === "product_research" ? (
+              /* Product Research Card */
+              message.productResearch && (
+                <div className="max-w-[80%] bg-gradient-to-br from-[var(--color-primary-50)] to-[var(--color-primary-100)] border-2 border-[var(--color-primary-300)] rounded-xl p-5 shadow-md">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[var(--color-primary-300)]">
+                    <Bot className="w-5 h-5 text-[var(--color-primary-700)]" />
+                    <h3 className="font-semibold text-[var(--color-primary-900)]">
+                      {message.productResearch.productName} Research
+                    </h3>
+                  </div>
+                  <div className="prose prose-sm max-w-none text-[var(--color-accent-700)]">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => <h1 {...props} className="text-lg font-bold text-[var(--color-primary-900)] mt-3 mb-2" />,
+                        h2: ({ node, ...props }) => <h2 {...props} className="text-base font-semibold text-[var(--color-primary-800)] mt-3 mb-2" />,
+                        h3: ({ node, ...props }) => <h3 {...props} className="text-sm font-semibold text-[var(--color-primary-700)] mt-2 mb-1" />,
+                        p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0 text-sm leading-relaxed" />,
+                        ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-5 mb-3 space-y-1" />,
+                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-5 mb-3 space-y-1" />,
+                        li: ({ node, ...props }) => <li {...props} className="text-sm" />,
+                        strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-[var(--color-primary-900)]" />,
+                      }}
+                    >
+                      {message.productResearch.research}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )
             ) : (
               /* Regular message bubble */
               <div

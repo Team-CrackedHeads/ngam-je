@@ -7,14 +7,16 @@ using the Parlant SDK with Gemini as the NLP service.
 import asyncio
 import parlant.sdk as p
 
-from .agents.listing_agent import create_listing_agent
+from .agents.buy_listing_agent import create_buy_listing_agent
+from .agents.sell_listing_agent import create_sell_listing_agent
 
 
 async def main() -> None:
     """Initialize and run the Parlant server."""
     async with p.Server(nlp_service=p.NLPServices.gemini) as server:
-        # Create and configure the listing agent
-        await create_listing_agent(server)
+        # Create both specialized agents
+        await create_buy_listing_agent(server)
+        await create_sell_listing_agent(server)
 
         # Server will keep running until interrupted
 

@@ -85,7 +85,6 @@ export default function CreateListingModal({
   const [isGeneratingPhotos, setIsGeneratingPhotos] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
-  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
   // AI Context Gathering states
   const [aiContextGathered, setAiContextGathered] = useState(false);
@@ -663,53 +662,6 @@ export default function CreateListingModal({
     }
   };
 
-  const handleSendMessage = async () => {
-    const allImages = [...selectedExternalImages, ...uploadedImages];
-    if (!userInput.trim() && allImages.length === 0) return;
-
-    setIsGeneratingAll(true);
-
-    try {
-      // Call backend API to generate listing content
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/listing`,
-        {
-          images: allImages,
-          description: userInput,
-          listing_type: listingType,
-        }
-      );
-
-      const generatedData = response.data;
-
-      // Pre-fill form data
-      if (listingType === "buy") {
-        setBuyFormData((prev) => ({
-          ...prev,
-          generatedTitle: generatedData.title,
-          generatedDescription: generatedData.description,
-          generatedImages: allImages, // Use combined images (searched/generated + uploaded)
-          tags: generatedData.tags,
-        }));
-      } else {
-        setSellFormData((prev) => ({
-          ...prev,
-          generatedTitle: generatedData.title,
-          generatedDescription: generatedData.description,
-          uploadedImages: allImages,
-          tags: generatedData.tags,
-        }));
-      }
-
-      // Mark context as gathered and show the form
-      setAiContextGathered(true);
-    } catch (error) {
-      console.error("Error generating listing:", error);
-      alert("Failed to generate listing. Please try again.");
-    } finally {
-      setIsGeneratingAll(false);
-    }
-  };
 
   // Sell-specific: Ownership proof
   const handleVerifyOwnershipProof = async (imageUrl: string) => {
@@ -1203,11 +1155,11 @@ export default function CreateListingModal({
               </div>
             )}
 
-            {/* Step 2: Product Details OR AI Context Gathering */}
+            {/* Step 2: Product Details */}
             {currentStep === 2 && listingType && (
               <>
-                {/* Show AI Context Gathering if AI Mode ON and context not gathered */}
-                {isAIModeEnabled && !aiContextGathered ? (
+                {/* Always show Product Details Step (AI chat is embedded) */}
+                {false ? (
                   <div className="space-y-6">
                     <div className="text-center mb-6">
                       <h2 className="text-2xl font-bold mb-2 text-accent-700">
@@ -1620,14 +1572,6 @@ export default function CreateListingModal({
                       >
                         Exit AI Mode
                       </Button>
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!userInput.trim() && selectedExternalImages.length === 0 && uploadedImages.length === 0}
-                        className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Listing
-                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -1641,7 +1585,6 @@ export default function CreateListingModal({
                     isGeneratingTitle={isGeneratingTitle}
                     isGeneratingDescription={isGeneratingDescription}
                     isGeneratingPhotos={isGeneratingPhotos}
-                    isGeneratingAll={isGeneratingAll}
                     titleSuggestion={titleSuggestion}
                     descriptionSuggestion={descriptionSuggestion}
                     selectedImageIndex={selectedImageIndex}
