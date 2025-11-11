@@ -7,7 +7,7 @@ import {
   Home,
   MessageCircle,
   User,
-  Settings,
+  // Settings,
   Menu,
   Plus,
   ChevronDown,
@@ -43,12 +43,12 @@ import SellListingsMenuItem from "@/components/sidebar/menu-items/SellListingsMe
 import MatchedListingsMenuItem from "@/components/sidebar/menu-items/MatchedListingsMenuItem";
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/messages", label: "Messages", icon: MessageCircle, isLoginRequired: true },
+  { href: "/profile", label: "Profile", icon: User, isLoginRequired: true },
   // { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-import { SignedIn } from '@clerk/nextjs'
+import { useAuth } from '@clerk/nextjs'
 
 // Mock chat history data - 2nd hand marketplace purchase decisions
 // Use centralized chat history data
@@ -278,12 +278,16 @@ function NavigationMenuItem() {
   const { state } = useSidebar();
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
+  const { isSignedIn } = useAuth();
 
   if (isCollapsed) {
     return (
       <>
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          if (!isSignedIn && item.isLoginRequired) {
+            return (<></>);
+          }
           return (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -328,6 +332,9 @@ function NavigationMenuItem() {
         <SidebarMenuSub>
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            if (!isSignedIn && item.isLoginRequired) {
+              return (<></>);
+            }
             return (
               <SidebarMenuSubItem key={item.href}>
                 <SidebarMenuSubButton
@@ -380,6 +387,8 @@ export function AppSidebar() {
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+  
+  const { isSignedIn } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -493,7 +502,7 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SignedIn>
+          {isSignedIn && (<>
             <div className="ml-1 mr-5">
               <SidebarSeparator />
             </div>
@@ -505,7 +514,7 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          </SignedIn>
+          </>)}
 
           <div className="ml-1 mr-5">
             <SidebarSeparator />
@@ -531,7 +540,8 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SignedIn>
+          
+          {isSignedIn && (<>
             <div className="ml-1 mr-5">
               <SidebarSeparator />
             </div>
@@ -543,7 +553,7 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          </SignedIn>
+          </>)}
 
         </SidebarContent>{" "}
         {/* <-- This closes SidebarContent */}
