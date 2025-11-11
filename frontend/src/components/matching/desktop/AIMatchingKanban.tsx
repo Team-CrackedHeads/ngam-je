@@ -29,6 +29,8 @@ import {
   userAIListing,
   KANBAN_COLUMNS,
 } from "@/utils/mock-all-data-used";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { likeRecommendation, rejectRecommendation } from "@/lib/api/recommendations";
 
 // Use centralized column configuration and add icons
 const columns = KANBAN_COLUMNS.map((col) => ({
@@ -44,13 +46,17 @@ const columns = KANBAN_COLUMNS.map((col) => ({
 }));
 
 export function AIMatchingKanban({
+  userListings,
+  availableListings,
   onMessage,
   onViewDetails,
+  onMatch,
 }: AIMatchingProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [expandedPopupColumn, setExpandedPopupColumn] =
     useState<ColumnType | null>(null);
+  const getApiClient = useClerkApiClient();
 
   // Animation state for card movements
   const [cardAnimation, setCardAnimation] = useState<{
@@ -64,12 +70,35 @@ export function AIMatchingKanban({
   // Comparison Modal
   const [showCompareModal, setShowCompareModal] = useState(false);
 
+  // Convert API listings to MatchedListing format
+  const convertToMatchedListing = (listing: any): MatchedListing => {
+    return {
+      id: String(listing.id),
+      title: listing.title,
+      description: listing.description,
+      price: listing.price || 0,
+      originalAsk: listing.price || 0,
+      images: listing.image_url ? [listing.image_url, ...(listing.gallery || [])] : [],
+      tags: listing.tags || [],
+      location: listing.creator_location || "Unknown",
+      timeAgo: new Date(listing.created_at).toLocaleDateString(),
+      seller: listing.creator_name || "Unknown",
+      type: listing.listing_type === "sale" ? "sell" : "buy",
+      category: listing.category || "general",
+      matchScore: listing.matchScore || 0,
+      matchReasons: listing.matchReasons || [],
+    };
+  };
+
+  // Convert available listings to MatchedListing format
+  const matchedListings = availableListings.map(convertToMatchedListing);
+
   // Card organization by column - stores listing IDs instead of indices
   const [cardsByColumn, setCardsByColumn] = useState<
     Record<ColumnType, string[]>
   >({
     passed: [],
-    queue: mockAIMatchings.map((listing) => listing.id), // All listings start in queue
+    queue: matchedListings.map((listing) => listing.id), // All listings start in queue
     liked: [],
   });
 
@@ -94,20 +123,66 @@ export function AIMatchingKanban({
   };
 
   // Get user's listing
-  const getUserListing = (): MatchedListing => userAIListing;
+  const getUserListing = (): MatchedListing => {
+    return userListings.length > 0 ? convertToMatchedListing(userListings[0]) : userAIListing;
+  };
 
   // Get listings for comparison from selected IDs
   const getListingsForComparison = (): MatchedListing[] => {
     return selectedForCompare
       .map((listingId) =>
-        mockAIMatchings.find((listing) => listing.id === listingId)
+        matchedListings.find((listing) => listing.id === listingId)
       )
       .filter(Boolean) as MatchedListing[];
   };
 
   // Helper function to get listing by ID
   const getListingById = (id: string): MatchedListing | undefined => {
-    return mockAIMatchings.find((listing) => listing.id === id);
+    return matchedListings.find((listing) => listing.id === id);
+  };
+
+  // Handle API calls for like/pass actions
+  const handleRecommendationAction = async (listingId: string, action: "like" | "pass") => {
+    try {
+      const apiClient = await getApiClient();
+      const listing = availableListings.find((l: any) => String(l.id) === listingId);
+
+      console.log("🔍 Looking for listing:", listingId);
+      console.log("📦 Found listing:", listing);
+      console.log("🔑 Recommendation ID:", (listing as any)?.recommendationId);
+
+      if (!listing) {
+        console.error("❌ Listing not found:", listingId);
+        alert(`Error: Listing ${listingId} not found`);
+        return;
+      }
+
+      if (!(listing as any).recommendationId) {
+        console.error("❌ No recommendation ID found for listing:", listingId);
+        console.error("Available listings:", availableListings);
+        alert(`Error: No recommendation ID found for listing ${listingId}`);
+        return;
+      }
+
+      const recommendationId = (listing as any).recommendationId;
+
+      console.log(`💚 ${action === "like" ? "Liking" : "Rejecting"} recommendation ${recommendationId}...`);
+
+      if (action === "like") {
+        const result = await likeRecommendation(apiClient.instance, recommendationId);
+        console.log("✅ Successfully liked recommendation:", result);
+      } else {
+        const result = await rejectRecommendation(apiClient.instance, recommendationId);
+        console.log("✅ Successfully rejected recommendation:", result);
+      }
+
+      // Call the onMatch callback
+      const matchedListing = convertToMatchedListing(listing);
+      onMatch(matchedListing, action);
+    } catch (error) {
+      console.error(`❌ Failed to ${action} recommendation:`, error);
+      alert(`Error: Failed to ${action} recommendation. Check console for details.`);
+    }
   };
 
   // Handle cycling cards in a column
@@ -243,7 +318,7 @@ export function AIMatchingKanban({
                     onClick={() => {
                       setCardsByColumn({
                         passed: [],
-                        queue: mockAIMatchings.map((listing) => listing.id),
+                        queue: matchedListings.map((listing) => listing.id),
                         liked: [],
                       });
                       setSelectedForCompare([]);
@@ -406,7 +481,12 @@ export function AIMatchingKanban({
                         {/* Pass Button */}
                         {expandedPopupColumn === "queue" && (
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              // Call API for each selected card
+                              for (const listingId of selectedForCompare) {
+                                await handleRecommendationAction(listingId, "pass");
+                              }
+
                               // Move selected cards to passed
                               setCardsByColumn((prev) => ({
                                 ...prev,
@@ -426,7 +506,12 @@ export function AIMatchingKanban({
                         {/* Like Button */}
                         {expandedPopupColumn === "queue" && (
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              // Call API for each selected card
+                              for (const listingId of selectedForCompare) {
+                                await handleRecommendationAction(listingId, "like");
+                              }
+
                               // Move selected cards to liked
                               setCardsByColumn((prev) => ({
                                 ...prev,
@@ -911,14 +996,22 @@ export function AIMatchingKanban({
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
               }}
-              onDrop={(e) => {
+              onDrop={async (e) => {
                 e.preventDefault();
                 if (draggedCard && draggedCard.sourceColumn !== column.id) {
                   // Show animation based on target column
                   if (column.id === "liked") {
                     showCardAnimation("like");
+                    // Call API when dragging from queue to liked
+                    if (draggedCard.sourceColumn === "queue") {
+                      await handleRecommendationAction(draggedCard.listingId, "like");
+                    }
                   } else if (column.id === "passed") {
                     showCardAnimation("pass");
+                    // Call API when dragging from queue to passed
+                    if (draggedCard.sourceColumn === "queue") {
+                      await handleRecommendationAction(draggedCard.listingId, "pass");
+                    }
                   }
 
                   setCardsByColumn((prev) => ({

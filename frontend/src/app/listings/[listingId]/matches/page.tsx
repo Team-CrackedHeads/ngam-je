@@ -46,16 +46,16 @@ export default function ListingMatchesPage() {
         if (!isMounted) return;
         setYourListing(listing);
 
-        // Fetch recommendations for this listing
+        // Fetch ALL recommendations for this listing (pending, liked, matched)
         const recommendations = await fetchListingRecommendations(
           apiClient.instance,
-          listingId,
-          "matched" // Only get matched recommendations
+          listingId
+          // No status filter - we want ALL recommendations for the swipe interface
         );
 
         if (!isMounted) return;
 
-        // Fetch the actual matched listings
+        // Fetch the actual matched listings with their recommendation data
         const matches: ApiListing[] = [];
         for (const rec of recommendations.recommendations) {
           try {
@@ -64,6 +64,13 @@ export default function ListingMatchesPage() {
               ? rec.target_listing_id
               : rec.source_listing_id;
             const matchedListing = await fetchListingById(apiClient.instance, matchedListingId);
+
+            // Attach recommendation metadata to the listing for the UI
+            (matchedListing as any).recommendationId = rec.id;
+            (matchedListing as any).matchScore = rec.match_score;
+            (matchedListing as any).matchReasons = rec.match_reasons;
+            (matchedListing as any).recommendationStatus = rec.status;
+
             matches.push(matchedListing);
           } catch (err) {
             console.error(`Failed to fetch matched listing:`, err);
