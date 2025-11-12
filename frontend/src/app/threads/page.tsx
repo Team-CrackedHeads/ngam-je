@@ -20,6 +20,8 @@ import PageHeader from "@/components/threads/PageHeader";
 import { MockAIResponse } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+import { useAuth, useClerk } from "@clerk/nextjs";
+
 type ViewType = "grid" | "list";
 
 function ThreadsPage() {
@@ -51,6 +53,9 @@ function ThreadsPage() {
   const [inOverviewView, setInOverviewView] = useState(false);
   const [isMetaInView, setIsMetaInView] = useState(false);
   const isMobile = useIsMobile();
+  
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
 
   // Derived query keywords
   const queryKeywords = useMemo(() => {
@@ -239,7 +244,10 @@ function ThreadsPage() {
 
               <button
                 ref={inlineCreateBtnRef}
-                onClick={() => setIsCreateOpen(true)}
+                onClick={() => {
+                  if (isSignedIn) setIsCreateOpen(true);
+                  else openSignIn();
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600"
               >
                 <Plus className="w-4 h-4" />
@@ -253,7 +261,10 @@ function ThreadsPage() {
                 <ViewDropdown activeView={viewType} viewAction={setViewType} />
                 <button
                   ref={inlineCreateBtnRef}
-                  onClick={() => setIsCreateOpen(true)}
+                  onClick={() => {
+                    if (isSignedIn) setIsCreateOpen(true);
+                    else openSignIn();
+                  }}
                   className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
                   aria-label="Create new thread"
                 >

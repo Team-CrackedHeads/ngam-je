@@ -12,6 +12,7 @@ import ListingTypeDropdown from "@/components/threads/category/ListingTypeDropdo
 import { Plus } from "lucide-react";
 import CreateListingModal from "@/components/create-listing/CreateListingModal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 type ListingType = "wtb" | "wts" | "general";
 
@@ -34,6 +35,9 @@ const CategoryPage: React.FC = () => {
 
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
 
   // Updated state for SearchFilter to include new fields
   const [appliedFilters, setAppliedFilters] = useState<FilterOptions>({
@@ -149,7 +153,8 @@ const CategoryPage: React.FC = () => {
 
   // Handle create listing modal
   const handleCreateListing = () => {
-    setIsCreateListingModalOpen(true);
+    if (isSignedIn) setIsCreateListingModalOpen(true);
+    else openSignIn();
   };
   // Filter listings based on all active filters - UPDATED for UnifiedListingData
   const getFilteredListings = useCallback((): UnifiedListingData[] => {
