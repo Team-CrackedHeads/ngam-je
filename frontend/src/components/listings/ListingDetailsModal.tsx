@@ -9,6 +9,7 @@ import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 interface ListingDetailsModalProps {
   listing: Listing | MatchedListing;
@@ -18,6 +19,8 @@ interface ListingDetailsModalProps {
 
 export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsModalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
 
   const handleCheckout = () => {
     setShowCheckout(true);
@@ -32,6 +35,17 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
   const handleCheckoutBack = () => {
     setShowCheckout(false);
   };
+
+  const handleContact = () => {
+    if (isSignedIn)
+    {
+      // TODO: Message the user/Reveal contact info here
+    }
+    else
+    {
+      openSignIn();
+    }
+  }
 
   const modalContent = showCheckout ? (
     <CheckoutModal
@@ -268,7 +282,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
           <div className="px-4 py-3 border-t border-neutral-200 bg-primary-50 shrink-0">
             {type !== "matched" ? (
               <div className="flex gap-3">
-                <Button className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
+                <Button onClick={handleContact} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Contact
                 </Button>
               </div>
@@ -277,7 +291,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <Button onClick={handleCheckout} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Checkout
                 </Button>
-                <Button className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
+                <Button onClick={handleContact} className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
                   Contact
                 </Button>
                 <Button className="flex-1 bg-error-500 hover:bg-error-900 text-white">
