@@ -32,6 +32,7 @@ interface ParlantChatProps {
   listingType: "buy" | "sell";
   onComplete?: (gatheredInfo: any) => void;
   onFieldUpdate?: (field: string, value: any) => void;
+  onClose?: () => void;
 }
 
 const PARLANT_SERVER_URL = "http://localhost:8800";
@@ -40,10 +41,12 @@ export default function ParlantChat({
   listingType,
   onComplete,
   onFieldUpdate,
+  onClose,
 }: ParlantChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [lastOffset, setLastOffset] = useState<number>(0);
   const [agentStatus, setAgentStatus] = useState<string>("");
@@ -97,6 +100,21 @@ export default function ParlantChat({
     scrollToBottom();
   }, [messages, agentStatus]);
 
+  // Clear session on page refresh/navigation
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const storageKey = `parlant_session_${listingType}`;
+      localStorage.removeItem(storageKey);
+      console.log(`Cleared ${listingType} session on page unload`);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [listingType]);
+
   // Fetch the correct agent based on listing type
   useEffect(() => {
     const fetchAgent = async () => {
@@ -128,12 +146,59 @@ export default function ParlantChat({
     fetchAgent();
   }, [listingType]);
 
-  // Initialize session when agent ID is available
+  // Initialize or restore session when agent ID is available
   useEffect(() => {
     if (!agentId) return;
 
     const initializeSession = async () => {
+      setIsLoadingSession(true);
       try {
+        // Check if we have an existing session in localStorage
+        const storageKey = `parlant_session_${listingType}`;
+        const existingSessionId = localStorage.getItem(storageKey);
+
+        if (existingSessionId) {
+          // Try to restore existing session
+          try {
+            const response = await axios.get(`${PARLANT_SERVER_URL}/sessions/${existingSessionId}`);
+            if (response.data && response.data.id) {
+              console.log(`Restored existing ${listingType} session:`, existingSessionId);
+              setSessionId(existingSessionId);
+
+              // Load existing messages from session
+              const eventsResponse = await axios.get(`${PARLANT_SERVER_URL}/sessions/${existingSessionId}/events`);
+              const events = eventsResponse.data;
+
+              // Reconstruct messages from events
+              const reconstructedMessages: Message[] = [];
+              events.forEach((event: any) => {
+                if (event.kind === "message" && event.source === "ai_agent") {
+                  reconstructedMessages.push({
+                    role: "agent",
+                    content: event.data.message,
+                  });
+                } else if (event.kind === "message" && event.source === "customer") {
+                  reconstructedMessages.push({
+                    role: "user",
+                    content: event.data.message,
+                  });
+                }
+              });
+
+              if (reconstructedMessages.length > 0) {
+                setMessages(reconstructedMessages);
+              }
+
+              setIsLoadingSession(false);
+              return; // Exit early if restoration succeeded
+            }
+          } catch (error) {
+            console.log("Existing session not found or invalid, creating new session");
+            localStorage.removeItem(storageKey);
+          }
+        }
+
+        // Create new session if no existing session or restoration failed
         const response = await axios.post(`${PARLANT_SERVER_URL}/sessions`, {
           agent_id: agentId,
           title: `${listingType} Listing - ${new Date().toLocaleString()}`,
@@ -141,6 +206,8 @@ export default function ParlantChat({
 
         const newSessionId = response.data.id;
         setSessionId(newSessionId);
+        localStorage.setItem(storageKey, newSessionId);
+        console.log(`Created new ${listingType} session:`, newSessionId);
 
         // Agent is already selected based on listing type - no context registration needed
       } catch (error) {
@@ -149,6 +216,8 @@ export default function ParlantChat({
           role: "agent",
           content: "Failed to connect to chat. Please try again.",
         }]);
+      } finally {
+        setIsLoadingSession(false);
       }
     };
 
@@ -640,11 +709,36 @@ export default function ParlantChat({
     }
   };
 
+  // Clear session and reset chat
+  const clearSession = () => {
+    const storageKey = `parlant_session_${listingType}`;
+    localStorage.removeItem(storageKey);
+    setMessages([]);
+    setSessionId(null);
+    setTodoItems([
+      { id: "title", label: "Title", completed: false },
+      { id: "description", label: "Description", completed: false },
+      { id: "images", label: "Images", completed: false },
+      { id: "tags", label: "Tags", completed: false },
+    ]);
+    // Will trigger re-initialization with new session
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Chat Messages */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 rounded-t-lg">
-        {messages.length === 0 ? (
+        {isLoadingSession ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <Loader2 className="w-12 h-12 text-[var(--color-secondary-500)] animate-spin mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--color-accent-700)] mb-2">
+              Loading your chat...
+            </h3>
+            <p className="text-sm text-gray-600 max-w-md">
+              Restoring your conversation
+            </p>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
             <img
               src="/listing-chat-placeholder.svg"
