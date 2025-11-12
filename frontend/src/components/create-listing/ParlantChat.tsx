@@ -23,8 +23,9 @@ interface Message {
   descriptionPreview?: string;
   approvalConfirmation?: {
     question: string;
-    selectedOption: string;
-    unselectedOption: string;
+    yesText: string;
+    noText: string;
+    userSelectedYes: boolean;
   };
 }
 
@@ -625,16 +626,13 @@ export default function ParlantChat({
     setIsLoading(true);
 
     // Determine button text based on content type
-    let yesText = "Yes";
-    let noText = "No";
+    const yesText = pendingApproval.contentType === "image_choice"
+      ? "Yes, do it for me"
+      : `Yes, use this ${pendingApproval.contentType}`;
 
-    if (pendingApproval.contentType === "image_choice") {
-      yesText = "Yes, do it for me";
-      noText = "No, I'll upload";
-    } else {
-      yesText = `Yes, use this ${pendingApproval.contentType}`;
-      noText = "No, do it differently";
-    }
+    const noText = pendingApproval.contentType === "image_choice"
+      ? "No, I'll upload"
+      : "No, do it differently";
 
     // Add visual confirmation to chat showing question and user's choice
     setMessages((prev) => [
@@ -644,8 +642,9 @@ export default function ParlantChat({
         content: "",
         approvalConfirmation: {
           question: pendingApproval.question,
-          selectedOption: approved ? yesText : noText,
-          unselectedOption: approved ? noText : yesText,
+          yesText,
+          noText,
+          userSelectedYes: approved,
         },
       },
     ]);
@@ -929,11 +928,21 @@ export default function ParlantChat({
                     <p className="text-xs text-[var(--color-neutral-700)]">{message.approvalConfirmation.question}</p>
                   </div>
                   <div className="flex gap-2 flex-wrap opacity-60 pointer-events-none">
-                    <div className="px-4 py-2 rounded-lg text-sm font-medium border-2 bg-[var(--color-secondary-500)] text-black border-[var(--color-secondary-600)]">
-                      {message.approvalConfirmation.selectedOption}
+                    {/* Yes option - always on left */}
+                    <div className={`px-4 py-2 rounded-lg text-sm font-medium border-2 ${
+                      message.approvalConfirmation.userSelectedYes
+                        ? "bg-[var(--color-secondary-500)] text-black border-[var(--color-secondary-600)]"
+                        : "bg-white text-[var(--color-neutral-600)] border-[var(--color-neutral-300)]"
+                    }`}>
+                      {message.approvalConfirmation.yesText}
                     </div>
-                    <div className="px-4 py-2 rounded-lg text-sm font-medium border-2 bg-white text-[var(--color-neutral-600)] border-[var(--color-neutral-300)]">
-                      {message.approvalConfirmation.unselectedOption}
+                    {/* No option - always on right */}
+                    <div className={`px-4 py-2 rounded-lg text-sm font-medium border-2 ${
+                      !message.approvalConfirmation.userSelectedYes
+                        ? "bg-[var(--color-secondary-500)] text-black border-[var(--color-secondary-600)]"
+                        : "bg-white text-[var(--color-neutral-600)] border-[var(--color-neutral-300)]"
+                    }`}>
+                      {message.approvalConfirmation.noText}
                     </div>
                   </div>
                 </div>
