@@ -533,19 +533,6 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
     )
 
     # ========== JOURNEY-SCOPED CANNED RESPONSES ==========
-    product_research_response = await journey.create_canned_response(
-        template="Let me research {{product_name}} for you...",
-        signals=["Let me look that up", "I'll search for information"]
-    )
-
-    title_suggestion_response = await journey.create_canned_response(
-        template="How about this for your listing title: \"WTB: {{generative.product_name}} - Looking to Buy\"? Would you like to use this or adjust it?"
-    )
-
-    images_choice_response = await journey.create_canned_response(
-        template="For images, you can either upload your own reference images or I can search for product photos online. Which would you prefer?"
-    )
-
     completion_response = await journey.create_canned_response(
         template="Fantastic! You've completed all the product details. Next, you'll need to add pricing and location information."
     )
@@ -733,6 +720,11 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
 
     # Journey-scoped guidelines for handling digressions
     await journey.create_guideline(
+        condition="User mentions wanting to SELL something, create a SELL listing, or switch to selling",
+        action="IMMEDIATELY refuse and redirect. Say: 'I'm the Buy Listing Assistant - I only help with buying products. Let's finish your buy listing for [current product] first. If you want to sell something, you'll need the Sell Listing Assistant.' DO NOT switch contexts or help with selling.",
+    )
+
+    await journey.create_guideline(
         condition="Product research has been shown via the show_product_research tool",
         action="DO NOT repeat or summarize the research information in your chat messages. The user can see it in the research card. Just acknowledge it briefly and move forward with the next question.",
     )
@@ -803,6 +795,11 @@ async def create_buy_listing_agent(server: p.Server) -> p.Agent:
     )
 
     # Agent-level guidelines (active across all contexts)
+    await agent.create_guideline(
+        condition="User mentions wanting to SELL something or create a SELL listing",
+        action="STOP immediately. You are the BUY Listing Assistant - you ONLY help with BUY listings (finding products to purchase). Politely tell them: 'I'm the Buy Listing Assistant and I can only help you find products to buy. To create a sell listing, you'll need to use the Sell Listing Assistant instead. For now, let's finish your buy listing for [product].'",
+    )
+
     await agent.create_guideline(
         condition="User goes completely off-topic or asks questions unrelated to creating a buy listing",
         action="Politely acknowledge their comment and gently redirect the conversation back to creating their buy listing",

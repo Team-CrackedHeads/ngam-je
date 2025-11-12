@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Send, Bot, User, Loader2, ClipboardList, Check, X, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -706,70 +707,96 @@ export default function ParlantChat({
                       {message.productResearch.productName} Research
                     </h3>
                   </div>
-                  <div className="prose prose-sm max-w-none text-[var(--color-accent-700)]">
-                    <ReactMarkdown
-                      components={{
-                        h1: ({ node, ...props }) => <h1 {...props} className="text-lg font-bold text-[var(--color-accent-700)] mt-3 mb-2" />,
-                        h2: ({ node, ...props }) => <h2 {...props} className="text-base font-semibold text-[var(--color-accent-700)] mt-3 mb-2" />,
-                        h3: ({ node, ...props }) => <h3 {...props} className="text-sm font-semibold text-[var(--color-secondary-700)] mt-2 mb-1" />,
-                        p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0 text-sm leading-relaxed" />,
-                        ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-5 mb-3 space-y-1" />,
-                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-5 mb-3 space-y-1" />,
-                        li: ({ node, ...props }) => <li {...props} className="text-sm" />,
-                        strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-[var(--color-accent-700)]" />,
-                      }}
-                    >
-                      {message.productResearch.research}
-                    </ReactMarkdown>
-                  </div>
+                  {message.productResearch.research ? (
+                    <div className="prose prose-sm max-w-none text-[var(--color-accent-700)]">
+                      <ReactMarkdown
+                        components={{
+                          h1: ({ node, ...props }) => <h1 {...props} className="text-lg font-bold text-[var(--color-accent-700)] mt-3 mb-2" />,
+                          h2: ({ node, ...props }) => <h2 {...props} className="text-base font-semibold text-[var(--color-accent-700)] mt-3 mb-2" />,
+                          h3: ({ node, ...props }) => <h3 {...props} className="text-sm font-semibold text-[var(--color-secondary-700)] mt-2 mb-1" />,
+                          p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0 text-sm leading-relaxed" />,
+                          ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-5 mb-3 space-y-1" />,
+                          ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-5 mb-3 space-y-1" />,
+                          li: ({ node, ...props }) => <li {...props} className="text-sm" />,
+                          strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-[var(--color-accent-700)]" />,
+                        }}
+                      >
+                        {message.productResearch.research}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-sm text-[var(--color-neutral-500)]">No product information found</p>
+                    </div>
+                  )}
                 </div>
               )
             ) : message.role === "title_preview" ? (
               /* Title Preview Card */
-              message.titlePreview && (
+              message.titlePreview !== undefined && (
                 <div className="max-w-[80%] bg-gradient-to-br from-[var(--color-secondary-50)] to-[var(--color-secondary-100)] border-2 border-[var(--color-secondary-300)] rounded-xl p-4 shadow-md">
                   <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--color-secondary-300)]">
                     <Bot className="w-5 h-5 text-[var(--color-secondary-700)]" />
                     <h3 className="font-semibold text-[var(--color-secondary-900)]">Generated Title</h3>
                   </div>
-                  <p className="text-base font-medium text-[var(--color-accent-700)] leading-relaxed">
-                    {message.titlePreview}
-                  </p>
+                  {message.titlePreview ? (
+                    <p className="text-base font-medium text-[var(--color-accent-700)] leading-relaxed">
+                      {message.titlePreview}
+                    </p>
+                  ) : (
+                    <div className="flex items-center justify-center py-4">
+                      <p className="text-sm text-[var(--color-neutral-500)]">No title generated</p>
+                    </div>
+                  )}
                 </div>
               )
             ) : message.role === "description_preview" ? (
               /* Description Preview Card */
-              message.descriptionPreview && (
+              message.descriptionPreview !== undefined && (
                 <div className="max-w-[80%] bg-gradient-to-br from-[var(--color-secondary-50)] to-[var(--color-secondary-100)] border-2 border-[var(--color-secondary-300)] rounded-xl p-4 shadow-md">
                   <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--color-secondary-300)]">
                     <Bot className="w-5 h-5 text-[var(--color-secondary-700)]" />
                     <h3 className="font-semibold text-[var(--color-secondary-900)]">Generated Description</h3>
                   </div>
-                  <p className="text-sm text-[var(--color-accent-700)] leading-relaxed">
-                    {message.descriptionPreview}
-                  </p>
+                  {message.descriptionPreview ? (
+                    <p className="text-sm text-[var(--color-accent-700)] leading-relaxed">
+                      {message.descriptionPreview}
+                    </p>
+                  ) : (
+                    <div className="flex items-center justify-center py-4">
+                      <p className="text-sm text-[var(--color-neutral-500)]">No description generated</p>
+                    </div>
+                  )}
                 </div>
               )
             ) : message.role === "images_preview" ? (
               /* Images Preview Card */
-              message.imagesPreview && message.imagesPreview.length > 0 && (
+              message.imagesPreview && (
                 <div className="max-w-[80%] bg-gradient-to-br from-[var(--color-secondary-50)] to-[var(--color-secondary-100)] border-2 border-[var(--color-secondary-300)] rounded-xl p-4 shadow-md">
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[var(--color-secondary-300)]">
                     <Bot className="w-5 h-5 text-[var(--color-secondary-700)]" />
                     <h3 className="font-semibold text-[var(--color-accent-700)]">
-                      Found {message.imagesPreview.length} Images
+                      {message.imagesPreview.length > 0 ? `Found ${message.imagesPreview.length} Images` : 'Image Search'}
                     </h3>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {message.imagesPreview.slice(0, 6).map((url, idx) => (
-                      <img
-                        key={idx}
-                        src={url}
-                        alt={`Product ${idx + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border border-[var(--color-secondary-200)]"
-                      />
-                    ))}
-                  </div>
+                  {message.imagesPreview.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {message.imagesPreview.slice(0, 6).map((url, idx) => (
+                        <div key={idx} className="relative w-full h-24">
+                          <Image
+                            src={url}
+                            alt={`Product ${idx + 1}`}
+                            fill
+                            className="object-cover rounded-lg border border-[var(--color-secondary-200)]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-sm text-[var(--color-neutral-500)]">No images found</p>
+                    </div>
+                  )}
                 </div>
               )
             ) : message.role === "tags_preview" ? (
@@ -782,16 +809,22 @@ export default function ParlantChat({
                       Generated Tags
                     </h3>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {message.tagsPreview.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 bg-[var(--color-secondary-200)] text-[var(--color-accent-700)] rounded-full text-sm font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  {message.tagsPreview.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {message.tagsPreview.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-[var(--color-secondary-200)] text-[var(--color-accent-700)] rounded-full text-sm font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-6">
+                      <p className="text-sm text-[var(--color-neutral-500)]">No tags generated</p>
+                    </div>
+                  )}
                 </div>
               )
             ) : message.role === "approval_confirmation" ? (
