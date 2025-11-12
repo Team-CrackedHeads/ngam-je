@@ -14,6 +14,18 @@ from src.schemas.listing import (
     ListingResponse,
     ListingListResponse,
 )
+from src.schemas.conversation import (
+    ConversationCreate,
+    ConversationUpdate,
+    ConversationResponse,
+    ConversationListResponse,
+)
+from src.schemas.message import (
+    MessageCreate,
+    MessageUpdate,
+    MessageResponse,
+    MessageListResponse,
+)
 
 __all__ = [
     # User schemas (Clerk-managed auth, no auth/token schemas needed)
@@ -30,4 +42,14 @@ __all__ = [
     "ListingUpdate",
     "ListingResponse",
     "ListingListResponse",
+    # Conversation schemas
+    "ConversationCreate",
+    "ConversationUpdate",
+    "ConversationResponse",
+    "ConversationListResponse",
+    # Message schemas
+    "MessageCreate",
+    "MessageUpdate",
+    "MessageResponse",
+    "MessageListResponse",
 ]

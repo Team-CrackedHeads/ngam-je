@@ -7,7 +7,7 @@ When adding new endpoints, import them here and include them in the api_router.
 
 from fastapi import APIRouter
 
-from src.app.api.v1.endpoints import health, users, kyc, threads, listings, faqs, faq_replies, recommendations
+from src.app.api.v1.endpoints import health, users, kyc, threads, listings, faqs, faq_replies, recommendations, conversations, messages
 
 api_router = APIRouter()
 
@@ -21,6 +21,8 @@ api_router.include_router(listings.router, prefix="/listings", tags=["listings"]
 api_router.include_router(faqs.router, prefix="/faqs", tags=["faqs"])
 api_router.include_router(faq_replies.router, prefix="/faq-replies", tags=["faq-replies"])
 api_router.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])
+api_router.include_router(conversations.router, prefix="/conversations", tags=["conversations"])
+api_router.include_router(messages.router, prefix="/messages", tags=["messages"])
 
 # Future routers can be added here:
 # api_router.include_router(items.router, prefix="/items", tags=["items"])

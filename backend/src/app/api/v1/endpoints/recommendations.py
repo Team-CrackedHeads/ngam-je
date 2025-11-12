@@ -9,6 +9,7 @@ from src.database import get_db
 from src.models.user import User
 from src.models.listing import Listing
 from src.models.recommendation import Recommendation
+from src.models.conversation import Conversation
 from src.schemas.recommendation import (
     RecommendationCreate,
     RecommendationUpdate,
@@ -213,6 +214,22 @@ async def like_recommendation(
 
     db.commit()
     db.refresh(recommendation)
+
+    # Auto-create conversation if status became "matched"
+    if recommendation.status == "matched":
+        # Check if conversation already exists
+        existing_conversation = db.query(Conversation).filter(
+            Conversation.recommendation_id == recommendation.id
+        ).first()
+
+        if not existing_conversation:
+            # Create new conversation
+            new_conversation = Conversation(
+                recommendation_id=recommendation.id,
+                is_active=True
+            )
+            db.add(new_conversation)
+            db.commit()
 
     return recommendation
 
