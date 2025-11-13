@@ -62,6 +62,10 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
     if (isApiListing(listing)) {
       return listing.image_url;
     }
+    // Handle MatchedListing with images array
+    if ('images' in listing && listing.images && listing.images.length > 0) {
+      return listing.images[0];
+    }
     return 'imageUrl' in listing ? listing.imageUrl : null;
   };
 

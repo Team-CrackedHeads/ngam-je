@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Heart,
@@ -641,10 +642,20 @@ export function AIMatchingKanban({
                               }`}
                           >
                             {/* Card Image */}
-                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                              <span className="text-accent-400 text-sm">
-                                Image
-                              </span>
+                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200">
+                              {listing && listing.images && listing.images.length > 0 ? (
+                                <Image
+                                  src={listing.images[0]}
+                                  alt={listing.title || 'Listing'}
+                                  fill
+                                  className="object-cover"
+                                  sizes="300px"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-accent-400 text-sm">No Image</span>
+                                </div>
+                              )}
                               {/* Match Score Badge */}
                               <div
                                 className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}
@@ -1257,10 +1268,20 @@ export function AIMatchingKanban({
                               }`}
                           >
                             {/* Card Image */}
-                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                              <span className="text-accent-400 text-sm">
-                                Image
-                              </span>
+                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200">
+                              {listing && listing.images && listing.images.length > 0 ? (
+                                <Image
+                                  src={listing.images[0]}
+                                  alt={listing.title || 'Listing'}
+                                  fill
+                                  className="object-cover"
+                                  sizes="300px"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-accent-400 text-sm">No Image</span>
+                                </div>
+                              )}
                               {/* Match Score Badge - only show on top card */}
                               {index === 1 && (
                                 <div

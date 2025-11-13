@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { MapPin, Clock, Heart, Sparkles, X, Undo2 } from "lucide-react";
 import { MatchedListing } from "@/components/matching/types";
 
@@ -117,8 +118,20 @@ export function MatchCard({ listing, showMatchScore = true, compact = false, onL
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-neutral-200">
       {/* Image */}
-      <div className="relative w-full aspect-[4/3] bg-primary-100 flex items-center justify-center">
-        <span className="text-accent-400 text-sm">Image</span>
+      <div className="relative w-full aspect-[4/3] bg-primary-100">
+        {listing.images && listing.images.length > 0 ? (
+          <Image
+            src={listing.images[0]}
+            alt={listing.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-accent-400 text-sm">No Image</span>
+          </div>
+        )}
 
         {/* Match Score Badge - Positioned on Image */}
         {showMatchScore && (
