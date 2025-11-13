@@ -8,6 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { X } from "lucide-react";
 import axios, { AxiosError } from "axios";
+import { useAuth } from "@clerk/nextjs";
 
 // Initialize Stripe
 const stripePromise = loadStripe(
@@ -46,15 +47,19 @@ export function StripePayment({
   const [error, setError] = useState<string>("");
 
   const amountNumber = parseAmount(amount);
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const createCheckoutSession = async () => {
       try {
+        const token = await getToken({ template: "default" });
         const response = await axios.post<{ clientSecret: string }>("/api/create-checkout-session", {
           amount: amountNumber,
           title,
           description,
           metadata,
+        },{
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         setClientSecret(response.data.clientSecret);

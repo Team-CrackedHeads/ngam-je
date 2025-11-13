@@ -13,6 +13,7 @@ import dynamic from "next/dynamic";
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { MeetupScheduler } from "@/components/checkout/MeetupScheduler";
 import { StripePayment } from "@/components/checkout/StripePayment";
+import { useUser } from "@clerk/nextjs";
 
 const GoogleLocationMap = dynamic(() => import("@/components/create-listing/GoogleLocationMap"), {
   ssr: false,
@@ -89,6 +90,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
 
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const placesLibrary = useMapsLibrary('places');
+
+  const { user, isLoaded, isSignedIn } = useUser();
 
   // Handle location search with Google Places Autocomplete
   const handleLocationSearch = (query: string, _isDelivery: boolean = true) => {
@@ -1165,7 +1168,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
       </motion.div>
 
       {/* Stripe Payment Modal */}
-      {showPayment && (
+      {showPayment && isLoaded && isSignedIn && (
         <StripePayment
           amount={("price" in listing ? listing.price : listing.budget) || 0}
           title="Complete Payment"
@@ -1174,10 +1177,17 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
             listingId: String(listing.id),
             listingTitle: listing.title,
             dealType: selectedDealType || "unknown",
+            clerkUserId: user?.id!,
           }}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
         />
+      )}
+      {/* Fallback, in case if user is somehow logged out during the process. */}
+      {showPayment && (!isLoaded || !isSignedIn) && (
+        <div className="p-6 text-center">
+          <p>Please sign in to proceed with payment.</p>
+        </div>
       )}
     </motion.div>
   );
