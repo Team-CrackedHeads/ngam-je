@@ -56,6 +56,11 @@ class Settings(BaseSettings):
     DIDIT_BASE_URL: str = "https://verification.didit.me"
     DIDIT_CALLBACK_URL: str = ""  # Webhook callback URL (must be publicly accessible)
 
+    # Cloudinary Image Storage
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+
     # ============================================================================
     # TEMPORARY: KYC Bypass Mode for Development
     # TODO: Remove this section before production deployment
