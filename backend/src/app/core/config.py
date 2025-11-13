@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
+    # Cloud SQL
+    instance_connection_name: str | None = None
+
     # GCP
     gcp_project_id: str | None = None
     gcp_region: str = "us-central1"
