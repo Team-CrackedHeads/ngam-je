@@ -361,10 +361,58 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
 
       const formData = listingType === 'buy' ? buyFormData : sellFormData;
 
+      // Get token for API calls
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
       // Get images based on listing type
       const images = listingType === 'buy'
         ? (formData as BuyFormData).generatedImages
         : (formData as SellFormData).uploadedImages;
+
+      // Upload images to Cloudinary first
+      console.log('🖼️ Starting image upload. Images to upload:', images.length);
+      console.log('📸 Image URLs:', images);
+
+      let uploadedImageUrls: string[] = [];
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          const imageUrl = images[i];
+          try {
+            console.log(`⬆️ Uploading image ${i + 1}/${images.length}...`);
+
+            // Fetch the blob and convert to File
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `listing-${Date.now()}.jpg`, { type: blob.type });
+
+            console.log('📦 File created:', file.name, file.size, 'bytes');
+
+            // Upload to Cloudinary
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', file);
+
+            console.log('🚀 Sending to /api/v1/upload/image...');
+            const uploadResponse = await apiClient.instance.post('/api/v1/upload/image', uploadFormData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+              params: { folder: 'listings' }
+            });
+
+            console.log('✅ Upload response:', uploadResponse.data);
+
+            if (uploadResponse.data.success) {
+              uploadedImageUrls.push(uploadResponse.data.data.url);
+              console.log(`✓ Uploaded successfully:`, uploadResponse.data.data.url);
+            }
+          } catch (err: any) {
+            console.error(`❌ Failed to upload image ${i + 1}:`, err);
+            console.error('Error response:', err.response?.data);
+          }
+        }
+      }
+
+      console.log(`📊 Upload complete: ${uploadedImageUrls.length}/${images.length} successful`);
+      console.log('🔗 Uploaded URLs:', uploadedImageUrls);
 
       // Prepare listing data for API
       const displayPrice = parseFloat(listingType === 'buy' ? formData.maxPrice : formData.minPrice);
@@ -390,8 +438,8 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
         max_price: maxPrice && maxPrice > 0 ? maxPrice : null,
         currency: formData.currency || 'MYR',
         listing_type: listingType === 'buy' ? 'wanted' : 'sale',
-        image_url: images && images.length > 0 ? images[0] : null,
-        gallery: images && images.length > 1 ? images.slice(1) : [],
+        image_url: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : null,
+        gallery: uploadedImageUrls.length > 1 ? uploadedImageUrls.slice(1) : [],
         tags: formData.tags || [],
         creator_location: formData.location || null,
         shipping_options: formData.shippingOptions || [],
@@ -403,10 +451,9 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
       };
 
       console.log('Creating listing with data:', listingData);
+      console.log('Uploaded image URLs:', uploadedImageUrls);
 
-      // Call backend API
-      const token = await getToken();
-      const apiClient = createClerkApiClient(token);
+      // Call backend API (token and apiClient already created above)
       const createdListing = await createListing(apiClient.instance, listingData);
 
       // Call original callbacks if provided

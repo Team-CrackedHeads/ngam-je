@@ -54,6 +54,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'al-ikhsan.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
     ],
   },
 };
