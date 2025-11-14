@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, XCircle, AlertTriangle, Loader2, Lightbulb, Tag } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Loader2, Lightbulb, Gauge, ClipboardList } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { ChecklistItem, EvaluationResult } from '@/hooks/use-description-evaluator';
 
 interface DescriptionEvaluatorProps {
@@ -47,19 +48,25 @@ export default function DescriptionEvaluator({ evaluation, isEvaluating, error }
   };
 
   return (
-    <div className={`mt-3 p-4 border rounded-lg ${getBgColor(evaluation.score)}`}>
+    <div className={`mt-3 p-4 border rounded-lg ${getBgColor(evaluation.completeness_score)}`}>
       {/* Score */}
       <div className="mb-3">
-        <p className="text-sm font-medium text-gray-700">Quality Score</p>
-        <p className={`text-2xl font-bold ${getScoreColor(evaluation.score)}`}>
-          {evaluation.score}%
+        <p className="text-base font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
+          <Gauge className="w-5 h-5" />
+          Completeness Score
+        </p>
+        <p className={`text-2xl font-bold ${getScoreColor(evaluation.completeness_score)}`}>
+          {evaluation.completeness_score}%
         </p>
       </div>
 
       {/* Checklist */}
       {evaluation.checklist.length > 0 && (
         <div className="mb-3">
-          <p className="text-sm font-medium text-gray-700 mb-2">Checklist</p>
+          <p className="text-base font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+            <ClipboardList className="w-5 h-5" />
+            Checklist
+          </p>
           <div className="space-y-1">
             {evaluation.checklist.map((item, idx) => (
               <ChecklistItemComponent key={idx} item={item} />
@@ -70,50 +77,30 @@ export default function DescriptionEvaluator({ evaluation, isEvaluating, error }
 
       {/* Suggestions */}
       {evaluation.suggestions.length > 0 && (
-        <div className="mb-2">
-          <p className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-            <Lightbulb className="w-4 h-4" />
+        <div>
+          <p className="text-base font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
+            <Lightbulb className="w-5 h-5" />
             Suggestions
           </p>
-          <ul className="text-sm text-gray-700 space-y-1">
+          <ul className="text-sm text-gray-700 space-y-2">
             {evaluation.suggestions.map((suggestion, idx) => (
               <li key={idx} className="flex items-start gap-2">
                 <span className="text-gray-400 mt-0.5">•</span>
-                <span>{suggestion}</span>
+                <div className="flex-1 prose prose-sm max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <span className="inline">{children}</span>,
+                      strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      code: ({ children }) => <code className="px-1 py-0.5 bg-gray-100 rounded text-xs font-mono">{children}</code>,
+                    }}
+                  >
+                    {suggestion}
+                  </ReactMarkdown>
+                </div>
               </li>
             ))}
           </ul>
-        </div>
-      )}
-
-      {/* Suggested Title */}
-      {evaluation.suggested_title && (
-        <div className="mb-2">
-          <p className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            Suggested Title:
-          </p>
-          <p className="text-sm text-gray-800 italic">"{evaluation.suggested_title}"</p>
-        </div>
-      )}
-
-      {/* Suggested Tags */}
-      {evaluation.suggested_tags.length > 0 && (
-        <div className="pt-2 border-t border-gray-200">
-          <p className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
-            <Tag className="w-3 h-3" />
-            Suggested Tags:
-          </p>
-          <div className="flex flex-wrap gap-1">
-            {evaluation.suggested_tags.map((tag, idx) => (
-              <span
-                key={idx}
-                className="px-2 py-0.5 bg-white border border-gray-300 rounded text-xs text-gray-700"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
         </div>
       )}
     </div>
@@ -144,7 +131,7 @@ function ChecklistItemComponent({ item }: { item: ChecklistItem }) {
   };
 
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex items-center gap-2">
       {getIcon()}
       <div className="flex-1">
         <p className={`text-sm font-medium ${getTextColor()}`}>{item.label}</p>

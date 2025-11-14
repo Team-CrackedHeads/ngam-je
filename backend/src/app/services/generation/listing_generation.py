@@ -11,6 +11,8 @@ Purpose: Transform good descriptions into polished marketplace listings
 from typing import List, Literal
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.providers.google import GoogleProvider
 from src.app.core.logging_config import get_logger
 from src.app.services.generation.config import get_ai_settings
 
@@ -78,8 +80,11 @@ def get_buy_listing_agent() -> Agent:
     """Get or create buy listing agent"""
     global _buy_listing_agent
     if _buy_listing_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _buy_listing_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=GeneratedListing,
             system_prompt=BUY_LISTING_PROMPT,
         )
@@ -90,8 +95,11 @@ def get_sell_listing_agent() -> Agent:
     """Get or create sell listing agent"""
     global _sell_listing_agent
     if _sell_listing_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _sell_listing_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=GeneratedListing,
             system_prompt=SELL_LISTING_PROMPT,
         )
@@ -137,12 +145,12 @@ Additional context:
 Create a complete listing with title, description, and tags."""
 
         result = await agent.run(prompt)
-        logger.info(f"✅ Generated listing: {result.data.title[:50]}...")
+        logger.info(f"✅ Generated listing: {result.output.title[:50]}...")
 
         return {
-            "title": result.data.title,
-            "description": result.data.description,
-            "tags": result.data.tags,
+            "title": result.output.title,
+            "description": result.output.description,
+            "tags": result.output.tags,
         }
 
     except Exception as e:
@@ -165,8 +173,11 @@ def get_regenerate_title_agent() -> Agent:
     """Get or create regenerate title agent"""
     global _regenerate_title_agent
     if _regenerate_title_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _regenerate_title_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=str,
             system_prompt="Generate a catchy, SEO-friendly marketplace listing title (max 80 characters). Respond with ONLY the title text.",
         )
@@ -177,8 +188,11 @@ def get_regenerate_description_agent() -> Agent:
     """Get or create regenerate description agent"""
     global _regenerate_description_agent
     if _regenerate_description_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _regenerate_description_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=str,
             system_prompt="Generate a detailed, compelling marketplace listing description (200-400 characters). Respond with ONLY the description text.",
         )
@@ -189,8 +203,11 @@ def get_regenerate_tags_agent() -> Agent:
     """Get or create regenerate tags agent"""
     global _regenerate_tags_agent
     if _regenerate_tags_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _regenerate_tags_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=TagList,
             system_prompt="Generate 5-8 relevant keywords/tags for a marketplace listing.",
         )
@@ -223,7 +240,7 @@ Create a DIFFERENT, more engaging title."""
 
         agent = get_regenerate_title_agent()
         result = await agent.run(prompt)
-        new_title = result.data.strip()
+        new_title = result.output.strip()
         logger.info(f"✅ Regenerated title: {new_title[:50]}...")
         return new_title
 
@@ -258,7 +275,7 @@ Create a DIFFERENT, more compelling description."""
 
         agent = get_regenerate_description_agent()
         result = await agent.run(prompt)
-        new_description = result.data.strip()
+        new_description = result.output.strip()
         logger.info(f"✅ Regenerated description")
         return new_description
 
@@ -293,7 +310,7 @@ Generate DIFFERENT, more relevant tags."""
 
         agent = get_regenerate_tags_agent()
         result = await agent.run(prompt)
-        new_tags = result.data.tags
+        new_tags = result.output.tags
         logger.info(f"✅ Regenerated {len(new_tags)} tags")
         return new_tags
 

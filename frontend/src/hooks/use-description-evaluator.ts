@@ -8,11 +8,15 @@ export interface ChecklistItem {
 }
 
 export interface EvaluationResult {
-  score: number;
+  completeness_score: number;
+  coverage: {
+    what: boolean;
+    why: boolean;
+    how: boolean;
+  };
   checklist: ChecklistItem[];
+  missing_info: string[];
   suggestions: string[];
-  suggested_title: string;
-  suggested_tags: string[];
 }
 
 interface UseDescriptionEvaluatorOptions {

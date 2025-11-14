@@ -11,7 +11,10 @@ Purpose: Evaluate user's freeform input and guide them to write better descripti
 from typing import Literal
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.providers.google import GoogleProvider
 from src.app.core.logging_config import get_logger
+from src.app.services.generation.config import get_ai_settings
 
 logger = get_logger("app.services.listing_evaluation.feedback")
 
@@ -26,7 +29,7 @@ class CoverageAnalysis(BaseModel):
     """Coverage of key information dimensions"""
     what: bool = Field(description="Product/item clearly identified?")
     why: bool = Field(description="Purpose/intent/use-case explained?")
-    how: bool = Field(description="Details like budget, specs, condition, preferences mentioned?")
+    how: bool = Field(description="Specs, condition, features, or preferences mentioned?")
 
 
 class FeedbackItem(BaseModel):
@@ -40,11 +43,9 @@ class DescriptionFeedback(BaseModel):
     """Complete feedback result from the agent"""
     completeness_score: int = Field(ge=0, le=100, description="How complete is the description (0-100)")
     coverage: CoverageAnalysis = Field(description="What dimensions are covered")
-    checklist: list[FeedbackItem] = Field(description="Specific checks and their status")
+    checklist: list[FeedbackItem] = Field(description="Top 3-5 most important checks and their status (limit to avoid overwhelming UI)")
     missing_info: list[str] = Field(description="What critical info is missing")
-    suggestions: list[str] = Field(description="Actionable suggestions to improve")
-    suggested_title: str = Field(default="", description="Suggested title based on description")
-    suggested_tags: list[str] = Field(default_factory=list, description="Suggested tags/keywords")
+    suggestions: list[str] = Field(description="Top 3-5 actionable suggestions to improve")
 
 
 # Context-aware system prompts for buy vs sell
@@ -53,36 +54,36 @@ BUY_SYSTEM_PROMPT = """You are a marketplace feedback agent helping buyers write
 Analyze the user's freeform description and evaluate:
 1. **WHAT** - Is the product/item type clearly identified? (e.g., "iPhone 13", "gaming laptop", "office chair")
 2. **WHY** - Is the purpose/use-case explained? (e.g., "for university", "replacing broken one", "gift for wife")
-3. **HOW** - Are preferences/requirements mentioned? (e.g., budget range, specs, condition, brand, color, location)
+3. **HOW** - Are specifications/preferences mentioned? (e.g., specs, condition, brand, color, storage size, model variant)
+
+Note: Price and location are handled separately - focus only on product details.
 
 Provide:
 - Completeness score (0-100)
 - Coverage analysis (what/why/how booleans)
-- Checklist of specific passes/warnings/failures
-- Missing information list
-- Actionable suggestions
-- Suggested title (format: "Looking for [item]" or "WTB: [item]")
-- Suggested tags
+- **Checklist: LIMIT to 3-5 most important items** - Focus on the most critical passes/warnings/failures
+- Missing information list (focus on product specs/condition, NOT price/location)
+- **Suggestions: LIMIT to 3-5 actionable items** - Only the most impactful product detail improvements
 
-Be encouraging but specific. Help them write a description that attracts good offers."""
+Be encouraging but concise. Help them write a description with enough context to attract good offers."""
 
 SELL_SYSTEM_PROMPT = """You are a marketplace feedback agent helping sellers write better "For Sale" posts.
 
 Analyze the seller's description and evaluate:
-1. **WHAT** - Is the product clearly identified? (e.g., "iPhone 13 Pro 256GB", "Herman Miller Aeron chair")
+1. **WHAT** - Is the product clearly identified? (e.g., "iPhone 13 Pro 256GB", "Herman Miller Aeron chair Size B")
 2. **WHY** - Is the reason for selling mentioned? (e.g., "upgrading", "moving", "not using anymore")
-3. **HOW** - Are key details provided? (e.g., condition, age, warranty, accessories, price, photos)
+3. **HOW** - Are key details provided? (e.g., condition, age, warranty status, included accessories, modifications)
+
+Note: Price and location are handled separately - focus only on product details.
 
 Provide:
 - Completeness score (0-100)
 - Coverage analysis (what/why/how booleans)
-- Checklist of specific passes/warnings/failures
-- Missing information list
-- Actionable suggestions
-- Suggested title (format: "For Sale: [item]" or "WTS: [item]")
-- Suggested tags
+- **Checklist: LIMIT to 3-5 most important items** - Focus on the most critical passes/warnings/failures
+- Missing information list (focus on product condition/specs, NOT price/location)
+- **Suggestions: LIMIT to 3-5 actionable items** - Only the most impactful product detail improvements
 
-Be encouraging but specific. Help them write a description that builds buyer confidence."""
+Be encouraging but concise. Help them write a description that builds buyer confidence."""
 
 
 def quick_rule_check(text: str) -> dict:
@@ -110,8 +111,11 @@ def get_buy_feedback_agent() -> Agent:
     """Get or create buy feedback agent"""
     global _buy_feedback_agent
     if _buy_feedback_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _buy_feedback_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=DescriptionFeedback,
             system_prompt=BUY_SYSTEM_PROMPT,
         )
@@ -122,8 +126,11 @@ def get_sell_feedback_agent() -> Agent:
     """Get or create sell feedback agent"""
     global _sell_feedback_agent
     if _sell_feedback_agent is None:
+        settings = get_ai_settings()
+        provider = GoogleProvider(api_key=settings.gemini_api_key)
+        model = GoogleModel('gemini-2.5-flash', provider=provider)
         _sell_feedback_agent = Agent(
-            'gemini-2.5-flash',
+            model,
             output_type=DescriptionFeedback,
             system_prompt=SELL_SYSTEM_PROMPT,
         )
@@ -162,9 +169,7 @@ async def evaluate_listing_description(
                 }
             ],
             "missing_info": ["Add more details about what you're looking for"],
-            "suggestions": ["Write at least a few words describing what you need"],
-            "suggested_title": "",
-            "suggested_tags": []
+            "suggestions": ["Write at least a few words describing what you need"]
         }
 
     if rules["blocked_words"]:
@@ -179,9 +184,7 @@ async def evaluate_listing_description(
                 }
             ],
             "missing_info": [],
-            "suggestions": ["Remove spam/inappropriate content and rewrite"],
-            "suggested_title": "",
-            "suggested_tags": []
+            "suggestions": ["Remove spam/inappropriate content and rewrite"]
         }
 
     # Step 2: AI-powered smart evaluation
@@ -199,9 +202,9 @@ Basic stats:
 Provide complete structured feedback."""
 
         result = await agent.run(prompt)
-        logger.info(f"✅ Feedback complete: {result.data.completeness_score}% score")
+        logger.info(f"✅ Feedback complete: {result.output.completeness_score}% score")
 
-        return result.data.model_dump()
+        return result.output.model_dump()
 
     except Exception as e:
         logger.error(f"❌ Feedback generation failed: {e}", exc_info=True)
@@ -229,14 +232,11 @@ Provide complete structured feedback."""
             "missing_info": [
                 "Specific product details",
                 "Purpose or use case",
-                "Budget or price range",
-                "Preferred specs or conditions"
+                "Preferred specs or condition"
             ],
             "suggestions": [
                 "Add more specific details about what you're looking for",
-                "Mention your budget range",
+                "Mention preferred specifications or condition",
                 "Explain why you need this item"
-            ],
-            "suggested_title": "",
-            "suggested_tags": []
+            ]
         }

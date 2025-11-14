@@ -133,6 +133,7 @@ export default function CreateListingModal({
   ]);
   const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
   const [showDescriptionHints, setShowDescriptionHints] = useState(true);
+  const [showEvaluationFeedback, setShowEvaluationFeedback] = useState(true);
 
   // Sell-specific states
   const [isVerifyingOwnership, setIsVerifyingOwnership] = useState(false);
@@ -1616,55 +1617,80 @@ export default function CreateListingModal({
                         />
                       </div>
 
-                      {/* Writing Tips & Guidelines */}
-                      <div className="mt-2">
-                        <button
-                          onClick={() => setShowDescriptionHints(!showDescriptionHints)}
-                          className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <Info className="w-3.5 h-3.5" />
-                            Writing Tips & Guidelines
-                          </span>
-                          {showDescriptionHints ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
+                      {/* Writing Tips & Guidelines and Evaluation Feedback */}
+                      <div className="mt-2 space-y-2">
+                        {/* Writing Tips & Guidelines */}
+                        <div>
+                          <button
+                            onClick={() => setShowDescriptionHints(!showDescriptionHints)}
+                            className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Info className="w-3.5 h-3.5" />
+                              Writing Tips & Guidelines
+                            </span>
+                            {showDescriptionHints ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </button>
+                          {showDescriptionHints && (
+                            <div className="mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs text-gray-600 font-medium mb-2">
+                                For best results, include:
+                              </p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Brand, model, or specific product name</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Condition (new, used, like-new, etc.)</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Key features, specifications, or requirements</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Any preferences or deal-breakers</span>
+                                </li>
+                              </ul>
+                            </div>
                           )}
-                        </button>
-                        {showDescriptionHints && (
-                          <div className="mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                            <p className="text-xs text-gray-600 font-medium mb-2">
-                              For best results, include:
-                            </p>
-                            <ul className="text-xs text-gray-500 space-y-1">
-                              <li className="flex items-start gap-2">
-                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                <span>Brand, model, or specific product name</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                <span>Condition (new, used, like-new, etc.)</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                <span>Key features, specifications, or requirements</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                <span>Any preferences or deal-breakers</span>
-                              </li>
-                            </ul>
+                        </div>
+
+                        {/* AI Feedback - Collapsible */}
+                        {(evaluation || isEvaluating || evaluationError) && (
+                          <div>
+                            <button
+                              onClick={() => setShowEvaluationFeedback(!showEvaluationFeedback)}
+                              className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                AI Feedback
+                              </span>
+                              {showEvaluationFeedback ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </button>
+                            {showEvaluationFeedback && (
+                              <div className="mt-2">
+                                <DescriptionEvaluator
+                                  evaluation={evaluation}
+                                  isEvaluating={isEvaluating}
+                                  error={evaluationError}
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-
-                      {/* Description Evaluator */}
-                      <DescriptionEvaluator
-                        evaluation={evaluation}
-                        isEvaluating={isEvaluating}
-                        error={evaluationError}
-                      />
                     </div>
 
                     {/* Action Buttons */}
