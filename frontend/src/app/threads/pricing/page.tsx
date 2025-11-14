@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
 import { MOCK_THREADS, TIER_FEATURES } from "@/utils/mock-all-data-used";
 import { StripePayment } from "@/components/checkout/StripePayment";
+import { useUser } from "@clerk/nextjs";
 
 // component for feature value display
 function FeatureValue({ value }: { value: string | boolean }) {
@@ -91,6 +92,8 @@ function PricingPageContent() {
   const boostRequirements = [0, 2, 7, 14];
   const [hoveredTier, setHoveredTier] = useState<number | null>(null);
   const [showPayment, setShowPayment] = useState<boolean>(false);
+  
+  const { user, isLoaded, isSignedIn } = useUser();
 
   // calculate boosts needed for next tier
   const boostsToNextTier =
@@ -348,7 +351,7 @@ function PricingPageContent() {
       </div>
 
       {/* Stripe Payment Modal */}
-      {showPayment && (
+      {showPayment && isLoaded && isSignedIn && (
         <StripePayment
           amount={4.99}
           title="Boost This Thread"
@@ -357,10 +360,17 @@ function PricingPageContent() {
             threadId: threadData.id.toString(),
             threadTitle: threadData.title,
             category: threadData.category,
+            clerkUserId: user?.id!,
           }}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
         />
+      )}
+      {/* Fallback, in case if user is not logged in. */}
+      {showPayment && (!isLoaded || !isSignedIn) && (
+        <div className="p-6 text-center">
+          <p>Please sign in to proceed with payment.</p>
+        </div>
       )}
     </div>
   );
