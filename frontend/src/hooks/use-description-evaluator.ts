@@ -32,27 +32,35 @@ export function useDescriptionEvaluator(options: UseDescriptionEvaluatorOptions)
   const abortControllerRef = useRef<AbortController>();
 
   const evaluateText = useCallback(async (text: string) => {
+    console.log('🔍 evaluateText called with:', { textLength: text.length, minChars });
+
     // Cancel any pending request
     if (abortControllerRef.current) {
+      console.log('❌ Aborting previous request');
       abortControllerRef.current.abort();
     }
 
     // Reset if text is too short
     if (text.length < minChars) {
+      console.log('⚠️ Text too short, skipping evaluation');
       setEvaluation(null);
       setIsEvaluating(false);
       setError(null);
       return;
     }
 
+    console.log('✅ Starting evaluation...');
     setIsEvaluating(true);
     setError(null);
 
     try {
       abortControllerRef.current = new AbortController();
 
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/evaluate-description`;
+      console.log('📡 Sending request to:', url);
+
       const response = await axios.post(
-        '/api/v1/generation/evaluate-description',
+        url,
         {
           text: text,
           listing_type: listingType,
@@ -62,12 +70,14 @@ export function useDescriptionEvaluator(options: UseDescriptionEvaluatorOptions)
         }
       );
 
+      console.log('✅ Evaluation response:', response.data);
       setEvaluation(response.data);
     } catch (err: any) {
       if (axios.isCancel(err)) {
+        console.log('🚫 Request cancelled');
         return;
       }
-      console.error('Evaluation error:', err);
+      console.error('❌ Evaluation error:', err);
       setError(err.response?.data?.detail || 'Failed to evaluate description');
     } finally {
       setIsEvaluating(false);
@@ -75,14 +85,31 @@ export function useDescriptionEvaluator(options: UseDescriptionEvaluatorOptions)
   }, [listingType, minChars]);
 
   const debouncedEvaluate = useCallback((text: string) => {
+    console.log('⏱️ debouncedEvaluate called, debounce:', debounceMs, 'ms');
+
     if (debounceTimerRef.current) {
+      console.log('🔄 Clearing previous debounce timer');
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(() => {
+      console.log('⏰ Debounce timer fired, evaluating now...');
       evaluateText(text);
     }, debounceMs);
   }, [evaluateText, debounceMs]);
+
+  const reset = useCallback(() => {
+    console.log('🔄 Resetting evaluation state');
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setEvaluation(null);
+    setIsEvaluating(false);
+    setError(null);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -100,5 +127,6 @@ export function useDescriptionEvaluator(options: UseDescriptionEvaluatorOptions)
     isEvaluating,
     error,
     evaluate: debouncedEvaluate,
+    reset,
   };
 }

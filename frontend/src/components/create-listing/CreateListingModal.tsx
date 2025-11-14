@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
@@ -56,6 +56,8 @@ import ProductDetailsStep from "./steps/ProductDetailsStep";
 import PricingShippingStep from "./steps/PricingShippingStep";
 import FAQsStep from "./steps/FAQsStep";
 import PreviewStep from "./steps/PreviewStep";
+import DescriptionEvaluator from "./DescriptionEvaluator";
+import { useDescriptionEvaluator } from "@/hooks/use-description-evaluator";
 import axios, { AxiosError } from "axios";
 
 interface CreateListingModalProps {
@@ -91,6 +93,11 @@ export default function CreateListingModal({
   const [aiContextGathered, setAiContextGathered] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  // Description evaluator for AI mode textarea
+  const { evaluation, isEvaluating, error: evaluationError, evaluate, reset: resetEvaluation } = useDescriptionEvaluator({
+    listingType: listingType || 'buy',
+  });
   const [externalImages, setExternalImages] = useState<string[]>([]); // Results from both search AND generate
   const [selectedExternalImages, setSelectedExternalImages] = useState<string[]>([]); // Selected from search/generate (max 3)
   const [isSearchingImages, setIsSearchingImages] = useState(false);
@@ -173,6 +180,14 @@ export default function CreateListingModal({
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
   const [priceRegenerateCount, setPriceRegenerateCount] = useState(0);
   const MAX_PRICE_REGENERATIONS = 3;
+
+  // Reset evaluation state when modal closes or listing type changes
+  useEffect(() => {
+    if (!isOpen || listingType === null) {
+      console.log('🧹 Cleaning up evaluation state (modal closed or no listing type)');
+      resetEvaluation();
+    }
+  }, [isOpen, listingType, resetEvaluation]);
 
   // Wrapper function to handle setState properly for both types
   const setFormData = useCallback(
@@ -1591,12 +1606,17 @@ export default function CreateListingModal({
                       <div className="relative">
                         <textarea
                           value={userInput}
-                          onChange={(e) => setUserInput(e.target.value)}
+                          onChange={(e) => {
+                            setUserInput(e.target.value);
+                            evaluate(e.target.value);
+                          }}
                           placeholder={`Describe the product you want to ${listingType}...`}
                           rows={6}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] resize-none transition-colors"
                         />
                       </div>
+
+                      {/* Writing Tips & Guidelines */}
                       <div className="mt-2">
                         <button
                           onClick={() => setShowDescriptionHints(!showDescriptionHints)}
@@ -1638,6 +1658,13 @@ export default function CreateListingModal({
                           </div>
                         )}
                       </div>
+
+                      {/* Description Evaluator */}
+                      <DescriptionEvaluator
+                        evaluation={evaluation}
+                        isEvaluating={isEvaluating}
+                        error={evaluationError}
+                      />
                     </div>
 
                     {/* Action Buttons */}
@@ -1657,6 +1684,7 @@ export default function CreateListingModal({
                             setSelectedExternalImages([]);
                             setGeneratedCount(0);
                             setUserInput("");
+                            resetEvaluation();
                           }}
                           variant="outline"
                           className="flex-1"

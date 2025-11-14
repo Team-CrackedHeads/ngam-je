@@ -6,10 +6,11 @@ Clean endpoints organized by what is being generated.
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Literal
 
 from src.app.core.logging_config import get_logger
 from src.app.services import generation
+from src.app.services import listing_evaluation
 
 logger = get_logger("app.api.generation")
 
@@ -173,7 +174,7 @@ async def generate_images_endpoint(request: GenerateImagesRequest) -> dict:
 class EvaluateDescriptionRequest(BaseModel):
     """Request model for description evaluation."""
     text: str
-    listing_type: str = "buy"
+    listing_type: Literal["buy", "sell"] = "buy"
 
 
 @router.post("/evaluate-description")
@@ -191,7 +192,7 @@ async def evaluate_description_endpoint(request: EvaluateDescriptionRequest) -> 
     """
     try:
         logger.info(f"📝 Evaluating description ({len(request.text)} chars)")
-        result = await generation.evaluate_listing_description(
+        result = await listing_evaluation.evaluate_listing_description(
             text=request.text,
             listing_type=request.listing_type,
         )
