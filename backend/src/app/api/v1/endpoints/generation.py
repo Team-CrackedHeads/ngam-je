@@ -170,6 +170,40 @@ async def generate_images_endpoint(request: GenerateImagesRequest) -> dict:
         raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")
 
 
+class EvaluateDescriptionRequest(BaseModel):
+    """Request model for description evaluation."""
+    text: str
+    listing_type: str = "buy"
+
+
+@router.post("/evaluate-description")
+async def evaluate_description_endpoint(request: EvaluateDescriptionRequest) -> dict:
+    """
+    Evaluate listing description quality with hybrid rule-based + AI approach.
+
+    Returns checklist, score, and suggestions.
+
+    Args:
+        request: EvaluateDescriptionRequest with text and listing_type
+
+    Returns:
+        dict with score, checklist, suggestions, suggested_title, suggested_tags
+    """
+    try:
+        logger.info(f"📝 Evaluating description ({len(request.text)} chars)")
+        result = await generation.evaluate_listing_description(
+            text=request.text,
+            listing_type=request.listing_type,
+        )
+        return result
+    except ValueError as e:
+        logger.error(f"❌ ValueError: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Evaluation error: {str(e)}")
+
+
 class PriceIntelligenceRequest(BaseModel):
     """Request model for price intelligence."""
     product_title: str

@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { Sparkles, Loader2, Upload, Trash2, Check, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import TagGenerator, { TagGeneratorRef } from '@/components/create-listing/tag-generator';
+import DescriptionEvaluator from '@/components/create-listing/DescriptionEvaluator';
+import { useDescriptionEvaluator } from '@/hooks/use-description-evaluator';
 import { PartialFormData } from '@/types/listing-form';
 
 interface ProductDetailsStepProps {
@@ -74,6 +75,18 @@ export default function ProductDetailsStep({
 
   const images = listingType === 'buy' ? formData.generatedImages : formData.uploadedImages;
 
+  // Description evaluator hook
+  const { evaluation, isEvaluating, error, evaluate } = useDescriptionEvaluator({
+    listingType,
+  });
+
+  // Evaluate description when it changes
+  useEffect(() => {
+    if (isAIModeEnabled && formData.generatedDescription) {
+      evaluate(formData.generatedDescription);
+    }
+  }, [formData.generatedDescription, isAIModeEnabled, evaluate]);
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -81,27 +94,14 @@ export default function ProductDetailsStep({
         <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
       </div>
 
-      {/* AI Action Bar */}
-      <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="ai-mode"
-              checked={isAIModeEnabled}
-              onCheckedChange={setIsAIModeEnabled}
-              className="data-[state=checked]:bg-[var(--color-secondary-500)]"
-            />
-            <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-[var(--color-secondary-600)]" />
-              AI Mode
-            </Label>
-          </div>
-          {isAIModeEnabled && (
-            <p className="text-xs text-[var(--color-primary-900)] italic">
-              Click the regenerate icon next to any field to update it
-            </p>
-          )}
-        </div>
+      <div className="flex justify-center mb-6">
+        <button
+          onClick={() => setIsAIModeEnabled(true)}
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-yellow-950 bg-yellow-500 hover:bg-yellow-600 transition-all duration-300 pulse-glow"
+        >
+          <Sparkles className="w-5 h-5" />
+          AI-Powered Listing
+        </button>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
@@ -389,6 +389,15 @@ export default function ProductDetailsStep({
               <span className="ml-2 text-[var(--color-secondary-500)]">• Press Tab to accept suggestion</span>
             )}
           </p>
+
+          {/* Description Evaluator - Password Checker Style */}
+          {isAIModeEnabled && (
+            <DescriptionEvaluator
+              evaluation={evaluation}
+              isEvaluating={isEvaluating}
+              error={error}
+            />
+          )}
         </div>
 
         {/* Tags Section */}

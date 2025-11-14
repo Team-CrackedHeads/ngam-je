@@ -24,6 +24,8 @@ dependencies = [
     "google-genai>=1.49.0",
     "pillow>=12.0.0",
     "parlant",
+    "pydantic-ai>=1.17.0",
+    "redis>=7.0.1",
 ]
 
 [dependency-groups]

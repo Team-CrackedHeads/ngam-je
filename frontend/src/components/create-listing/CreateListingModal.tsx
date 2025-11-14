@@ -11,6 +11,8 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   X,
   MessageCircle,
   ShoppingCart,
@@ -123,6 +125,7 @@ export default function CreateListingModal({
     "SGD",
   ]);
   const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
+  const [showDescriptionHints, setShowDescriptionHints] = useState(true);
 
   // Sell-specific states
   const [isVerifyingOwnership, setIsVerifyingOwnership] = useState(false);
@@ -663,7 +666,29 @@ export default function CreateListingModal({
 
   const handleSendMessage = async () => {
     const allImages = [...selectedExternalImages, ...uploadedImages];
-    if (!userInput.trim() && allImages.length === 0) return;
+
+    // Check if at least one image is provided
+    if (allImages.length === 0) {
+      setErrorModal({
+        isOpen: true,
+        title: "Image Required",
+        message: "Please provide at least one image to generate your listing. You can upload an image or use the Search/Generate tabs to find one.",
+        icon: 'alert',
+      });
+      return;
+    }
+
+    // Inform user if generating without text description
+    if (!userInput.trim()) {
+      setErrorModal({
+        isOpen: true,
+        title: "Generating from Images Only",
+        message: "We'll analyze your images and create a listing for you! Since no description was provided, we'll make our best guess. You can always edit or regenerate the content afterward.",
+        icon: 'alert',
+      });
+      // Continue with generation after showing the message
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to show modal
+    }
 
     setIsGeneratingAll(true);
 
@@ -1563,42 +1588,90 @@ export default function CreateListingModal({
                       <label className="block text-sm font-medium mb-2 text-accent-700">
                         Tell us about the product
                       </label>
-                      <textarea
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        placeholder={`Describe the product you want to ${listingType}...`}
-                        rows={4}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] resize-none"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Include details like brand, model, condition, etc.
-                      </p>
+                      <div className="relative">
+                        <textarea
+                          value={userInput}
+                          onChange={(e) => setUserInput(e.target.value)}
+                          placeholder={`Describe the product you want to ${listingType}...`}
+                          rows={6}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] resize-none transition-colors"
+                        />
+                      </div>
+                      <div className="mt-2">
+                        <button
+                          onClick={() => setShowDescriptionHints(!showDescriptionHints)}
+                          className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Info className="w-3.5 h-3.5" />
+                            Writing Tips & Guidelines
+                          </span>
+                          {showDescriptionHints ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </button>
+                        {showDescriptionHints && (
+                          <div className="mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                            <p className="text-xs text-gray-600 font-medium mb-2">
+                              For best results, include:
+                            </p>
+                            <ul className="text-xs text-gray-500 space-y-1">
+                              <li className="flex items-start gap-2">
+                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                <span>Brand, model, or specific product name</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                <span>Condition (new, used, like-new, etc.)</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                <span>Key features, specifications, or requirements</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                <span>Any preferences or deal-breakers</span>
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4">
-                      <Button
-                        onClick={() => {
-                          setIsAIModeEnabled(false);
-                          setUploadedImages([]);
-                          setExternalImages([]);
-                          setSelectedExternalImages([]);
-                          setGeneratedCount(0);
-                          setUserInput("");
-                        }}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        Exit AI Mode
-                      </Button>
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!userInput.trim() && selectedExternalImages.length === 0 && uploadedImages.length === 0}
-                        className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Listing
-                      </Button>
+                    <div className="space-y-2">
+                      {selectedExternalImages.length === 0 && uploadedImages.length === 0 && (
+                        <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Please provide at least one image to generate your listing</span>
+                        </div>
+                      )}
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => {
+                            setIsAIModeEnabled(false);
+                            setUploadedImages([]);
+                            setExternalImages([]);
+                            setSelectedExternalImages([]);
+                            setGeneratedCount(0);
+                            setUserInput("");
+                          }}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          Exit AI Mode
+                        </Button>
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={selectedExternalImages.length === 0 && uploadedImages.length === 0}
+                          className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black disabled:opacity-50"
+                        >
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate Listing
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
