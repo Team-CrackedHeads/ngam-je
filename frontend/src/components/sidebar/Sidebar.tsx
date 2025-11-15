@@ -563,28 +563,27 @@ export function AppSidebar() {
             <SidebarSeparator />
           </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <BuyListingsMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
-
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SellListingsMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          
           {isSignedIn && (<>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <BuyListingsMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
+
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SellListingsMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
             <div className="ml-1 mr-5">
               <SidebarSeparator />
             </div>
