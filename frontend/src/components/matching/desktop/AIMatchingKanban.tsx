@@ -146,11 +146,13 @@ export function AIMatchingKanban({
   const handleRecommendationAction = async (listingId: string, action: "like" | "pass") => {
     try {
       const apiClient = await getApiClient();
-      const listing = availableListings.find((l: any) => String(l.id) === listingId);
+      const listing = availableListings.find((l) => String(l.id) === listingId);
 
       console.log("🔍 Looking for listing:", listingId);
       console.log("📦 Found listing:", listing);
-      console.log("🔑 Recommendation ID:", (listing as any)?.recommendationId);
+
+      const extendedListing = listing as MatchedListing & { recommendationId?: number };
+      console.log("🔑 Recommendation ID:", extendedListing?.recommendationId);
 
       if (!listing) {
         console.error("❌ Listing not found:", listingId);
@@ -158,14 +160,14 @@ export function AIMatchingKanban({
         return;
       }
 
-      if (!(listing as any).recommendationId) {
+      if (!extendedListing.recommendationId) {
         console.error("❌ No recommendation ID found for listing:", listingId);
         console.error("Available listings:", availableListings);
         alert(`Error: No recommendation ID found for listing ${listingId}`);
         return;
       }
 
-      const recommendationId = (listing as any).recommendationId;
+      const recommendationId = extendedListing.recommendationId;
 
       console.log(`💚 ${action === "like" ? "Liking" : "Rejecting"} recommendation ${recommendationId}...`);
 

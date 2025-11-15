@@ -82,10 +82,11 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
     console.log("Listing type:", type);
     console.log("Is API listing:", isApiListing(listing));
     console.log("Listing data:", listing);
-    console.log("Recommendation ID:", (listing as any).recommendationId);
+    const extendedListing = listing as ApiListing & { recommendationId?: number };
+    console.log("Recommendation ID:", extendedListing.recommendationId);
 
     // For demo: Call API for any API listing (not just matched)
-    if (isApiListing(listing) && (listing as any).recommendationId) {
+    if (isApiListing(listing) && extendedListing.recommendationId) {
       try {
         console.log("Attempting to call checkout API...");
         const apiClient = await getApiClient();
@@ -99,7 +100,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
         };
 
         const checkoutData = {
-          recommendation_id: (listing as any).recommendationId,
+          recommendation_id: extendedListing.recommendationId,
           transaction_method: transactionMethodMap[dealDetails.dealType] || dealDetails.dealType,
           delivery_address: dealDetails.deliveryAddress,
           payment_method: dealDetails.useEscrow ? "escrow" : "direct"
@@ -118,7 +119,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
     } else {
       console.log("⚠️ Skipping checkout API call - missing requirements");
       console.log("- Is API listing:", isApiListing(listing));
-      console.log("- Has recommendation ID:", !!(listing as any).recommendationId);
+      console.log("- Has recommendation ID:", !!extendedListing.recommendationId);
     }
 
     // Don't close modal here - let CheckoutModal handle the flow

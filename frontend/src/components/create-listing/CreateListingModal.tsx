@@ -374,7 +374,7 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
       console.log('🖼️ Starting image upload. Images to upload:', images.length);
       console.log('📸 Image URLs:', images);
 
-      let uploadedImageUrls: string[] = [];
+      const uploadedImageUrls: string[] = [];
       if (images.length > 0) {
         for (let i = 0; i < images.length; i++) {
           const imageUrl = images[i];
@@ -404,9 +404,11 @@ export default function CreateListingModal({ isOpen, onClose, onSubmitBuy, onSub
               uploadedImageUrls.push(uploadResponse.data.data.url);
               console.log(`✓ Uploaded successfully:`, uploadResponse.data.data.url);
             }
-          } catch (err: any) {
+          } catch (err) {
             console.error(`❌ Failed to upload image ${i + 1}:`, err);
-            console.error('Error response:', err.response?.data);
+            if (err && typeof err === 'object' && 'response' in err) {
+              console.error('Error response:', (err as { response?: { data?: unknown } }).response?.data);
+            }
           }
         }
       }

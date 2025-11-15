@@ -12,7 +12,6 @@ import { useClerkApiClient } from "@/lib/clerk-api-client";
 import { fetchListingById } from "@/lib/api/listings";
 import { fetchListingRecommendations } from "@/lib/api/recommendations";
 import type { Listing as ApiListing } from "@/types/listing";
-import type { Recommendation } from "@/lib/api/recommendations";
 
 export default function ListingMatchesPage() {
   const params = useParams();
@@ -56,8 +55,8 @@ export default function ListingMatchesPage() {
         const matchedRec = recommendations.recommendations.find(rec => rec.status === "matched");
         if (matchedRec) {
           // Attach recommendation ID to your listing for checkout
-          (listing as any).recommendationId = matchedRec.id;
-          (listing as any).recommendationStatus = matchedRec.status;
+          (listing as ApiListing & { recommendationId?: number; recommendationStatus?: string }).recommendationId = matchedRec.id;
+          (listing as ApiListing & { recommendationId?: number; recommendationStatus?: string }).recommendationStatus = matchedRec.status;
         }
 
         setYourListing(listing);
@@ -75,10 +74,16 @@ export default function ListingMatchesPage() {
             const matchedListing = await fetchListingById(apiClient.instance, matchedListingId);
 
             // Attach recommendation metadata to the listing for the UI
-            (matchedListing as any).recommendationId = rec.id;
-            (matchedListing as any).matchScore = rec.match_score;
-            (matchedListing as any).matchReasons = rec.match_reasons;
-            (matchedListing as any).recommendationStatus = rec.status;
+            const extendedListing = matchedListing as ApiListing & {
+              recommendationId?: number;
+              matchScore?: number;
+              matchReasons?: string[];
+              recommendationStatus?: string
+            };
+            extendedListing.recommendationId = rec.id;
+            extendedListing.matchScore = rec.match_score;
+            extendedListing.matchReasons = rec.match_reasons;
+            extendedListing.recommendationStatus = rec.status;
 
             matches.push(matchedListing);
           } catch (err) {
@@ -217,7 +222,7 @@ export default function ListingMatchesPage() {
             type={
               selectedListing.id === yourListing.id
                 ? listingType
-                : (selectedListing as any).recommendationStatus === "matched"
+                : (selectedListing as ApiListing & { recommendationStatus?: string }).recommendationStatus === "matched"
                   ? "matched"
                   : listingType === "sale"
                     ? "wanted"

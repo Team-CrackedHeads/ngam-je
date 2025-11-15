@@ -370,11 +370,18 @@ const FAQPage: React.FC = () => {
 
       // Switch to unanswered tab to see the new question
       setActiveTab("unanswered");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to ask question:", error);
-      const errorMessage = error.response?.data?.detail?.[0]?.msg ||
-                          error.response?.data?.detail ||
-                          "Failed to ask question. Please try again.";
+      let errorMessage = "Failed to ask question. Please try again.";
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { detail?: unknown } } };
+        const detail = err.response?.data?.detail;
+        if (Array.isArray(detail) && detail[0]?.msg) {
+          errorMessage = detail[0].msg;
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        }
+      }
       alert(errorMessage);
     }
   };
