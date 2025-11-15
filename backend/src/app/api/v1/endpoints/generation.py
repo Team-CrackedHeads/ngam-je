@@ -246,3 +246,122 @@ async def get_price_intelligence_endpoint(request: PriceIntelligenceRequest) -> 
     except Exception as e:
         logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Price intelligence error: {str(e)}")
+
+
+class VerifyOwnershipRequest(BaseModel):
+    """Request model for ownership verification."""
+    image_data_url: str
+    expected_username: str | None = None
+
+
+@router.post("/verify-ownership")
+async def verify_ownership_endpoint(request: VerifyOwnershipRequest) -> dict:
+    """
+    Verify proof of ownership using Gemini OCR.
+
+    Checks if the image contains:
+    - User's name/username
+    - Current date (within 7 days)
+    - Clear, readable text
+
+    Args:
+        request: VerifyOwnershipRequest with image and optional username
+
+    Returns:
+        dict with verification result (is_verified, detected_name, detected_date, confidence, issues, suggestions)
+
+    Raises:
+        HTTPException: 422 if validation fails, 500 if verification fails
+    """
+    try:
+        logger.info(f"🔍 Verifying ownership proof")
+        result = await generation.verify_ownership_proof(
+            image_data_url=request.image_data_url,
+            expected_username=request.expected_username,
+        )
+        return result
+    except ValueError as e:
+        logger.error(f"❌ ValueError: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Ownership verification error: {str(e)}")
+
+
+class EnhanceImageRequest(BaseModel):
+    """Request model for image enhancement."""
+    product_image_url: str
+    background_image_url: str
+    enhancement_instructions: str | None = None
+
+
+@router.post("/enhance-image")
+async def enhance_image_endpoint(request: EnhanceImageRequest) -> dict:
+    """
+    Enhance a product image by combining it with a new background.
+
+    Uses Gemini 2.5 Flash (nano banana) to intelligently merge the product
+    with a new background while preserving product details.
+
+    Args:
+        request: EnhanceImageRequest with product image, background image, and optional instructions
+
+    Returns:
+        dict with enhanced image URL (base64 data URL)
+
+    Raises:
+        HTTPException: 422 if validation fails, 500 if enhancement fails
+    """
+    try:
+        logger.info("🎨 Enhancing product image")
+        enhanced_image_url = await generation.enhance_product_image(
+            product_image_url=request.product_image_url,
+            background_image_url=request.background_image_url,
+            enhancement_instructions=request.enhancement_instructions,
+        )
+        return {"enhanced_image": enhanced_image_url}
+    except ValueError as e:
+        logger.error(f"❌ ValueError: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Image enhancement error: {str(e)}")
+
+
+class BatchEnhanceImagesRequest(BaseModel):
+    """Request model for batch image enhancement."""
+    product_image_urls: List[str]
+    background_image_urls: List[str]
+    enhancement_instructions: str | None = None
+
+
+@router.post("/batch-enhance-images")
+async def batch_enhance_images_endpoint(request: BatchEnhanceImagesRequest) -> dict:
+    """
+    Enhance multiple product images with multiple backgrounds.
+
+    Creates enhanced versions by combining each product with each background.
+
+    Args:
+        request: BatchEnhanceImagesRequest with product images, background images, and optional instructions
+
+    Returns:
+        dict with list of enhanced image URLs
+
+    Raises:
+        HTTPException: 422 if validation fails or limits exceeded, 500 if enhancement fails
+    """
+    try:
+        logger.info(f"🎨 Batch enhancing {len(request.product_image_urls)} products with {len(request.background_image_urls)} backgrounds")
+        enhanced_images = await generation.batch_enhance_images(
+            product_image_urls=request.product_image_urls,
+            background_image_urls=request.background_image_urls,
+            enhancement_instructions=request.enhancement_instructions,
+        )
+        return {"enhanced_images": enhanced_images}
+    except ValueError as e:
+        logger.error(f"❌ ValueError: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Exception: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Batch image enhancement error: {str(e)}")
