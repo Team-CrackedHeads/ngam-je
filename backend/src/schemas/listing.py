@@ -64,6 +64,15 @@ class ListingUpdate(BaseModel):
     # FAQs removed - use FAQ endpoints instead
 
 
+class CheckoutConfirm(BaseModel):
+    """Schema for confirming a checkout/deal."""
+
+    recommendation_id: int = Field(..., description="ID of the recommendation/match")
+    transaction_method: str = Field(..., description="Transaction method chosen (in-person, platform-logistics, etc.)")
+    delivery_address: Optional[str] = Field(None, description="Delivery address if applicable")
+    payment_method: Optional[str] = Field(None, description="Payment method chosen")
+
+
 class ListingResponse(ListingBase):
     """Schema for listing API responses."""
 
@@ -75,6 +84,7 @@ class ListingResponse(ListingBase):
     creator_verified: bool
     is_active: bool
     is_matched: bool
+    is_checked_out: bool
     created_at: datetime
     updated_at: datetime
 

@@ -10,6 +10,8 @@ import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { confirmCheckout } from "@/lib/api/listings";
 
 interface ListingDetailsModalProps {
   listing: MockListing | MatchedListing | ApiListing;
@@ -19,6 +21,7 @@ interface ListingDetailsModalProps {
 
 export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsModalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
+  const getApiClient = useClerkApiClient();
 
   // Helper function to check if listing is from API (has snake_case properties)
   const isApiListing = (l: typeof listing): l is ApiListing => {
@@ -73,10 +76,53 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
     setShowCheckout(true);
   };
 
-  const handleCheckoutConfirm = (dealDetails: DealDetails) => {
-    console.log("Deal confirmed:", dealDetails);
-    // TODO: Handle the deal confirmation (API call, navigation, etc.)
-    onClose();
+  const handleCheckoutConfirm = async (dealDetails: DealDetails) => {
+    console.log("=== CHECKOUT CONFIRM TRIGGERED ===");
+    console.log("Deal details:", dealDetails);
+    console.log("Listing type:", type);
+    console.log("Is API listing:", isApiListing(listing));
+    console.log("Listing data:", listing);
+    console.log("Recommendation ID:", (listing as any).recommendationId);
+
+    // For demo: Call API for any API listing (not just matched)
+    if (isApiListing(listing) && (listing as any).recommendationId) {
+      try {
+        console.log("Attempting to call checkout API...");
+        const apiClient = await getApiClient();
+
+        // Map deal type to transaction method
+        const transactionMethodMap: Record<string, string> = {
+          "in-person": "in-person",
+          "platform-logistics": "platform-logistics",
+          "platform-inspection": "platform-inspection",
+          "direct-shipping": "direct-shipping"
+        };
+
+        const checkoutData = {
+          recommendation_id: (listing as any).recommendationId,
+          transaction_method: transactionMethodMap[dealDetails.dealType] || dealDetails.dealType,
+          delivery_address: dealDetails.deliveryAddress,
+          payment_method: dealDetails.useEscrow ? "escrow" : "direct"
+        };
+
+        console.log("Checkout data to send:", checkoutData);
+
+        await confirmCheckout(apiClient.instance, listing.id, checkoutData);
+
+        console.log("✅ Checkout confirmed successfully!");
+        // TODO: Show success message, refresh listing data, or navigate
+      } catch (error) {
+        console.error("❌ Failed to confirm checkout:", error);
+        // TODO: Show error message to user
+      }
+    } else {
+      console.log("⚠️ Skipping checkout API call - missing requirements");
+      console.log("- Is API listing:", isApiListing(listing));
+      console.log("- Has recommendation ID:", !!(listing as any).recommendationId);
+    }
+
+    // Don't close modal here - let CheckoutModal handle the flow
+    // The modal will stay open for Stripe payment
   };
 
   const handleCheckoutBack = () => {

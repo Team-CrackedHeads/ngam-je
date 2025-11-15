@@ -44,7 +44,6 @@ export default function ListingMatchesPage() {
         const listing = await fetchListingById(apiClient.instance, listingId);
 
         if (!isMounted) return;
-        setYourListing(listing);
 
         // Fetch ALL recommendations for this listing (pending, liked, matched)
         const recommendations = await fetchListingRecommendations(
@@ -52,6 +51,16 @@ export default function ListingMatchesPage() {
           listingId
           // No status filter - we want ALL recommendations for the swipe interface
         );
+
+        // Find a matched recommendation for this listing (if any)
+        const matchedRec = recommendations.recommendations.find(rec => rec.status === "matched");
+        if (matchedRec) {
+          // Attach recommendation ID to your listing for checkout
+          (listing as any).recommendationId = matchedRec.id;
+          (listing as any).recommendationStatus = matchedRec.status;
+        }
+
+        setYourListing(listing);
 
         if (!isMounted) return;
 
@@ -207,9 +216,12 @@ export default function ListingMatchesPage() {
             listing={selectedListing}
             type={
               selectedListing.id === yourListing.id
-                ? listingType : listingType === "sale"
-                  ? "wanted" : listingType === "wanted"
-                    ? "sale" : "matched"
+                ? listingType
+                : (selectedListing as any).recommendationStatus === "matched"
+                  ? "matched"
+                  : listingType === "sale"
+                    ? "wanted"
+                    : "sale"
             }
             onClose={() => setSelectedListing(null)}
           />

@@ -64,6 +64,7 @@ class Listing(Base):
     # Status flags
     is_active = Column(Boolean, nullable=False, default=True)
     is_matched = Column(Boolean, nullable=False, default=False)  # For matched WTB/WTS pairs
+    is_checked_out = Column(Boolean, nullable=False, default=False)  # For completed checkout deals
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

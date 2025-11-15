@@ -1,7 +1,19 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingCart, Package, Clock, MapPin, Eye, Timer, AlertTriangle, Sparkles, Plus, Handshake, Search } from "lucide-react";
+import {
+  ShoppingCart,
+  Package,
+  Clock,
+  MapPin,
+  Eye,
+  Timer,
+  AlertTriangle,
+  Sparkles,
+  Plus,
+  Handshake,
+  Search,
+} from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { LISTINGS_TABS } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -35,7 +47,9 @@ function getListingDurationByTier(threadTier: number): number {
 function calculateExpiresAt(createdAt: string, threadTier: number): string {
   const created = new Date(createdAt);
   const durationDays = getListingDurationByTier(threadTier);
-  const expires = new Date(created.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  const expires = new Date(
+    created.getTime() + durationDays * 24 * 60 * 60 * 1000
+  );
   return expires.toISOString();
 }
 
@@ -59,7 +73,7 @@ function getTimeRemaining(expiresAt: string) {
       text: `${days}d ${hours}h`,
       urgent,
       days,
-      hours
+      hours,
     };
   } else {
     return {
@@ -67,7 +81,7 @@ function getTimeRemaining(expiresAt: string) {
       text: `${hours}h`,
       urgent: true,
       days: 0,
-      hours
+      hours,
     };
   }
 }
@@ -108,15 +122,27 @@ function convertApiListingToUiListing(
   };
 }
 
-
 // Use centralized tabs configuration and add icons
-const tabs = LISTINGS_TABS.map(tab => ({
+const tabs = LISTINGS_TABS.map((tab) => ({
   ...tab,
-  icon: tab.iconName === "ShoppingCart" ? ShoppingCart : tab.iconName === "Package" ? Package : Handshake
+  icon:
+    tab.iconName === "ShoppingCart"
+      ? ShoppingCart
+      : tab.iconName === "Package"
+      ? Package
+      : Handshake,
 }));
 
 // Mobile-specific compact card component
-function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListing; type: "sale" | "wanted" | "matched"; isHighlighted?: boolean }) {
+function MobileProductCard({
+  listing,
+  type,
+  isHighlighted,
+}: {
+  listing: UiListing;
+  type: "sale" | "wanted" | "matched";
+  isHighlighted?: boolean;
+}) {
   const router = useRouter();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
   const extensionPrice = getExtensionPrice(listing.threadTier);
@@ -124,7 +150,9 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListin
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
+    console.log(
+      `Extending listing ${listing.id} for 7 days at ${extensionPrice}`
+    );
   };
 
   const handleViewMatches = (e: React.MouseEvent) => {
@@ -140,13 +168,15 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListin
     <div>
       {/* Timer badge and Match badge above card */}
       <div className="mb-2 flex items-center gap-2 flex-wrap">
-        <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-          timeRemaining.expired
-            ? 'bg-red-100 text-red-700'
-            : timeRemaining.urgent
-              ? 'bg-orange-100 text-orange-700'
-              : 'bg-green-100 text-green-700'
-        }`}>
+        <div
+          className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+            timeRemaining.expired
+              ? "bg-red-100 text-red-700"
+              : timeRemaining.urgent
+              ? "bg-orange-100 text-orange-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
           {timeRemaining.expired ? (
             <AlertTriangle size={10} />
           ) : (
@@ -165,9 +195,22 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListin
             <span>{matchCount}</span>
           </button>
         )}
+
+        {/* Checked Out badge */}
+        {listing.is_checked_out && (
+          <div className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-success-500 text-white font-medium">
+            <ShoppingCart size={12} />
+            <span>Checked Out</span>
+          </div>
+        )}
       </div>
 
-      <div onClick={handleCardClick} className={`rounded-xl shadow p-3 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+      <div
+        onClick={handleCardClick}
+        className={`rounded-xl shadow p-3 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col ${
+          isHighlighted ? "ring-4 ring-secondary-500 bg-secondary-50" : ""
+        }`}
+      >
         {/* Listing Image */}
         <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2 flex items-center justify-center relative overflow-hidden">
           {listing.image_url ? (
@@ -241,7 +284,17 @@ function MobileProductCard({ listing, type, isHighlighted }: { listing: UiListin
   );
 }
 
-function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiListing; type: "sale" | "wanted" | "matched"; viewMode: "grid" | "list"; isHighlighted?: boolean }) {
+function ProductCard({
+  listing,
+  type,
+  viewMode,
+  isHighlighted,
+}: {
+  listing: UiListing;
+  type: "sale" | "wanted" | "matched";
+  viewMode: "grid" | "list";
+  isHighlighted?: boolean;
+}) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const timeRemaining = getTimeRemaining(listing.expiresAt);
@@ -250,7 +303,9 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
 
   const handleExtendListing = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Extending listing ${listing.id} for 7 days at ${extensionPrice}`);
+    console.log(
+      `Extending listing ${listing.id} for 7 days at ${extensionPrice}`
+    );
     // Future implementation: API call to extend listing
   };
 
@@ -266,7 +321,13 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
 
   // Use mobile component for grid view on mobile
   if (isMobile && viewMode === "grid") {
-    return <MobileProductCard listing={listing} type={type} isHighlighted={isHighlighted} />;
+    return (
+      <MobileProductCard
+        listing={listing}
+        type={type}
+        isHighlighted={isHighlighted}
+      />
+    );
   }
 
   if (viewMode === "list") {
@@ -274,13 +335,15 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
       <div>
         {/* Timer badge and Match badge above card */}
         <div className="mb-2 flex items-center gap-2">
-          <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-            timeRemaining.expired
-              ? 'bg-red-100 text-red-700'
-              : timeRemaining.urgent
-                ? 'bg-orange-100 text-orange-700'
-                : 'bg-green-100 text-green-700'
-          }`}>
+          <div
+            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+              timeRemaining.expired
+                ? "bg-red-100 text-red-700"
+                : timeRemaining.urgent
+                ? "bg-orange-100 text-orange-700"
+                : "bg-green-100 text-green-700"
+            }`}
+          >
             {timeRemaining.expired ? (
               <AlertTriangle size={10} />
             ) : (
@@ -296,93 +359,110 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
               className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
             >
               <Sparkles size={12} />
-              <span className="max-md:hidden">{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+              <span className="max-md:hidden">
+                {matchCount} {matchCount === 1 ? "match" : "matches"}
+              </span>
               <span className="md:hidden">{matchCount}</span>
             </button>
           )}
+
+          {/* Checked Out badge */}
+          {listing.is_checked_out && (
+            <div className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-success-500 text-white font-medium">
+              <ShoppingCart size={12} />
+              <span>Checked Out</span>
+            </div>
+          )}
         </div>
 
-        <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-48 ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+        <div
+          onClick={handleCardClick}
+          className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-48 ${
+            isHighlighted ? "ring-4 ring-secondary-500 bg-secondary-50" : ""
+          }`}
+        >
           <div className="flex gap-4 h-full">
-          {/* Image Section */}
-          <div className="flex-shrink-0">
-            {/* Image - wider aspect ratio for better visual balance */}
-            <div className="w-32 h-full bg-gray-200 rounded-xl flex items-center justify-center relative">
-              <span className="text-gray-400 text-xs">Image</span>
+            {/* Image Section */}
+            <div className="flex-shrink-0">
+              {/* Image - wider aspect ratio for better visual balance */}
+              <div className="w-32 h-full bg-gray-200 rounded-xl flex items-center justify-center relative">
+                <span className="text-gray-400 text-xs">Image</span>
 
-              {/* Extension overlay for urgent/expired listings - row view only */}
-              {(timeRemaining.urgent || timeRemaining.expired) && (
-                <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
-                  <div className="flex items-center gap-1 mb-2">
-                    <AlertTriangle size={16} className="text-black" />
+                {/* Extension overlay for urgent/expired listings - row view only */}
+                {(timeRemaining.urgent || timeRemaining.expired) && (
+                  <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
+                    <div className="flex items-center gap-1 mb-2">
+                      <AlertTriangle size={16} className="text-black" />
+                    </div>
+                    <button
+                      onClick={handleExtendListing}
+                      className="px-3 py-1 bg-secondary-500 text-accent-700 rounded text-xs font-medium hover:bg-secondary-600 transition-colors shadow-md"
+                    >
+                      {extensionPrice}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleExtendListing}
-                    className="px-3 py-1 bg-secondary-500 text-accent-700 rounded text-xs font-medium hover:bg-secondary-600 transition-colors shadow-md"
-                  >
-                    {extensionPrice}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0 flex flex-col h-full">
-            {/* Top Section */}
-            <div className="flex-1">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-1">
-                <h3 className="font-semibold text-accent-700 line-clamp-2 flex-1 text-sm leading-tight">
-                  {listing.title}
-                </h3>
-                <span className="font-bold text-sm text-secondary-700 ml-2 whitespace-nowrap">
-                  {listing.currency} {listing.price}
-                </span>
+                )}
               </div>
+            </div>
 
-              {/* Category badge - using tags */}
-              {listing.tags && listing.tags.length > 0 && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
-                    {listing.tags[0]}
+            {/* Content */}
+            <div className="flex-1 min-w-0 flex flex-col h-full">
+              {/* Top Section */}
+              <div className="flex-1">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-1">
+                  <h3 className="font-semibold text-accent-700 line-clamp-2 flex-1 text-sm leading-tight">
+                    {listing.title}
+                  </h3>
+                  <span className="font-bold text-sm text-secondary-700 ml-2 whitespace-nowrap">
+                    {listing.currency} {listing.price}
                   </span>
                 </div>
-              )}
 
-              {/* Description */}
-              <div className="mb-2">
-                <p className="text-xs text-accent-500 line-clamp-2 leading-relaxed">
-                  {listing.description}
-                </p>
+                {/* Category badge - using tags */}
+                {listing.tags && listing.tags.length > 0 && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
+                      {listing.tags[0]}
+                    </span>
+                  </div>
+                )}
+
+                {/* Description */}
+                <div className="mb-2">
+                  <p className="text-xs text-accent-500 line-clamp-2 leading-relaxed">
+                    {listing.description}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Footer - always at bottom */}
-            <div className="space-y-1 mt-auto">
-              {/* Location */}
-              {listing.creator_location && (
+              {/* Footer - always at bottom */}
+              <div className="space-y-1 mt-auto">
+                {/* Location */}
+                {listing.creator_location && (
+                  <div className="flex items-center gap-1 text-xs text-accent-400">
+                    <MapPin size={12} />
+                    <span>{listing.creator_location}</span>
+                  </div>
+                )}
+
+                {/* Post Time */}
                 <div className="flex items-center gap-1 text-xs text-accent-400">
-                  <MapPin size={12} />
-                  <span>{listing.creator_location}</span>
+                  <Clock size={12} />
+                  <span>
+                    {new Date(listing.created_at).toLocaleDateString()}
+                  </span>
                 </div>
-              )}
 
-              {/* Post Time */}
-              <div className="flex items-center gap-1 text-xs text-accent-400">
-                <Clock size={12} />
-                <span>{new Date(listing.created_at).toLocaleDateString()}</span>
-              </div>
-
-              {/* Views */}
-              <div className="flex items-center gap-4 text-xs text-accent-400">
-                <div className="flex items-center gap-1">
-                  <Eye size={12} />
-                  <span>{listing.views || 0} views</span>
+                {/* Views */}
+                <div className="flex items-center gap-4 text-xs text-accent-400">
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} />
+                    <span>{listing.views || 0} views</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
@@ -393,13 +473,15 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
     <div>
       {/* Timer badge and Match badge above card */}
       <div className="mb-2 flex items-center gap-2 flex-wrap">
-        <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-          timeRemaining.expired
-            ? 'bg-red-100 text-red-700'
-            : timeRemaining.urgent
-              ? 'bg-orange-100 text-orange-700'
-              : 'bg-green-100 text-green-700'
-        }`}>
+        <div
+          className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+            timeRemaining.expired
+              ? "bg-red-100 text-red-700"
+              : timeRemaining.urgent
+              ? "bg-orange-100 text-orange-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
           {timeRemaining.expired ? (
             <AlertTriangle size={10} />
           ) : (
@@ -415,100 +497,114 @@ function ProductCard({ listing, type, viewMode, isHighlighted }: { listing: UiLi
             className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-secondary-100 text-secondary-700 hover:bg-secondary-200 transition-all font-medium border border-secondary-200"
           >
             <Sparkles size={12} />
-            <span className="max-md:hidden">{matchCount} {matchCount === 1 ? 'match' : 'matches'}</span>
+            <span className="max-md:hidden">
+              {matchCount} {matchCount === 1 ? "match" : "matches"}
+            </span>
             <span className="md:hidden">{matchCount}</span>
           </button>
         )}
+
+        {/* Checked Out badge */}
+        {listing.is_checked_out && (
+          <div className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-success-500 text-white font-medium">
+            <ShoppingCart size={12} />
+            <span>Checked Out</span>
+          </div>
+        )}
       </div>
 
-      <div onClick={handleCardClick} className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${isHighlighted ? 'ring-4 ring-secondary-500 bg-secondary-50' : ''}`}>
+      <div
+        onClick={handleCardClick}
+        className={`rounded-2xl shadow p-4 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer h-96 flex flex-col ${
+          isHighlighted ? "ring-4 ring-secondary-500 bg-secondary-50" : ""
+        }`}
+      >
+        {/* Listing Image */}
+        <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
+          {listing.image_url ? (
+            <img
+              src={listing.image_url}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-gray-400 text-sm">No Image</span>
+          )}
 
-      {/* Listing Image */}
-      <div className="w-full h-48 bg-gray-200 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
-        {listing.image_url ? (
-          <img
-            src={listing.image_url}
-            alt={listing.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <span className="text-gray-400 text-sm">No Image</span>
-        )}
-
-        {/* Extension overlay for urgent/expired listings */}
-        {(timeRemaining.urgent || timeRemaining.expired) && (
-          <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
-            <AlertTriangle size={16} className="mb-1 text-black" />
-            <div className="text-center">
-              <div className="font-medium mb-1 text-accent-700">
-                {timeRemaining.expired ? "Expired" : "Expires Soon"}
+          {/* Extension overlay for urgent/expired listings */}
+          {(timeRemaining.urgent || timeRemaining.expired) && (
+            <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-xl flex flex-col items-center justify-center">
+              <AlertTriangle size={16} className="mb-1 text-black" />
+              <div className="text-center">
+                <div className="font-medium mb-1 text-accent-700">
+                  {timeRemaining.expired ? "Expired" : "Expires Soon"}
+                </div>
+                <button
+                  onClick={handleExtendListing}
+                  className="px-2 py-1 bg-secondary-500 text-accent-700 rounded text-xs font-medium hover:bg-secondary-600 transition-colors shadow-md"
+                >
+                  Extend {extensionPrice}
+                </button>
               </div>
-              <button
-                onClick={handleExtendListing}
-                className="px-2 py-1 bg-secondary-500 text-accent-700 rounded text-xs font-medium hover:bg-secondary-600 transition-colors shadow-md"
-              >
-                Extend {extensionPrice}
-              </button>
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Content Area - flex-grow to fill remaining space */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="mb-2">
-          <h3 className="font-semibold text-accent-700 line-clamp-2 text-sm leading-tight">
-            {listing.title}
-          </h3>
+          )}
         </div>
 
-        {/* Category badge - using tags */}
-        {listing.tags && listing.tags.length > 0 && (
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
-              {listing.tags[0]}
-            </span>
+        {/* Content Area - flex-grow to fill remaining space */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <div className="mb-2">
+            <h3 className="font-semibold text-accent-700 line-clamp-2 text-sm leading-tight">
+              {listing.title}
+            </h3>
           </div>
-        )}
 
-        {/* Price */}
-        <div className="mb-2">
-          <span className="font-bold text-lg text-secondary-700">
-            {listing.currency} {listing.price}
-          </span>
-        </div>
-
-        {/* Description - flex-grow to take available space */}
-        <p className="text-xs text-accent-500 mb-3 line-clamp-3 leading-relaxed flex-1 overflow-hidden text-ellipsis">
-          {listing.description}
-        </p>
-
-        {/* Footer - always at bottom */}
-        <div className="space-y-1 mt-auto">
-          {/* Location */}
-          {listing.creator_location && (
-            <div className="flex items-center gap-1 text-xs text-accent-400">
-              <MapPin size={12} />
-              <span className="truncate">{listing.creator_location}</span>
+          {/* Category badge - using tags */}
+          {listing.tags && listing.tags.length > 0 && (
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="px-2 py-1 text-xs rounded-full bg-primary-200 text-accent-600">
+                {listing.tags[0]}
+              </span>
             </div>
           )}
 
-          {/* Post Time */}
-          <div className="flex items-center gap-1 text-xs text-accent-400">
-            <Clock size={12} />
-            <span>{new Date(listing.created_at).toLocaleDateString()}</span>
+          {/* Price */}
+          <div className="mb-2">
+            <span className="font-bold text-lg text-secondary-700">
+              {listing.currency} {listing.price}
+            </span>
           </div>
 
-          {/* Views */}
-          <div className="flex items-center gap-4 text-xs text-accent-400">
-            <div className="flex items-center gap-1">
-              <Eye size={12} />
-              <span>{listing.views || 0} views</span>
+          {/* Description - flex-grow to take available space */}
+          <p className="text-xs text-accent-500 mb-3 line-clamp-3 leading-relaxed flex-1 overflow-hidden text-ellipsis">
+            {listing.description}
+          </p>
+
+          {/* Footer - always at bottom */}
+          <div className="space-y-1 mt-auto">
+            {/* Location */}
+            {listing.creator_location && (
+              <div className="flex items-center gap-1 text-xs text-accent-400">
+                <MapPin size={12} />
+                <span className="truncate">{listing.creator_location}</span>
+              </div>
+            )}
+
+            {/* Post Time */}
+            <div className="flex items-center gap-1 text-xs text-accent-400">
+              <Clock size={12} />
+              <span>{new Date(listing.created_at).toLocaleDateString()}</span>
+            </div>
+
+            {/* Views */}
+            <div className="flex items-center gap-4 text-xs text-accent-400">
+              <div className="flex items-center gap-1">
+                <Eye size={12} />
+                <span>{listing.views || 0} views</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
@@ -520,7 +616,9 @@ function ListingsPageContent() {
   const { user } = useUser();
   const getApiClient = useClerkApiClient();
 
-  const [activeTab, setActiveTab] = useState<"sale" | "wanted" | "matched">("sale");
+  const [activeTab, setActiveTab] = useState<"sale" | "wanted" | "matched">(
+    "sale"
+  );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -556,21 +654,34 @@ function ListingsPageContent() {
         const apiClient = await getApiClient();
 
         // Get current user profile to fetch user ID
-        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
+        const userProfile = await apiClient.get<{ id: number }>(
+          "/api/v1/users/me"
+        );
 
         if (activeTab === "matched") {
           // For matched tab, fetch all user listings and filter for those with matches
-          const saleListings = await fetchUserListings(apiClient.instance, userProfile.id, {
-            listing_type: "sale",
-            limit: 100,
-          });
+          const saleListings = await fetchUserListings(
+            apiClient.instance,
+            userProfile.id,
+            {
+              listing_type: "sale",
+              limit: 100,
+            }
+          );
 
-          const wantedListings = await fetchUserListings(apiClient.instance, userProfile.id, {
-            listing_type: "wanted",
-            limit: 100,
-          });
+          const wantedListings = await fetchUserListings(
+            apiClient.instance,
+            userProfile.id,
+            {
+              listing_type: "wanted",
+              limit: 100,
+            }
+          );
 
-          const allUserListings = [...saleListings.listings, ...wantedListings.listings];
+          const allUserListings = [
+            ...saleListings.listings,
+            ...wantedListings.listings,
+          ];
           const matchedListingsData: UiListing[] = [];
 
           for (const listing of allUserListings) {
@@ -584,37 +695,61 @@ function ListingsPageContent() {
               if (recommendations.recommendations.length > 0) {
                 // Fetch thread tier from thread API
                 try {
-                  const thread = await fetchThreadById(apiClient.instance, listing.thread_id);
+                  const thread = await fetchThreadById(
+                    apiClient.instance,
+                    listing.thread_id
+                  );
                   matchedListingsData.push(
-                    convertApiListingToUiListing(listing, thread.tier, recommendations.recommendations.length)
+                    convertApiListingToUiListing(
+                      listing,
+                      thread.tier,
+                      recommendations.recommendations.length
+                    )
                   );
                 } catch (threadErr) {
-                  console.error(`Error fetching thread ${listing.thread_id}:`, threadErr);
+                  console.error(
+                    `Error fetching thread ${listing.thread_id}:`,
+                    threadErr
+                  );
                   // Fallback to tier 0 if thread fetch fails
                   matchedListingsData.push(
-                    convertApiListingToUiListing(listing, 0, recommendations.recommendations.length)
+                    convertApiListingToUiListing(
+                      listing,
+                      0,
+                      recommendations.recommendations.length
+                    )
                   );
                 }
               }
             } catch (err) {
-              console.error(`Error fetching recommendations for listing ${listing.id}:`, err);
+              console.error(
+                `Error fetching recommendations for listing ${listing.id}:`,
+                err
+              );
             }
           }
 
           setListings(matchedListingsData);
         } else {
           // For sale/wanted tabs, fetch listings of that type
-          const response = await fetchUserListings(apiClient.instance, userProfile.id, {
-            listing_type: activeTab === "sale" ? "sale" : "wanted",
-            limit: 100,
-          });
+          const response = await fetchUserListings(
+            apiClient.instance,
+            userProfile.id,
+            {
+              listing_type: activeTab === "sale" ? "sale" : "wanted",
+              limit: 100,
+            }
+          );
 
           // Convert API listings to UI listings
           const uiListings: UiListing[] = [];
           for (const listing of response.listings) {
             try {
               // Fetch thread tier from thread API
-              const thread = await fetchThreadById(apiClient.instance, listing.thread_id);
+              const thread = await fetchThreadById(
+                apiClient.instance,
+                listing.thread_id
+              );
 
               // Fetch match count for this listing
               try {
@@ -625,15 +760,27 @@ function ListingsPageContent() {
                 );
 
                 uiListings.push(
-                  convertApiListingToUiListing(listing, thread.tier, recommendations.recommendations.length)
+                  convertApiListingToUiListing(
+                    listing,
+                    thread.tier,
+                    recommendations.recommendations.length
+                  )
                 );
               } catch (recErr) {
-                console.error(`Error fetching recommendations for listing ${listing.id}:`, recErr);
+                console.error(
+                  `Error fetching recommendations for listing ${listing.id}:`,
+                  recErr
+                );
                 // Still add the listing even if recommendations fetch fails
-                uiListings.push(convertApiListingToUiListing(listing, thread.tier, 0));
+                uiListings.push(
+                  convertApiListingToUiListing(listing, thread.tier, 0)
+                );
               }
             } catch (threadErr) {
-              console.error(`Error fetching thread ${listing.thread_id}:`, threadErr);
+              console.error(
+                `Error fetching thread ${listing.thread_id}:`,
+                threadErr
+              );
               // Fallback to tier 0 if thread fetch fails
               try {
                 const recommendations = await fetchListingRecommendations(
@@ -641,7 +788,13 @@ function ListingsPageContent() {
                   listing.id,
                   "matched"
                 );
-                uiListings.push(convertApiListingToUiListing(listing, 0, recommendations.recommendations.length));
+                uiListings.push(
+                  convertApiListingToUiListing(
+                    listing,
+                    0,
+                    recommendations.recommendations.length
+                  )
+                );
               } catch (_recErr) {
                 uiListings.push(convertApiListingToUiListing(listing, 0, 0));
               }
@@ -663,28 +816,38 @@ function ListingsPageContent() {
   }, [user, activeTab]); // Re-fetch when user or activeTab changes
 
   // Extract unique categories from tags
-  const categories = [...new Set(listings.flatMap(listing => listing.tags || []))];
+  const categories = [
+    ...new Set(listings.flatMap((listing) => listing.tags || [])),
+  ];
 
   // Apply category and search filters
   let currentListings = selectedCategory
-    ? listings.filter(listing => listing.tags?.includes(selectedCategory))
+    ? listings.filter((listing) => listing.tags?.includes(selectedCategory))
     : listings;
 
   // Apply search filter
   if (searchQuery.trim()) {
-    currentListings = currentListings.filter(listing =>
-      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (listing.creator_location && listing.creator_location.toLowerCase().includes(searchQuery.toLowerCase()))
+    currentListings = currentListings.filter(
+      (listing) =>
+        listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (listing.creator_location &&
+          listing.creator_location
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()))
     );
   }
 
-  const ActiveIcon = activeTab === "sale" ? ShoppingCart : activeTab === "wanted" ? Package : Handshake;
+  const ActiveIcon =
+    activeTab === "sale"
+      ? ShoppingCart
+      : activeTab === "wanted"
+      ? Package
+      : Handshake;
 
   return (
     <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
       <div className="max-w-6xl mx-auto">
-
         {/* Tabs */}
         <div className="flex justify-center mb-8 border-b pb-2 space-x-8">
           {tabs.map((tab) => {
@@ -693,11 +856,13 @@ function ListingsPageContent() {
             return (
               <button
                 key={tab.value}
-                onClick={() => router.push(`/listings?type=${tab.value}`, { scroll: false })}
+                onClick={() =>
+                  router.push(`/listings?type=${tab.value}`, { scroll: false })
+                }
                 className={`flex items-center gap-2 pb-2 transition-colors ${
                   isActive
-                    ? 'text-accent-700 border-b-2 border-accent-700'
-                    : 'text-accent-500 hover:text-accent-700'
+                    ? "text-accent-700 border-b-2 border-accent-700"
+                    : "text-accent-500 hover:text-accent-700"
                 }`}
               >
                 <Icon size={18} />
@@ -797,7 +962,13 @@ function ListingsPageContent() {
 
         {/* Listings Grid */}
         {!loading && !error && (
-          <div className={viewMode === "grid" ? "grid gap-4 grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid gap-4 grid-cols-2 lg:grid-cols-3"
+                : "space-y-4"
+            }
+          >
             {currentListings.map((listing) => (
               <ProductCard
                 key={listing.id}
@@ -815,15 +986,28 @@ function ListingsPageContent() {
           <div className="text-center py-12">
             <ActiveIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-accent-600 mb-2">
-              No {activeTab === "sale" ? "items for sale" : activeTab === "wanted" ? "wanted items" : "matched items"} yet
+              No{" "}
+              {activeTab === "sale"
+                ? "items for sale"
+                : activeTab === "wanted"
+                ? "wanted items"
+                : "matched items"}{" "}
+              yet
             </h3>
             {activeTab !== "matched" && (
               <>
                 <p className="text-accent-400 mb-4">
-                  Be the first to post a {activeTab === "sale" ? "sale listing" : activeTab === "wanted" ? "wanted request" : "matched request"}!
+                  Be the first to post a{" "}
+                  {activeTab === "sale"
+                    ? "sale listing"
+                    : activeTab === "wanted"
+                    ? "wanted request"
+                    : "matched request"}
+                  !
                 </p>
                 <button className="px-6 py-3 bg-secondary-500 text-accent-700 rounded-lg font-medium hover:bg-secondary-600 transition-colors">
-                  Create {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
+                  Create{" "}
+                  {activeTab === "sale" ? "Sale Listing" : "Wanted Request"}
                 </button>
               </>
             )}
@@ -836,7 +1020,13 @@ function ListingsPageContent() {
 
 export default function ListingsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 flex items-center justify-center"><div className="text-accent-500">Loading...</div></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen px-4 py-6 pb-24 bg-primary-100 flex items-center justify-center">
+          <div className="text-accent-500">Loading...</div>
+        </div>
+      }
+    >
       <ListingsPageContent />
     </Suspense>
   );

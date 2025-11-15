@@ -99,3 +99,24 @@ export async function fetchUserListings(
   );
   return response.data;
 }
+
+/**
+ * Confirm checkout for a matched listing
+ * Marks both listings in the match as checked out
+ */
+export async function confirmCheckout(
+  apiClient: AxiosInstance,
+  listingId: number,
+  data: {
+    recommendation_id: number;
+    transaction_method: string;
+    delivery_address?: string;
+    payment_method?: string;
+  }
+): Promise<Listing> {
+  const response = await apiClient.post<Listing>(
+    `${API_BASE}/${listingId}/checkout`,
+    data
+  );
+  return response.data;
+}

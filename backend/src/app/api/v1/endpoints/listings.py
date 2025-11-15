@@ -15,7 +15,9 @@ from src.schemas.listing import (
     ListingUpdate,
     ListingResponse,
     ListingListResponse,
+    CheckoutConfirm,
 )
+from src.models.recommendation import Recommendation
 
 router = APIRouter()
 
@@ -324,3 +326,71 @@ async def get_user_listings(
     listings = query.order_by(Listing.created_at.desc()).offset(skip).limit(limit).all()
 
     return ListingListResponse(listings=listings, total=total)
+
+
+@router.post("/{listing_id}/checkout", response_model=ListingResponse)
+async def confirm_checkout(
+    listing_id: int,
+    checkout_data: CheckoutConfirm,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Confirm checkout for a matched listing.
+
+    When a user confirms checkout, this marks the listing as checked out.
+    Both users in a match need to confirm for the deal to be finalized.
+    """
+    # Get the listing
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Listing not found",
+        )
+
+    # Get the recommendation to find the matched listing
+    recommendation = db.query(Recommendation).filter(
+        Recommendation.id == checkout_data.recommendation_id
+    ).first()
+
+    if not recommendation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Recommendation not found",
+        )
+
+    # Verify this recommendation is for this listing
+    if recommendation.source_listing_id != listing_id and recommendation.target_listing_id != listing_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Recommendation does not match this listing",
+        )
+
+    # Verify the recommendation is in matched status
+    if recommendation.status != "matched":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only checkout matched listings",
+        )
+
+    # Get the other listing in the match
+    other_listing_id = (
+        recommendation.target_listing_id
+        if recommendation.source_listing_id == listing_id
+        else recommendation.source_listing_id
+    )
+    other_listing = db.query(Listing).filter(Listing.id == other_listing_id).first()
+
+    # Mark both listings as checked out
+    listing.is_checked_out = True
+    if other_listing:
+        other_listing.is_checked_out = True
+
+    # TODO: Create a Deal/Transaction record to store checkout details
+    # For now, we're just marking the listings as checked out
+
+    db.commit()
+    db.refresh(listing)
+
+    return listing
