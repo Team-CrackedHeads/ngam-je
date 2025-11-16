@@ -133,19 +133,31 @@ async def _generate_from_images(
     # Initialize Gemini client
     client = genai.Client(api_key=settings.gemini_api_key)
 
-    # Convert first image (or multiple) to PIL
+    # Convert images to PIL (handle both data URLs and HTTP URLs)
     pil_images = []
     for idx, img_url in enumerate(images[:3]):  # Analyze up to 3 images
         try:
-            if ',' in img_url:
-                img_data = img_url.split(',', 1)[1]
+            if img_url.startswith('http://') or img_url.startswith('https://'):
+                # HTTP URL - fetch the image
+                import httpx
+                async with httpx.AsyncClient() as http_client:
+                    response = await http_client.get(img_url, timeout=10.0)
+                    response.raise_for_status()
+                    img_bytes = response.content
+                    pil_image = Image.open(io.BytesIO(img_bytes))
+                    pil_images.append(pil_image)
+                    logger.info(f"  Fetched & loaded image {idx+1} from URL: {pil_image.size}")
             else:
-                img_data = img_url
+                # Base64 data URL
+                if ',' in img_url:
+                    img_data = img_url.split(',', 1)[1]
+                else:
+                    img_data = img_url
 
-            img_bytes = base64.b64decode(img_data)
-            pil_image = Image.open(io.BytesIO(img_bytes))
-            pil_images.append(pil_image)
-            logger.info(f"  Loaded image {idx+1}: {pil_image.size}")
+                img_bytes = base64.b64decode(img_data)
+                pil_image = Image.open(io.BytesIO(img_bytes))
+                pil_images.append(pil_image)
+                logger.info(f"  Loaded image {idx+1} from base64: {pil_image.size}")
         except Exception as e:
             logger.warning(f"  Failed to load image {idx+1}: {e}")
 
