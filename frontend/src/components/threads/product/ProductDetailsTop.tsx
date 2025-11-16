@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Eye, Shield } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 
 interface ProductCardDetailsProps {

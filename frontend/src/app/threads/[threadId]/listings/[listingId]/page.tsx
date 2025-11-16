@@ -6,6 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { ProductHeader } from "@/components/threads/product/ProductHeader";
 import { ProductDetails } from "@/components/threads/product/ProductDetails";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SafeImage from "@/components/ui/SafeImage";
 import { createClerkApiClient } from "@/lib/clerk-api-client";
 import { fetchListingById } from "@/lib/api/listings";
 import { fetchThreadById } from "@/lib/api/threads";
