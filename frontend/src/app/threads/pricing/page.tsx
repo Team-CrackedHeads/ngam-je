@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
 import { MOCK_THREADS, TIER_FEATURES } from "@/utils/mock-all-data-used";
 import { StripePayment } from "@/components/checkout/StripePayment";
-import { useUser, PricingTable } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 
 // component for feature value display
 function FeatureValue({ value }: { value: string | boolean }) {
