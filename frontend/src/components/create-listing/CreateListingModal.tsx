@@ -879,11 +879,13 @@ export default function CreateListingModal({
 
   // Enhance product images with backgrounds
   const handleEnhanceImages = async () => {
-    if (sellFormData.uploadedImages.length === 0) {
+    const allProductImages = [...selectedExternalImages, ...uploadedImages];
+
+    if (allProductImages.length === 0) {
       setErrorModal({
         isOpen: true,
         title: "No Product Images",
-        message: "Please upload at least one product image in the Upload Product Images tab before enhancing.",
+        message: "Please upload at least one product image in the Upload tab before enhancing.",
         icon: 'alert',
       });
       return;
@@ -904,7 +906,7 @@ export default function CreateListingModal({
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/batch-enhance-images`,
         {
-          product_image_urls: sellFormData.uploadedImages.slice(0, 2), // Max 2 products
+          product_image_urls: allProductImages.slice(0, 2), // Max 2 products
           background_image_urls: selectedBackgrounds.slice(0, 3), // Max 3 backgrounds
         },
         {
@@ -1579,7 +1581,7 @@ export default function CreateListingModal({
                                       </div>
 
                                       {/* Thumbnail Strip */}
-                                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-4">
                                         {allImages.map((img, idx) => (
                                           <button
                                             key={idx}
@@ -2287,7 +2289,9 @@ export default function CreateListingModal({
                       )}
 
                       {/* Enhance Tab Content (Sell) */}
-                      {imageMode === 'enhance' && listingType === 'sell' && (
+                      {imageMode === 'enhance' && listingType === 'sell' && (() => {
+                        const allProductImages = [...selectedExternalImages, ...uploadedImages];
+                        return (
                         <div className="space-y-4">
                           <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-[var(--color-primary-50)]">
                             <h3 className="text-sm font-medium mb-2 text-accent-700">
@@ -2300,7 +2304,7 @@ export default function CreateListingModal({
                             <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                               <div>
                                 <p className="font-medium text-gray-700 mb-1">Product Images:</p>
-                                <p className="text-gray-600">{sellFormData.uploadedImages.length} uploaded</p>
+                                <p className="text-gray-600">{allProductImages.length} uploaded</p>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-700 mb-1">Backgrounds Selected:</p>
@@ -2310,7 +2314,7 @@ export default function CreateListingModal({
 
                             <Button
                               onClick={handleEnhanceImages}
-                              disabled={sellFormData.uploadedImages.length === 0 || selectedBackgrounds.length === 0 || isEnhancing}
+                              disabled={allProductImages.length === 0 || selectedBackgrounds.length === 0 || isEnhancing}
                               className="w-full bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
                             >
                               {isEnhancing ? (
@@ -2326,12 +2330,12 @@ export default function CreateListingModal({
                               )}
                             </Button>
 
-                            {sellFormData.uploadedImages.length === 0 && (
+                            {allProductImages.length === 0 && (
                               <p className="text-xs text-[var(--color-warning-900)] mt-2">
-                                Please upload product images in the "Upload Product Images" tab first.
+                                Please upload product images in the "Upload" tab first.
                               </p>
                             )}
-                            {selectedBackgrounds.length === 0 && sellFormData.uploadedImages.length > 0 && (
+                            {selectedBackgrounds.length === 0 && allProductImages.length > 0 && (
                               <p className="text-xs text-[var(--color-warning-900)] mt-2">
                                 Please select backgrounds in the "Search Backgrounds" tab.
                               </p>
@@ -2355,12 +2359,10 @@ export default function CreateListingModal({
                                     <div
                                       key={index}
                                       onClick={() => {
-                                        // Add to uploaded images
-                                        if (sellFormData.uploadedImages.length < 5 && !sellFormData.uploadedImages.includes(imageUrl)) {
-                                          setSellFormData(prev => ({
-                                            ...prev,
-                                            uploadedImages: [...prev.uploadedImages, imageUrl]
-                                          }));
+                                        // Add enhanced image to uploaded images
+                                        const currentTotal = uploadedImages.length + selectedExternalImages.length;
+                                        if (currentTotal < 5 && !uploadedImages.includes(imageUrl) && !selectedExternalImages.includes(imageUrl)) {
+                                          setUploadedImages(prev => [...prev, imageUrl]);
                                         }
                                       }}
                                       className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[var(--color-secondary-500)] transition-all cursor-pointer group"
@@ -2380,7 +2382,8 @@ export default function CreateListingModal({
                             </div>
                           )}
                         </div>
-                      )}
+                        );
+                      })()}
                     </div>
 
                     {/* Product Description */}
@@ -2495,6 +2498,12 @@ export default function CreateListingModal({
                             setGeneratedCount(0);
                             setUserInput("");
                             resetEvaluation();
+                            // Clear sell-specific states
+                            setBackgroundImages([]);
+                            setSelectedBackgrounds([]);
+                            setEnhancedImages([]);
+                            setOwnershipProofDetails(null);
+                            setOwnershipVerified(null);
                           }}
                           variant="outline"
                           className="flex-1"
