@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useRef } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, X, Sparkles, ChevronLeft } from "lucide-react";
 import { MOCK_THREADS, TIER_FEATURES } from "@/utils/mock-all-data-used";
 import { StripePayment } from "@/components/checkout/StripePayment";
-import { useUser } from "@clerk/nextjs";
+import { useUser, PricingTable } from "@clerk/nextjs";
 
 // component for feature value display
 function FeatureValue({ value }: { value: string | boolean }) {
@@ -107,6 +107,10 @@ function PricingPageContent() {
     setShowPayment(true);
   };
 
+  const handleGetMoreBoostClick = () => {
+    router.push(`/threads/pricing/subscription`);
+  };
+
   const handlePaymentSuccess = () => {
     setShowPayment(false);
     // TODO: Update thread boost count and tier in backend
@@ -155,13 +159,23 @@ function PricingPageContent() {
               {threadData.title}
             </h2>
 
+            <div className="inline-block bg-neutral-white/60 text-accent-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium my-4 sm:my-6">
+              You can Boost a thread 2 more times.
+            </div>
+
             {/* action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 px-4">
               <button
                 onClick={handleBoostClick}
-                className="bg-neutral-white text-accent-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-neutral-100 transition-colors text-sm sm:text-base"
+                className="bg-secondary-300 text-accent-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-secondary-400 transition-colors text-sm sm:text-base"
               >
                 Boost This Thread
+              </button>
+              <button
+                onClick={handleGetMoreBoostClick}
+                className="bg-neutral-white text-accent-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-[30px] font-semibold hover:bg-neutral-100 transition-colors text-sm sm:text-base"
+              >
+                Get More Boosts
               </button>
             </div>
 
