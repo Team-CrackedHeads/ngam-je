@@ -176,7 +176,7 @@ export default function ProductDetailsStep({
 
         {/* Ownership Proof Section (Sell only) */}
         {listingType === 'sell' && (
-          <div className="pt-6 border-t-2 border-[var(--color-primary-300)]">
+          <div>
             <Label className="text-base font-medium mb-3 block text-[var(--color-accent-700)]">
               Proof of Ownership
             </Label>

@@ -755,12 +755,16 @@ export default function CreateListingModal({
           tags: generatedData.tags,
         }));
       } else {
+        // For sell listings, preserve the ownership proof image (first uploaded image)
+        const ownershipImage = uploadedImages.length > 0 ? uploadedImages[0] : null;
+
         setSellFormData((prev) => ({
           ...prev,
           generatedTitle: generatedData.title,
           generatedDescription: generatedData.description,
           uploadedImages: allImages,
           tags: generatedData.tags,
+          ownershipProofImage: ownershipImage, // Preserve ownership proof from AI mode
         }));
       }
 
@@ -2625,7 +2629,7 @@ export default function CreateListingModal({
 
             {/* Navigation Buttons - Hide on Step 1 (selection page) */}
             {currentStep !== 1 && (
-              <div className="flex justify-between items-center mt-8 pt-6 border-t">
+              <div className="flex justify-between items-center mt-8">
                 <Button
                   variant="outline"
                   onClick={handleBack}
