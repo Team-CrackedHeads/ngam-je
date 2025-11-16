@@ -523,16 +523,24 @@ export default function CreateListingModal({
       const newImages: string[] = [];
       const combinedLength = uploadedImages.length + selectedExternalImages.length;
       const remainingSlots = 5 - combinedLength;
+      const isFirstImageForSell = listingType === 'sell' && combinedLength === 0;
 
       // Only process up to the remaining slots
       const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-      filesToProcess.forEach((file) => {
+      filesToProcess.forEach((file, index) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          newImages.push(reader.result as string);
+          const imageUrl = reader.result as string;
+          newImages.push(imageUrl);
+
           if (newImages.length === filesToProcess.length) {
             setUploadedImages((prev) => [...prev, ...newImages]);
+
+            // Auto-verify first image for sell listings
+            if (isFirstImageForSell && newImages.length > 0) {
+              handleVerifyOwnershipProof(newImages[0]);
+            }
           }
         };
         reader.readAsDataURL(file);
@@ -1476,146 +1484,179 @@ export default function CreateListingModal({
 
                       {/* Upload Tab Content */}
                       {imageMode === 'upload' && (
-                        <div className={listingType === 'sell' ? 'space-y-4' : ''}>
-                          {/* Ownership Proof for Sell Listings */}
-                          {listingType === 'sell' && (
-                            <div>
-                              <label className="block text-sm font-medium mb-2 text-accent-700">
-                                Proof of Ownership <span className="text-[var(--color-error-500)]">*</span>
-                              </label>
-                              <p className="text-xs text-gray-600 mb-2">
-                                Upload a photo showing your name and today's date (e.g., written on paper next to the product)
-                              </p>
-
+                        <div className="space-y-4">
+                          {/* Sequential Upload: Ownership first, then product images */}
+                          {listingType === 'sell' ? (
+                            <>
                               <input
                                 type="file"
                                 accept="image/*"
+                                multiple
                                 className="hidden"
-                                id="ai-ownership-proof-upload"
-                                onChange={handleOwnershipProofUpload}
+                                id="context-image-upload"
+                                onChange={handleContextImageUpload}
                               />
 
-                              {sellFormData.ownershipProofImage ? (
-                                <div className="space-y-3">
-                                  <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-[var(--color-primary-200)]">
-                                    <Image
-                                      src={sellFormData.ownershipProofImage}
-                                      alt="Ownership Proof"
-                                      fill
-                                      className="object-cover"
-                                    />
-                                    <button
-                                      onClick={() => {
-                                        setSellFormData(prev => ({ ...prev, ownershipProofImage: null }));
-                                        setOwnershipVerified(null);
-                                        setOwnershipProofDetails(null);
-                                      }}
-                                      className="absolute top-2 right-2 p-2 bg-[var(--color-error-500)] text-white rounded-full hover:bg-[var(--color-error-900)] transition-colors"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
+                              {(() => {
+                                const allImages = [...selectedExternalImages, ...uploadedImages];
+                                const hasImages = allImages.length > 0;
+                                const firstImage = allImages[0];
+                                const remainingSlots = 5 - allImages.length;
 
-                                  {/* Verification Status */}
-                                  {isVerifyingOwnership && (
-                                    <div className="flex items-center gap-2 text-[var(--color-accent-700)] bg-[var(--color-secondary-50)] border border-[var(--color-secondary-200)] rounded-lg px-4 py-3">
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                      <span className="text-sm font-medium">Verifying ownership proof...</span>
-                                    </div>
-                                  )}
-
-                                  {!isVerifyingOwnership && ownershipProofDetails && (
-                                    <div className={`border rounded-lg px-4 py-3 ${
-                                      ownershipVerified
-                                        ? 'bg-[var(--color-success-50)] border-[var(--color-success-500)]'
-                                        : 'bg-[var(--color-error-50)] border-[var(--color-error-500)]'
-                                    }`}>
-                                      <div className="flex items-start gap-2 mb-2">
-                                        {ownershipVerified ? (
-                                          <Check className="w-5 h-5 text-[var(--color-success-500)] flex-shrink-0 mt-0.5" />
-                                        ) : (
-                                          <AlertCircle className="w-5 h-5 text-[var(--color-error-500)] flex-shrink-0 mt-0.5" />
+                                return hasImages ? (
+                                  <div className="space-y-4">
+                                    {/* Product Images Grid */}
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-accent-700">
+                                          Product Photos ({allImages.length} / 5)
+                                        </label>
+                                        {remainingSlots > 0 && (
+                                          <span className="text-xs text-gray-600">
+                                            {remainingSlots} slot{remainingSlots > 1 ? 's' : ''} remaining
+                                          </span>
                                         )}
-                                        <div className="flex-1">
-                                          <h4 className={`text-sm font-medium mb-1 ${
-                                            ownershipVerified ? 'text-[var(--color-success-900)]' : 'text-[var(--color-error-900)]'
-                                          }`}>
-                                            {ownershipVerified ? 'Ownership Verified!' : 'Verification Failed'}
-                                          </h4>
-                                          {ownershipProofDetails.detected_name && (
-                                            <p className="text-xs text-gray-700 mb-1">
-                                              <span className="font-medium">Detected name:</span> {ownershipProofDetails.detected_name}
-                                            </p>
-                                          )}
-                                          {ownershipProofDetails.detected_date && (
-                                            <p className="text-xs text-gray-700 mb-1">
-                                              <span className="font-medium">Detected date:</span> {ownershipProofDetails.detected_date}
-                                            </p>
-                                          )}
-                                          <p className="text-xs text-gray-700 mb-2">
-                                            <span className="font-medium">Confidence:</span> {ownershipProofDetails.confidence}
-                                          </p>
+                                      </div>
 
-                                          {ownershipProofDetails.issues.length > 0 && (
-                                            <div className="mb-2">
-                                              <p className="text-xs font-medium text-gray-700 mb-1">Issues:</p>
-                                              <ul className="text-xs text-gray-600 space-y-0.5">
-                                                {ownershipProofDetails.issues.map((issue, idx) => (
-                                                  <li key={idx}>• {issue}</li>
-                                                ))}
-                                              </ul>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {allImages.map((img, idx) => (
+                                          <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200 group">
+                                            <Image src={img} alt={`Image ${idx + 1}`} fill className="object-cover" />
+                                            <div className="absolute top-1 right-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
+                                              {idx === 0 ? 'Proof' : `#${idx}`}
                                             </div>
-                                          )}
+                                            {idx > 0 && (
+                                              <button
+                                                onClick={() => {
+                                                  if (idx - 1 < selectedExternalImages.length) {
+                                                    setSelectedExternalImages(prev => prev.filter((_, i) => i !== idx - 1));
+                                                  } else {
+                                                    const uploadedIdx = idx - 1 - selectedExternalImages.length;
+                                                    setUploadedImages(prev => prev.filter((_, i) => i !== uploadedIdx));
+                                                  }
+                                                }}
+                                                className="absolute top-1 left-1 p-1.5 bg-[var(--color-error-500)] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                              >
+                                                <Trash2 className="w-3 h-3" />
+                                              </button>
+                                            )}
+                                          </div>
+                                        ))}
 
-                                          {ownershipProofDetails.suggestions.length > 0 && (
-                                            <div>
-                                              <p className="text-xs font-medium text-gray-700 mb-1">Suggestions:</p>
-                                              <ul className="text-xs text-gray-600 space-y-0.5">
-                                                {ownershipProofDetails.suggestions.map((suggestion, idx) => (
-                                                  <li key={idx}>• {suggestion}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          )}
+                                        {remainingSlots > 0 && (
+                                          <div
+                                            onClick={() => document.getElementById('context-image-upload')?.click()}
+                                            className="aspect-video rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-50)] transition-all group"
+                                          >
+                                            <Upload className="w-8 h-8 text-gray-400 group-hover:text-[var(--color-secondary-500)] transition-colors mb-1" />
+                                            <p className="text-xs text-gray-500 group-hover:text-[var(--color-secondary-700)]">Add More</p>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Ownership Verification Status + Replace Button */}
+                                      <div className="mt-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs font-medium text-gray-600">
+                                            <Shield className="w-3.5 h-3.5 inline-block mr-1" />
+                                            Ownership Proof (First Image)
+                                          </span>
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            id="ownership-proof-replace"
+                                            onChange={handleOwnershipProofUpload}
+                                          />
+                                          <button
+                                            onClick={() => document.getElementById('ownership-proof-replace')?.click()}
+                                            className="text-xs text-[var(--color-secondary-700)] hover:text-[var(--color-secondary-900)] font-medium underline"
+                                          >
+                                            Replace Proof
+                                          </button>
                                         </div>
+
+                                        {/* Verification Status */}
+                                        {isVerifyingOwnership && (
+                                          <div className="flex items-center gap-2 text-[var(--color-accent-700)] bg-[var(--color-secondary-50)] border border-[var(--color-secondary-200)] rounded-lg px-4 py-3">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <span className="text-sm font-medium">Verifying ownership proof...</span>
+                                          </div>
+                                        )}
+
+                                        {!isVerifyingOwnership && ownershipProofDetails && (
+                                          <div className={`border rounded-lg px-4 py-3 ${
+                                            ownershipVerified
+                                              ? 'bg-[var(--color-success-50)] border-[var(--color-success-500)]'
+                                              : 'bg-[var(--color-warning-50)] border-[var(--color-warning-500)]'
+                                          }`}>
+                                            <div className="flex items-start gap-2">
+                                              {ownershipVerified ? (
+                                                <Check className="w-5 h-5 text-[var(--color-success-500)] flex-shrink-0 mt-0.5" />
+                                              ) : (
+                                                <AlertCircle className="w-5 h-5 text-[var(--color-warning-500)] flex-shrink-0 mt-0.5" />
+                                              )}
+                                              <div className="flex-1">
+                                                <h4 className={`text-sm font-medium mb-1 ${
+                                                  ownershipVerified ? 'text-[var(--color-success-900)]' : 'text-[var(--color-warning-900)]'
+                                                }`}>
+                                                  {ownershipVerified ? 'Ownership Verified!' : 'Not Verified'}
+                                                </h4>
+                                                {ownershipProofDetails.detected_name && (
+                                                  <p className="text-xs text-gray-700 mb-1">
+                                                    <span className="font-medium">Detected:</span> {ownershipProofDetails.detected_name}
+                                                    {ownershipProofDetails.detected_date && ` • ${ownershipProofDetails.detected_date}`}
+                                                  </p>
+                                                )}
+                                                {!ownershipVerified && ownershipProofDetails.suggestions.length > 0 && (
+                                                  <p className="text-xs text-gray-600 mt-1">
+                                                    {ownershipProofDetails.suggestions[0]}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {!isVerifyingOwnership && !ownershipProofDetails && (
+                                          <div className="bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] rounded-lg px-4 py-3">
+                                            <p className="text-xs text-gray-600">
+                                              First image will be verified for ownership proof (name + date)
+                                            </p>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div
-                                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
-                                  onClick={() => document.getElementById('ai-ownership-proof-upload')?.click()}
-                                >
-                                  <Upload className="w-12 h-12 mx-auto mb-3 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
-                                  <p className="text-[var(--color-primary-900)] mb-1 font-medium">Upload Proof of Ownership</p>
-                                  <p className="text-xs text-[var(--color-primary-700)]">Photo with your name and today's date</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                  </div>
+                                ) : (
+                                  <div
+                                    className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
+                                    onClick={() => document.getElementById('context-image-upload')?.click()}
+                                  >
+                                    <Shield className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                    <p className="text-[var(--color-primary-900)] mb-2 font-medium">Upload Your First Image</p>
+                                    <p className="text-sm text-[var(--color-primary-700)] mb-1">First image should show proof of ownership</p>
+                                    <p className="text-xs text-gray-600">(Your name + today's date next to the product)</p>
+                                  </div>
+                                );
+                              })()}
+                            </>
+                          ) : (
+                            // Buy listing upload (unchanged)
+                            <>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                id="context-image-upload"
+                                onChange={handleContextImageUpload}
+                              />
+                              {(() => {
+                                const allImages = [...selectedExternalImages, ...uploadedImages];
+                                const remainingSlots = 5 - allImages.length;
 
-                          {/* Product Images */}
-                          <div>
-                            {listingType === 'sell' && (
-                              <label className="block text-sm font-medium mb-2 text-accent-700">
-                                Product Photos
-                              </label>
-                            )}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              className="hidden"
-                              id="context-image-upload"
-                              onChange={handleContextImageUpload}
-                            />
-
-                          {(() => {
-                            const allImages = [...selectedExternalImages, ...uploadedImages];
-                            const remainingSlots = 5 - allImages.length;
-
-                            return allImages.length > 0 ? (
+                                return allImages.length > 0 ? (
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-sm font-medium text-accent-700">
@@ -1695,7 +1736,8 @@ export default function CreateListingModal({
                               </div>
                             );
                           })()}
-                          </div>
+                            </>
+                          )}
                         </div>
                       )}
 
