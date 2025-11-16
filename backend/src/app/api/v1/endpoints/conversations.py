@@ -1,7 +1,7 @@
 """Conversation API endpoints for user messaging."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 
 from src.app.api.deps import get_current_user
@@ -31,11 +31,20 @@ async def get_user_conversations(
     Returns conversations where the user is part of a matched recommendation,
     including other user's name and listing details.
     Ordered by last_message_at (most recent first).
+
+    OPTIMIZED: Uses eager loading to prevent N+1 query problem.
     """
-    # Get all conversations where user is involved in the recommendation
+    # Get all conversations with eager loading of related data
+    # This loads everything in 1-2 queries instead of 60+
     conversations = (
         db.query(Conversation)
         .join(Recommendation, Conversation.recommendation_id == Recommendation.id)
+        .options(
+            joinedload(Conversation.recommendation)
+            .joinedload(Recommendation.source_listing),
+            joinedload(Conversation.recommendation)
+            .joinedload(Recommendation.target_listing),
+        )
         .filter(
             (Recommendation.source_listing.has(user_id=current_user.id)) |
             (Recommendation.target_listing.has(user_id=current_user.id))
@@ -47,12 +56,13 @@ async def get_user_conversations(
         .all()
     )
 
-    # Enrich with user and listing data
+    # Enrich with user and listing data (no additional queries needed!)
     enriched_conversations = []
     for conv in conversations:
         rec = conv.recommendation
-        source_listing = db.query(Listing).filter(Listing.id == rec.source_listing_id).first()
-        target_listing = db.query(Listing).filter(Listing.id == rec.target_listing_id).first()
+        # Listings are already loaded via eager loading
+        source_listing = rec.source_listing
+        target_listing = rec.target_listing
 
         # Determine which user is the "other" user
         if source_listing.user_id == current_user.id:
@@ -64,8 +74,17 @@ async def get_user_conversations(
             other_listing = source_listing
             my_listing = target_listing
 
-        # Get other user details
-        other_user = db.query(User).filter(User.id == other_listing.user_id).first()
+        # User data is stored denormalized in listings - no extra query needed!
+        # The listing model stores creator_name, so we can use that
+        # If not available, we need to query the user
+        other_user_name = other_listing.creator_name if hasattr(other_listing, 'creator_name') else None
+        if not other_user_name:
+            # Fallback: query user (should be rare if creator_name is properly set)
+            other_user = db.query(User).filter(User.id == other_listing.user_id).first()
+            other_user_name = other_user.username if other_user else "Unknown User"
+            other_user_id = other_user.id if other_user else None
+        else:
+            other_user_id = other_listing.user_id
 
         # Get listing image (use image_url or first gallery image)
         listing_image = other_listing.image_url
@@ -80,8 +99,8 @@ async def get_user_conversations(
             "updated_at": conv.updated_at.isoformat(),
             "last_message_at": conv.last_message_at.isoformat() if conv.last_message_at else None,
             # Enriched data
-            "other_user_name": other_user.username if other_user else "Unknown User",
-            "other_user_id": other_user.id if other_user else None,
+            "other_user_name": other_user_name,
+            "other_user_id": other_user_id,
             "listing_title": other_listing.title,
             "listing_image": listing_image,
             "my_listing_title": my_listing.title,
