@@ -29,6 +29,7 @@ import {
   Shield,
   Wrench,
   CreditCard,
+  Clipboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -1518,39 +1519,96 @@ export default function CreateListingModal({
                                         )}
                                       </div>
 
-                                      <div className="grid grid-cols-2 gap-3">
+                                      {/* Featured Image Viewer */}
+                                      <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-[var(--color-primary-200)] bg-gray-100">
+                                        <Image
+                                          src={allImages[selectedImageIndex] || firstImage}
+                                          alt={`Product Image ${selectedImageIndex + 1}`}
+                                          fill
+                                          className="object-contain"
+                                        />
+                                        {/* Image Label */}
+                                        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
+                                          {selectedImageIndex === 0 ? (
+                                            <>
+                                              <Clipboard className="w-3.5 h-3.5" />
+                                              <span>Ownership Proof</span>
+                                            </>
+                                          ) : (
+                                            `Photo ${selectedImageIndex}`
+                                          )}
+                                        </div>
+                                        {/* Delete Button (not for proof) */}
+                                        {selectedImageIndex > 0 && (
+                                          <button
+                                            onClick={() => {
+                                              const idx = selectedImageIndex;
+                                              // Remove the image
+                                              if (idx - 1 < selectedExternalImages.length) {
+                                                setSelectedExternalImages(prev => prev.filter((_, i) => i !== idx - 1));
+                                              } else {
+                                                const uploadedIdx = idx - 1 - selectedExternalImages.length;
+                                                setUploadedImages(prev => prev.filter((_, i) => i !== uploadedIdx));
+                                              }
+                                              // Adjust selected index
+                                              const newLength = allImages.length - 1;
+                                              setSelectedImageIndex(Math.max(0, Math.min(selectedImageIndex, newLength - 1)));
+                                            }}
+                                            className="absolute top-2 left-2 p-2 bg-[var(--color-error-500)] text-white rounded-full hover:bg-[var(--color-error-600)] transition-colors shadow-lg"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        )}
+                                        {/* Navigation Arrows */}
+                                        {allImages.length > 1 && (
+                                          <>
+                                            <button
+                                              onClick={() => setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                                              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all"
+                                            >
+                                              <ChevronLeft className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                              onClick={() => setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                                              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all"
+                                            >
+                                              <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+
+                                      {/* Thumbnail Strip */}
+                                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                         {allImages.map((img, idx) => (
-                                          <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200 group">
-                                            <Image src={img} alt={`Image ${idx + 1}`} fill className="object-cover" />
-                                            <div className="absolute top-1 right-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
-                                              {idx === 0 ? 'Proof' : `#${idx}`}
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setSelectedImageIndex(idx)}
+                                            className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                              selectedImageIndex === idx
+                                                ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-200)] scale-105'
+                                                : 'border-gray-300 hover:border-[var(--color-secondary-300)]'
+                                            }`}
+                                          >
+                                            <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                            <div className="absolute bottom-1 left-1 text-white text-xs font-bold flex items-center">
+                                              {idx === 0 ? <Clipboard className="w-3 h-3" /> : idx}
                                             </div>
-                                            {idx > 0 && (
-                                              <button
-                                                onClick={() => {
-                                                  if (idx - 1 < selectedExternalImages.length) {
-                                                    setSelectedExternalImages(prev => prev.filter((_, i) => i !== idx - 1));
-                                                  } else {
-                                                    const uploadedIdx = idx - 1 - selectedExternalImages.length;
-                                                    setUploadedImages(prev => prev.filter((_, i) => i !== uploadedIdx));
-                                                  }
-                                                }}
-                                                className="absolute top-1 left-1 p-1.5 bg-[var(--color-error-500)] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                              >
-                                                <Trash2 className="w-3 h-3" />
-                                              </button>
-                                            )}
-                                          </div>
+                                          </button>
                                         ))}
 
+                                        {/* Add More Button */}
                                         {remainingSlots > 0 && (
-                                          <div
+                                          <button
+                                            type="button"
                                             onClick={() => document.getElementById('context-image-upload')?.click()}
-                                            className="aspect-video rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-50)] transition-all group"
+                                            className="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-50)] transition-all group"
                                           >
-                                            <Upload className="w-8 h-8 text-gray-400 group-hover:text-[var(--color-secondary-500)] transition-colors mb-1" />
-                                            <p className="text-xs text-gray-500 group-hover:text-[var(--color-secondary-700)]">Add More</p>
-                                          </div>
+                                            <Upload className="w-6 h-6 text-gray-400 group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                            <span className="text-xs text-gray-500 group-hover:text-[var(--color-secondary-700)] mt-0.5">+{remainingSlots}</span>
+                                          </button>
                                         )}
                                       </div>
 
