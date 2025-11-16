@@ -9,10 +9,14 @@ Purpose: Transform good descriptions into polished marketplace listings
 """
 
 from typing import List, Literal
+import base64
+import io
+from PIL import Image
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
+import google.generativeai as genai
 from src.app.core.logging_config import get_logger
 from src.app.services.generation.config import get_ai_settings
 
@@ -106,17 +110,130 @@ def get_sell_listing_agent() -> Agent:
     return _sell_listing_agent
 
 
+async def _generate_from_images(
+    images: List[str],
+    description: str,
+    listing_type: str,
+    settings,
+) -> dict:
+    """
+    Generate listing using Gemini Vision to analyze images.
+
+    Args:
+        images: List of base64 data URLs
+        description: Optional text description
+        listing_type: "buy" or "sell"
+        settings: AI settings with API key
+
+    Returns:
+        dict with title, description, tags
+    """
+    logger.info(f"🖼️ Using Gemini Vision to analyze {len(images)} image(s)")
+
+    # Initialize Gemini client
+    client = genai.Client(api_key=settings.gemini_api_key)
+
+    # Convert first image (or multiple) to PIL
+    pil_images = []
+    for idx, img_url in enumerate(images[:3]):  # Analyze up to 3 images
+        try:
+            if ',' in img_url:
+                img_data = img_url.split(',', 1)[1]
+            else:
+                img_data = img_url
+
+            img_bytes = base64.b64decode(img_data)
+            pil_image = Image.open(io.BytesIO(img_bytes))
+            pil_images.append(pil_image)
+            logger.info(f"  Loaded image {idx+1}: {pil_image.size}")
+        except Exception as e:
+            logger.warning(f"  Failed to load image {idx+1}: {e}")
+
+    if not pil_images:
+        raise ValueError("No valid images could be loaded")
+
+    # Build prompt for vision analysis
+    system_prompt = SELL_LISTING_PROMPT if listing_type == "sell" else BUY_LISTING_PROMPT
+
+    if description and len(description.strip()) > 0:
+        # Has description - use both images and text
+        vision_prompt = f"""Analyze the provided images and combine with the user's description to generate a marketplace listing.
+
+User's description:
+"{description}"
+
+Examine the images to identify additional details like:
+- Brand, model, color, size
+- Condition and quality
+- Materials and construction
+- Any unique features
+
+Generate a complete listing with title, description (200-400 chars), and 5-8 tags.
+Format as JSON: {{"title": "...", "description": "...", "tags": ["tag1", "tag2", ...]}}"""
+    else:
+        # No description - rely entirely on image analysis
+        vision_prompt = f"""Analyze these product images and generate a complete marketplace listing.
+
+Carefully examine the images to identify:
+1. What the product is (type, category)
+2. Brand, model, and specifications (if visible)
+3. Color, size, materials
+4. Condition (new, used, excellent, etc.)
+5. Notable features or details
+
+Listing type: {"Selling (create 'For Sale: ...' listing)" if listing_type == "sell" else "Looking to buy (create 'Looking for...' listing)"}
+
+Generate:
+- Title: SEO-optimized, max 80 chars
+- Description: Compelling description, 200-400 chars
+- Tags: 5-8 relevant keywords
+
+Format as JSON: {{"title": "...", "description": "...", "tags": ["tag1", "tag2", ...]}}"""
+
+    # Call Gemini Vision
+    contents = [vision_prompt] + pil_images
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=contents
+    )
+
+    response_text = response.text.strip()
+    logger.info(f"  Vision response: {response_text[:100]}...")
+
+    # Parse JSON response
+    import json
+    # Extract JSON from response (handle markdown code blocks)
+    if "```json" in response_text:
+        json_str = response_text.split("```json")[1].split("```")[0].strip()
+    elif "```" in response_text:
+        json_str = response_text.split("```")[1].split("```")[0].strip()
+    else:
+        json_str = response_text
+
+    try:
+        parsed = json.loads(json_str)
+        return {
+            "title": parsed.get("title", ""),
+            "description": parsed.get("description", ""),
+            "tags": parsed.get("tags", []),
+        }
+    except json.JSONDecodeError as e:
+        logger.error(f"  Failed to parse JSON: {e}")
+        logger.error(f"  Raw response: {response_text}")
+        raise ValueError(f"Failed to parse AI response as JSON: {e}")
+
+
 async def generate_listing(
     images: List[str],
     description: str,
     listing_type: str,
 ) -> dict:
     """
-    Generate complete listing (title, description, tags) from user input.
+    Generate complete listing (title, description, tags) from images and/or description.
 
     Args:
-        images: List of image URLs (currently not used in AI, reserved for future vision features)
-        description: User's freeform description
+        images: List of image URLs (data URLs or http URLs) - analyzed using vision
+        description: User's freeform description (optional)
         listing_type: "buy" or "sell"
 
     Returns:
@@ -129,18 +246,21 @@ async def generate_listing(
     if not settings.gemini_api_key:
         raise ValueError("Gemini API key not configured. Set AI_GEMINI_API_KEY in .env")
 
-    logger.info(f"📝 Generating {listing_type} listing from description ({len(description)} chars)")
+    logger.info(f"📝 Generating {listing_type} listing from {len(images)} images and description ({len(description)} chars)")
 
     try:
+        # If we have images, use Gemini Vision directly for better image analysis
+        if images and len(images) > 0:
+            return await _generate_from_images(images, description, listing_type, settings)
+
+        # No images - use PydanticAI agent for text-only generation
         agent = get_buy_listing_agent() if listing_type == "buy" else get_sell_listing_agent()
 
         prompt = f"""Generate a polished marketplace listing from this user description:
 
 "{description}"
 
-Additional context:
-- Listing type: {listing_type}
-- Number of images: {len(images)}
+Listing type: {listing_type}
 
 Create a complete listing with title, description, and tags."""
 
