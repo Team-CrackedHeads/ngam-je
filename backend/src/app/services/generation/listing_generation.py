@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
-import google.generativeai as genai
+from google import genai
 from src.app.core.logging_config import get_logger
 from src.app.services.generation.config import get_ai_settings
 
