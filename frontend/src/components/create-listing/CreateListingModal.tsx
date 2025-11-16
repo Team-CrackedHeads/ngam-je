@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import {
   Info,
@@ -46,11 +47,9 @@ import {
 } from "@/utils/mock-all-data-used";
 import { TagGeneratorRef } from "@/components/create-listing/tag-generator";
 import { verifyOwnershipProofWithAI } from "@/components/create-listing/ai-photo";
-import {
-  addNewListing,
-  generateListingId,
-  convertFormToListing,
-} from "@/utils/listing-storage";
+import { createClerkApiClient } from "@/lib/clerk-api-client";
+import { createListing } from "@/lib/api/listings";
+import type { ListingCreate } from "@/types/listing";
 import type { PartialFormData } from "@/types/listing-form";
 import type { BuyFormData, SellFormData } from "@/types/listing-form";
 import ProductDetailsStep from "./steps/ProductDetailsStep";
@@ -66,7 +65,8 @@ interface CreateListingModalProps {
   onClose: () => void;
   onSubmitBuy?: (data: BuyFormData) => void;
   onSubmitSell?: (data: SellFormData) => void;
-  category?: string; // Thread category where listing is being created
+  threadId: number; // Thread ID where listing is being created
+  onListingCreated?: () => void; // Callback after listing is created
 }
 
 type ListingType = null | "buy" | "sell";
@@ -76,9 +76,11 @@ export default function CreateListingModal({
   onClose,
   onSubmitBuy,
   onSubmitSell,
-  category,
+  threadId,
+  onListingCreated,
 }: CreateListingModalProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [listingType, setListingType] = useState<ListingType>(null);
 
@@ -89,6 +91,7 @@ export default function CreateListingModal({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // AI Context Gathering states
   const [aiContextGathered, setAiContextGathered] = useState(false);
@@ -1023,30 +1026,135 @@ export default function CreateListingModal({
   const handleSubmit = async () => {
     if (!listingType) return;
 
-    const formData = listingType === "buy" ? buyFormData : sellFormData;
+    try {
+      setIsSubmitting(true);
 
-    // Convert form data to listing format, passing the thread category
-    const listingData = convertFormToListing(formData, listingType, category);
+      const formData = listingType === "buy" ? buyFormData : sellFormData;
 
-    // Generate ID and add to storage
-    const listingId = generateListingId(listingData.category);
-    const completeListing = { ...listingData, id: listingId };
-    addNewListing(completeListing);
+      // Get token for API calls
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
 
-    // Call original callbacks if provided
-    if (listingType === "buy" && onSubmitBuy) {
-      onSubmitBuy(buyFormData);
-    } else if (listingType === "sell" && onSubmitSell) {
-      onSubmitSell(sellFormData);
+      // Get images based on listing type
+      const images = listingType === "buy"
+        ? (formData as BuyFormData).generatedImages
+        : (formData as SellFormData).uploadedImages;
+
+      // Upload images to Cloudinary first
+      console.log("🖼️ Starting image upload. Images to upload:", images.length);
+      console.log("📸 Image URLs:", images);
+
+      const uploadedImageUrls: string[] = [];
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          const imageUrl = images[i];
+          try {
+            console.log(`⬆️ Uploading image ${i + 1}/${images.length}...`);
+
+            // Fetch the blob and convert to File
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `listing-${Date.now()}.jpg`, { type: blob.type });
+
+            console.log("📦 File created:", file.name, file.size, "bytes");
+
+            // Upload to Cloudinary
+            const uploadFormData = new FormData();
+            uploadFormData.append("file", file);
+
+            console.log("🚀 Sending to /api/v1/upload/image...");
+            const uploadResponse = await apiClient.instance.post("/api/v1/upload/image", uploadFormData, {
+              headers: { "Content-Type": "multipart/form-data" },
+              params: { folder: "listings" }
+            });
+
+            console.log("✅ Upload response:", uploadResponse.data);
+
+            if (uploadResponse.data.success) {
+              uploadedImageUrls.push(uploadResponse.data.data.url);
+              console.log(`✓ Uploaded successfully:`, uploadResponse.data.data.url);
+            }
+          } catch (err) {
+            console.error(`❌ Failed to upload image ${i + 1}:`, err);
+            if (err && typeof err === "object" && "response" in err) {
+              console.error("Error response:", (err as { response?: { data?: unknown } }).response?.data);
+            }
+          }
+        }
+      }
+
+      console.log(`📊 Upload complete: ${uploadedImageUrls.length}/${images.length} successful`);
+      console.log("🔗 Uploaded URLs:", uploadedImageUrls);
+
+      // Prepare listing data for API
+      const displayPrice = parseFloat(listingType === "buy" ? formData.maxPrice : formData.minPrice);
+      const minPrice = formData.minPrice ? parseFloat(formData.minPrice) : null;
+      const maxPrice = formData.maxPrice ? parseFloat(formData.maxPrice) : null;
+      const inventoryQty = listingType === "sell" && (formData as SellFormData).inventoryQuantity
+        ? parseInt((formData as SellFormData).inventoryQuantity)
+        : null;
+
+      // Validation checks
+      if (!displayPrice || isNaN(displayPrice) || displayPrice <= 0) {
+        alert("Please enter a valid price greater than 0");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const listingData: ListingCreate = {
+        thread_id: threadId, // CRITICAL: Connect to thread
+        title: formData.generatedTitle,
+        description: formData.generatedDescription,
+        price: displayPrice,
+        min_price: minPrice && minPrice > 0 ? minPrice : null,
+        max_price: maxPrice && maxPrice > 0 ? maxPrice : null,
+        currency: formData.currency || "MYR",
+        listing_type: listingType === "buy" ? "wanted" : "sale",
+        image_url: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : null,
+        gallery: uploadedImageUrls.length > 1 ? uploadedImageUrls.slice(1) : [],
+        tags: formData.tags || [],
+        creator_location: formData.location || null,
+        shipping_options: formData.shippingOptions || [],
+        inventory_quantity: inventoryQty && inventoryQty > 0 ? inventoryQty : null,
+        ownership_proof_url: listingType === "sell"
+          ? (formData as SellFormData).ownershipProofImage || null
+          : null,
+        faqs: formData.faqs || [],
+      };
+
+      console.log("Creating listing with data:", listingData);
+      console.log("Uploaded image URLs:", uploadedImageUrls);
+
+      // Call backend API (token and apiClient already created above)
+      const createdListing = await createListing(apiClient.instance, listingData);
+
+      // Call original callbacks if provided
+      if (listingType === "buy" && onSubmitBuy) {
+        onSubmitBuy(buyFormData);
+      } else if (listingType === "sell" && onSubmitSell) {
+        onSubmitSell(sellFormData);
+      }
+
+      console.log(`${listingType} listing created:`, createdListing);
+
+      // Notify parent component to refresh listings
+      if (onListingCreated) {
+        onListingCreated();
+      }
+
+      // Close modal
+      handleClose();
+
+      // Navigate to the new listing
+      router.push(`/threads/${threadId}/listings/${createdListing.id}`);
+    } catch (error: unknown) {
+      console.error("Failed to create listing:", error);
+      const errorMessage = (error as { detail?: string; message?: string })?.detail || (error as { detail?: string; message?: string })?.message || "Failed to create listing. Please try again.";
+      console.error("Error details:", errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    console.log(`${listingType} listing created:`, completeListing);
-
-    // Close modal
-    handleClose();
-
-    // Navigate to the new listing
-    router.push(`/threads/${listingData.category}/${listingId}`);
   };
 
   const handleClose = () => {
