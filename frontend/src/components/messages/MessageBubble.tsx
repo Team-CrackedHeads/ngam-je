@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { cn } from "@/lib/utils";
 
 interface ProductInfo {
@@ -26,7 +26,7 @@ export function MessageBubble({
       <div className="flex justify-start">
         <div className="bg-muted rounded-2xl p-3 max-w-[75%]">
           <div className="relative h-32 w-full rounded-lg overflow-hidden mb-2">
-            <Image
+            <SafeImage
               src={product.image}
               alt={product.title}
               fill

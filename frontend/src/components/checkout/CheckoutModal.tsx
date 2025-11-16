@@ -10,6 +10,7 @@ import { MatchedListing } from "@/components/matching/types";
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
+import SafeImage from "@/components/ui/SafeImage";
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { MeetupScheduler } from "@/components/checkout/MeetupScheduler";
 import { StripePayment } from "@/components/checkout/StripePayment";
@@ -189,13 +190,8 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
 
   const handleConfirm = () => {
     if (!selectedDealType) return;
-    // Open Stripe payment modal
-    setShowPayment(true);
-  };
 
-  const handlePaymentSuccess = () => {
-    if (!selectedDealType) return;
-
+    // Call the checkout API immediately when user clicks "Confirm & Finalize Deal"
     const dealDetails: DealDetails = {
       dealType: selectedDealType,
       useEscrow: selectedDealType !== "in-person" && selectedDealType !== "direct-shipping", // Escrow for platform services only
@@ -209,8 +205,18 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
       }),
     };
 
-    setShowPayment(false);
+    // Mark listings as checked out BEFORE opening Stripe
     onConfirm(dealDetails);
+
+    // Then open Stripe payment modal
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    if (!selectedDealType) return;
+    // Just close the payment modal after success
+    setShowPayment(false);
+    // Don't call onConfirm again - already called in handleConfirm
   };
 
   const handlePaymentCancel = () => {
@@ -281,17 +287,36 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
               </h4>
               <div className="p-3 bg-primary-50 rounded-lg border border-primary-200">
                 <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 bg-primary-200 rounded-lg flex items-center justify-center shrink-0">
-                    <span className="text-xs text-accent-400">Image</span>
-                  </div>
+                  {/* Product Image */}
+                  {"image_url" in listing && listing.image_url ? (
+                    <SafeImage
+                      src={listing.image_url}
+                      alt={listing.title}
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 object-cover rounded-lg shrink-0"
+                    />
+                  ) : "images" in listing && listing.images && listing.images[0] ? (
+                    <SafeImage
+                      src={listing.images[0]}
+                      alt={listing.title}
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 object-cover rounded-lg shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-primary-200 rounded-lg flex items-center justify-center shrink-0">
+                      <span className="text-xs text-accent-400">Image</span>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-accent-700 mb-1 truncate">{listing.title}</h3>
                     <p className="text-2xl font-bold text-secondary-600 mb-2">
-                      {("price" in listing ? listing.price : listing.budget) || "N/A"}
+                      {listing.currency || 'MYR'} {("price" in listing ? listing.price : "budget" in listing ? listing.budget : "N/A")}
                     </p>
                     <div className="flex items-center gap-2 text-sm text-accent-500">
                       <MapPin className="w-4 h-4" />
-                      {listing.location}
+                      {"creator_location" in listing ? listing.creator_location : "location" in listing ? listing.location : "Location not specified"}
                     </div>
                   </div>
                 </div>
@@ -1023,15 +1048,33 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                 <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
                   <h4 className="font-semibold text-sm text-accent-700 mb-3">Item Details</h4>
                   <div className="flex items-start gap-4 mb-3">
-                    <div className="w-24 h-24 bg-primary-200 rounded-lg flex items-center justify-center shrink-0">
-                      <span className="text-xs text-accent-400">Image</span>
-                    </div>
+                    {"image_url" in listing && listing.image_url ? (
+                      <SafeImage
+                        src={listing.image_url}
+                        alt={listing.title}
+                        width={96}
+                        height={96}
+                        className="w-24 h-24 object-cover rounded-lg shrink-0"
+                      />
+                    ) : "images" in listing && listing.images && listing.images[0] ? (
+                      <SafeImage
+                        src={listing.images[0]}
+                        alt={listing.title}
+                        width={96}
+                        height={96}
+                        className="w-24 h-24 object-cover rounded-lg shrink-0"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 bg-primary-200 rounded-lg flex items-center justify-center shrink-0">
+                        <span className="text-xs text-accent-400">Image</span>
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-accent-700 mb-1">{listing.title}</h3>
                       <p className="text-sm text-primary-700 mb-2 line-clamp-2">{listing.description}</p>
                       <div className="flex items-center gap-4 text-xs text-primary-700">
                         <span className="text-lg font-bold text-accent-700">
-                          {("price" in listing ? listing.price : listing.budget) || "N/A"}
+                          {listing.currency || 'MYR'} {("price" in listing ? listing.price : "budget" in listing ? listing.budget : "N/A")}
                         </span>
                       </div>
                     </div>

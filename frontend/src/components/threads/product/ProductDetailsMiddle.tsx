@@ -28,7 +28,7 @@ const ProductDetailsMiddle: React.FC<ProductDetailsMiddleProps> = ({
                 className="relative w-24 h-24 rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => openModal(index)}
               >
-                <Image
+                <SafeImage
                   src={image.replace("w=1200", "w=200")} // Adjusting image size for thumbnail
                   alt={`Gallery thumbnail ${index + 1}`}
                   fill

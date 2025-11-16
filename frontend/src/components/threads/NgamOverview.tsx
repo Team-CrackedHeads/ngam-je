@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import ReactMarkdown from "react-markdown";
 import { Puzzle, ExternalLink, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -221,7 +221,7 @@ export default function NgamOverview({
               {displayedImages && displayedImages.length > 0 && (
                 <div className="flex flex-wrap gap-4">
                   {displayedImages.map((image, index) => (
-                    <Image
+                    <SafeImage
                       key={`img-${index}`}
                       src={image}
                       alt={`Reference image ${index + 1}`}

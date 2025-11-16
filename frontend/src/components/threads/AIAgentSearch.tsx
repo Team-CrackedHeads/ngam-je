@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { Plus, Sparkles } from "lucide-react";
 import { mockAIResponses, MockAIResponse } from "@/utils/mock-all-data-used";
 
@@ -72,7 +72,7 @@ export default function AIAgentSearch({
       >
         {/* Illustration - image overlay */}
         <div className="flex justify-center">
-          <Image
+          <SafeImage
             src="/images/ai-image.png"
             alt="Marketplace illustration"
             width={192}

@@ -21,7 +21,7 @@ const ProductDetailsTop: React.FC<ProductCardDetailsProps> = ({
     <div className="product-card-details-container">
       {/* Product Image - Clicking this opens the modal */}
       <div className="relative w-full h-64 sm:h-[50vh]">
-        <Image
+        <SafeImage
           src={mainImageSrc}
           alt={listing.title}
           fill

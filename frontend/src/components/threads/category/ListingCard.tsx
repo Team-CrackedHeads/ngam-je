@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { Heart, MapPin, Clock } from "lucide-react";
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 
@@ -51,16 +51,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
       {/* Image with themed badge */}
       <div className="relative">
-        <Image
+        <SafeImage
           src={imageUrl}
           alt={title}
           width={800}
           height={400}
           className="w-full rounded-lg object-cover h-48 sm:h-64"
-          onError={(e) => {
-            e.currentTarget.src =
-              "https://placehold.co/800x400/cccccc/333333?text=Image+Missing";
-          }}
+          maxRetries={3}
         />
         {/* For Sale - badge */}
         <span
@@ -79,7 +76,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
         {/* Seller info - moved below title */}
         <div className="flex items-center text-xs text-gray-600 mt-3 gap-2">
-          <Image
+          <SafeImage
             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seller.name}`}
             alt={seller.name}
             width={32}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronRight, Clock, Package } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, ShoppingCart } from "lucide-react";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
@@ -10,27 +10,70 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { mockWantedListings } from "@/utils/mock-all-data-used";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { useUser } from "@clerk/nextjs";
+import { fetchUserListings } from "@/lib/api/listings";
+import type { Listing } from "@/types/listing";
 
 export default function SellListingsMenuItem() {
   const router = useRouter();
+  const { user } = useUser();
+  const getApiClient = useClerkApiClient();
+
   const [isOpen, setIsOpen] = useState(false);
   const [visibleListings, setVisibleListings] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
   const KEEP_RECENT_COUNT = 10;
   const MAX_LOADED_COUNT = 25;
   const DELOAD_TO_COUNT = 15;
 
+  // Lazy load: Only fetch when menu is opened for the first time
+  useEffect(() => {
+    if (!user || !isOpen || hasLoadedOnce) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const apiClient = await getApiClient();
+
+        // Get current user profile to fetch user ID
+        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
+
+        // Fetch user's sale listings (WTS = want to sell)
+        const response = await fetchUserListings(apiClient.instance, userProfile.id, {
+          listing_type: "sale",
+          limit: 50, // Fetch more for sidebar scrolling
+        });
+
+        setListings(response.listings);
+        setError(null);
+        setHasLoadedOnce(true);
+      } catch (err) {
+        console.error("Error fetching sale listings:", err);
+        setError("Failed to load listings");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isOpen]); // Fetch when opened
+
   const handleListingClick = (listingId: number) => {
-    router.push(`/listings/${listingId}/matches?type=wanted`);
+    router.push(`/listings/${listingId}/matches?type=sale`);
   };
 
   const loadMoreListings = () => {
-    if (loading || visibleListings >= mockWantedListings.length) return;
+    if (loading || visibleListings >= listings.length) return;
 
     setLoading(true);
     setTimeout(() => {
-      const newCount = Math.min(visibleListings + 5, mockWantedListings.length);
+      const newCount = Math.min(visibleListings + 5, listings.length);
 
       if (newCount > MAX_LOADED_COUNT) {
         setVisibleListings(Math.max(DELOAD_TO_COUNT, KEEP_RECENT_COUNT));
@@ -65,8 +108,8 @@ export default function SellListingsMenuItem() {
         onClick={() => setIsOpen(!isOpen)}
         className="group/menu-item text-accent-700 font-semibold"
       >
-        <Package className="w-5 h-5" />
-        <span>Want Listings</span>
+        <ShoppingCart className="w-5 h-5" />
+        <span>Sale Listings</span>
         {isOpen ? (
           <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
         ) : (
@@ -83,7 +126,7 @@ export default function SellListingsMenuItem() {
           <SidebarMenuSubItem>
             <SidebarMenuSubButton
               onClick={() =>
-                router.push("/listings?type=wanted", { scroll: false })
+                router.push("/listings?type=sale", { scroll: false })
               }
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700 cursor-pointer"
             >
@@ -97,7 +140,17 @@ export default function SellListingsMenuItem() {
               className="max-h-32 overflow-y-auto space-y-1 px-2"
               onScroll={handleScroll}
             >
-              {mockWantedListings.slice(0, visibleListings).map((listing) => (
+              {error && (
+                <div className="p-2 text-xs text-red-500">{error}</div>
+              )}
+
+              {!error && listings.length === 0 && !loading && (
+                <div className="p-2 text-xs text-accent-400 text-center">
+                  No sale listings yet
+                </div>
+              )}
+
+              {listings.slice(0, visibleListings).map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => handleListingClick(listing.id)}
@@ -105,8 +158,8 @@ export default function SellListingsMenuItem() {
                 >
                   <div className="truncate font-medium">{listing.title}</div>
                   <div className="flex justify-between text-[10px] text-accent-400">
-                    <span>{listing.price || listing.budget}</span>
-                    <span>{listing.timestamp}</span>
+                    <span>{listing.currency} {listing.price}</span>
+                    <span>{new Date(listing.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               ))}
@@ -117,8 +170,8 @@ export default function SellListingsMenuItem() {
                 </div>
               )}
 
-              {visibleListings >= mockWantedListings.length &&
-                mockWantedListings.length > 5 && (
+              {visibleListings >= listings.length &&
+                listings.length > 5 && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-400">
                       No more listings
@@ -126,11 +179,11 @@ export default function SellListingsMenuItem() {
                   </div>
                 )}
 
-              {visibleListings < mockWantedListings.length &&
+              {visibleListings < listings.length &&
                 visibleListings >= MAX_LOADED_COUNT && (
                   <div className="flex justify-center py-2">
                     <div className="text-xs text-accent-300">
-                      {mockWantedListings.length - visibleListings} older listings
+                      {listings.length - visibleListings} older listings
                       hidden
                     </div>
                   </div>

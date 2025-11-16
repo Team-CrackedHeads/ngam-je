@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +136,7 @@ export function ListingComparisonModal({
                 <div className="space-y-4">
                   {/* Image */}
                   <div className="aspect-[4/3] rounded-xl overflow-hidden relative bg-primary-100">
-                    <Image
+                    <SafeImage
                       src={userListing.images[0]}
                       alt={userListing.title}
                       width={400}
@@ -218,7 +218,7 @@ export function ListingComparisonModal({
                   {/* Images Row */}
                   {listings.map((listing) => (
                     <div key={`img-${listing.id}`} className="aspect-[4/3] rounded-xl overflow-hidden relative bg-primary-100">
-                      <Image
+                      <SafeImage
                         src={listing.images[0]}
                         alt={listing.title}
                         width={400}

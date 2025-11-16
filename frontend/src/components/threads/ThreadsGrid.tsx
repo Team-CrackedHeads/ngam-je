@@ -2,10 +2,10 @@
 // New file
 import React from "react";
 import ThreadCard from "./ThreadCard";
-import { ThreadData } from "@/utils/mock-all-data-used";
+import { ThreadDisplay } from "@/types/thread";
 
 type ThreadsGridProps = {
-  threads: ThreadData[];
+  threads: ThreadDisplay[];
 };
 
 export default function ThreadsGrid({ threads }: ThreadsGridProps) {
