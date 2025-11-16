@@ -75,6 +75,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.gstatic.com', // Google Shopping images
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
     ],
   },
 };

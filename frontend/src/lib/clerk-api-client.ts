@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { useAuth } from '@clerk/nextjs';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -133,9 +134,6 @@ export function createClerkApiClient(token: string | null) {
  * ```
  */
 export function useClerkApiClient() {
-  // Dynamic import to avoid issues with SSR
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useAuth } = require('@clerk/nextjs');
   const { getToken } = useAuth();
 
   return async () => {
