@@ -1451,9 +1451,9 @@ export default function CreateListingModal({
                           Upload
                         </button>
                         <button
-                          onClick={() => setImageMode('search')}
+                          onClick={() => setImageMode(listingType === 'sell' ? 'search-backgrounds' : 'search')}
                           className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
-                            imageMode === 'search'
+                            (listingType === 'sell' ? imageMode === 'search-backgrounds' : imageMode === 'search')
                               ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
                               : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                           }`}
@@ -1462,15 +1462,15 @@ export default function CreateListingModal({
                           {listingType === 'sell' ? 'Search Backgrounds' : 'Search'}
                         </button>
                         <button
-                          onClick={() => setImageMode('generate')}
+                          onClick={() => setImageMode(listingType === 'sell' ? 'enhance' : 'generate')}
                           className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
-                            imageMode === 'generate'
+                            (listingType === 'sell' ? imageMode === 'enhance' : imageMode === 'generate')
                               ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
                               : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                           }`}
                         >
                           <Wand2 className="w-4 h-4 inline-block mr-2" />
-                          Generate
+                          {listingType === 'sell' ? 'Enhance' : 'Generate'}
                         </button>
                       </div>
 
