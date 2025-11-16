@@ -1,6 +1,7 @@
 """Recommendation API endpoints for listing matches."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, union_all
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -45,20 +46,36 @@ async def get_listing_recommendations(
         )
 
     # Query recommendations where listing is source OR target
-    query = db.query(Recommendation).filter(
-        (Recommendation.source_listing_id == listing_id) |
-        (Recommendation.target_listing_id == listing_id)
+    # OPTIMIZED: Use UNION instead of OR for better index usage
+    source_query = db.query(Recommendation).filter(
+        Recommendation.source_listing_id == listing_id
+    )
+    target_query = db.query(Recommendation).filter(
+        Recommendation.target_listing_id == listing_id
     )
 
     # Filter by status if provided
     if status_filter:
-        query = query.filter(Recommendation.status == status_filter)
+        source_query = source_query.filter(Recommendation.status == status_filter)
+        target_query = target_query.filter(Recommendation.status == status_filter)
 
-    # Get total count
-    total = query.count()
+    # Combine with UNION ALL (no duplicates possible since source != target)
+    combined_query = source_query.union_all(target_query)
+
+    # Get total count (optimized)
+    count_source = db.query(func.count(Recommendation.id)).filter(
+        Recommendation.source_listing_id == listing_id
+    )
+    count_target = db.query(func.count(Recommendation.id)).filter(
+        Recommendation.target_listing_id == listing_id
+    )
+    if status_filter:
+        count_source = count_source.filter(Recommendation.status == status_filter)
+        count_target = count_target.filter(Recommendation.status == status_filter)
+    total = (count_source.scalar() or 0) + (count_target.scalar() or 0)
 
     # Order by match score descending, then by created date
-    recommendations = query.order_by(
+    recommendations = combined_query.order_by(
         Recommendation.match_score.desc(),
         Recommendation.created_at.desc()
     ).all()
@@ -88,16 +105,31 @@ async def get_matched_listings(
         )
 
     # Query only matched recommendations
-    query = db.query(Recommendation).filter(
-        (
-            (Recommendation.source_listing_id == listing_id) |
-            (Recommendation.target_listing_id == listing_id)
-        ),
+    # OPTIMIZED: Use UNION instead of OR for better index usage
+    source_query = db.query(Recommendation).filter(
+        Recommendation.source_listing_id == listing_id,
+        Recommendation.status == "matched"
+    )
+    target_query = db.query(Recommendation).filter(
+        Recommendation.target_listing_id == listing_id,
         Recommendation.status == "matched"
     )
 
-    total = query.count()
-    recommendations = query.order_by(Recommendation.match_score.desc()).all()
+    # Combine with UNION ALL
+    combined_query = source_query.union_all(target_query)
+
+    # Get total count (optimized)
+    count_source = db.query(func.count(Recommendation.id)).filter(
+        Recommendation.source_listing_id == listing_id,
+        Recommendation.status == "matched"
+    ).scalar() or 0
+    count_target = db.query(func.count(Recommendation.id)).filter(
+        Recommendation.target_listing_id == listing_id,
+        Recommendation.status == "matched"
+    ).scalar() or 0
+    total = count_source + count_target
+
+    recommendations = combined_query.order_by(Recommendation.match_score.desc()).all()
 
     return RecommendationListResponse(recommendations=recommendations, total=total)
 

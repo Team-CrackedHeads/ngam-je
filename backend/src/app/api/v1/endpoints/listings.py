@@ -1,6 +1,7 @@
 """Listing API endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
 import re
@@ -104,8 +105,15 @@ async def list_listings(
     if is_active is not None:
         query = query.filter(Listing.is_active == is_active)
 
-    # Get total count before pagination
-    total = query.count()
+    # Get total count before pagination (optimized - counts IDs only, not all columns)
+    count_query = db.query(func.count(Listing.id))
+    if listing_type:
+        count_query = count_query.filter(Listing.listing_type == listing_type)
+    if thread_id:
+        count_query = count_query.filter(Listing.thread_id == thread_id)
+    if is_active is not None:
+        count_query = count_query.filter(Listing.is_active == is_active)
+    total = count_query.scalar()
 
     # Apply pagination and ordering (newest first)
     listings = query.order_by(Listing.created_at.desc()).offset(skip).limit(limit).all()
@@ -319,8 +327,13 @@ async def get_user_listings(
     if is_active is not None:
         query = query.filter(Listing.is_active == is_active)
 
-    # Get total count before pagination
-    total = query.count()
+    # Get total count before pagination (optimized - counts IDs only, not all columns)
+    count_query = db.query(func.count(Listing.id)).filter(Listing.user_id == user_id)
+    if listing_type:
+        count_query = count_query.filter(Listing.listing_type == listing_type)
+    if is_active is not None:
+        count_query = count_query.filter(Listing.is_active == is_active)
+    total = count_query.scalar()
 
     # Apply pagination and ordering (newest first)
     listings = query.order_by(Listing.created_at.desc()).offset(skip).limit(limit).all()
