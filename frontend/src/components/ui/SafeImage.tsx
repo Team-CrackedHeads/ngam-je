@@ -64,7 +64,7 @@ export default function SafeImage({
     );
   }
 
-  const imageProps: any = {
+  const imageProps: Record<string, unknown> = {
     src: currentSrc,
     alt,
     className,
@@ -90,5 +90,5 @@ export default function SafeImage({
     imageProps.style = { objectFit };
   }
 
-  return <Image {...imageProps} />;
+  return <Image {...(imageProps as unknown as React.ComponentProps<typeof Image>)} />;
 }

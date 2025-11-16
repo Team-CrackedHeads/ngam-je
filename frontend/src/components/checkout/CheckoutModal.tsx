@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Package, Handshake, Truck, Shield, MapPin, Calendar, ArrowLeft, AlertTriangle, Lightbulb, Loader2, Warehouse, ClipboardCheck } from "lucide-react";
 import { type Listing } from "@/utils/mock-all-data-used";
+import { type Listing as ApiListing } from "@/types/listing";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -20,7 +21,7 @@ const GoogleLocationMap = dynamic(() => import("@/components/create-listing/Goog
 });
 
 interface CheckoutModalProps {
-  listing: Listing | MatchedListing;
+  listing: Listing | MatchedListing | ApiListing;
   onClose: () => void;
   onBack: () => void;
   onConfirm: (dealDetails: DealDetails) => void;
@@ -288,7 +289,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
               <div className="p-3 bg-primary-50 rounded-lg border border-primary-200">
                 <div className="flex items-start gap-4">
                   {/* Product Image */}
-                  {"image_url" in listing && listing.image_url ? (
+                  {"image_url" in listing && listing.image_url && typeof listing.image_url === 'string' ? (
                     <SafeImage
                       src={listing.image_url}
                       alt={listing.title}
@@ -316,7 +317,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                     </p>
                     <div className="flex items-center gap-2 text-sm text-accent-500">
                       <MapPin className="w-4 h-4" />
-                      {"creator_location" in listing ? listing.creator_location : "location" in listing ? listing.location : "Location not specified"}
+                      {(("creator_location" in listing && listing.creator_location) || ("location" in listing && listing.location) || "Location not specified") as string}
                     </div>
                   </div>
                 </div>
@@ -1048,7 +1049,7 @@ function CheckoutModalContent({ listing, onClose, onBack, onConfirm }: CheckoutM
                 <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
                   <h4 className="font-semibold text-sm text-accent-700 mb-3">Item Details</h4>
                   <div className="flex items-start gap-4 mb-3">
-                    {"image_url" in listing && listing.image_url ? (
+                    {"image_url" in listing && listing.image_url && typeof listing.image_url === 'string' ? (
                       <SafeImage
                         src={listing.image_url}
                         alt={listing.title}

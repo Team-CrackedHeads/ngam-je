@@ -2315,6 +2315,7 @@ export interface Listing {
   title: string;
   price?: string;
   budget?: string;
+  currency?: string;
   location: string;
   timestamp: string;
   description: string;

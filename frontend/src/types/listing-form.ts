@@ -57,7 +57,7 @@ export interface UnifiedListingData {
     timePosted: string;
   };
   imageUrl: string;
-  gallery: string[];
+  gallery?: string[];
   category: string;
   listingType: "sale" | "wanted";
   tags: string[];

@@ -32,8 +32,8 @@ export function useDescriptionEvaluator(options: UseDescriptionEvaluatorOptions)
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
-  const abortControllerRef = useRef<AbortController>();
+  const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const abortControllerRef = useRef<AbortController | undefined>(undefined);
 
   const evaluateText = useCallback(async (text: string) => {
     console.log('🔍 evaluateText called with:', { textLength: text.length, minChars });
@@ -76,13 +76,14 @@ export function useDescriptionEvaluator(options: UseDescriptionEvaluatorOptions)
 
       console.log('✅ Evaluation response:', response.data);
       setEvaluation(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isCancel(err)) {
         console.log('🚫 Request cancelled');
         return;
       }
       console.error('❌ Evaluation error:', err);
-      setError(err.response?.data?.detail || 'Failed to evaluate description');
+      const errorMessage = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'detail' in err.response.data ? String(err.response.data.detail) : 'Failed to evaluate description';
+      setError(errorMessage);
     } finally {
       setIsEvaluating(false);
     }

@@ -20,6 +20,7 @@ import {
   AIMatchingProps,
   ColumnType,
   MatchedListing,
+  ListingType,
 } from "@/components/matching/types";
 import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 import { Card } from "@/components/ui/card";
@@ -72,22 +73,22 @@ export function AIMatchingKanban({
   const [showCompareModal, setShowCompareModal] = useState(false);
 
   // Convert API listings to MatchedListing format
-  const convertToMatchedListing = (listing: any): MatchedListing => {
+  const convertToMatchedListing = (listing: ListingType): MatchedListing => {
     return {
       id: String(listing.id),
       title: listing.title,
       description: listing.description,
-      price: listing.price || 0,
-      originalAsk: listing.price || 0,
-      images: listing.image_url ? [listing.image_url, ...(listing.gallery || [])] : [],
+      price: typeof listing.price === 'string' ? parseFloat(listing.price) || 0 : listing.price || 0,
+      originalAsk: typeof listing.price === 'string' ? parseFloat(listing.price) || 0 : listing.price || 0,
+      images: listing.images || [],
       tags: listing.tags || [],
-      location: listing.creator_location || "Unknown",
-      timeAgo: new Date(listing.created_at).toLocaleDateString(),
-      seller: listing.creator_name || "Unknown",
-      type: listing.listing_type === "sale" ? "sell" : "buy",
+      location: listing.location || "Unknown",
+      timeAgo: listing.timestamp || "Unknown",
+      seller: listing.seller || "Unknown",
+      type: listing.type,
       category: listing.category || "general",
-      matchScore: listing.matchScore || 0,
-      matchReasons: listing.matchReasons || [],
+      matchScore: 0,
+      matchReasons: [],
     };
   };
 

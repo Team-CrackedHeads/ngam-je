@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ProductDetailsMiddleProps {
   galleryImages: string[];

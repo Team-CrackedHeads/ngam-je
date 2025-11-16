@@ -4,6 +4,7 @@ export interface MatchedListing {
   description: string;
   price: number;
   originalAsk?: number;
+  currency?: string;
   images: string[];
   tags: string[];
   location: string;

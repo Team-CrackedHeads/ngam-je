@@ -82,7 +82,7 @@ export default function ListingMatchesPage() {
             };
             extendedListing.recommendationId = rec.id;
             extendedListing.matchScore = rec.match_score;
-            extendedListing.matchReasons = rec.match_reasons;
+            extendedListing.matchReasons = rec.match_reasons ?? undefined;
             extendedListing.recommendationStatus = rec.status;
 
             matches.push(matchedListing);
@@ -328,7 +328,7 @@ export default function ListingMatchesPage() {
                 availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
                 onMatch={() => { }}
                 onMessage={() => { }}
-                onViewDetails={(listing) => setSelectedListing(listing)}
+                onViewDetails={(listing) => setSelectedListing(listing as unknown as ApiListing)}
                 onClose={() => { }}
               />
             </>

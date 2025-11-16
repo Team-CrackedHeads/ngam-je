@@ -50,10 +50,6 @@ const Header = () => {
               },
             }}
             afterSignOutUrl="/threads"
-            signOutCallback={() => {
-              // Force full page reload and redirect to threads page
-              window.location.href = "/threads";
-            }}
           />
         ) : (
           <SignInButton mode="modal" forceRedirectUrl={pathname}>

@@ -135,7 +135,7 @@ export const ProductDetails = ({
         <MakeOfferBuy
           isOpen={isMakeOfferModalOpen}
           onClose={() => setIsMakeOfferModalOpen(false)}
-          sourceListingId={listing.id}
+          sourceListingId={String(listing.id)}
           sourceTitle={listing.title}
           sourceDescription={listing.description}
           sourceImages={listing.gallery || [listing.imageUrl]}
@@ -149,7 +149,7 @@ export const ProductDetails = ({
         <MakeOfferSell
           isOpen={isMakeOfferModalOpen}
           onClose={() => setIsMakeOfferModalOpen(false)}
-          sourceListingId={listing.id}
+          sourceListingId={String(listing.id)}
           sourceTitle={listing.title}
           sourcePrice={listing.price}
           category={listing.category}

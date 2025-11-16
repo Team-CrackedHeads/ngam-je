@@ -261,7 +261,12 @@ export default function CreateListingModal({
 
   // TODO: Rebuild with simple LLM calls (no agents)
   // AI Generation functions
-  const getProductDataFromAI = async () => {
+  const getProductDataFromAI = async (): Promise<{
+    images: string[];
+    title?: string;
+    description?: string;
+    tags?: string[];
+  } | null> => {
     console.log("AI generation temporarily disabled - will rebuild with simple LLM calls");
     return null;
   };
@@ -569,7 +574,7 @@ export default function CreateListingModal({
       );
 
       // Extract image URLs from Unsplash response
-      const imageUrls = response.data.images.map((img: any) => img.url);
+      const imageUrls = response.data.images.map((img: { url: string }) => img.url);
       setExternalImages(imageUrls);
     } catch (error) {
       console.error("Error searching images:", error);
@@ -858,7 +863,7 @@ export default function CreateListingModal({
         }
       );
 
-      const imageUrls = response.data.images.map((img: any) => img.url);
+      const imageUrls = response.data.images.map((img: { url: string }) => img.url);
       setBackgroundImages(imageUrls);
     } catch (error) {
       console.error("Error searching backgrounds:", error);
@@ -1808,7 +1813,7 @@ export default function CreateListingModal({
                                     <Shield className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
                                     <p className="text-[var(--color-primary-900)] mb-2 font-medium">Upload Your First Image</p>
                                     <p className="text-sm text-[var(--color-primary-700)] mb-1">First image should show proof of ownership</p>
-                                    <p className="text-xs text-gray-600">(Your name + today's date next to the product)</p>
+                                    <p className="text-xs text-gray-600">(Your name + today&apos;s date next to the product)</p>
                                   </div>
                                 );
                               })()}
@@ -2200,7 +2205,7 @@ export default function CreateListingModal({
                               Proof of Ownership <span className="text-[var(--color-error-500)]">*</span>
                             </label>
                             <p className="text-xs text-gray-600 mb-2">
-                              Upload a photo showing your name and today's date (e.g., written on paper next to the product)
+                              Upload a photo showing your name and today&apos;s date (e.g., written on paper next to the product)
                             </p>
 
                             <input
@@ -2305,7 +2310,7 @@ export default function CreateListingModal({
                               >
                                 <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
                                 <p className="text-[var(--color-primary-900)] mb-2 font-medium">Upload Proof of Ownership</p>
-                                <p className="text-sm text-[var(--color-primary-700)]">Photo with your name and today's date</p>
+                                <p className="text-sm text-[var(--color-primary-700)]">Photo with your name and today&apos;s date</p>
                               </div>
                             )}
                           </div>
@@ -2444,12 +2449,12 @@ export default function CreateListingModal({
 
                             {allProductImages.length === 0 && (
                               <p className="text-xs text-[var(--color-warning-900)] mt-2">
-                                Please upload product images in the "Upload" tab first.
+                                Please upload product images in the &quot;Upload&quot; tab first.
                               </p>
                             )}
                             {selectedBackgrounds.length === 0 && allProductImages.length > 0 && (
                               <p className="text-xs text-[var(--color-warning-900)] mt-2">
-                                Please select backgrounds in the "Search Backgrounds" tab.
+                                Please select backgrounds in the &quot;Search Backgrounds&quot; tab.
                               </p>
                             )}
                           </div>

@@ -20,6 +20,7 @@ export interface Listing {
   max_price: number | null;
   currency: string;
   listing_type: "sale" | "wanted"; // "sale" = WTS/sell, "wanted" = WTB/buy
+  category: string;
   image_url: string | null;
   gallery: string[];
   tags: string[];
@@ -34,6 +35,7 @@ export interface Listing {
   faqs: FAQ[];
   is_active: boolean;
   is_matched: boolean;
+  is_checked_out: boolean;
   created_at: string;
   updated_at: string;
 }
