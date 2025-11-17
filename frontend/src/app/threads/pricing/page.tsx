@@ -108,7 +108,7 @@ function PricingPageContent() {
   };
 
   const handleGetMoreBoostClick = () => {
-    router.push(`/threads/pricing/subscription`);
+    router.push(`/subscription`);
   };
 
   const handlePaymentSuccess = () => {
