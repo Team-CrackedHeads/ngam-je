@@ -63,7 +63,7 @@ substitutions:
   _MAX_INSTANCES: '10'
   _TIMEOUT: '300s'
   _CONCURRENCY: '80'
-  _SERVICE_ACCOUNT: 'ngamje-backend@${PROJECT_ID}.iam.gserviceaccount.com'
+  _SERVICE_ACCOUNT: 'cloudrun@${PROJECT_ID}.iam.gserviceaccount.com'
   # _VPC_CONNECTOR: 'projects/${PROJECT_ID}/locations/${_REGION}/connectors/ngamje-vpc'
 
 # Images to be pushed to Artifact Registry
