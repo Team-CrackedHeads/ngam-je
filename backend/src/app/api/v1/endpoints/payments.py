@@ -27,12 +27,12 @@ class CreateCheckoutSessionResponse(BaseModel):
     clientSecret: str
 
 
-def get_stripe_client() -> stripe.Stripe:
+def get_stripe_client() -> stripe.StripeClient:
     """Get configured Stripe client."""
     api_key = os.getenv("STRIPE_SECRET_KEY")
     if not api_key:
         raise ValueError("STRIPE_SECRET_KEY environment variable is not set")
-    return stripe.Stripe(api_key=api_key)
+    return stripe.StripeClient(api_key=api_key)
 
 
 def parse_amount(amount: float | str) -> float:
