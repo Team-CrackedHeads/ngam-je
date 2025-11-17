@@ -23,7 +23,10 @@ dependencies = [
     "langchain>=1.0.5",
     "google-genai>=1.49.0",
     "pillow>=12.0.0",
-    "parlant",
+    "pydantic-ai>=1.17.0",
+    "redis>=7.0.1",
+    "cloudinary>=1.44.1",
+    "cloud-sql-python-connector[pg8000]>=1.14.2",
 ]
 
 [dependency-groups]
@@ -54,6 +57,3 @@ target-version = "py312"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-
-[tool.uv.sources]
-parlant = { git = "https://github.com/emcie-co/parlant", rev = "develop" }

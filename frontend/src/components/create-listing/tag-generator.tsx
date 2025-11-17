@@ -206,7 +206,7 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
   };
 
   return (
-    <div className="pt-4 sm:pt-6 border-t-2 border-[var(--color-primary-300)]">
+    <div className="pt-4 sm:pt-6">
       <div className="flex justify-between items-center mb-3">
         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
           Product Category Tags

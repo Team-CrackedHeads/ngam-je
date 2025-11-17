@@ -1,5 +1,5 @@
 // src/components/threads/product/ImageGalleryModal.tsx
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ImageGalleryModalProps {
@@ -44,7 +44,7 @@ export const ImageGalleryModal = ({
         )}
 
         {/* Current Image */}
-        <Image
+        <SafeImage
           src={images[currentIndex]}
           alt={`Gallery image ${currentIndex + 1}`}
           width={1200}

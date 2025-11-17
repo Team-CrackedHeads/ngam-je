@@ -242,3 +242,17 @@
   transform: translate(-50%, -50%) !important;
   margin: 0 !important;
 }
+
+/* AI Mode Button Pulse Glow Animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(234, 179, 8, 0.5), 0 0 35px rgba(234, 179, 8, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(234, 179, 8, 0.6), 0 0 50px rgba(234, 179, 8, 0.4);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

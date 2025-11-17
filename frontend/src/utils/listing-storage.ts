@@ -3,7 +3,7 @@ import { UnifiedListingData } from './mock-all-data-used';
 // In-memory storage for new listings (in a real app, this would be a database/API call)
 let newListings: UnifiedListingData[] = [];
 
-export function addNewListing(listing: UnifiedListingData): string {
+export function addNewListing(listing: UnifiedListingData): string | number {
   newListings.push(listing);
   return listing.id;
 }
@@ -75,7 +75,7 @@ export function convertFormToListing(
       timePosted: 'Just now',
     },
     imageUrl: images && images.length > 0 ? images[0] : '',
-    gallery: images && images.length > 1 ? images.slice(1) : undefined,
+    gallery: images && images.length > 1 ? images.slice(1) : [],
     category: category,
     listingType: isBuy ? 'wanted' : 'sale',
     tags: formData.tags || [],

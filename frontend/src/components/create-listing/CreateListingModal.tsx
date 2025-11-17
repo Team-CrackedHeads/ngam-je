@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import {
   Info,
@@ -11,6 +12,8 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   X,
   MessageCircle,
   ShoppingCart,
@@ -27,6 +30,7 @@ import {
   Shield,
   Wrench,
   CreditCard,
+  Clipboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,17 +47,17 @@ import {
 } from "@/utils/mock-all-data-used";
 import { TagGeneratorRef } from "@/components/create-listing/tag-generator";
 import { verifyOwnershipProofWithAI } from "@/components/create-listing/ai-photo";
-import {
-  addNewListing,
-  generateListingId,
-  convertFormToListing,
-} from "@/utils/listing-storage";
+import { createClerkApiClient } from "@/lib/clerk-api-client";
+import { createListing } from "@/lib/api/listings";
+import type { ListingCreate } from "@/types/listing";
 import type { PartialFormData } from "@/types/listing-form";
 import type { BuyFormData, SellFormData } from "@/types/listing-form";
 import ProductDetailsStep from "./steps/ProductDetailsStep";
 import PricingShippingStep from "./steps/PricingShippingStep";
 import FAQsStep from "./steps/FAQsStep";
 import PreviewStep from "./steps/PreviewStep";
+import DescriptionEvaluator from "./DescriptionEvaluator";
+import { useDescriptionEvaluator } from "@/hooks/use-description-evaluator";
 import axios, { AxiosError } from "axios";
 
 interface CreateListingModalProps {
@@ -61,7 +65,8 @@ interface CreateListingModalProps {
   onClose: () => void;
   onSubmitBuy?: (data: BuyFormData) => void;
   onSubmitSell?: (data: SellFormData) => void;
-  category?: string; // Thread category where listing is being created
+  threadId: number; // Thread ID where listing is being created
+  onListingCreated?: () => void; // Callback after listing is created
 }
 
 type ListingType = null | "buy" | "sell";
@@ -71,9 +76,11 @@ export default function CreateListingModal({
   onClose,
   onSubmitBuy,
   onSubmitSell,
-  category,
+  threadId,
+  onListingCreated,
 }: CreateListingModalProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [listingType, setListingType] = useState<ListingType>(null);
 
@@ -84,18 +91,37 @@ export default function CreateListingModal({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAIModeEnabled, setIsAIModeEnabled] = useState(false);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // AI Context Gathering states
   const [aiContextGathered, setAiContextGathered] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  // Description evaluator for AI mode textarea
+  const { evaluation, isEvaluating, error: evaluationError, evaluate, reset: resetEvaluation } = useDescriptionEvaluator({
+    listingType: listingType || 'buy',
+  });
   const [externalImages, setExternalImages] = useState<string[]>([]); // Results from both search AND generate
   const [selectedExternalImages, setSelectedExternalImages] = useState<string[]>([]); // Selected from search/generate (max 3)
   const [isSearchingImages, setIsSearchingImages] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [generatedCount, setGeneratedCount] = useState(0); // Track how many times generated (max 3)
-  const [imageMode, setImageMode] = useState<'upload' | 'search' | 'generate'>('upload');
+  const [imageMode, setImageMode] = useState<'upload' | 'search' | 'generate' | 'upload-proof' | 'search-backgrounds' | 'enhance'>('upload');
   const [imageQuery, setImageQuery] = useState("");
+
+  // Sell-specific image states
+  const [backgroundImages, setBackgroundImages] = useState<string[]>([]); // Search results for backgrounds
+  const [selectedBackgrounds, setSelectedBackgrounds] = useState<string[]>([]); // Selected backgrounds (max 3)
+  const [enhancedImages, setEnhancedImages] = useState<string[]>([]); // Enhanced product images
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [ownershipProofDetails, setOwnershipProofDetails] = useState<{
+    detected_name: string | null;
+    detected_date: string | null;
+    confidence: string;
+    issues: string[];
+    suggestions: string[];
+  } | null>(null);
   const [errorModal, setErrorModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -123,6 +149,8 @@ export default function CreateListingModal({
     "SGD",
   ]);
   const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
+  const [showDescriptionHints, setShowDescriptionHints] = useState(true);
+  const [showEvaluationFeedback, setShowEvaluationFeedback] = useState(true);
 
   // Sell-specific states
   const [isVerifyingOwnership, setIsVerifyingOwnership] = useState(false);
@@ -171,6 +199,14 @@ export default function CreateListingModal({
   const [priceRegenerateCount, setPriceRegenerateCount] = useState(0);
   const MAX_PRICE_REGENERATIONS = 3;
 
+  // Reset evaluation state when modal closes or listing type changes
+  useEffect(() => {
+    if (!isOpen || listingType === null) {
+      console.log('🧹 Cleaning up evaluation state (modal closed or no listing type)');
+      resetEvaluation();
+    }
+  }, [isOpen, listingType, resetEvaluation]);
+
   // Wrapper function to handle setState properly for both types
   const setFormData = useCallback(
     (update: React.SetStateAction<PartialFormData>) => {
@@ -196,11 +232,13 @@ export default function CreateListingModal({
 
   const handleBuySelect = () => {
     setListingType("buy");
+    setImageMode('upload');
     setCurrentStep(2);
   };
 
   const handleSellSelect = () => {
     setListingType("sell");
+    setImageMode('upload');
     setCurrentStep(2);
   };
 
@@ -223,7 +261,12 @@ export default function CreateListingModal({
 
   // TODO: Rebuild with simple LLM calls (no agents)
   // AI Generation functions
-  const getProductDataFromAI = async () => {
+  const getProductDataFromAI = async (): Promise<{
+    images: string[];
+    title?: string;
+    description?: string;
+    tags?: string[];
+  } | null> => {
     console.log("AI generation temporarily disabled - will rebuild with simple LLM calls");
     return null;
   };
@@ -489,16 +532,24 @@ export default function CreateListingModal({
       const newImages: string[] = [];
       const combinedLength = uploadedImages.length + selectedExternalImages.length;
       const remainingSlots = 5 - combinedLength;
+      const isFirstImageForSell = listingType === 'sell' && combinedLength === 0;
 
       // Only process up to the remaining slots
       const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-      filesToProcess.forEach((file) => {
+      filesToProcess.forEach((file, index) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          newImages.push(reader.result as string);
+          const imageUrl = reader.result as string;
+          newImages.push(imageUrl);
+
           if (newImages.length === filesToProcess.length) {
             setUploadedImages((prev) => [...prev, ...newImages]);
+
+            // Auto-verify first image for sell listings
+            if (isFirstImageForSell && newImages.length > 0) {
+              handleVerifyOwnershipProof(newImages[0]);
+            }
           }
         };
         reader.readAsDataURL(file);
@@ -523,7 +574,7 @@ export default function CreateListingModal({
       );
 
       // Extract image URLs from Unsplash response
-      const imageUrls = response.data.images.map((img: any) => img.url);
+      const imageUrls = response.data.images.map((img: { url: string }) => img.url);
       setExternalImages(imageUrls);
     } catch (error) {
       console.error("Error searching images:", error);
@@ -663,7 +714,29 @@ export default function CreateListingModal({
 
   const handleSendMessage = async () => {
     const allImages = [...selectedExternalImages, ...uploadedImages];
-    if (!userInput.trim() && allImages.length === 0) return;
+
+    // Check if at least one image is provided
+    if (allImages.length === 0) {
+      setErrorModal({
+        isOpen: true,
+        title: "Image Required",
+        message: "Please provide at least one image to generate your listing. You can upload an image or use the Search/Generate tabs to find one.",
+        icon: 'alert',
+      });
+      return;
+    }
+
+    // Inform user if generating without text description
+    if (!userInput.trim()) {
+      setErrorModal({
+        isOpen: true,
+        title: "Generating from Images Only",
+        message: "We'll analyze your images and create a listing for you! Since no description was provided, we'll make our best guess. You can always edit or regenerate the content afterward.",
+        icon: 'alert',
+      });
+      // Continue with generation after showing the message
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to show modal
+    }
 
     setIsGeneratingAll(true);
 
@@ -690,12 +763,16 @@ export default function CreateListingModal({
           tags: generatedData.tags,
         }));
       } else {
+        // For sell listings, preserve the ownership proof image (first uploaded image)
+        const ownershipImage = uploadedImages.length > 0 ? uploadedImages[0] : null;
+
         setSellFormData((prev) => ({
           ...prev,
           generatedTitle: generatedData.title,
           generatedDescription: generatedData.description,
           uploadedImages: allImages,
           tags: generatedData.tags,
+          ownershipProofImage: ownershipImage, // Preserve ownership proof from AI mode
         }));
       }
 
@@ -713,9 +790,45 @@ export default function CreateListingModal({
   const handleVerifyOwnershipProof = async (imageUrl: string) => {
     setIsVerifyingOwnership(true);
     setOwnershipVerified(null);
-    const isVerified = await verifyOwnershipProofWithAI(imageUrl);
-    setOwnershipVerified(isVerified);
-    setIsVerifyingOwnership(false);
+    setOwnershipProofDetails(null);
+
+    try {
+      // Convert to base64 if needed
+      let imageDataUrl = imageUrl;
+      if (!imageUrl.startsWith('data:')) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        imageDataUrl = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/verify-ownership`,
+        {
+          image_data_url: imageDataUrl,
+          expected_username: null, // TODO: get from user context
+        }
+      );
+
+      const result = response.data;
+      setOwnershipVerified(result.is_verified);
+      setOwnershipProofDetails(result);
+    } catch (error) {
+      console.error("Error verifying ownership:", error);
+      setOwnershipVerified(false);
+      setOwnershipProofDetails({
+        detected_name: null,
+        detected_date: null,
+        confidence: "low",
+        issues: ["Failed to verify ownership proof"],
+        suggestions: ["Please try again with a clearer image"],
+      });
+    } finally {
+      setIsVerifyingOwnership(false);
+    }
   };
 
   const handleOwnershipProofUpload = (
@@ -723,9 +836,127 @@ export default function CreateListingModal({
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setSellFormData((prev) => ({ ...prev, ownershipProofImage: imageUrl }));
-      handleVerifyOwnershipProof(imageUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string;
+        setSellFormData((prev) => ({ ...prev, ownershipProofImage: imageUrl }));
+        handleVerifyOwnershipProof(imageUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Search for background images
+  const handleSearchBackgrounds = async () => {
+    if (!imageQuery.trim()) return;
+
+    setIsSearchingImages(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/unsplash/search`,
+        {
+          params: {
+            query: imageQuery,
+            per_page: 30,
+          },
+          timeout: 30000,
+        }
+      );
+
+      const imageUrls = response.data.images.map((img: { url: string }) => img.url);
+      setBackgroundImages(imageUrls);
+    } catch (error) {
+      console.error("Error searching backgrounds:", error);
+      setErrorModal({
+        isOpen: true,
+        title: "Background Search Failed",
+        message: "Failed to search for background images. Please try again.",
+        icon: 'alert',
+      });
+    } finally {
+      setIsSearchingImages(false);
+    }
+  };
+
+  // Select/deselect background image
+  const handleSelectBackground = (imageUrl: string) => {
+    if (selectedBackgrounds.includes(imageUrl)) {
+      setSelectedBackgrounds(prev => prev.filter(img => img !== imageUrl));
+    } else {
+      if (selectedBackgrounds.length < 3) {
+        setSelectedBackgrounds(prev => [...prev, imageUrl]);
+      }
+    }
+  };
+
+  // Enhance product images with backgrounds
+  const handleEnhanceImages = async () => {
+    const allProductImages = [...selectedExternalImages, ...uploadedImages];
+
+    if (allProductImages.length === 0) {
+      setErrorModal({
+        isOpen: true,
+        title: "No Product Images",
+        message: "Please upload at least one product image in the Upload tab before enhancing.",
+        icon: 'alert',
+      });
+      return;
+    }
+
+    if (selectedBackgrounds.length === 0) {
+      setErrorModal({
+        isOpen: true,
+        title: "No Background Selected",
+        message: "Please select at least one background from the Search Backgrounds tab.",
+        icon: 'alert',
+      });
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/batch-enhance-images`,
+        {
+          product_image_urls: allProductImages.slice(0, 2), // Max 2 products
+          background_image_urls: selectedBackgrounds.slice(0, 3), // Max 3 backgrounds
+        },
+        {
+          timeout: 120000, // 2 minute timeout
+        }
+      );
+
+      const enhanced = response.data.enhanced_images || [];
+      setEnhancedImages(enhanced);
+
+      if (enhanced.length > 0) {
+        setErrorModal({
+          isOpen: true,
+          title: "Enhancement Complete!",
+          message: `Successfully created ${enhanced.length} enhanced product images. You can now use these in your listing!`,
+          icon: 'alert',
+        });
+      }
+    } catch (error) {
+      console.error("Error enhancing images:", error);
+
+      let errorMessage = "Failed to enhance images. Please try again.";
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = "Enhancement is taking too long. Please try with fewer images.";
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        }
+      }
+
+      setErrorModal({
+        isOpen: true,
+        title: "Enhancement Failed",
+        message: errorMessage,
+        icon: 'alert',
+      });
+    } finally {
+      setIsEnhancing(false);
     }
   };
 
@@ -800,30 +1031,135 @@ export default function CreateListingModal({
   const handleSubmit = async () => {
     if (!listingType) return;
 
-    const formData = listingType === "buy" ? buyFormData : sellFormData;
+    try {
+      setIsSubmitting(true);
 
-    // Convert form data to listing format, passing the thread category
-    const listingData = convertFormToListing(formData, listingType, category);
+      const formData = listingType === "buy" ? buyFormData : sellFormData;
 
-    // Generate ID and add to storage
-    const listingId = generateListingId(listingData.category);
-    const completeListing = { ...listingData, id: listingId };
-    addNewListing(completeListing);
+      // Get token for API calls
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
 
-    // Call original callbacks if provided
-    if (listingType === "buy" && onSubmitBuy) {
-      onSubmitBuy(buyFormData);
-    } else if (listingType === "sell" && onSubmitSell) {
-      onSubmitSell(sellFormData);
+      // Get images based on listing type
+      const images = listingType === "buy"
+        ? (formData as BuyFormData).generatedImages
+        : (formData as SellFormData).uploadedImages;
+
+      // Upload images to Cloudinary first
+      console.log("🖼️ Starting image upload. Images to upload:", images.length);
+      console.log("📸 Image URLs:", images);
+
+      const uploadedImageUrls: string[] = [];
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          const imageUrl = images[i];
+          try {
+            console.log(`⬆️ Uploading image ${i + 1}/${images.length}...`);
+
+            // Fetch the blob and convert to File
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `listing-${Date.now()}.jpg`, { type: blob.type });
+
+            console.log("📦 File created:", file.name, file.size, "bytes");
+
+            // Upload to Cloudinary
+            const uploadFormData = new FormData();
+            uploadFormData.append("file", file);
+
+            console.log("🚀 Sending to /api/v1/upload/image...");
+            const uploadResponse = await apiClient.instance.post("/api/v1/upload/image", uploadFormData, {
+              headers: { "Content-Type": "multipart/form-data" },
+              params: { folder: "listings" }
+            });
+
+            console.log("✅ Upload response:", uploadResponse.data);
+
+            if (uploadResponse.data.success) {
+              uploadedImageUrls.push(uploadResponse.data.data.url);
+              console.log(`✓ Uploaded successfully:`, uploadResponse.data.data.url);
+            }
+          } catch (err) {
+            console.error(`❌ Failed to upload image ${i + 1}:`, err);
+            if (err && typeof err === "object" && "response" in err) {
+              console.error("Error response:", (err as { response?: { data?: unknown } }).response?.data);
+            }
+          }
+        }
+      }
+
+      console.log(`📊 Upload complete: ${uploadedImageUrls.length}/${images.length} successful`);
+      console.log("🔗 Uploaded URLs:", uploadedImageUrls);
+
+      // Prepare listing data for API
+      const displayPrice = parseFloat(listingType === "buy" ? formData.maxPrice : formData.minPrice);
+      const minPrice = formData.minPrice ? parseFloat(formData.minPrice) : null;
+      const maxPrice = formData.maxPrice ? parseFloat(formData.maxPrice) : null;
+      const inventoryQty = listingType === "sell" && (formData as SellFormData).inventoryQuantity
+        ? parseInt((formData as SellFormData).inventoryQuantity)
+        : null;
+
+      // Validation checks
+      if (!displayPrice || isNaN(displayPrice) || displayPrice <= 0) {
+        alert("Please enter a valid price greater than 0");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const listingData: ListingCreate = {
+        thread_id: threadId, // CRITICAL: Connect to thread
+        title: formData.generatedTitle,
+        description: formData.generatedDescription,
+        price: displayPrice,
+        min_price: minPrice && minPrice > 0 ? minPrice : null,
+        max_price: maxPrice && maxPrice > 0 ? maxPrice : null,
+        currency: formData.currency || "MYR",
+        listing_type: listingType === "buy" ? "wanted" : "sale",
+        image_url: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : null,
+        gallery: uploadedImageUrls.length > 1 ? uploadedImageUrls.slice(1) : [],
+        tags: formData.tags || [],
+        creator_location: formData.location || null,
+        shipping_options: formData.shippingOptions || [],
+        inventory_quantity: inventoryQty && inventoryQty > 0 ? inventoryQty : null,
+        ownership_proof_url: listingType === "sell"
+          ? (formData as SellFormData).ownershipProofImage || null
+          : null,
+        faqs: formData.faqs || [],
+      };
+
+      console.log("Creating listing with data:", listingData);
+      console.log("Uploaded image URLs:", uploadedImageUrls);
+
+      // Call backend API (token and apiClient already created above)
+      const createdListing = await createListing(apiClient.instance, listingData);
+
+      // Call original callbacks if provided
+      if (listingType === "buy" && onSubmitBuy) {
+        onSubmitBuy(buyFormData);
+      } else if (listingType === "sell" && onSubmitSell) {
+        onSubmitSell(sellFormData);
+      }
+
+      console.log(`${listingType} listing created:`, createdListing);
+
+      // Notify parent component to refresh listings
+      if (onListingCreated) {
+        onListingCreated();
+      }
+
+      // Close modal
+      handleClose();
+
+      // Navigate to the new listing
+      router.push(`/threads/${threadId}/listings/${createdListing.id}`);
+    } catch (error: unknown) {
+      console.error("Failed to create listing:", error);
+      const errorMessage = (error as { detail?: string; message?: string })?.detail || (error as { detail?: string; message?: string })?.message || "Failed to create listing. Please try again.";
+      console.error("Error details:", errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    console.log(`${listingType} listing created:`, completeListing);
-
-    // Close modal
-    handleClose();
-
-    // Navigate to the new listing
-    router.push(`/threads/${listingData.category}/${listingId}`);
   };
 
   const handleClose = () => {
@@ -876,6 +1212,13 @@ export default function CreateListingModal({
     setUploadedImages([]);
     setExternalImages([]);
     setSelectedExternalImages([]);
+
+    // Clear sell-specific states
+    setBackgroundImages([]);
+    setSelectedBackgrounds([]);
+    setEnhancedImages([]);
+    setOwnershipProofDetails(null);
+    setImageMode('upload');
 
     onClose();
   };
@@ -1235,51 +1578,262 @@ export default function CreateListingModal({
                           <Upload className="w-4 h-4 inline-block mr-2" />
                           Upload
                         </button>
-                        {listingType === 'buy' && (
-                          <>
-                            <button
-                              onClick={() => setImageMode('search')}
-                              className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
-                                imageMode === 'search'
-                                  ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
-                                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                              }`}
-                            >
-                              <Search className="w-4 h-4 inline-block mr-2" />
-                              Search
-                            </button>
-                            <button
-                              onClick={() => setImageMode('generate')}
-                              className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
-                                imageMode === 'generate'
-                                  ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
-                                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                              }`}
-                            >
-                              <Wand2 className="w-4 h-4 inline-block mr-2" />
-                              Generate
-                            </button>
-                          </>
-                        )}
+                        <button
+                          onClick={() => setImageMode(listingType === 'sell' ? 'search-backgrounds' : 'search')}
+                          className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                            (listingType === 'sell' ? imageMode === 'search-backgrounds' : imageMode === 'search')
+                              ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
+                              : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                          }`}
+                        >
+                          <Search className="w-4 h-4 inline-block mr-2" />
+                          {listingType === 'sell' ? 'Search Backgrounds' : 'Search'}
+                        </button>
+                        <button
+                          onClick={() => setImageMode(listingType === 'sell' ? 'enhance' : 'generate')}
+                          className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                            (listingType === 'sell' ? imageMode === 'enhance' : imageMode === 'generate')
+                              ? 'border-[var(--color-secondary-500)] text-[var(--color-secondary-700)] bg-[var(--color-secondary-50)]'
+                              : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                          }`}
+                        >
+                          <Wand2 className="w-4 h-4 inline-block mr-2" />
+                          {listingType === 'sell' ? 'Enhance' : 'Generate'}
+                        </button>
                       </div>
 
                       {/* Upload Tab Content */}
                       {imageMode === 'upload' && (
-                        <div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            id="context-image-upload"
-                            onChange={handleContextImageUpload}
-                          />
+                        <div className="space-y-4">
+                          {/* Sequential Upload: Ownership first, then product images */}
+                          {listingType === 'sell' ? (
+                            <>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                id="context-image-upload"
+                                onChange={handleContextImageUpload}
+                              />
 
-                          {(() => {
-                            const allImages = [...selectedExternalImages, ...uploadedImages];
-                            const remainingSlots = 5 - allImages.length;
+                              {(() => {
+                                const allImages = [...selectedExternalImages, ...uploadedImages];
+                                const hasImages = allImages.length > 0;
+                                const firstImage = allImages[0];
+                                const remainingSlots = 5 - allImages.length;
 
-                            return allImages.length > 0 ? (
+                                return hasImages ? (
+                                  <div className="space-y-4">
+                                    {/* Product Images Grid */}
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-accent-700">
+                                          Product Photos ({allImages.length} / 5)
+                                        </label>
+                                        {remainingSlots > 0 && (
+                                          <span className="text-xs text-gray-600">
+                                            {remainingSlots} slot{remainingSlots > 1 ? 's' : ''} remaining
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Featured Image Viewer */}
+                                      <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-[var(--color-primary-200)] bg-gray-100">
+                                        <Image
+                                          src={allImages[selectedImageIndex] || firstImage}
+                                          alt={`Product Image ${selectedImageIndex + 1}`}
+                                          fill
+                                          className="object-contain"
+                                        />
+                                        {/* Image Label */}
+                                        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
+                                          {selectedImageIndex === 0 ? (
+                                            <>
+                                              <Clipboard className="w-3.5 h-3.5" />
+                                              <span>Ownership Proof</span>
+                                            </>
+                                          ) : (
+                                            `Photo ${selectedImageIndex}`
+                                          )}
+                                        </div>
+                                        {/* Delete Button (not for proof) */}
+                                        {selectedImageIndex > 0 && (
+                                          <button
+                                            onClick={() => {
+                                              const idx = selectedImageIndex;
+                                              // Remove the image
+                                              if (idx - 1 < selectedExternalImages.length) {
+                                                setSelectedExternalImages(prev => prev.filter((_, i) => i !== idx - 1));
+                                              } else {
+                                                const uploadedIdx = idx - 1 - selectedExternalImages.length;
+                                                setUploadedImages(prev => prev.filter((_, i) => i !== uploadedIdx));
+                                              }
+                                              // Adjust selected index
+                                              const newLength = allImages.length - 1;
+                                              setSelectedImageIndex(Math.max(0, Math.min(selectedImageIndex, newLength - 1)));
+                                            }}
+                                            className="absolute top-2 left-2 p-2 bg-[var(--color-error-500)] text-white rounded-full hover:bg-[var(--color-error-600)] transition-colors shadow-lg"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        )}
+                                        {/* Navigation Arrows */}
+                                        {allImages.length > 1 && (
+                                          <>
+                                            <button
+                                              onClick={() => setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                                              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all"
+                                            >
+                                              <ChevronLeft className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                              onClick={() => setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                                              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all"
+                                            >
+                                              <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+
+                                      {/* Thumbnail Strip */}
+                                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-4">
+                                        {allImages.map((img, idx) => (
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setSelectedImageIndex(idx)}
+                                            className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                              selectedImageIndex === idx
+                                                ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-200)] scale-105'
+                                                : 'border-gray-300 hover:border-[var(--color-secondary-300)]'
+                                            }`}
+                                          >
+                                            <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                            <div className="absolute bottom-1 left-1 text-white text-xs font-bold flex items-center">
+                                              {idx === 0 ? <Clipboard className="w-3 h-3" /> : idx}
+                                            </div>
+                                          </button>
+                                        ))}
+
+                                        {/* Add More Button */}
+                                        {remainingSlots > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => document.getElementById('context-image-upload')?.click()}
+                                            className="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-50)] transition-all group"
+                                          >
+                                            <Upload className="w-6 h-6 text-gray-400 group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                            <span className="text-xs text-gray-500 group-hover:text-[var(--color-secondary-700)] mt-0.5">+{remainingSlots}</span>
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Ownership Verification Status + Replace Button */}
+                                      <div className="mt-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs font-medium text-gray-600">
+                                            <Shield className="w-3.5 h-3.5 inline-block mr-1" />
+                                            Ownership Proof (First Image)
+                                          </span>
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            id="ownership-proof-replace"
+                                            onChange={handleOwnershipProofUpload}
+                                          />
+                                          <button
+                                            onClick={() => document.getElementById('ownership-proof-replace')?.click()}
+                                            className="text-xs text-[var(--color-secondary-700)] hover:text-[var(--color-secondary-900)] font-medium underline"
+                                          >
+                                            Replace Proof
+                                          </button>
+                                        </div>
+
+                                        {/* Verification Status */}
+                                        {isVerifyingOwnership && (
+                                          <div className="flex items-center gap-2 text-[var(--color-accent-700)] bg-[var(--color-secondary-50)] border border-[var(--color-secondary-200)] rounded-lg px-4 py-3">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <span className="text-sm font-medium">Verifying ownership proof...</span>
+                                          </div>
+                                        )}
+
+                                        {!isVerifyingOwnership && ownershipProofDetails && (
+                                          <div className={`border rounded-lg px-4 py-3 ${
+                                            ownershipVerified
+                                              ? 'bg-[var(--color-success-50)] border-[var(--color-success-500)]'
+                                              : 'bg-[var(--color-warning-50)] border-[var(--color-warning-500)]'
+                                          }`}>
+                                            <div className="flex items-start gap-2">
+                                              {ownershipVerified ? (
+                                                <Check className="w-5 h-5 text-[var(--color-success-500)] flex-shrink-0 mt-0.5" />
+                                              ) : (
+                                                <AlertCircle className="w-5 h-5 text-[var(--color-warning-500)] flex-shrink-0 mt-0.5" />
+                                              )}
+                                              <div className="flex-1">
+                                                <h4 className={`text-sm font-medium mb-1 ${
+                                                  ownershipVerified ? 'text-[var(--color-success-900)]' : 'text-[var(--color-warning-900)]'
+                                                }`}>
+                                                  {ownershipVerified ? 'Ownership Verified!' : 'Not Verified'}
+                                                </h4>
+                                                {ownershipProofDetails.detected_name && (
+                                                  <p className="text-xs text-gray-700 mb-1">
+                                                    <span className="font-medium">Detected:</span> {ownershipProofDetails.detected_name}
+                                                    {ownershipProofDetails.detected_date && ` • ${ownershipProofDetails.detected_date}`}
+                                                  </p>
+                                                )}
+                                                {!ownershipVerified && ownershipProofDetails.suggestions.length > 0 && (
+                                                  <p className="text-xs text-gray-600 mt-1">
+                                                    {ownershipProofDetails.suggestions[0]}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {!isVerifyingOwnership && !ownershipProofDetails && (
+                                          <div className="bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] rounded-lg px-4 py-3">
+                                            <p className="text-xs text-gray-600">
+                                              First image will be verified for ownership proof (name + date)
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
+                                    onClick={() => document.getElementById('context-image-upload')?.click()}
+                                  >
+                                    <Shield className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                    <p className="text-[var(--color-primary-900)] mb-2 font-medium">Upload Your First Image</p>
+                                    <p className="text-sm text-[var(--color-primary-700)] mb-1">First image should show proof of ownership</p>
+                                    <p className="text-xs text-gray-600">(Your name + today&apos;s date next to the product)</p>
+                                  </div>
+                                );
+                              })()}
+                            </>
+                          ) : (
+                            // Buy listing upload (unchanged)
+                            <>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                id="context-image-upload"
+                                onChange={handleContextImageUpload}
+                              />
+                              {(() => {
+                                const allImages = [...selectedExternalImages, ...uploadedImages];
+                                const remainingSlots = 5 - allImages.length;
+
+                                return allImages.length > 0 ? (
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-sm font-medium text-accent-700">
@@ -1325,7 +1879,7 @@ export default function CreateListingModal({
                                         setSelectedImageIndex(Math.max(0, newLength - 1));
                                       }
                                     }}
-                                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                                    className="absolute top-2 right-2 p-2 bg-[var(--color-error-500)] text-white rounded-full hover:bg-[var(--color-error-900)] transition-colors z-10"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1359,6 +1913,8 @@ export default function CreateListingModal({
                               </div>
                             );
                           })()}
+                            </>
+                          )}
                         </div>
                       )}
 
@@ -1556,6 +2112,395 @@ export default function CreateListingModal({
                           </div>
                         </div>
                       )}
+
+                      {/* SELL LISTING TABS */}
+
+                      {/* Upload Proof Tab Content (Sell) */}
+                      {imageMode === 'upload-proof' && listingType === 'sell' && (
+                        <div className="space-y-4">
+                          {/* Product Images Upload */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-accent-700">
+                              Product Photos <span className="text-[var(--color-error-500)]">*</span>
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              id="product-images-upload"
+                              onChange={handleImageUpload}
+                            />
+
+                            {sellFormData.uploadedImages.length > 0 ? (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-accent-700">
+                                    {sellFormData.uploadedImages.length} / 5 images
+                                  </span>
+                                  {sellFormData.uploadedImages.length < 5 && (
+                                    <span className="text-xs text-gray-600">
+                                      {5 - sellFormData.uploadedImages.length} slot{5 - sellFormData.uploadedImages.length > 1 ? 's' : ''} remaining
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2 border-[var(--color-primary-200)] group cursor-pointer"
+                                     onClick={() => sellFormData.uploadedImages.length < 5 && document.getElementById('product-images-upload')?.click()}>
+                                  <Image
+                                    src={sellFormData.uploadedImages[selectedImageIndex]}
+                                    alt={`Product ${selectedImageIndex + 1}`}
+                                    fill
+                                    className="object-cover transition-all group-hover:blur-sm"
+                                  />
+                                  {sellFormData.uploadedImages.length < 5 && (
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                                      <Upload className="w-12 h-12 text-white mb-2" />
+                                      <p className="text-white font-medium">Upload More Photos</p>
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeImage(selectedImageIndex);
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-[var(--color-error-500)] text-white rounded-full hover:bg-[var(--color-error-900)] transition-colors z-10"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                  {sellFormData.uploadedImages.map((img, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => setSelectedImageIndex(idx)}
+                                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                        selectedImageIndex === idx
+                                          ? 'border-[var(--color-secondary-500)] shadow-md'
+                                          : 'border-gray-200'
+                                      }`}
+                                    >
+                                      <Image src={img} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div
+                                className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
+                                onClick={() => document.getElementById('product-images-upload')?.click()}
+                              >
+                                <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                <p className="text-[var(--color-primary-900)] mb-2 font-medium">Upload Product Photos</p>
+                                <p className="text-sm text-[var(--color-primary-700)]">Up to 5 photos of your product</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Ownership Proof Upload */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-accent-700">
+                              Proof of Ownership <span className="text-[var(--color-error-500)]">*</span>
+                            </label>
+                            <p className="text-xs text-gray-600 mb-2">
+                              Upload a photo showing your name and today&apos;s date (e.g., written on paper next to the product)
+                            </p>
+
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id="ownership-proof-upload"
+                              onChange={handleOwnershipProofUpload}
+                            />
+
+                            {sellFormData.ownershipProofImage ? (
+                              <div className="space-y-3">
+                                <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-[var(--color-primary-200)]">
+                                  <Image
+                                    src={sellFormData.ownershipProofImage}
+                                    alt="Ownership Proof"
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      setSellFormData(prev => ({ ...prev, ownershipProofImage: null }));
+                                      setOwnershipVerified(null);
+                                      setOwnershipProofDetails(null);
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-[var(--color-error-500)] text-white rounded-full hover:bg-[var(--color-error-900)] transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+
+                                {/* Verification Status */}
+                                {isVerifyingOwnership && (
+                                  <div className="flex items-center gap-2 text-[var(--color-accent-700)] bg-[var(--color-secondary-50)] border border-[var(--color-secondary-200)] rounded-lg px-4 py-3">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span className="text-sm font-medium">Verifying ownership proof...</span>
+                                  </div>
+                                )}
+
+                                {!isVerifyingOwnership && ownershipProofDetails && (
+                                  <div className={`border rounded-lg px-4 py-3 ${
+                                    ownershipVerified
+                                      ? 'bg-[var(--color-success-50)] border-[var(--color-success-500)]'
+                                      : 'bg-[var(--color-error-50)] border-[var(--color-error-500)]'
+                                  }`}>
+                                    <div className="flex items-start gap-2 mb-2">
+                                      {ownershipVerified ? (
+                                        <Check className="w-5 h-5 text-[var(--color-success-500)] flex-shrink-0 mt-0.5" />
+                                      ) : (
+                                        <AlertCircle className="w-5 h-5 text-[var(--color-error-500)] flex-shrink-0 mt-0.5" />
+                                      )}
+                                      <div className="flex-1">
+                                        <h4 className={`text-sm font-medium mb-1 ${
+                                          ownershipVerified ? 'text-[var(--color-success-900)]' : 'text-[var(--color-error-900)]'
+                                        }`}>
+                                          {ownershipVerified ? 'Ownership Verified!' : 'Verification Failed'}
+                                        </h4>
+                                        {ownershipProofDetails.detected_name && (
+                                          <p className="text-xs text-gray-700 mb-1">
+                                            <span className="font-medium">Detected name:</span> {ownershipProofDetails.detected_name}
+                                          </p>
+                                        )}
+                                        {ownershipProofDetails.detected_date && (
+                                          <p className="text-xs text-gray-700 mb-1">
+                                            <span className="font-medium">Detected date:</span> {ownershipProofDetails.detected_date}
+                                          </p>
+                                        )}
+                                        <p className="text-xs text-gray-700 mb-2">
+                                          <span className="font-medium">Confidence:</span> {ownershipProofDetails.confidence}
+                                        </p>
+
+                                        {ownershipProofDetails.issues.length > 0 && (
+                                          <div className="mb-2">
+                                            <p className="text-xs font-medium text-gray-700 mb-1">Issues:</p>
+                                            <ul className="text-xs text-gray-600 space-y-0.5">
+                                              {ownershipProofDetails.issues.map((issue, idx) => (
+                                                <li key={idx}>• {issue}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
+
+                                        {ownershipProofDetails.suggestions.length > 0 && (
+                                          <div>
+                                            <p className="text-xs font-medium text-gray-700 mb-1">Suggestions:</p>
+                                            <ul className="text-xs text-gray-600 space-y-0.5">
+                                              {ownershipProofDetails.suggestions.map((suggestion, idx) => (
+                                                <li key={idx}>• {suggestion}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div
+                                className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-[var(--color-primary-50)] cursor-pointer hover:border-[var(--color-secondary-500)] hover:bg-[var(--color-primary-100)] transition-all group"
+                                onClick={() => document.getElementById('ownership-proof-upload')?.click()}
+                              >
+                                <Upload className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary-500)] group-hover:text-[var(--color-secondary-500)] transition-colors" />
+                                <p className="text-[var(--color-primary-900)] mb-2 font-medium">Upload Proof of Ownership</p>
+                                <p className="text-sm text-[var(--color-primary-700)]">Photo with your name and today&apos;s date</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Search Backgrounds Tab Content (Sell) */}
+                      {imageMode === 'search-backgrounds' && listingType === 'sell' && (
+                        <div>
+                          <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-[var(--color-primary-50)]">
+                            <label className="block text-sm font-medium mb-2 text-accent-700">
+                              Search for professional backgrounds
+                            </label>
+                            <p className="text-xs text-gray-600 mb-3">
+                              Find high-quality backgrounds to enhance your product photos
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={imageQuery}
+                                onChange={(e) => setImageQuery(e.target.value)}
+                                placeholder="e.g., minimalist white, wooden table, studio lighting..."
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)]"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter' && imageQuery.trim()) {
+                                    handleSearchBackgrounds();
+                                  }
+                                }}
+                              />
+                              <Button
+                                onClick={handleSearchBackgrounds}
+                                disabled={!imageQuery.trim() || isSearchingImages}
+                                className="bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                              >
+                                {isSearchingImages ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Search className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {backgroundImages.length > 0 && (
+                            <div className="border border-[var(--color-primary-200)] rounded-lg bg-white mt-4">
+                              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                                <h3 className="text-sm font-medium text-accent-700">
+                                  Select up to 3 backgrounds ({backgroundImages.length} found)
+                                </h3>
+                                <span className="text-xs text-gray-600">
+                                  {selectedBackgrounds.length} / 3 selected
+                                </span>
+                              </div>
+                              <div className="p-4 max-h-[500px] overflow-y-auto">
+                                <ResponsiveMasonry columnsCountBreakPoints={{350: 2, 750: 3, 900: 4}}>
+                                  <Masonry gutter="12px">
+                                    {backgroundImages.map((imageUrl, index) => {
+                                      const isSelected = selectedBackgrounds.includes(imageUrl);
+                                      const canSelect = selectedBackgrounds.length < 3;
+                                      return (
+                                        <div
+                                          key={index}
+                                          onClick={() => handleSelectBackground(imageUrl)}
+                                          className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                                            isSelected
+                                              ? 'border-[var(--color-secondary-500)] ring-2 ring-[var(--color-secondary-500)] cursor-pointer'
+                                              : canSelect
+                                              ? 'border-gray-200 hover:border-[var(--color-secondary-300)] cursor-pointer'
+                                              : 'border-gray-200 opacity-50 cursor-not-allowed'
+                                          }`}
+                                        >
+                                          <img
+                                            src={imageUrl}
+                                            alt={`Background ${index + 1}`}
+                                            className="w-full h-auto object-cover"
+                                          />
+                                          {isSelected && (
+                                            <div className="absolute inset-0 bg-[var(--color-secondary-500)]/20 flex items-center justify-center">
+                                              <div className="bg-[var(--color-secondary-500)] rounded-full p-1">
+                                                <Check className="w-4 h-4 text-black" />
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </Masonry>
+                                </ResponsiveMasonry>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Enhance Tab Content (Sell) */}
+                      {imageMode === 'enhance' && listingType === 'sell' && (() => {
+                        const allProductImages = [...selectedExternalImages, ...uploadedImages];
+                        return (
+                        <div className="space-y-4">
+                          <div className="border border-[var(--color-primary-200)] rounded-lg p-4 bg-[var(--color-primary-50)]">
+                            <h3 className="text-sm font-medium mb-2 text-accent-700">
+                              Enhance Your Product Photos
+                            </h3>
+                            <p className="text-xs text-gray-600 mb-3">
+                              Combine your product images with professional backgrounds using AI to create stunning product photos.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                              <div>
+                                <p className="font-medium text-gray-700 mb-1">Product Images:</p>
+                                <p className="text-gray-600">{allProductImages.length} uploaded</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-700 mb-1">Backgrounds Selected:</p>
+                                <p className="text-gray-600">{selectedBackgrounds.length} selected</p>
+                              </div>
+                            </div>
+
+                            <Button
+                              onClick={handleEnhanceImages}
+                              disabled={allProductImages.length === 0 || selectedBackgrounds.length === 0 || isEnhancing}
+                              className="w-full bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
+                            >
+                              {isEnhancing ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Enhancing Images...
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="w-4 h-4 mr-2" />
+                                  Enhance Images
+                                </>
+                              )}
+                            </Button>
+
+                            {allProductImages.length === 0 && (
+                              <p className="text-xs text-[var(--color-warning-900)] mt-2">
+                                Please upload product images in the &quot;Upload&quot; tab first.
+                              </p>
+                            )}
+                            {selectedBackgrounds.length === 0 && allProductImages.length > 0 && (
+                              <p className="text-xs text-[var(--color-warning-900)] mt-2">
+                                Please select backgrounds in the &quot;Search Backgrounds&quot; tab.
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Enhanced Images Preview */}
+                          {enhancedImages.length > 0 && (
+                            <div className="border border-[var(--color-primary-200)] rounded-lg bg-white">
+                              <div className="p-4 border-b border-gray-200">
+                                <h3 className="text-sm font-medium text-accent-700">
+                                  Enhanced Images ({enhancedImages.length})
+                                </h3>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  Click on an image to use it in your listing
+                                </p>
+                              </div>
+                              <div className="p-4 max-h-[500px] overflow-y-auto">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                  {enhancedImages.map((imageUrl, index) => (
+                                    <div
+                                      key={index}
+                                      onClick={() => {
+                                        // Add enhanced image to uploaded images
+                                        const currentTotal = uploadedImages.length + selectedExternalImages.length;
+                                        if (currentTotal < 5 && !uploadedImages.includes(imageUrl) && !selectedExternalImages.includes(imageUrl)) {
+                                          setUploadedImages(prev => [...prev, imageUrl]);
+                                        }
+                                      }}
+                                      className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[var(--color-secondary-500)] transition-all cursor-pointer group"
+                                    >
+                                      <img
+                                        src={imageUrl}
+                                        alt={`Enhanced ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <p className="text-white text-sm font-medium">Add to Listing</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Product Description */}
@@ -1563,42 +2508,134 @@ export default function CreateListingModal({
                       <label className="block text-sm font-medium mb-2 text-accent-700">
                         Tell us about the product
                       </label>
-                      <textarea
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        placeholder={`Describe the product you want to ${listingType}...`}
-                        rows={4}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] resize-none"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Include details like brand, model, condition, etc.
-                      </p>
+                      <div className="relative">
+                        <textarea
+                          value={userInput}
+                          onChange={(e) => {
+                            setUserInput(e.target.value);
+                            evaluate(e.target.value);
+                          }}
+                          placeholder={`Describe the product you want to ${listingType}...`}
+                          rows={6}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary-500)] resize-none transition-colors"
+                        />
+                      </div>
+
+                      {/* Writing Tips & Guidelines and Evaluation Feedback */}
+                      <div className="mt-2 space-y-2">
+                        {/* Writing Tips & Guidelines */}
+                        <div>
+                          <button
+                            onClick={() => setShowDescriptionHints(!showDescriptionHints)}
+                            className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Info className="w-3.5 h-3.5" />
+                              Writing Tips & Guidelines
+                            </span>
+                            {showDescriptionHints ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </button>
+                          {showDescriptionHints && (
+                            <div className="mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs text-gray-600 font-medium mb-2">
+                                For best results, include:
+                              </p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Brand, model, or specific product name</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Condition (new, used, like-new, etc.)</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Key features, specifications, or requirements</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
+                                  <span>Any preferences or deal-breakers</span>
+                                </li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* AI Feedback - Collapsible */}
+                        {(evaluation || isEvaluating || evaluationError) && (
+                          <div>
+                            <button
+                              onClick={() => setShowEvaluationFeedback(!showEvaluationFeedback)}
+                              className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                AI Feedback
+                              </span>
+                              {showEvaluationFeedback ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </button>
+                            {showEvaluationFeedback && (
+                              <div className="mt-2">
+                                <DescriptionEvaluator
+                                  evaluation={evaluation}
+                                  isEvaluating={isEvaluating}
+                                  error={evaluationError}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4">
-                      <Button
-                        onClick={() => {
-                          setIsAIModeEnabled(false);
-                          setUploadedImages([]);
-                          setExternalImages([]);
-                          setSelectedExternalImages([]);
-                          setGeneratedCount(0);
-                          setUserInput("");
-                        }}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        Exit AI Mode
-                      </Button>
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!userInput.trim() && selectedExternalImages.length === 0 && uploadedImages.length === 0}
-                        className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Listing
-                      </Button>
+                    <div className="space-y-2">
+                      {selectedExternalImages.length === 0 && uploadedImages.length === 0 && (
+                        <div className="flex items-center gap-2 text-xs text-[var(--color-warning-900)] bg-[var(--color-warning-50)] border border-[var(--color-warning-500)] rounded-lg px-3 py-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Please provide at least one image to generate your listing</span>
+                        </div>
+                      )}
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => {
+                            setIsAIModeEnabled(false);
+                            setUploadedImages([]);
+                            setExternalImages([]);
+                            setSelectedExternalImages([]);
+                            setGeneratedCount(0);
+                            setUserInput("");
+                            resetEvaluation();
+                            // Clear sell-specific states
+                            setBackgroundImages([]);
+                            setSelectedBackgrounds([]);
+                            setEnhancedImages([]);
+                            setOwnershipProofDetails(null);
+                            setOwnershipVerified(null);
+                          }}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          Exit AI Mode
+                        </Button>
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={selectedExternalImages.length === 0 && uploadedImages.length === 0}
+                          className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black disabled:opacity-50"
+                        >
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate Listing
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -1705,7 +2742,7 @@ export default function CreateListingModal({
 
             {/* Navigation Buttons - Hide on Step 1 (selection page) */}
             {currentStep !== 1 && (
-              <div className="flex justify-between items-center mt-8 pt-6 border-t">
+              <div className="flex justify-between items-center mt-8">
                 <Button
                   variant="outline"
                   onClick={handleBack}
@@ -1729,7 +2766,7 @@ export default function CreateListingModal({
                   <Button
                     onClick={handleSubmit}
                     disabled={!isStepValid()}
-                    className="px-8 bg-green-600 hover:bg-green-700 text-lg font-semibold text-white"
+                    className="px-8 bg-[var(--color-success-500)] hover:bg-[var(--color-success-900)] text-lg font-semibold text-white"
                   >
                     <Check className="w-5 h-5 mr-2" />
                     Publish {listingType === "buy" ? "Buy" : "Sell"} Listing

@@ -8,6 +8,8 @@ from .listing_generation import (
 )
 from .image_generation import generate_images
 from .price_intelligence import get_price_intelligence
+from .ownership_verification import verify_ownership_proof
+from .image_enhancement import enhance_product_image, batch_enhance_images
 from .config import get_ai_settings
 
 __all__ = [
@@ -17,5 +19,8 @@ __all__ = [
     "regenerate_tags",
     "generate_images",
     "get_price_intelligence",
+    "verify_ownership_proof",
+    "enhance_product_image",
+    "batch_enhance_images",
     "get_ai_settings",
 ]

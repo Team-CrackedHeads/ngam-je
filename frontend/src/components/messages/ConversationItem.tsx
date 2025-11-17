@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -73,7 +73,7 @@ export function ConversationItem({
         {product && (
           <div className="mt-2 flex items-center gap-2 rounded-lg border border-border bg-card p-2">
             <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
-              <Image
+              <SafeImage
                 src={product.image}
                 alt={product.title}
                 fill

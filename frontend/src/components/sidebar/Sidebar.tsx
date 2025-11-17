@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
@@ -99,19 +99,13 @@ function FollowingMenuItem() {
                   className="flex items-center gap-3 text-accent-500 hover:bg-primary-200 hover:text-accent-700"
                 >
                   <div className="w-6 h-6 rounded-full bg-primary-200 border border-primary-300 flex-shrink-0 overflow-hidden">
-                    <Image
+                    <SafeImage
                       src={thread.imageUrl}
                       alt={thread.title}
                       width={24}
                       height={24}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.parentElement?.style.setProperty(
-                          "background",
-                          "linear-gradient(45deg, var(--color-primary-300), var(--color-secondary-300))"
-                        );
-                      }}
+                      maxRetries={3}
                     />
                   </div>
                   <span className="truncate text-xs font-medium flex-1 min-w-0">

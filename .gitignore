@@ -183,8 +183,9 @@ chroma/
 faiss/
 pinecone/
 
-# AI Models
-models/
+# AI Models (exclude backend source code models)
+/models/
+ai_models/
 *.pkl
 *.model
 
@@ -199,3 +200,10 @@ CLAUDE.md
 
 # Developer Scripts (Darren)
 git-prune-gone.sh
+
+# Cloud SQL
+cloud-sql-proxy
+cloud_sql_proxy
+test_cloud_sql_connection.py
+*.dump
+*.sql.backup

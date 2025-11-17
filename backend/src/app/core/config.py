@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
+    # Cloud SQL
+    instance_connection_name: str | None = None
+
     # GCP
     gcp_project_id: str | None = None
     gcp_region: str = "us-central1"
@@ -55,6 +58,11 @@ class Settings(BaseSettings):
     DIDIT_WORKFLOW_ID: str = ""  # Default KYC workflow ID
     DIDIT_BASE_URL: str = "https://verification.didit.me"
     DIDIT_CALLBACK_URL: str = ""  # Webhook callback URL (must be publicly accessible)
+
+    # Cloudinary Image Storage
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
 
     # ============================================================================
     # TEMPORARY: KYC Bypass Mode for Development

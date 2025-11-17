@@ -35,7 +35,7 @@ export const ProductDetails = ({
   // ADDED: Router and params for navigation
   const router = useRouter();
   const params = useParams();
-  const category = params.threadCategory as string;
+  const threadId = params.threadId ? parseInt(params.threadId as string) : undefined;
 
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,15 +79,17 @@ export const ProductDetails = ({
   };
 
   const handleFAQClick = () => {
-    router.push(`/threads/${category}/${listing.id}/faq`);
+    if (threadId) {
+      router.push(`/threads/${threadId}/listings/${listing.id}/faq`);
+    }
   };
 
   const handleMakeOfferClick = () => {
     setIsMakeOfferModalOpen(true);
   };
 
-  // Set main image source - use gallery first, then imageUrl fallback
-  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl;
+  // Set main image source - use imageUrl (first uploaded image), gallery contains remaining images
+  const mainImageSrc = listing.imageUrl;
 
   return (
     <>
@@ -133,29 +135,31 @@ export const ProductDetails = ({
         <MakeOfferBuy
           isOpen={isMakeOfferModalOpen}
           onClose={() => setIsMakeOfferModalOpen(false)}
-          sourceListingId={listing.id}
+          sourceListingId={String(listing.id)}
           sourceTitle={listing.title}
           sourceDescription={listing.description}
           sourceImages={listing.gallery || [listing.imageUrl]}
           sourceOwnershipProof={null}
           sourceTags={listing.tags}
           sourcePrice={listing.price}
-          category={category}
+          category={listing.category}
           sourceFAQs={listing.faqs || []}
         />
       ) : (
         <MakeOfferSell
           isOpen={isMakeOfferModalOpen}
           onClose={() => setIsMakeOfferModalOpen(false)}
-          sourceListingId={listing.id}
+          sourceListingId={String(listing.id)}
           sourceTitle={listing.title}
           sourcePrice={listing.price}
-          category={category}
+          category={listing.category}
           sourceFAQs={listing.faqs || []}
         />
       )}
 
-      <ProductFAQSummary listingId={listing.id} category={category} />
+      {threadId && (
+        <ProductFAQSummary listingId={listing.id} threadId={threadId} />
+      )}
     </>
   );
 };
