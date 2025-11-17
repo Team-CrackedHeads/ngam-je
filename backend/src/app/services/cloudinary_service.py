@@ -1,12 +1,12 @@
 """
 Cloudinary service for image upload and management.
 """
+
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 from typing import Dict, Any, Optional
 from fastapi import UploadFile, HTTPException
-import os
 
 from src.app.core.config import get_settings
 
@@ -22,14 +22,11 @@ class CloudinaryService:
             cloud_name=settings.CLOUDINARY_CLOUD_NAME,
             api_key=settings.CLOUDINARY_API_KEY,
             api_secret=settings.CLOUDINARY_API_SECRET,
-            secure=True  # Use HTTPS URLs
+            secure=True,  # Use HTTPS URLs
         )
 
     async def upload_image(
-        self,
-        file: UploadFile,
-        folder: str = "listings",
-        public_id: Optional[str] = None
+        self, file: UploadFile, folder: str = "listings", public_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Upload an image to Cloudinary.
@@ -56,17 +53,14 @@ class CloudinaryService:
         if file.content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}",
             )
 
         # Validate file size (max 10MB)
         max_size = 10 * 1024 * 1024  # 10MB in bytes
         file_content = await file.read()
         if len(file_content) > max_size:
-            raise HTTPException(
-                status_code=400,
-                detail="File too large. Maximum size is 10MB"
-            )
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB")
 
         # Reset file pointer
         await file.seek(0)
@@ -93,10 +87,7 @@ class CloudinaryService:
             }
 
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to upload image: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
     async def delete_image(self, public_id: str) -> bool:
         """
@@ -115,15 +106,10 @@ class CloudinaryService:
             result = cloudinary.uploader.destroy(public_id)
             return result.get("result") == "ok"
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to delete image: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to delete image: {str(e)}")
 
     async def upload_multiple_images(
-        self,
-        files: list[UploadFile],
-        folder: str = "listings"
+        self, files: list[UploadFile], folder: str = "listings"
     ) -> list[Dict[str, Any]]:
         """
         Upload multiple images to Cloudinary.
@@ -146,7 +132,7 @@ class CloudinaryService:
         public_id: str,
         width: Optional[int] = None,
         height: Optional[int] = None,
-        crop: str = "fill"
+        crop: str = "fill",
     ) -> str:
         """
         Generate an optimized URL for an existing Cloudinary image.

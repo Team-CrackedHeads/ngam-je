@@ -61,8 +61,8 @@ async def generate_images(
         if reference_images:
             for img_data_url in reference_images:
                 # Remove data URL prefix if present
-                if ',' in img_data_url:
-                    img_data = img_data_url.split(',', 1)[1]
+                if "," in img_data_url:
+                    img_data = img_data_url.split(",", 1)[1]
                 else:
                     img_data = img_data_url
 
@@ -87,8 +87,7 @@ async def generate_images(
 
             # Generate image using new SDK
             response = client.models.generate_content(
-                model="gemini-2.5-flash-image",
-                contents=contents
+                model="gemini-2.5-flash-image", contents=contents
             )
 
             # Extract image from response (new SDK style)
@@ -105,7 +104,7 @@ async def generate_images(
                     buffered = io.BytesIO()
                     pil_image.save(buffered, format="PNG")
                     image_bytes = buffered.getvalue()
-                    base64_str = base64.b64encode(image_bytes).decode('utf-8')
+                    base64_str = base64.b64encode(image_bytes).decode("utf-8")
                     data_url = f"data:image/png;base64,{base64_str}"
 
                     image_urls.append(data_url)
@@ -117,7 +116,9 @@ async def generate_images(
             if not image_found:
                 logger.warning(f"No image data in response for image {i+1}")
                 logger.debug(f"Response: {response}")
-                raise ValueError(f"Model did not return image data (possibly blocked by safety filters)")
+                raise ValueError(
+                    "Model did not return image data (possibly blocked by safety filters)"
+                )
 
         logger.info(f"✅ Generated {len(image_urls)} images successfully")
         return image_urls

@@ -4,11 +4,10 @@ Price intelligence service using SerpAPI + Gemini LLM.
 Searches for similar products and analyzes pricing patterns.
 """
 
-import json
 import google.generativeai as genai
 from serpapi import GoogleSearch
 from cachetools import TTLCache
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from src.app.core.logging_config import get_logger
 from src.app.services.generation.config import get_ai_settings
@@ -39,16 +38,18 @@ async def search_similar_products(product_query: str, location: str = "Malaysia"
     try:
         logger.info(f"🔍 Searching for: {product_query[:50]}...")
 
-        search = GoogleSearch({
-            "q": product_query,
-            "location": location,
-            "hl": "en",
-            "gl": "my",
-            "google_domain": "google.com.my",
-            "api_key": settings.serpapi_api_key,
-            "engine": "google_shopping",
-            "num": 20,  # Get up to 20 results
-        })
+        search = GoogleSearch(
+            {
+                "q": product_query,
+                "location": location,
+                "hl": "en",
+                "gl": "my",
+                "google_domain": "google.com.my",
+                "api_key": settings.serpapi_api_key,
+                "engine": "google_shopping",
+                "num": 20,  # Get up to 20 results
+            }
+        )
 
         results = search.get_dict()
         shopping_results = results.get("shopping_results", [])
@@ -60,17 +61,18 @@ async def search_similar_products(product_query: str, location: str = "Malaysia"
         for item in shopping_results:
             try:
                 # Extract price (handle different formats)
-                price_str = item.get("price", "")
                 extracted_price = item.get("extracted_price")
 
                 if extracted_price:
-                    products.append({
-                        "title": item.get("title", ""),
-                        "price": float(extracted_price),
-                        "currency": item.get("currency", "MYR"),
-                        "source": item.get("source", ""),
-                        "link": item.get("link", ""),
-                    })
+                    products.append(
+                        {
+                            "title": item.get("title", ""),
+                            "price": float(extracted_price),
+                            "currency": item.get("currency", "MYR"),
+                            "source": item.get("source", ""),
+                            "link": item.get("link", ""),
+                        }
+                    )
             except (ValueError, TypeError) as e:
                 logger.debug(f"Skipping item due to price parsing error: {e}")
                 continue
@@ -127,7 +129,9 @@ async def analyze_prices_with_ai(
 
     if settings.gemini_api_key:
         try:
-            price_list = ", ".join([f"{p['title']}: {p['currency']} {p['price']}" for p in products[:10]])
+            price_list = ", ".join(
+                [f"{p['title']}: {p['currency']} {p['price']}" for p in products[:10]]
+            )
 
             genai.configure(api_key=settings.gemini_api_key)
             model = genai.GenerativeModel(settings.default_model)
@@ -152,7 +156,7 @@ Respond with ONLY the insight text, no JSON or formatting."""
             )
 
             insights = response.text.strip().strip('"').strip("'")
-            logger.info(f"✅ Got AI insights for pricing")
+            logger.info("✅ Got AI insights for pricing")
 
         except Exception as e:
             logger.warning(f"⚠️ Failed to get AI insights: {e}")
@@ -188,7 +192,20 @@ def generate_price_history(average_price: float, num_months: int = 6) -> List[Di
     today = datetime.now()
 
     # Month names for formatting
-    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    month_names = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
 
     # Generate slightly declining trend (simulating depreciation)
     for i in range(num_months, 0, -1):
@@ -199,18 +216,22 @@ def generate_price_history(average_price: float, num_months: int = 6) -> List[Di
         time_factor = (i / num_months) * 0.15
         price = average_price * (1 + variation + time_factor)
 
-        history.append({
-            "month": month_names[date.month - 1],
-            "year": date.year,
-            "price": round(price, 2),
-        })
+        history.append(
+            {
+                "month": month_names[date.month - 1],
+                "year": date.year,
+                "price": round(price, 2),
+            }
+        )
 
     # Add current price point
-    history.append({
-        "month": month_names[today.month - 1],
-        "year": today.year,
-        "price": round(average_price, 2),
-    })
+    history.append(
+        {
+            "month": month_names[today.month - 1],
+            "year": today.year,
+            "price": round(average_price, 2),
+        }
+    )
 
     return history
 

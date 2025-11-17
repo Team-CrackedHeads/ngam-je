@@ -48,7 +48,9 @@ class Listing(Base):
     # Creator/Poster info (person who created the listing, whether buying or selling)
     creator_name = Column(String(100), nullable=True)  # From current_user.username
     creator_location = Column(String(100), nullable=True)  # From location field
-    creator_verified = Column(Boolean, nullable=False, default=False)  # From KYC or ownershipProofImage
+    creator_verified = Column(
+        Boolean, nullable=False, default=False
+    )  # From KYC or ownershipProofImage
 
     # Shipping (matches frontend form fields)
     shipping_options = Column(JSONB, nullable=True, default=list)  # From shippingOptions field

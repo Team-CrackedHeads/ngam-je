@@ -13,12 +13,15 @@ settings = get_settings()
 # Initialize the Cloud SQL Connector once (reuse across connections)
 _connector = None
 
+
 def get_connector():
     """Get or create the Cloud SQL Connector instance."""
     global _connector
     if _connector is None:
         # Load credentials from the service account JSON file if provided
-        if settings.google_application_credentials and os.path.exists(settings.google_application_credentials):
+        if settings.google_application_credentials and os.path.exists(
+            settings.google_application_credentials
+        ):
             credentials = service_account.Credentials.from_service_account_file(
                 settings.google_application_credentials
             )
@@ -26,6 +29,7 @@ def get_connector():
         else:
             _connector = Connector()
     return _connector
+
 
 # Google Cloud SQL Connector function
 def getconn():
@@ -36,7 +40,7 @@ def getconn():
         "pg8000",
         user=settings.postgres_user,
         password=settings.postgres_password,
-        db=settings.postgres_db
+        db=settings.postgres_db,
     )
     return conn
 

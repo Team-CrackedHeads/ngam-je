@@ -2,8 +2,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import Optional
 from datetime import datetime, timezone
 
 from src.app.api.deps import get_current_user
@@ -47,13 +45,17 @@ async def get_conversation_messages(
 
     # Verify user is part of this conversation
     recommendation = conversation.recommendation
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(
@@ -69,18 +71,13 @@ async def get_conversation_messages(
 
     # Count unread messages for current user (messages sent by others that are unread)
     unread_count = query.filter(
-        Message.sender_id != current_user.id,
-        Message.is_read == False
+        Message.sender_id != current_user.id, ~Message.is_read
     ).count()
 
     # Get paginated messages (oldest first)
     messages = query.order_by(Message.created_at.asc()).offset(offset).limit(limit).all()
 
-    return MessageListResponse(
-        messages=messages,
-        total=total,
-        unread_count=unread_count
-    )
+    return MessageListResponse(messages=messages, total=total, unread_count=unread_count)
 
 
 @router.post("/", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
@@ -95,9 +92,9 @@ async def send_message(
     Automatically updates the conversation's last_message_at timestamp.
     """
     # Verify conversation exists and user has access
-    conversation = db.query(Conversation).filter(
-        Conversation.id == message_in.conversation_id
-    ).first()
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == message_in.conversation_id).first()
+    )
 
     if not conversation:
         raise HTTPException(
@@ -107,13 +104,17 @@ async def send_message(
 
     # Verify user is part of this conversation
     recommendation = conversation.recommendation
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(
@@ -134,7 +135,7 @@ async def send_message(
         sender_id=current_user.id,
         content=message_in.content,
         message_type=message_in.message_type,
-        is_read=False
+        is_read=False,
     )
 
     db.add(message)
@@ -172,13 +173,17 @@ async def update_message(
     conversation = message.conversation
     recommendation = conversation.recommendation
 
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(
@@ -207,7 +212,9 @@ async def update_message(
     return message
 
 
-@router.post("/conversation/{conversation_id}/mark-all-read", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/conversation/{conversation_id}/mark-all-read", status_code=status.HTTP_204_NO_CONTENT
+)
 async def mark_all_messages_read(
     conversation_id: int,
     current_user: User = Depends(get_current_user),
@@ -229,13 +236,17 @@ async def mark_all_messages_read(
 
     # Verify user is part of this conversation
     recommendation = conversation.recommendation
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(
@@ -249,11 +260,8 @@ async def mark_all_messages_read(
     db.query(Message).filter(
         Message.conversation_id == conversation_id,
         Message.sender_id != current_user.id,
-        Message.is_read == False
-    ).update({
-        "is_read": True,
-        "read_at": now
-    })
+        ~Message.is_read,
+    ).update({"is_read": True, "read_at": now})
 
     db.commit()
 

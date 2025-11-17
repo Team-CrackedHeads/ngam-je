@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class ThreadBase(BaseModel):
@@ -12,7 +12,9 @@ class ThreadBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=100, description="Thread title")
     description: str = Field(..., min_length=1, description="Thread description")
     image_url: Optional[str] = Field(None, description="Cover image URL")
-    category: str = Field(..., min_length=1, max_length=50, description="Thread category (e.g., gaming, fashion)")
+    category: str = Field(
+        ..., min_length=1, max_length=50, description="Thread category (e.g., gaming, fashion)"
+    )
     tags: list[str] = Field(default_factory=list, description="Array of tags")
 
 

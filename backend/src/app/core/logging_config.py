@@ -7,7 +7,6 @@ both Uvicorn in development and production environments.
 
 import logging
 import logging.config
-import sys
 from pathlib import Path
 
 
@@ -29,7 +28,6 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
     config = {
         "version": 1,
         "disable_existing_loggers": False,
-
         # ========================================
         # Formatters
         # ========================================
@@ -46,7 +44,6 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
                 "format": '%(levelname)s:     %(client_addr)s - "%(request_line)s" %(status_code)s',
             },
         },
-
         # ========================================
         # Handlers
         # ========================================
@@ -64,7 +61,6 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
                 "stream": "ext://sys.stdout",
             },
         },
-
         # ========================================
         # Loggers
         # ========================================
@@ -75,7 +71,6 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
                 "handlers": ["console"],
                 "propagate": False,
             },
-
             # Uvicorn loggers
             "uvicorn": {
                 "level": log_level,
@@ -92,7 +87,6 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
                 "handlers": ["console"],
                 "propagate": False,
             },
-
             # Application loggers
             "app": {
                 "level": log_level,
@@ -114,7 +108,6 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
                 "handlers": ["console_detailed"],
                 "propagate": False,
             },
-
             # Third-party library loggers (suppress verbose output)
             "httpx": {
                 "level": "WARNING",
@@ -158,9 +151,7 @@ def configure_logging(log_level: str = "INFO", log_to_file: bool = False):
         # Add file handlers to loggers
         for logger_name in ["", "app", "app.api", "app.services", "app.services.ai"]:
             if logger_name in config["loggers"]:
-                config["loggers"][logger_name]["handlers"].extend(
-                    ["file_rotating", "file_error"]
-                )
+                config["loggers"][logger_name]["handlers"].extend(["file_rotating", "file_error"])
 
     # Apply configuration
     logging.config.dictConfig(config)

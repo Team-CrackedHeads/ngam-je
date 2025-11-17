@@ -1,7 +1,7 @@
 """Recommendation API endpoints for listing matches."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, union_all
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -47,12 +47,8 @@ async def get_listing_recommendations(
 
     # Query recommendations where listing is source OR target
     # OPTIMIZED: Use UNION instead of OR for better index usage
-    source_query = db.query(Recommendation).filter(
-        Recommendation.source_listing_id == listing_id
-    )
-    target_query = db.query(Recommendation).filter(
-        Recommendation.target_listing_id == listing_id
-    )
+    source_query = db.query(Recommendation).filter(Recommendation.source_listing_id == listing_id)
+    target_query = db.query(Recommendation).filter(Recommendation.target_listing_id == listing_id)
 
     # Filter by status if provided
     if status_filter:
@@ -76,8 +72,7 @@ async def get_listing_recommendations(
 
     # Order by match score descending, then by created date
     recommendations = combined_query.order_by(
-        Recommendation.match_score.desc(),
-        Recommendation.created_at.desc()
+        Recommendation.match_score.desc(), Recommendation.created_at.desc()
     ).all()
 
     return RecommendationListResponse(recommendations=recommendations, total=total)
@@ -107,26 +102,28 @@ async def get_matched_listings(
     # Query only matched recommendations
     # OPTIMIZED: Use UNION instead of OR for better index usage
     source_query = db.query(Recommendation).filter(
-        Recommendation.source_listing_id == listing_id,
-        Recommendation.status == "matched"
+        Recommendation.source_listing_id == listing_id, Recommendation.status == "matched"
     )
     target_query = db.query(Recommendation).filter(
-        Recommendation.target_listing_id == listing_id,
-        Recommendation.status == "matched"
+        Recommendation.target_listing_id == listing_id, Recommendation.status == "matched"
     )
 
     # Combine with UNION ALL
     combined_query = source_query.union_all(target_query)
 
     # Get total count (optimized)
-    count_source = db.query(func.count(Recommendation.id)).filter(
-        Recommendation.source_listing_id == listing_id,
-        Recommendation.status == "matched"
-    ).scalar() or 0
-    count_target = db.query(func.count(Recommendation.id)).filter(
-        Recommendation.target_listing_id == listing_id,
-        Recommendation.status == "matched"
-    ).scalar() or 0
+    count_source = (
+        db.query(func.count(Recommendation.id))
+        .filter(Recommendation.source_listing_id == listing_id, Recommendation.status == "matched")
+        .scalar()
+        or 0
+    )
+    count_target = (
+        db.query(func.count(Recommendation.id))
+        .filter(Recommendation.target_listing_id == listing_id, Recommendation.status == "matched")
+        .scalar()
+        or 0
+    )
     total = count_source + count_target
 
     recommendations = combined_query.order_by(Recommendation.match_score.desc()).all()
@@ -150,14 +147,18 @@ async def create_recommendation(
     The recommendation starts with status "pending".
     """
     # Verify both listings exist
-    source_listing = db.query(Listing).filter(Listing.id == recommendation_data.source_listing_id).first()
+    source_listing = (
+        db.query(Listing).filter(Listing.id == recommendation_data.source_listing_id).first()
+    )
     if not source_listing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Source listing {recommendation_data.source_listing_id} not found",
         )
 
-    target_listing = db.query(Listing).filter(Listing.id == recommendation_data.target_listing_id).first()
+    target_listing = (
+        db.query(Listing).filter(Listing.id == recommendation_data.target_listing_id).first()
+    )
     if not target_listing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -165,11 +166,15 @@ async def create_recommendation(
         )
 
     # Prevent duplicate recommendations
-    existing = db.query(Recommendation).filter(
-        Recommendation.source_listing_id == recommendation_data.source_listing_id,
-        Recommendation.target_listing_id == recommendation_data.target_listing_id,
-        Recommendation.status.in_(["pending", "liked_by_source", "liked_by_target", "matched"])
-    ).first()
+    existing = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.source_listing_id == recommendation_data.source_listing_id,
+            Recommendation.target_listing_id == recommendation_data.target_listing_id,
+            Recommendation.status.in_(["pending", "liked_by_source", "liked_by_target", "matched"]),
+        )
+        .first()
+    )
 
     if existing:
         raise HTTPException(
@@ -217,8 +222,12 @@ async def like_recommendation(
         )
 
     # Get both listings to check ownership
-    source_listing = db.query(Listing).filter(Listing.id == recommendation.source_listing_id).first()
-    target_listing = db.query(Listing).filter(Listing.id == recommendation.target_listing_id).first()
+    source_listing = (
+        db.query(Listing).filter(Listing.id == recommendation.source_listing_id).first()
+    )
+    target_listing = (
+        db.query(Listing).filter(Listing.id == recommendation.target_listing_id).first()
+    )
 
     # Determine which party is liking
     is_source_owner = source_listing.user_id == current_user.id
@@ -250,16 +259,15 @@ async def like_recommendation(
     # Auto-create conversation if status became "matched"
     if recommendation.status == "matched":
         # Check if conversation already exists
-        existing_conversation = db.query(Conversation).filter(
-            Conversation.recommendation_id == recommendation.id
-        ).first()
+        existing_conversation = (
+            db.query(Conversation)
+            .filter(Conversation.recommendation_id == recommendation.id)
+            .first()
+        )
 
         if not existing_conversation:
             # Create new conversation
-            new_conversation = Conversation(
-                recommendation_id=recommendation.id,
-                is_active=True
-            )
+            new_conversation = Conversation(recommendation_id=recommendation.id, is_active=True)
             db.add(new_conversation)
             db.commit()
 
@@ -295,8 +303,12 @@ async def checkout_recommendation(
         )
 
     # Get both listings
-    source_listing = db.query(Listing).filter(Listing.id == recommendation.source_listing_id).first()
-    target_listing = db.query(Listing).filter(Listing.id == recommendation.target_listing_id).first()
+    source_listing = (
+        db.query(Listing).filter(Listing.id == recommendation.source_listing_id).first()
+    )
+    target_listing = (
+        db.query(Listing).filter(Listing.id == recommendation.target_listing_id).first()
+    )
 
     # Check ownership
     is_source_owner = source_listing.user_id == current_user.id
@@ -355,8 +367,12 @@ async def reject_recommendation(
         )
 
     # Get both listings to check ownership
-    source_listing = db.query(Listing).filter(Listing.id == recommendation.source_listing_id).first()
-    target_listing = db.query(Listing).filter(Listing.id == recommendation.target_listing_id).first()
+    source_listing = (
+        db.query(Listing).filter(Listing.id == recommendation.source_listing_id).first()
+    )
+    target_listing = (
+        db.query(Listing).filter(Listing.id == recommendation.target_listing_id).first()
+    )
 
     # Check ownership
     is_source_owner = source_listing.user_id == current_user.id

@@ -33,6 +33,7 @@ def verify_clerk_token(token: str) -> Optional[dict]:
         # We create a simple object that provides the required interface
         class RequestAdapter:
             """Adapts our token string to the request interface expected by Clerk SDK."""
+
             def __init__(self, token: str):
                 # Clerk SDK checks for 'authorization' header (case-sensitive)
                 # Provide both to be safe with different HTTP implementations
@@ -50,7 +51,7 @@ def verify_clerk_token(token: str) -> Optional[dict]:
             AuthenticateRequestOptions(
                 secret_key=settings.CLERK_SECRET_KEY,
                 authorized_parties=None,  # Accept tokens from any frontend origin
-            )
+            ),
         )
 
         # Debug: log if auth failed
@@ -66,5 +67,6 @@ def verify_clerk_token(token: str) -> Optional[dict]:
     except Exception as e:
         print(f"Error verifying Clerk token: {e}")
         import traceback
+
         traceback.print_exc()
         return None

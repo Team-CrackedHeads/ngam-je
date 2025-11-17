@@ -69,8 +69,7 @@ def create_reply(
     faq = db.query(FAQ).filter(FAQ.id == reply_in.faq_id).first()
     if not faq:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"FAQ with id {reply_in.faq_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"FAQ with id {reply_in.faq_id} not found"
         )
 
     # If parent_reply_id is provided, verify it exists
@@ -79,13 +78,13 @@ def create_reply(
         if not parent_reply:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Parent reply with id {reply_in.parent_reply_id} not found"
+                detail=f"Parent reply with id {reply_in.parent_reply_id} not found",
             )
         # Ensure parent reply belongs to the same FAQ
         if parent_reply.faq_id != reply_in.faq_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Parent reply must belong to the same FAQ"
+                detail="Parent reply must belong to the same FAQ",
             )
 
     # Create new reply
@@ -119,12 +118,16 @@ def get_faq_replies(
     faq = db.query(FAQ).filter(FAQ.id == faq_id).first()
     if not faq:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"FAQ with id {faq_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"FAQ with id {faq_id} not found"
         )
 
     # Get all replies for this FAQ
-    replies = db.query(FAQReply).filter(FAQReply.faq_id == faq_id).order_by(FAQReply.created_at.asc()).all()
+    replies = (
+        db.query(FAQReply)
+        .filter(FAQReply.faq_id == faq_id)
+        .order_by(FAQReply.created_at.asc())
+        .all()
+    )
 
     # Build nested tree structure
     return build_reply_tree(replies)
@@ -140,8 +143,7 @@ def get_reply(
     reply = db.query(FAQReply).filter(FAQReply.id == reply_id).first()
     if not reply:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Reply with id {reply_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Reply with id {reply_id} not found"
         )
     return reply
 
@@ -161,15 +163,13 @@ def update_reply(
     reply = db.query(FAQReply).filter(FAQReply.id == reply_id).first()
     if not reply:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Reply with id {reply_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Reply with id {reply_id} not found"
         )
 
     # Only author can edit text
     if reply_in.text is not None and reply.user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the reply author can edit the text"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only the reply author can edit the text"
         )
 
     # Update fields
@@ -200,15 +200,13 @@ def delete_reply(
     reply = db.query(FAQReply).filter(FAQReply.id == reply_id).first()
     if not reply:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Reply with id {reply_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Reply with id {reply_id} not found"
         )
 
     # Only author can delete
     if reply.user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the reply author can delete it"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only the reply author can delete it"
         )
 
     db.delete(reply)

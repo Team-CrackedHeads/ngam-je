@@ -8,7 +8,7 @@ Purpose: Transform good descriptions into polished marketplace listings
 - Understand buy vs sell nuances (e.g., buy = "Looking for X", sell = "Selling Y")
 """
 
-from typing import List, Literal
+from typing import List
 import base64
 import io
 from PIL import Image
@@ -26,6 +26,7 @@ logger = get_logger("app.services.generation.listing")
 # Output models
 class GeneratedListing(BaseModel):
     """Complete generated listing"""
+
     title: str = Field(description="SEO-optimized title (max 80 chars)")
     description: str = Field(description="Compelling description (200-400 chars)")
     tags: List[str] = Field(description="5-8 relevant tags/keywords")
@@ -86,7 +87,7 @@ def get_buy_listing_agent() -> Agent:
     if _buy_listing_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _buy_listing_agent = Agent(
             model,
             output_type=GeneratedListing,
@@ -101,7 +102,7 @@ def get_sell_listing_agent() -> Agent:
     if _sell_listing_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _sell_listing_agent = Agent(
             model,
             output_type=GeneratedListing,
@@ -137,9 +138,10 @@ async def _generate_from_images(
     pil_images = []
     for idx, img_url in enumerate(images[:3]):  # Analyze up to 3 images
         try:
-            if img_url.startswith('http://') or img_url.startswith('https://'):
+            if img_url.startswith("http://") or img_url.startswith("https://"):
                 # HTTP URL - fetch the image
                 import httpx
+
                 async with httpx.AsyncClient() as http_client:
                     response = await http_client.get(img_url, timeout=10.0)
                     response.raise_for_status()
@@ -149,8 +151,8 @@ async def _generate_from_images(
                     logger.info(f"  Fetched & loaded image {idx+1} from URL: {pil_image.size}")
             else:
                 # Base64 data URL
-                if ',' in img_url:
-                    img_data = img_url.split(',', 1)[1]
+                if "," in img_url:
+                    img_data = img_url.split(",", 1)[1]
                 else:
                     img_data = img_url
 
@@ -234,16 +236,14 @@ Format as JSON: {{"title": "...", "description": "...", "tags": ["tag1", "tag2",
 
     # Call Gemini Vision
     contents = [vision_prompt] + pil_images
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=contents
-    )
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=contents)
 
     response_text = response.text.strip()
     logger.info(f"  Vision response: {response_text[:100]}...")
 
     # Parse JSON response
     import json
+
     # Extract JSON from response (handle markdown code blocks)
     if "```json" in response_text:
         json_str = response_text.split("```json")[1].split("```")[0].strip()
@@ -288,7 +288,9 @@ async def generate_listing(
     if not settings.gemini_api_key:
         raise ValueError("Gemini API key not configured. Set AI_GEMINI_API_KEY in .env")
 
-    logger.info(f"📝 Generating {listing_type} listing from {len(images)} images and description ({len(description)} chars)")
+    logger.info(
+        f"📝 Generating {listing_type} listing from {len(images)} images and description ({len(description)} chars)"
+    )
 
     try:
         # If we have images, use Gemini Vision directly for better image analysis
@@ -328,6 +330,7 @@ _regenerate_tags_agent = None
 
 class TagList(BaseModel):
     """List of tags"""
+
     tags: List[str] = Field(description="5-8 relevant keywords/tags")
 
 
@@ -337,7 +340,7 @@ def get_regenerate_title_agent() -> Agent:
     if _regenerate_title_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _regenerate_title_agent = Agent(
             model,
             output_type=str,
@@ -352,7 +355,7 @@ def get_regenerate_description_agent() -> Agent:
     if _regenerate_description_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _regenerate_description_agent = Agent(
             model,
             output_type=str,
@@ -367,7 +370,7 @@ def get_regenerate_tags_agent() -> Agent:
     if _regenerate_tags_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _regenerate_tags_agent = Agent(
             model,
             output_type=TagList,
@@ -438,7 +441,7 @@ Create a DIFFERENT, more compelling description."""
         agent = get_regenerate_description_agent()
         result = await agent.run(prompt)
         new_description = result.output.strip()
-        logger.info(f"✅ Regenerated description")
+        logger.info("✅ Regenerated description")
         return new_description
 
     except Exception as e:

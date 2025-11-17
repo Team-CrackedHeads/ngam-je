@@ -16,8 +16,7 @@ KYC_EXPIRY_SECONDS = 15  # TODO: Change to 900 for production
 
 @router.get("/me", response_model=UserSchema)
 async def get_my_profile(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Get current authenticated user's profile.
@@ -28,7 +27,8 @@ async def get_my_profile(
     if current_user.kyc_status == "in_progress":
         if (
             not current_user.kyc_initiated_at
-            or (datetime.now(timezone.utc) - current_user.kyc_initiated_at).total_seconds() > KYC_EXPIRY_SECONDS
+            or (datetime.now(timezone.utc) - current_user.kyc_initiated_at).total_seconds()
+            > KYC_EXPIRY_SECONDS
         ):
             current_user.kyc_status = "pending"
             current_user.kyc_session_id = None
