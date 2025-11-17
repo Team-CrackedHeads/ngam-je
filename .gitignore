@@ -133,7 +133,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Bun
-bun.lockb
+# bun.lockb - Lockfile should be committed for reproducible builds
 
 # IDEs
 .vscode/
