@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import SafeImage from "@/components/ui/SafeImage";
 import ReactMarkdown from "react-markdown";
-import { Puzzle, ExternalLink, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Puzzle,
+  ExternalLink,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 export interface NgamOverviewProps {
   /** Full/long content (used in expanded mode). If absent, uses `content`. */
@@ -69,13 +75,37 @@ export default function NgamOverview({
 }: NgamOverviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [askValue, setAskValue] = useState("");
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Rotating loading messages
+  const loadingMessages = [
+    { main: "Ngam is warming up...", sub: "Preparing the search" },
+    { main: "Ngam is thinking...", sub: "Searching the web" },
+    { main: "Ngam is vibing...", sub: "Analyzing market data" },
+    { main: "Almost there...", sub: "Generating insights" },
+    { main: "Ngam is tuning in...", sub: "Finding the best results" },
+    { main: "Just a sec...", sub: "Verifying sources" },
+    { main: "Ngam is polishing...", sub: "Finishing the last details" },
+  ];
+
+  // Rotate loading message every second
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingMessageIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   // Defaults for suggestion bubbles (expanded mode only)
   const bubbles = useMemo(
     () =>
-      suggestions && suggestions.length > 0
-        ? suggestions
-        : DEFAULT_SUGGESTIONS,
+      suggestions && suggestions.length > 0 ? suggestions : DEFAULT_SUGGESTIONS,
     [suggestions]
   );
 
@@ -95,8 +125,12 @@ export default function NgamOverview({
     shortImages ?? baseImages.slice(0, Math.min(2, baseImages.length));
   const effectiveLongImages = longImages ?? baseImages;
 
-  const displayedContent = isExpanded ? effectiveLongContent : effectiveShortContent;
-  const displayedImages = isExpanded ? effectiveLongImages : effectiveShortImages;
+  const displayedContent = isExpanded
+    ? effectiveLongContent
+    : effectiveShortContent;
+  const displayedImages = isExpanded
+    ? effectiveLongImages
+    : effectiveShortImages;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +158,9 @@ export default function NgamOverview({
           <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-secondary-500">
             <Puzzle className="w-4 h-4 md:w-5 md:h-5 text-accent-700" />
           </div>
-          <h3 className="text-lg md:text-xl font-bold text-foreground">Ngam Overview</h3>
+          <h3 className="text-lg md:text-xl font-bold text-foreground">
+            Ngam Overview
+          </h3>
         </div>
       </div>
 
@@ -133,7 +169,9 @@ export default function NgamOverview({
         <div
           className={[
             "p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 transition-[max-height] duration-300 ease-out",
-            isExpanded ? "max-h-[60vh] overflow-y-auto" : "max-h-64 overflow-hidden",
+            isExpanded
+              ? "max-h-[60vh] overflow-y-auto"
+              : "max-h-64 overflow-hidden",
           ].join(" ")}
         >
           {/* Loading state */}
@@ -141,8 +179,12 @@ export default function NgamOverview({
             <div className="flex flex-col items-center justify-center py-8 gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground" />
               <div className="text-center space-y-1.5">
-                <p className="text-lg font-medium text-foreground">Ngam is thinking...</p>
-                <p className="text-sm text-muted-foreground">Generating summary</p>
+                <p className="text-lg font-medium text-foreground transition-opacity duration-1500">
+                  {loadingMessages[loadingMessageIndex].main}
+                </p>
+                <p className="text-sm text-muted-foreground transition-opacity duration-1500">
+                  {loadingMessages[loadingMessageIndex].sub}
+                </p>
               </div>
             </div>
           ) : (
@@ -183,7 +225,9 @@ export default function NgamOverview({
                         </ol>
                       ),
                       li: ({ children }) => (
-                        <li className="text-sm md:text-base leading-relaxed">{children}</li>
+                        <li className="text-sm md:text-base leading-relaxed">
+                          {children}
+                        </li>
                       ),
                       code: ({ children }) => (
                         <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground">
@@ -265,7 +309,10 @@ export default function NgamOverview({
           <div
             aria-hidden
             className="pointer-events-none absolute left-0 right-0 bottom-0 h-16"
-            style={{ background: "linear-gradient(to top, var(--color-card) 60%, transparent)" }}
+            style={{
+              background:
+                "linear-gradient(to top, var(--color-card) 60%, transparent)",
+            }}
           />
         )}
       </div>

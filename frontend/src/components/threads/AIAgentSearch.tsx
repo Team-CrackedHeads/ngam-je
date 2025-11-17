@@ -3,12 +3,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import SafeImage from "@/components/ui/SafeImage";
 import { Plus, Sparkles } from "lucide-react";
-import { mockAIResponses, MockAIResponse } from "@/utils/mock-all-data-used";
+import axios from "axios";
+
+export type NgamOverviewResponse = {
+  content: string;
+  images?: string[];
+  sources?: string[];
+  key_points?: string[];
+  price_range?: string | null;
+};
 
 type AIAgentSearchProps = {
   onOpenAI: () => void;
   onSearchStart?: () => void;
-  onSearchComplete?: (response: MockAIResponse) => void;
+  onSearchComplete?: (response: NgamOverviewResponse & { prompt: string }) => void;
   overviewSectionId?: string; // default "ngam-overview"
 };
 
@@ -33,30 +41,42 @@ export default function AIAgentSearch({
     setIsLoading(true);
     onSearchStart?.();
 
-    setTimeout(() => {
-      let selected = mockAIResponses[0];
-      const q = prompt.toLowerCase();
+    try {
+      // Call the real Ngam Overview API
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ngam-overview/generate`,
+        {
+          query: prompt,
+          include_images: true,
+          max_results: 10,
+        }
+      );
 
-      if (/(price|cost|value|pay|market|chicago)/.test(q)) selected = mockAIResponses[1];
-      else if (/(invest|profit|money|roi|worth)/.test(q)) selected = mockAIResponses[2];
-      else if (/(where|buy|shop|store|malaysia)/.test(q)) selected = mockAIResponses[3];
-      else if (/(authentic|verify|real|fake|check|legit)/.test(q)) selected = mockAIResponses[0];
-
-      const responseData: MockAIResponse = {
+      const responseData: NgamOverviewResponse & { prompt: string } = {
         prompt,
-        content: selected.content,
-        images: selected.images,
-        sources: selected.sources,
+        content: response.data.content,
+        images: response.data.images || [],
+        sources: response.data.sources || [],
+        key_points: response.data.key_points || [],
+        price_range: response.data.price_range,
       };
 
       setIsLoading(false);
       onSearchComplete?.(responseData);
 
+      // Scroll to overview section
       const target = document.getElementById(overviewSectionId);
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
 
+      // Clear input
       if (inputRef.current) inputRef.current.value = "";
-    }, 800);
+    } catch (error) {
+      console.error("Failed to generate overview:", error);
+      setIsLoading(false);
+
+      // Show error to user (you can enhance this with a toast notification)
+      alert("Failed to generate overview. Please check your API configuration and try again.");
+    }
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
