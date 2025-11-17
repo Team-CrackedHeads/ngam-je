@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Puzzle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,9 +8,14 @@ import { useAuth, useUser, SignInButton } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 
 const Header = () => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, has } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
+  const router = useRouter();
+  
+  const handleCurrentPlanClick = () => {
+    router.push(`/subscription`);
+  };
 
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
@@ -41,14 +46,24 @@ const Header = () => {
       <div className="flex items-center gap-3 relative">
         {/* Auth Button - Login or User Button */}
         {isSignedIn ? (
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-10 w-10",
-              },
-            }}
-            afterSignOutUrl={pathname}
-          />
+          <>
+            <Button onClick={handleCurrentPlanClick} className="bg-secondary-600 hover:bg-secondary-400 text-black gap-2 md:mr-4">
+              <span className="hidden md:inline">Current Plan:</span>
+              {has({plan: 'ngam_sub'}) ? (
+                <span className="font-semibold">Subscribed</span>
+              ) : (
+                <span className="font-semibold">Free</span>
+              )}
+            </Button>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-10 w-10",
+                },
+              }}
+              afterSignOutUrl={pathname}
+            />
+          </>
         ) : (
           <SignInButton mode="modal" forceRedirectUrl={pathname}>
             <Button variant="ghost" className="text-accent-500 gap-2">
