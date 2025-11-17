@@ -16,6 +16,7 @@ logger = get_logger("app.services.imagesearch.unsplash")
 
 class UnsplashImage(BaseModel):
     """Image result from Unsplash API."""
+
     url: str
     thumbnail_url: str
     width: int
@@ -75,15 +76,17 @@ async def search_unsplash(
 
     results = []
     for photo in data.get("results", []):
-        results.append(UnsplashImage(
-            url=photo["urls"]["regular"],
-            thumbnail_url=photo["urls"]["small"],
-            width=photo["width"],
-            height=photo["height"],
-            description=photo.get("description") or photo.get("alt_description"),
-            photographer=photo["user"]["name"],
-            photographer_url=photo["user"]["links"]["html"],
-        ))
+        results.append(
+            UnsplashImage(
+                url=photo["urls"]["regular"],
+                thumbnail_url=photo["urls"]["small"],
+                width=photo["width"],
+                height=photo["height"],
+                description=photo.get("description") or photo.get("alt_description"),
+                photographer=photo["user"]["name"],
+                photographer_url=photo["user"]["links"]["html"],
+            )
+        )
 
     logger.info(f"✅ Found {len(results)} images")
     return results

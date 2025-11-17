@@ -37,7 +37,7 @@ def create_question(
     if not listing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Listing with id {faq_in.listing_id} not found"
+            detail=f"Listing with id {faq_in.listing_id} not found",
         )
 
     # Create new FAQ question
@@ -75,23 +75,19 @@ def answer_question(
     faq = db.query(FAQ).filter(FAQ.id == faq_id).first()
     if not faq:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"FAQ with id {faq_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"FAQ with id {faq_id} not found"
         )
 
     # Get the listing to check ownership
     listing = db.query(Listing).filter(Listing.id == faq.listing_id).first()
     if not listing:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Listing not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
 
     # Only listing owner can answer
     if listing.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the listing owner can answer questions"
+            detail="Only the listing owner can answer questions",
         )
 
     # Update FAQ with answer (allow multiple answers/updates)
@@ -124,8 +120,7 @@ def get_listing_faqs(
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not listing:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Listing with id {listing_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Listing with id {listing_id} not found"
         )
 
     # Build query
@@ -136,11 +131,7 @@ def get_listing_faqs(
         query = query.filter(FAQ.is_answered == is_answered)
 
     # Order by: accepted first, then by helpful count, then by creation date
-    query = query.order_by(
-        FAQ.is_accepted.desc(),
-        FAQ.helpful_count.desc(),
-        FAQ.created_at.desc()
-    )
+    query = query.order_by(FAQ.is_accepted.desc(), FAQ.helpful_count.desc(), FAQ.created_at.desc())
 
     # Get total count
     total = query.count()
@@ -161,8 +152,7 @@ def get_faq(
     faq = db.query(FAQ).filter(FAQ.id == faq_id).first()
     if not faq:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"FAQ with id {faq_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"FAQ with id {faq_id} not found"
         )
     return faq
 
@@ -182,23 +172,19 @@ def update_faq(
     faq = db.query(FAQ).filter(FAQ.id == faq_id).first()
     if not faq:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"FAQ with id {faq_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"FAQ with id {faq_id} not found"
         )
 
     # Get listing to check ownership
     listing = db.query(Listing).filter(Listing.id == faq.listing_id).first()
     if not listing:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Listing not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
 
     # Only listing owner can mark as accepted
     if faq_in.is_accepted is not None and listing.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the listing owner can mark answers as accepted"
+            detail="Only the listing owner can mark answers as accepted",
         )
 
     # Update fields
@@ -229,15 +215,13 @@ def delete_faq(
     faq = db.query(FAQ).filter(FAQ.id == faq_id).first()
     if not faq:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"FAQ with id {faq_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"FAQ with id {faq_id} not found"
         )
 
     # Only question author can delete
     if faq.question_user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the question author can delete it"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only the question author can delete it"
         )
 
     db.delete(faq)

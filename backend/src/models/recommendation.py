@@ -1,6 +1,7 @@
 """
 Recommendation model for AI and user-generated listing matches
 """
+
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
@@ -17,6 +18,7 @@ class Recommendation(Base):
     2. Both parties "like" → status becomes "matched" (shown in Matched Listings)
     3. Both parties "checkout" → status becomes "completed" (both listings hidden)
     """
+
     __tablename__ = "recommendations"
 
     # Primary key
@@ -24,50 +26,34 @@ class Recommendation(Base):
 
     # Foreign keys - which listings are being matched
     source_listing_id = Column(
-        Integer,
-        ForeignKey("listings.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("listings.id", ondelete="CASCADE"), nullable=False, index=True
     )  # The listing being viewed
 
     target_listing_id = Column(
-        Integer,
-        ForeignKey("listings.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("listings.id", ondelete="CASCADE"), nullable=False, index=True
     )  # The recommended/matched listing
 
     # Who initiated this recommendation
     created_by_user_id = Column(
-        Integer,
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )  # NULL = AI generated, user_id = user clicked "Make Offer"
 
     # Recommendation metadata
     recommendation_type = Column(
-        String(20),
-        nullable=False,
-        default="ai_match"
+        String(20), nullable=False, default="ai_match"
     )  # "ai_match" | "user_offer" | "similar"
 
     match_score = Column(
-        Float,
-        nullable=False,
-        default=0.0
+        Float, nullable=False, default=0.0
     )  # AI confidence score (0-100), 100 for user offers
 
     match_reasons = Column(
-        JSONB,
-        nullable=True,
-        default=list
+        JSONB, nullable=True, default=list
     )  # ["Similar price range", "Same location", "Matching tags", etc.]
 
     # Status tracking
     status = Column(
-        String(20),
-        nullable=False,
-        default="pending"
+        String(20), nullable=False, default="pending"
     )  # "pending" | "liked_by_source" | "liked_by_target" | "matched" | "checkout_by_source" | "checkout_by_target" | "completed" | "rejected" | "expired"
 
     # Detailed status explanation:
@@ -86,7 +72,9 @@ class Recommendation(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
     expires_at = Column(DateTime(timezone=True), nullable=True)  # Optional expiration
 
     # Relationships

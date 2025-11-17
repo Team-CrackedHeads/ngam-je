@@ -18,6 +18,7 @@ router = APIRouter()
 
 class ImageSearchResponse(BaseModel):
     """Response model for image search."""
+
     images: List[imagesearch.UnsplashImage]
     total: int
 
@@ -26,7 +27,9 @@ class ImageSearchResponse(BaseModel):
 async def search_images(
     query: str = Query(..., description="Search query"),
     per_page: int = Query(30, le=30, description="Number of results"),
-    orientation: Optional[str] = Query(None, description="Image orientation: landscape, portrait, squarish"),
+    orientation: Optional[str] = Query(
+        None, description="Image orientation: landscape, portrait, squarish"
+    ),
 ):
     """
     Search Unsplash for images.
@@ -52,7 +55,9 @@ async def search_images(
 
 @router.get("/backgrounds", response_model=ImageSearchResponse)
 async def search_backgrounds(
-    style: Optional[str] = Query(None, description="Background style (e.g., marble, wood, minimal)"),
+    style: Optional[str] = Query(
+        None, description="Background style (e.g., marble, wood, minimal)"
+    ),
     per_page: int = Query(30, le=30, description="Number of results"),
 ):
     """

@@ -1,6 +1,7 @@
 """
 Conversation model for 1-to-1 messaging between matched users
 """
+
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -17,6 +18,7 @@ class Conversation(Base):
     3. Users can exchange messages in this conversation
     4. Each recommendation = 1 conversation (tied to specific listing match)
     """
+
     __tablename__ = "conversations"
 
     # Primary key
@@ -28,24 +30,31 @@ class Conversation(Base):
         ForeignKey("recommendations.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,  # One conversation per recommendation
-        index=True
+        index=True,
     )
 
     # Status tracking
     is_active = Column(
-        Boolean,
-        nullable=False,
-        default=True
+        Boolean, nullable=False, default=True
     )  # Can be set to False if conversation is archived/closed
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    last_message_at = Column(DateTime(timezone=True), nullable=True)  # Updated when new message sent
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+    last_message_at = Column(
+        DateTime(timezone=True), nullable=True
+    )  # Updated when new message sent
 
     # Relationships
     recommendation = relationship("Recommendation", backref="conversation")
-    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at")
+    messages = relationship(
+        "Message",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="Message.created_at",
+    )
 
     def __repr__(self):
         return f"<Conversation(id={self.id}, recommendation_id={self.recommendation_id}, is_active={self.is_active})>"

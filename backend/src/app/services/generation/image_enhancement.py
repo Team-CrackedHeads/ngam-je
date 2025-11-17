@@ -50,8 +50,8 @@ async def enhance_product_image(
         client = genai.Client(api_key=settings.gemini_api_key)
 
         # Convert product image from base64 to PIL Image
-        if ',' in product_image_url:
-            product_data = product_image_url.split(',', 1)[1]
+        if "," in product_image_url:
+            product_data = product_image_url.split(",", 1)[1]
         else:
             product_data = product_image_url
 
@@ -60,18 +60,21 @@ async def enhance_product_image(
         logger.info(f"  Loaded product image: {product_pil.size}")
 
         # Convert background image from base64 to PIL Image
-        if background_image_url.startswith('http'):
+        if background_image_url.startswith("http"):
             # If it's a URL, fetch it
             import aiohttp
+
             async with aiohttp.ClientSession() as session:
                 async with session.get(background_image_url) as response:
                     if response.status != 200:
-                        raise ValueError(f"Failed to fetch background image: HTTP {response.status}")
+                        raise ValueError(
+                            f"Failed to fetch background image: HTTP {response.status}"
+                        )
                     background_bytes = await response.read()
         else:
             # It's a base64 data URL
-            if ',' in background_image_url:
-                background_data = background_image_url.split(',', 1)[1]
+            if "," in background_image_url:
+                background_data = background_image_url.split(",", 1)[1]
             else:
                 background_data = background_image_url
             background_bytes = base64.b64decode(background_data)
@@ -98,8 +101,7 @@ The result should look like a professional product photography shot."""
 
         # Call Gemini with both images (text-and-image-to-image mode)
         response = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=[prompt, product_pil, background_pil]
+            model="gemini-2.5-flash-image", contents=[prompt, product_pil, background_pil]
         )
 
         # Extract enhanced image from response
@@ -116,7 +118,7 @@ The result should look like a professional product photography shot."""
                 buffered = io.BytesIO()
                 enhanced_pil.save(buffered, format="PNG")
                 image_bytes = buffered.getvalue()
-                base64_str = base64.b64encode(image_bytes).decode('utf-8')
+                base64_str = base64.b64encode(image_bytes).decode("utf-8")
                 enhanced_image_url = f"data:image/png;base64,{base64_str}"
 
                 logger.info(f"  ✅ Enhanced image generated: {enhanced_pil.size}")
@@ -125,7 +127,9 @@ The result should look like a professional product photography shot."""
         if not enhanced_image_url:
             logger.warning("No image data in response")
             logger.debug(f"Response: {response}")
-            raise ValueError("Model did not return enhanced image (possibly blocked by safety filters)")
+            raise ValueError(
+                "Model did not return enhanced image (possibly blocked by safety filters)"
+            )
 
         return enhanced_image_url
 
@@ -162,7 +166,9 @@ async def batch_enhance_images(
     if len(background_image_urls) > 3:
         raise ValueError("Maximum 3 background images allowed for batch enhancement")
 
-    logger.info(f"🎨 Batch enhancing {len(product_image_urls)} products with {len(background_image_urls)} backgrounds")
+    logger.info(
+        f"🎨 Batch enhancing {len(product_image_urls)} products with {len(background_image_urls)} backgrounds"
+    )
 
     enhanced_images = []
 
@@ -181,5 +187,7 @@ async def batch_enhance_images(
                 logger.error(f"  ❌ Failed to enhance product {i+1} with background {j+1}: {e}")
                 # Continue with other combinations even if one fails
 
-    logger.info(f"✅ Batch enhancement complete: {len(enhanced_images)}/{len(product_image_urls) * len(background_image_urls)} successful")
+    logger.info(
+        f"✅ Batch enhancement complete: {len(enhanced_images)}/{len(product_image_urls) * len(background_image_urls)} successful"
+    )
     return enhanced_images

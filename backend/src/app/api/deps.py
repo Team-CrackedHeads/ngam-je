@@ -20,7 +20,9 @@ __all__ = ["get_db", "get_current_user", "get_or_create_user_from_clerk", "Pagin
 security = HTTPBearer()
 
 
-def get_or_create_user_from_clerk(clerk_user_id: str, email: str, username: str, db: Session) -> User:
+def get_or_create_user_from_clerk(
+    clerk_user_id: str, email: str, username: str, db: Session
+) -> User:
     """
     Get or create a user from Clerk authentication.
 

@@ -4,17 +4,18 @@ KYC verification endpoints.
 Handles initiation of KYC verification, status checks, and Didit webhooks.
 """
 
-import hmac
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from src.app.api.deps import get_current_user, get_db
+
 # ============================================================================
 # TEMPORARY: KYC Bypass Mode for Development
 # TODO: Remove this import before production deployment
 # ============================================================================
 from src.app.core.config import get_settings
+
 # ============================================================================
 from src.app.services.kyc import didit_service
 from src.models.user import User
@@ -48,9 +49,7 @@ async def initiate_kyc_verification(
     if current_user.kyc_status == "in_progress" and current_user.kyc_session_id:
         # Return existing session if still in progress
         try:
-            status_data = await didit_service.get_verification_status(
-                current_user.kyc_session_id
-            )
+            status_data = await didit_service.get_verification_status(current_user.kyc_session_id)
             # If session is still valid, return it
             if status_data.get("status") in ["pending", "in_progress"]:
                 return {
@@ -142,6 +141,8 @@ async def dev_approve_kyc(
         "kyc_status": "verified",
         "kyc_verified_at": current_user.kyc_verified_at,
     }
+
+
 # ============================================================================
 
 
@@ -175,7 +176,9 @@ async def didit_webhook(
         data = {
             "session_id": verificationSessionId,
             "status": status_value.lower(),
-            "decision": {"status": "approved" if status_value.lower() == "approved" else "rejected"},
+            "decision": {
+                "status": "approved" if status_value.lower() == "approved" else "rejected"
+            },
         }
     else:
         # Handle POST request (for future compatibility)
@@ -184,7 +187,9 @@ async def didit_webhook(
         signature = request.headers.get("x-signature", "")
 
         # Verify webhook signature
-        if signature and not didit_service.verify_webhook_signature(body.decode("utf-8"), signature):
+        if signature and not didit_service.verify_webhook_signature(
+            body.decode("utf-8"), signature
+        ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid webhook signature",

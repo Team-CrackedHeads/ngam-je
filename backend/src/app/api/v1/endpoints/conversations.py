@@ -2,19 +2,16 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from typing import Optional
 
 from src.app.api.deps import get_current_user
 from src.database import get_db
 from src.models.user import User
 from src.models.conversation import Conversation
 from src.models.recommendation import Recommendation
-from src.models.listing import Listing
 from src.schemas.conversation import (
     ConversationCreate,
     ConversationUpdate,
     ConversationResponse,
-    ConversationListResponse,
 )
 
 router = APIRouter()
@@ -40,19 +37,14 @@ async def get_user_conversations(
         db.query(Conversation)
         .join(Recommendation, Conversation.recommendation_id == Recommendation.id)
         .options(
-            joinedload(Conversation.recommendation)
-            .joinedload(Recommendation.source_listing),
-            joinedload(Conversation.recommendation)
-            .joinedload(Recommendation.target_listing),
+            joinedload(Conversation.recommendation).joinedload(Recommendation.source_listing),
+            joinedload(Conversation.recommendation).joinedload(Recommendation.target_listing),
         )
         .filter(
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+            (Recommendation.source_listing.has(user_id=current_user.id))
+            | (Recommendation.target_listing.has(user_id=current_user.id))
         )
-        .order_by(
-            Conversation.last_message_at.desc().nullslast(),
-            Conversation.created_at.desc()
-        )
+        .order_by(Conversation.last_message_at.desc().nullslast(), Conversation.created_at.desc())
         .all()
     )
 
@@ -77,7 +69,9 @@ async def get_user_conversations(
         # User data is stored denormalized in listings - no extra query needed!
         # The listing model stores creator_name, so we can use that
         # If not available, we need to query the user
-        other_user_name = other_listing.creator_name if hasattr(other_listing, 'creator_name') else None
+        other_user_name = (
+            other_listing.creator_name if hasattr(other_listing, "creator_name") else None
+        )
         if not other_user_name:
             # Fallback: query user (should be rare if creator_name is properly set)
             other_user = db.query(User).filter(User.id == other_listing.user_id).first()
@@ -91,25 +85,26 @@ async def get_user_conversations(
         if not listing_image and other_listing.gallery:
             listing_image = other_listing.gallery[0] if len(other_listing.gallery) > 0 else None
 
-        enriched_conversations.append({
-            "id": conv.id,
-            "recommendation_id": conv.recommendation_id,
-            "is_active": conv.is_active,
-            "created_at": conv.created_at.isoformat(),
-            "updated_at": conv.updated_at.isoformat(),
-            "last_message_at": conv.last_message_at.isoformat() if conv.last_message_at else None,
-            # Enriched data
-            "other_user_name": other_user_name,
-            "other_user_id": other_user_id,
-            "listing_title": other_listing.title,
-            "listing_image": listing_image,
-            "my_listing_title": my_listing.title,
-        })
+        enriched_conversations.append(
+            {
+                "id": conv.id,
+                "recommendation_id": conv.recommendation_id,
+                "is_active": conv.is_active,
+                "created_at": conv.created_at.isoformat(),
+                "updated_at": conv.updated_at.isoformat(),
+                "last_message_at": (
+                    conv.last_message_at.isoformat() if conv.last_message_at else None
+                ),
+                # Enriched data
+                "other_user_name": other_user_name,
+                "other_user_id": other_user_id,
+                "listing_title": other_listing.title,
+                "listing_image": listing_image,
+                "my_listing_title": my_listing.title,
+            }
+        )
 
-    return {
-        "conversations": enriched_conversations,
-        "total": len(enriched_conversations)
-    }
+    return {"conversations": enriched_conversations, "total": len(enriched_conversations)}
 
 
 @router.get("/{conversation_id}", response_model=ConversationResponse)
@@ -136,13 +131,17 @@ async def get_conversation(
 
     # Check if user owns either the source or target listing
     # (You may need to adjust this based on your Listing model structure)
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(
@@ -166,9 +165,11 @@ async def create_conversation(
     but can also be manually triggered.
     """
     # Check if recommendation exists and is matched
-    recommendation = db.query(Recommendation).filter(
-        Recommendation.id == conversation_in.recommendation_id
-    ).first()
+    recommendation = (
+        db.query(Recommendation)
+        .filter(Recommendation.id == conversation_in.recommendation_id)
+        .first()
+    )
 
     if not recommendation:
         raise HTTPException(
@@ -183,9 +184,11 @@ async def create_conversation(
         )
 
     # Check if conversation already exists for this recommendation
-    existing = db.query(Conversation).filter(
-        Conversation.recommendation_id == conversation_in.recommendation_id
-    ).first()
+    existing = (
+        db.query(Conversation)
+        .filter(Conversation.recommendation_id == conversation_in.recommendation_id)
+        .first()
+    )
 
     if existing:
         raise HTTPException(
@@ -194,13 +197,17 @@ async def create_conversation(
         )
 
     # Verify user is part of this recommendation
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(
@@ -209,10 +216,7 @@ async def create_conversation(
         )
 
     # Create conversation
-    conversation = Conversation(
-        recommendation_id=conversation_in.recommendation_id,
-        is_active=True
-    )
+    conversation = Conversation(recommendation_id=conversation_in.recommendation_id, is_active=True)
 
     db.add(conversation)
     db.commit()
@@ -241,13 +245,17 @@ async def update_conversation(
 
     # Verify user is part of this conversation
     recommendation = conversation.recommendation
-    user_listings = db.query(Recommendation).filter(
-        Recommendation.id == recommendation.id,
-        (
-            (Recommendation.source_listing.has(user_id=current_user.id)) |
-            (Recommendation.target_listing.has(user_id=current_user.id))
+    user_listings = (
+        db.query(Recommendation)
+        .filter(
+            Recommendation.id == recommendation.id,
+            (
+                (Recommendation.source_listing.has(user_id=current_user.id))
+                | (Recommendation.target_listing.has(user_id=current_user.id))
+            ),
         )
-    ).first()
+        .first()
+    )
 
     if not user_listings:
         raise HTTPException(

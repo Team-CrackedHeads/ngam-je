@@ -1,6 +1,7 @@
 """
 Message model for chat messages within conversations
 """
+
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -16,6 +17,7 @@ class Message(Base):
     2. Message stored with sender_id, content, and timestamps
     3. Other user can see message in real-time (or on page refresh)
     """
+
     __tablename__ = "messages"
 
     # Primary key
@@ -23,17 +25,14 @@ class Message(Base):
 
     # Foreign keys
     conversation_id = Column(
-        Integer,
-        ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     sender_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,  # SET NULL if user deleted, but preserve message
-        index=True
+        index=True,
     )
 
     # Message content
@@ -41,9 +40,7 @@ class Message(Base):
 
     # Message metadata
     message_type = Column(
-        String(20),
-        nullable=False,
-        default="text"
+        String(20), nullable=False, default="text"
     )  # "text" | "system" (e.g., "User liked your item") | "image" (future)
 
     # Read tracking
@@ -51,8 +48,12 @@ class Message(Base):
     read_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     conversation = relationship("Conversation", back_populates="messages")

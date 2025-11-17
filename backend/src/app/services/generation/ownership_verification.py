@@ -21,10 +21,13 @@ logger = get_logger("app.services.generation.ownership_verification")
 
 class OwnershipVerificationResult(BaseModel):
     """Result of ownership verification check"""
+
     is_verified: bool = Field(description="Whether ownership proof is valid")
     detected_name: str | None = Field(description="Name detected in the image")
     detected_date: str | None = Field(description="Date detected in the image")
-    confidence: Literal["high", "medium", "low"] = Field(description="Confidence level of verification")
+    confidence: Literal["high", "medium", "low"] = Field(
+        description="Confidence level of verification"
+    )
     issues: list[str] = Field(description="List of issues found (if any)")
     suggestions: list[str] = Field(description="Suggestions to improve proof")
 
@@ -61,15 +64,17 @@ async def verify_ownership_proof(
     if not settings.gemini_api_key:
         raise ValueError("Gemini API key not configured. Set AI_GEMINI_API_KEY in .env")
 
-    logger.info(f"🔍 Verifying ownership proof{' for user: ' + expected_username if expected_username else ''}")
+    logger.info(
+        f"🔍 Verifying ownership proof{' for user: ' + expected_username if expected_username else ''}"
+    )
 
     try:
         # Initialize Gemini client
         client = genai.Client(api_key=settings.gemini_api_key)
 
         # Convert image data URL to PIL Image
-        if ',' in image_data_url:
-            img_data = image_data_url.split(',', 1)[1]
+        if "," in image_data_url:
+            img_data = image_data_url.split(",", 1)[1]
         else:
             img_data = image_data_url
 
@@ -104,8 +109,7 @@ Respond in a structured format."""
 
         # Call Gemini with vision
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[prompt, pil_image]
+            model="gemini-2.5-flash", contents=[prompt, pil_image]
         )
 
         # Parse the response text
@@ -142,12 +146,12 @@ Respond with ONLY valid JSON matching this exact structure:
 }}"""
 
         structured_response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=structure_prompt
+            model="gemini-2.5-flash", contents=structure_prompt
         )
 
         # Parse JSON response
         import json
+
         result_text = structured_response.text.strip()
 
         # Extract JSON from markdown code blocks if present
@@ -182,8 +186,8 @@ Respond with ONLY valid JSON matching this exact structure:
             "suggestions": [
                 "Ensure the image is clear and well-lit",
                 "Write your name and today's date on a piece of paper",
-                "Take a photo with the paper next to your product"
-            ]
+                "Take a photo with the paper next to your product",
+            ],
         }
 
     except Exception as e:

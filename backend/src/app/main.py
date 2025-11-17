@@ -9,8 +9,7 @@ from src.app.api.v1.api import api_router
 # Configure logging BEFORE FastAPI initialization
 settings = get_settings()
 configure_logging(
-    log_level="DEBUG" if settings.debug else "INFO",
-    log_to_file=settings.env == "production"
+    log_level="DEBUG" if settings.debug else "INFO", log_to_file=settings.env == "production"
 )
 
 # Get logger for this module

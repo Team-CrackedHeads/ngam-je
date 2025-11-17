@@ -1,6 +1,7 @@
 """
 Image upload endpoints using Cloudinary.
 """
+
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from typing import List
 
@@ -29,11 +30,7 @@ async def upload_image(
     **Authentication required.**
     """
     result = await cloudinary_service.upload_image(file, folder)
-    return {
-        "success": True,
-        "data": result,
-        "message": "Image uploaded successfully"
-    }
+    return {"success": True, "data": result, "message": "Image uploaded successfully"}
 
 
 @router.post("/images", summary="Upload multiple images")
@@ -55,17 +52,14 @@ async def upload_multiple_images(
     """
     # Limit to 10 images per request
     if len(files) > 10:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot upload more than 10 images at once"
-        )
+        raise HTTPException(status_code=400, detail="Cannot upload more than 10 images at once")
 
     results = await cloudinary_service.upload_multiple_images(files, folder)
     return {
         "success": True,
         "data": results,
         "count": len(results),
-        "message": f"Successfully uploaded {len(results)} images"
+        "message": f"Successfully uploaded {len(results)} images",
     }
 
 
@@ -85,12 +79,6 @@ async def delete_image(
     success = await cloudinary_service.delete_image(public_id)
 
     if success:
-        return {
-            "success": True,
-            "message": "Image deleted successfully"
-        }
+        return {"success": True, "message": "Image deleted successfully"}
     else:
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to delete image"
-        )
+        raise HTTPException(status_code=500, detail="Failed to delete image")

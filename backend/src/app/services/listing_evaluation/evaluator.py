@@ -20,13 +20,21 @@ logger = get_logger("app.services.listing_evaluation.feedback")
 
 # Blocklist - in production, this would be Redis/DB
 BLOCKLIST = {
-    "spam", "scam", "free money", "click here", "buy now",
-    "limited time", "act now", "guarantee", "risk free"
+    "spam",
+    "scam",
+    "free money",
+    "click here",
+    "buy now",
+    "limited time",
+    "act now",
+    "guarantee",
+    "risk free",
 }
 
 
 class CoverageAnalysis(BaseModel):
     """Coverage of key information dimensions"""
+
     what: bool = Field(description="Product/item clearly identified?")
     why: bool = Field(description="Purpose/intent/use-case explained?")
     how: bool = Field(description="Specs, condition, features, or preferences mentioned?")
@@ -34,6 +42,7 @@ class CoverageAnalysis(BaseModel):
 
 class FeedbackItem(BaseModel):
     """Single feedback item in checklist"""
+
     status: Literal["pass", "fail", "warning"]
     label: str
     message: str
@@ -41,9 +50,14 @@ class FeedbackItem(BaseModel):
 
 class DescriptionFeedback(BaseModel):
     """Complete feedback result from the agent"""
-    completeness_score: int = Field(ge=0, le=100, description="How complete is the description (0-100)")
+
+    completeness_score: int = Field(
+        ge=0, le=100, description="How complete is the description (0-100)"
+    )
     coverage: CoverageAnalysis = Field(description="What dimensions are covered")
-    checklist: list[FeedbackItem] = Field(description="Top 3-5 most important checks and their status (limit to avoid overwhelming UI)")
+    checklist: list[FeedbackItem] = Field(
+        description="Top 3-5 most important checks and their status (limit to avoid overwhelming UI)"
+    )
     missing_info: list[str] = Field(description="What critical info is missing")
     suggestions: list[str] = Field(description="Top 3-5 actionable suggestions to improve")
 
@@ -113,7 +127,7 @@ def get_buy_feedback_agent() -> Agent:
     if _buy_feedback_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _buy_feedback_agent = Agent(
             model,
             output_type=DescriptionFeedback,
@@ -128,7 +142,7 @@ def get_sell_feedback_agent() -> Agent:
     if _sell_feedback_agent is None:
         settings = get_ai_settings()
         provider = GoogleProvider(api_key=settings.gemini_api_key)
-        model = GoogleModel('gemini-2.5-flash', provider=provider)
+        model = GoogleModel("gemini-2.5-flash", provider=provider)
         _sell_feedback_agent = Agent(
             model,
             output_type=DescriptionFeedback,
@@ -138,8 +152,7 @@ def get_sell_feedback_agent() -> Agent:
 
 
 async def evaluate_listing_description(
-    text: str,
-    listing_type: Literal["buy", "sell"] = "buy"
+    text: str, listing_type: Literal["buy", "sell"] = "buy"
 ) -> dict:
     """
     Evaluate listing description and provide actionable feedback.
@@ -165,11 +178,11 @@ async def evaluate_listing_description(
                 {
                     "status": "fail",
                     "label": "Length",
-                    "message": "Description too short (minimum 10 characters)"
+                    "message": "Description too short (minimum 10 characters)",
                 }
             ],
             "missing_info": ["Add more details about what you're looking for"],
-            "suggestions": ["Write at least a few words describing what you need"]
+            "suggestions": ["Write at least a few words describing what you need"],
         }
 
     if rules["blocked_words"]:
@@ -180,11 +193,11 @@ async def evaluate_listing_description(
                 {
                     "status": "fail",
                     "label": "Content Policy",
-                    "message": f"Blocked words detected: {', '.join(rules['blocked_words'])}"
+                    "message": f"Blocked words detected: {', '.join(rules['blocked_words'])}",
                 }
             ],
             "missing_info": [],
-            "suggestions": ["Remove spam/inappropriate content and rewrite"]
+            "suggestions": ["Remove spam/inappropriate content and rewrite"],
         }
 
     # Step 2: AI-powered smart evaluation
@@ -212,31 +225,27 @@ Provide complete structured feedback."""
         # Fallback response
         return {
             "completeness_score": min(rules["word_count"] * 10, 50),  # Cap at 50 for fallback
-            "coverage": {
-                "what": rules["word_count"] >= 3,
-                "why": False,
-                "how": False
-            },
+            "coverage": {"what": rules["word_count"] >= 3, "why": False, "how": False},
             "checklist": [
                 {
                     "status": "warning",
                     "label": "AI Analysis",
-                    "message": "AI feedback unavailable - showing basic analysis"
+                    "message": "AI feedback unavailable - showing basic analysis",
                 },
                 {
                     "status": "pass" if rules["has_minimum_words"] else "fail",
                     "label": "Word Count",
-                    "message": f"Has {rules['word_count']} words"
-                }
+                    "message": f"Has {rules['word_count']} words",
+                },
             ],
             "missing_info": [
                 "Specific product details",
                 "Purpose or use case",
-                "Preferred specs or condition"
+                "Preferred specs or condition",
             ],
             "suggestions": [
                 "Add more specific details about what you're looking for",
                 "Mention preferred specifications or condition",
-                "Explain why you need this item"
-            ]
+                "Explain why you need this item",
+            ],
         }

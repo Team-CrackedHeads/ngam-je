@@ -20,6 +20,7 @@ router = APIRouter()
 # Request/Response Models
 class GenerateListingRequest(BaseModel):
     """Request model for listing generation."""
+
     images: List[str]
     description: str
     listing_type: str
@@ -27,6 +28,7 @@ class GenerateListingRequest(BaseModel):
 
 class GenerateListingResponse(BaseModel):
     """Response model for generated listing."""
+
     title: str
     description: str
     tags: List[str]
@@ -34,11 +36,13 @@ class GenerateListingResponse(BaseModel):
 
 class RegenerateFieldRequest(BaseModel):
     """Request model for regenerating a specific field."""
+
     context: dict  # Contains current title, description, tags
 
 
 class GenerateImagesRequest(BaseModel):
     """Request model for image generation."""
+
     description: str
     num_images: int = 1  # Default to 1 image to avoid quota issues
     reference_images: List[str] | None = None  # Optional reference images for editing
@@ -173,6 +177,7 @@ async def generate_images_endpoint(request: GenerateImagesRequest) -> dict:
 
 class EvaluateDescriptionRequest(BaseModel):
     """Request model for description evaluation."""
+
     text: str
     listing_type: Literal["buy", "sell"] = "buy"
 
@@ -207,6 +212,7 @@ async def evaluate_description_endpoint(request: EvaluateDescriptionRequest) -> 
 
 class PriceIntelligenceRequest(BaseModel):
     """Request model for price intelligence."""
+
     product_title: str
     product_description: str
     listing_type: str  # "buy" or "sell"
@@ -231,7 +237,9 @@ async def get_price_intelligence_endpoint(request: PriceIntelligenceRequest) -> 
         HTTPException: 422 if validation fails, 500 if analysis fails
     """
     try:
-        logger.info(f"💰 Getting price intelligence for: {request.product_title[:50]}... (cache: {request.use_cache})")
+        logger.info(
+            f"💰 Getting price intelligence for: {request.product_title[:50]}... (cache: {request.use_cache})"
+        )
         price_data = await generation.get_price_intelligence(
             product_title=request.product_title,
             product_description=request.product_description,
@@ -250,6 +258,7 @@ async def get_price_intelligence_endpoint(request: PriceIntelligenceRequest) -> 
 
 class VerifyOwnershipRequest(BaseModel):
     """Request model for ownership verification."""
+
     image_data_url: str
     expected_username: str | None = None
 
@@ -274,7 +283,7 @@ async def verify_ownership_endpoint(request: VerifyOwnershipRequest) -> dict:
         HTTPException: 422 if validation fails, 500 if verification fails
     """
     try:
-        logger.info(f"🔍 Verifying ownership proof")
+        logger.info("🔍 Verifying ownership proof")
         result = await generation.verify_ownership_proof(
             image_data_url=request.image_data_url,
             expected_username=request.expected_username,
@@ -290,6 +299,7 @@ async def verify_ownership_endpoint(request: VerifyOwnershipRequest) -> dict:
 
 class EnhanceImageRequest(BaseModel):
     """Request model for image enhancement."""
+
     product_image_url: str
     background_image_url: str
     enhancement_instructions: str | None = None
@@ -330,6 +340,7 @@ async def enhance_image_endpoint(request: EnhanceImageRequest) -> dict:
 
 class BatchEnhanceImagesRequest(BaseModel):
     """Request model for batch image enhancement."""
+
     product_image_urls: List[str]
     background_image_urls: List[str]
     enhancement_instructions: str | None = None
@@ -352,7 +363,9 @@ async def batch_enhance_images_endpoint(request: BatchEnhanceImagesRequest) -> d
         HTTPException: 422 if validation fails or limits exceeded, 500 if enhancement fails
     """
     try:
-        logger.info(f"🎨 Batch enhancing {len(request.product_image_urls)} products with {len(request.background_image_urls)} backgrounds")
+        logger.info(
+            f"🎨 Batch enhancing {len(request.product_image_urls)} products with {len(request.background_image_urls)} backgrounds"
+        )
         enhanced_images = await generation.batch_enhance_images(
             product_image_urls=request.product_image_urls,
             background_image_urls=request.background_image_urls,

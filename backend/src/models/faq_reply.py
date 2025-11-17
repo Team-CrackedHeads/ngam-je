@@ -1,6 +1,7 @@
 """
 FAQ Reply model for nested replies to FAQ answers
 """
+
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -9,6 +10,7 @@ from src.database import Base
 
 class FAQReply(Base):
     """FAQ Reply table - stores nested replies to FAQ answers"""
+
     __tablename__ = "faq_replies"
 
     # Primary key
@@ -16,8 +18,12 @@ class FAQReply(Base):
 
     # Foreign keys
     faq_id = Column(Integer, ForeignKey("faqs.id", ondelete="CASCADE"), nullable=False, index=True)
-    parent_reply_id = Column(Integer, ForeignKey("faq_replies.id", ondelete="CASCADE"), nullable=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    parent_reply_id = Column(
+        Integer, ForeignKey("faq_replies.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Reply content
     text = Column(Text, nullable=False)
@@ -29,7 +35,9 @@ class FAQReply(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     faq = relationship("FAQ", back_populates="replies")

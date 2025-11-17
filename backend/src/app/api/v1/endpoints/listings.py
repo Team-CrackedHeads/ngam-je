@@ -36,18 +36,43 @@ def extract_city_from_address(address: str) -> str:
     # Common Malaysian cities (ordered by priority - cities first, states excluded)
     # Cities in Selangor
     cities = [
-        "Petaling Jaya", "Shah Alam", "Subang Jaya", "Klang", "Puchong",
-        "Cyberjaya", "Kajang", "Bangi", "Ampang", "Cheras", "Setia Alam",
-        "Seri Kembangan", "Rawang", "Banting", "Sepang",
+        "Petaling Jaya",
+        "Shah Alam",
+        "Subang Jaya",
+        "Klang",
+        "Puchong",
+        "Cyberjaya",
+        "Kajang",
+        "Bangi",
+        "Ampang",
+        "Cheras",
+        "Setia Alam",
+        "Seri Kembangan",
+        "Rawang",
+        "Banting",
+        "Sepang",
         # Federal Territories
-        "Kuala Lumpur", "Putrajaya",
+        "Kuala Lumpur",
+        "Putrajaya",
         # Penang
-        "Georgetown", "George Town", "Butterworth", "Bayan Lepas",
+        "Georgetown",
+        "George Town",
+        "Butterworth",
+        "Bayan Lepas",
         # Johor
-        "Johor Bahru", "Skudai", "Iskandar Puteri", "Nusajaya",
+        "Johor Bahru",
+        "Skudai",
+        "Iskandar Puteri",
+        "Nusajaya",
         # Other major cities
-        "Malacca", "Melaka", "Ipoh", "Kota Kinabalu", "Kuching",
-        "Seremban", "Nilai", "Port Dickson",
+        "Malacca",
+        "Melaka",
+        "Ipoh",
+        "Kota Kinabalu",
+        "Kuching",
+        "Seremban",
+        "Nilai",
+        "Port Dickson",
     ]
 
     # Try to find a known city in the address (prioritize longer/more specific names)
@@ -58,17 +83,22 @@ def extract_city_from_address(address: str) -> str:
 
     # Fallback: Try to extract part after postal code (Malaysian format: 5 digits)
     # Example: "50480 Kuala Lumpur, Wilayah Persekutuan" -> extract "Kuala Lumpur"
-    postal_match = re.search(r'\d{5}\s+([^,]+)', address)
+    postal_match = re.search(r"\d{5}\s+([^,]+)", address)
     if postal_match:
         extracted = postal_match.group(1).strip()
         # Remove state names and extra info
-        extracted = re.sub(r',?\s*(Wilayah Persekutuan|Selangor|Penang|Johor|Negeri Sembilan|Melaka|Perak|Sabah|Sarawak).*$', '', extracted, flags=re.IGNORECASE)
+        extracted = re.sub(
+            r",?\s*(Wilayah Persekutuan|Selangor|Penang|Johor|Negeri Sembilan|Melaka|Perak|Sabah|Sarawak).*$",
+            "",
+            extracted,
+            flags=re.IGNORECASE,
+        )
         extracted = extracted.strip()
         if extracted and len(extracted) <= 100:
             return extracted
 
     # Last resort: Take first part before first comma, limited to 100 chars
-    first_part = address.split(',')[0].strip()
+    first_part = address.split(",")[0].strip()
     return first_part[:100]
 
 
@@ -254,8 +284,7 @@ async def update_listing(
     # Convert FAQ objects to dicts if present
     if "faqs" in update_data and update_data["faqs"]:
         update_data["faqs"] = [
-            faq.model_dump() if hasattr(faq, "model_dump") else faq
-            for faq in update_data["faqs"]
+            faq.model_dump() if hasattr(faq, "model_dump") else faq for faq in update_data["faqs"]
         ]
 
     for field, value in update_data.items():
@@ -363,9 +392,11 @@ async def confirm_checkout(
         )
 
     # Get the recommendation to find the matched listing
-    recommendation = db.query(Recommendation).filter(
-        Recommendation.id == checkout_data.recommendation_id
-    ).first()
+    recommendation = (
+        db.query(Recommendation)
+        .filter(Recommendation.id == checkout_data.recommendation_id)
+        .first()
+    )
 
     if not recommendation:
         raise HTTPException(
@@ -374,7 +405,10 @@ async def confirm_checkout(
         )
 
     # Verify this recommendation is for this listing
-    if recommendation.source_listing_id != listing_id and recommendation.target_listing_id != listing_id:
+    if (
+        recommendation.source_listing_id != listing_id
+        and recommendation.target_listing_id != listing_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Recommendation does not match this listing",

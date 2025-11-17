@@ -3,7 +3,6 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import ARRAY, Column, DateTime, Integer, String, Text, ForeignKey
-from sqlalchemy.orm import relationship
 
 from src.database import Base
 
@@ -17,13 +16,17 @@ class Thread(Base):
     title = Column(String(100), nullable=False)
     description = Column(Text, nullable=False)
     image_url = Column(String, nullable=True)  # Cover image for the thread
-    category = Column(String(50), nullable=False, index=True)  # e.g., "gaming", "fashion", "furniture"
+    category = Column(
+        String(50), nullable=False, index=True
+    )  # e.g., "gaming", "fashion", "furniture"
     tags = Column(ARRAY(String), nullable=False, default=list)  # Array of tags
 
     # Tier system (0-3, like Discord boosts)
     tier = Column(Integer, default=0, nullable=False)  # Starts at Tier 0
     contributions = Column(Integer, default=0, nullable=False)  # Total boosts received (all time)
-    active_contributions = Column(Integer, default=0, nullable=False)  # Currently active boosts (can decrease)
+    active_contributions = Column(
+        Integer, default=0, nullable=False
+    )  # Currently active boosts (can decrease)
     boost_expires_at = Column(DateTime(timezone=True), nullable=True)  # When current tier expires
 
     # Membership tracking

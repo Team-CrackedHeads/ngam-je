@@ -4,7 +4,6 @@ Unsplash API Configuration.
 Simple configuration for Unsplash image search service.
 """
 
-import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
