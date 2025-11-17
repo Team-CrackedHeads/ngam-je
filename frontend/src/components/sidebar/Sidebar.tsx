@@ -143,7 +143,7 @@ function NgamJeAssistantMenuItem({
   const { has } = useAuth();
 
   const handleNewChat = () => {
-    const isAllowed = has({feature: 'ngam_assistant'});
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
     if (!isAllowed) {
       showFeatureDisabledMessage();
       return;
@@ -152,7 +152,7 @@ function NgamJeAssistantMenuItem({
   };
 
   const handleChatClick = (chatId: number) => {
-    const isAllowed = has({feature: 'ngam_assistant'});
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
     if (!isAllowed) {
       showFeatureDisabledMessage();
       return;
@@ -161,7 +161,7 @@ function NgamJeAssistantMenuItem({
   };
 
   const handleChatHistoryClick = () => {
-    const isAllowed = has({feature: 'ngam_assistant'});
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
     if (!isAllowed) {
       showFeatureDisabledMessage();
       return;
