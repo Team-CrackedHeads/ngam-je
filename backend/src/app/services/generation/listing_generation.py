@@ -164,12 +164,42 @@ async def _generate_from_images(
     if not pil_images:
         raise ValueError("No valid images could be loaded")
 
-    # Build prompt for vision analysis
-    system_prompt = SELL_LISTING_PROMPT if listing_type == "sell" else BUY_LISTING_PROMPT
+    # Build prompt for vision analysis with proper buy/sell context
+    if listing_type == "buy":
+        listing_context = """You are creating a "WANT TO BUY" (WTB) listing from a BUYER's perspective.
+
+**Title Format**: "Looking for [item]" or "WTB: [item with key details]"
+- Max 80 characters
+- MUST use buyer language (e.g., "Looking for", "WTB:", "Seeking")
+- Include key specs if mentioned
+
+**Description Format**: Write from BUYER's perspective (200-400 chars)
+- Use buyer language: "Looking for...", "Need...", "Interested in..."
+- Explain what they want to buy and why
+- Mention preferences, condition requirements, budget if provided
+- DO NOT write as a seller ("Discover...", "This features...", "Perfect for...")
+
+**Tags**: 5-8 keywords for what the buyer is searching for"""
+    else:
+        listing_context = """You are creating a "FOR SALE" listing from a SELLER's perspective.
+
+**Title Format**: "For Sale: [item with key details]" or "[Item] - [condition/key feature]"
+- Max 80 characters
+- Include model, specs, condition
+- SEO-friendly and attention-grabbing
+
+**Description Format**: Write from SELLER's perspective (200-400 chars)
+- Highlight product features, condition, and value
+- Use seller language: "Selling...", "This item features...", "Perfect for..."
+- Build buyer confidence with specifics
+
+**Tags**: 5-8 keywords for search optimization"""
 
     if description and len(description.strip()) > 0:
         # Has description - use both images and text
-        vision_prompt = f"""Analyze the provided images and combine with the user's description to generate a marketplace listing.
+        vision_prompt = f"""{listing_context}
+
+Analyze the provided images and combine with the user's description to generate a marketplace listing.
 
 User's description:
 "{description}"
@@ -184,7 +214,9 @@ Generate a complete listing with title, description (200-400 chars), and 5-8 tag
 Format as JSON: {{"title": "...", "description": "...", "tags": ["tag1", "tag2", ...]}}"""
     else:
         # No description - rely entirely on image analysis
-        vision_prompt = f"""Analyze these product images and generate a complete marketplace listing.
+        vision_prompt = f"""{listing_context}
+
+Analyze these product images and generate a complete marketplace listing.
 
 Carefully examine the images to identify:
 1. What the product is (type, category)
@@ -192,8 +224,6 @@ Carefully examine the images to identify:
 3. Color, size, materials
 4. Condition (new, used, excellent, etc.)
 5. Notable features or details
-
-Listing type: {"Selling (create 'For Sale: ...' listing)" if listing_type == "sell" else "Looking to buy (create 'Looking for...' listing)"}
 
 Generate:
 - Title: SEO-optimized, max 80 chars
