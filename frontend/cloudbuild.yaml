@@ -8,12 +8,21 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$$CLERK_PUBLISHABLE_KEY'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=${_BACKEND_URL}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$$GOOGLE_MAPS_API_KEY'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$$STRIPE_PUBLISHABLE_KEY'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:${SHORT_SHA}'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:latest'
       - '.'
     dir: 'frontend'
+    secretEnv: ['CLERK_PUBLISHABLE_KEY', 'GOOGLE_MAPS_API_KEY', 'STRIPE_PUBLISHABLE_KEY']
     id: 'build-image'
 
   # Step 2: Push the Docker image to Artifact Registry
@@ -74,3 +83,13 @@ options:
 
 # Build timeout
 timeout: '1200s'
+
+# Available secrets from Secret Manager
+availableSecrets:
+  secretManager:
+    - versionName: projects/gaia-capstone4-prd/secrets/CLERK_PUBLISHABLE_KEY/versions/latest
+      env: 'CLERK_PUBLISHABLE_KEY'
+    - versionName: projects/gaia-capstone4-prd/secrets/GOOGLE_MAPS_API_KEY/versions/latest
+      env: 'GOOGLE_MAPS_API_KEY'
+    - versionName: projects/gaia-capstone4-prd/secrets/STRIPE_PUBLISHABLE_KEY/versions/latest
+      env: 'STRIPE_PUBLISHABLE_KEY'
