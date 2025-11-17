@@ -21,7 +21,7 @@ from src.app.api.v1.endpoints import (
     conversations,
     messages,
     upload,
-    payments,
+    # payments,  # Temporarily disabled to debug
 )
 
 api_router = APIRouter()
