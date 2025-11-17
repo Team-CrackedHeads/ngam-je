@@ -50,12 +50,16 @@ export function StripePayment({
   useEffect(() => {
     const createCheckoutSession = async () => {
       try {
-        const response = await axios.post<{ clientSecret: string }>("/api/create-checkout-session", {
-          amount: amountNumber,
-          title,
-          description,
-          metadata,
-        });
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const response = await axios.post<{ clientSecret: string }>(
+          `${apiUrl}/api/v1/payments/create-checkout-session`,
+          {
+            amount: amountNumber,
+            title,
+            description,
+            metadata,
+          }
+        );
 
         setClientSecret(response.data.clientSecret);
         setLoading(false);

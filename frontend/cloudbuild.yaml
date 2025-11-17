@@ -52,6 +52,8 @@ steps:
       - '--service-account=${_SERVICE_ACCOUNT}'
       # Environment variables (add your frontend env vars here)
       - '--set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL=${_BACKEND_URL}'
+      # Runtime secrets needed by middleware
+      - '--set-secrets=CLERK_SECRET_KEY=CLERK_SECRET_KEY:latest'
     id: 'deploy-to-cloud-run'
 
 # Substitutions (default values, can be overridden)
