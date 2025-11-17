@@ -140,13 +140,33 @@ function NgamJeAssistantMenuItem({
   const KEEP_RECENT_COUNT = 10;
   const MAX_LOADED_COUNT = 25;
   const DELOAD_TO_COUNT = 15;
+  const { has } = useAuth();
 
   const handleNewChat = () => {
+    const isAllowed = has({feature: 'ngam_assistant'});
+    if (!isAllowed) {
+      showFeatureDisabledMessage();
+      return;
+    }
     onNewChat();
   };
 
   const handleChatClick = (chatId: number) => {
+    const isAllowed = has({feature: 'ngam_assistant'});
+    if (!isAllowed) {
+      showFeatureDisabledMessage();
+      return;
+    }
     router.push(`/chat/history?id=${chatId}`);
+  };
+
+  const handleChatHistoryClick = () => {
+    const isAllowed = has({feature: 'ngam_assistant'});
+    if (!isAllowed) {
+      showFeatureDisabledMessage();
+      return;
+    }
+    router.push('/chat/history');
   };
 
   const loadMoreChats = () => {
@@ -183,6 +203,10 @@ function NgamJeAssistantMenuItem({
     }
   };
 
+  const showFeatureDisabledMessage = () => {
+    alert("Your current plan does not support Ngam-je Assistant. Please upgrade your plan to access this feature.");
+  }
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -209,10 +233,10 @@ function NgamJeAssistantMenuItem({
               asChild
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
             >
-              <Link href="/chat/history" className="flex items-center gap-2">
+              <SidebarMenuButton onClick={handleChatHistoryClick} className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm font-medium">Chat History</span>
-              </Link>
+              </SidebarMenuButton>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
 
