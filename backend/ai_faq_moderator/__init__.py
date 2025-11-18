@@ -4,6 +4,7 @@ This module provides RAG-based FAQ answering capabilities for e-commerce listing
 """
 
 from . import agent
+from .moderator import FAQModeratorAgent
 from .tools import (
     rag_query,
     retrieve_similar_faqs,
@@ -14,6 +15,7 @@ from .tools import (
 
 __all__ = [
     "agent",
+    "FAQModeratorAgent",
     "rag_query",
     "retrieve_similar_faqs",
     "generate_grounded_response",
