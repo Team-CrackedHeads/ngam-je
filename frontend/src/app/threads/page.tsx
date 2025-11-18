@@ -20,10 +20,14 @@ import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
 import { MockAIResponse } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 type ViewType = "grid" | "list";
 
 function ThreadsPage() {
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
   const [viewType, setViewType] = useState<ViewType>("grid");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -278,6 +282,14 @@ function ThreadsPage() {
     setLastQuery("");
   };
 
+  const handleCreateClick = () => {
+    if (isSignedIn) {
+      setIsCreateOpen(true);
+    } else {
+      openSignIn();
+    }
+  };
+
   // CTA State
   const hasOverview = !!(currentOverview || isAILoading);
   const hasQueryFilter = queryKeywords.length > 0 || lastQuery.length > 0;
@@ -372,7 +384,7 @@ function ThreadsPage() {
 
               <button
                 ref={inlineCreateBtnRef}
-                onClick={() => setIsCreateOpen(true)}
+                onClick={handleCreateClick}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-500 text-accent-700 font-semibold rounded-xl shadow hover:scale-105 active:scale-95 border border-secondary-600"
               >
                 <Plus className="w-4 h-4" />
@@ -389,7 +401,7 @@ function ThreadsPage() {
                 <ViewDropdown activeView={viewType} viewAction={setViewType} />
                 <button
                   ref={inlineCreateBtnRef}
-                  onClick={() => setIsCreateOpen(true)}
+                  onClick={handleCreateClick}
                   className="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold bg-secondary-500 text-accent-700 rounded-lg border border-secondary-600 shadow-sm hover:scale-[1.02] active:scale-95 transition-transform ml-auto"
                   aria-label="Create new thread"
                 >
