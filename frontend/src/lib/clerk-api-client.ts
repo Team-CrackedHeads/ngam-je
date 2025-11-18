@@ -3,14 +3,15 @@
  * Handles authenticated requests using Clerk JWT tokens
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import { useAuth } from '@clerk/nextjs';
+import axios, { AxiosInstance, AxiosError } from "axios";
+import { useAuth } from "@clerk/nextjs";
 
 // Force HTTPS in production - fallback to localhost in development only
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== 'undefined' && window.location.hostname.includes('run.app')
-    ? 'https://ngamje-backend-645994298827.asia-southeast1.run.app'
-    : 'http://localhost:8000');
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname.includes("run.app")
+    ? "https://ngamje-backend-645994298827.asia-southeast1.run.app"
+    : "");
 
 export interface ApiError {
   detail: string;
@@ -27,7 +28,7 @@ export function createClerkApiClient(token: string | null) {
     baseURL: API_BASE_URL,
     timeout: 30000, // 30 second timeout
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -50,21 +51,22 @@ export function createClerkApiClient(token: string | null) {
         // Server responded with error status
         const errorData = error.response.data;
         const apiError: ApiError = {
-          detail: errorData?.detail || errorData?.message || 'An error occurred',
+          detail:
+            errorData?.detail || errorData?.message || "An error occurred",
           status: error.response.status,
         };
         return Promise.reject(apiError);
       } else if (error.request) {
         // Request made but no response received
         const apiError: ApiError = {
-          detail: 'Network error. Please check your connection.',
+          detail: "Network error. Please check your connection.",
           status: 0,
         };
         return Promise.reject(apiError);
       } else {
         // Something else happened
         const apiError: ApiError = {
-          detail: error.message || 'An error occurred',
+          detail: error.message || "An error occurred",
           status: 0,
         };
         return Promise.reject(apiError);
