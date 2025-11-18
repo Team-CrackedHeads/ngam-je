@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import ProductFAQSummary from "./ProductFAQSummary";
@@ -36,6 +37,10 @@ export const ProductDetails = ({
   const router = useRouter();
   const params = useParams();
   const threadId = params.threadId ? parseInt(params.threadId as string) : undefined;
+
+  // Check if current user owns this listing
+  const { user } = useUser();
+  const isOwnListing = user?.id === listing.userId;
 
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,6 +121,8 @@ export const ProductDetails = ({
           onChat={handleChatClick}
           onFAQ={handleFAQClick}
           onBuyNow={handleMakeOfferClick}
+          isOwnListing={isOwnListing}
+          listingType={listing.listingType}
         />
       </div>
 
