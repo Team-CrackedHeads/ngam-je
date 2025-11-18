@@ -64,12 +64,8 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str = ""
     CLOUDINARY_API_SECRET: str = ""
 
-    # ============================================================================
-    # TEMPORARY: KYC Bypass Mode for Development
-    # TODO: Remove this section before production deployment
-    # ============================================================================
-    KYC_SKIP_VERIFICATION: bool = False  # Set to True to bypass real KYC calls
-    # ============================================================================
+    # Unsplash
+    UNSPLASH_ACCESS_KEY: str = ""
 
     @property
     def database_url(self) -> str:

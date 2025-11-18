@@ -11,7 +11,7 @@ import {
   ListingListResponse,
 } from "@/types/listing";
 
-const API_BASE = "/api/v1/listings";
+const API_BASE = "/api/v1/listings/";
 
 /**
  * Fetch all listings with optional filters
@@ -40,7 +40,7 @@ export async function fetchListingById(
   apiClient: AxiosInstance,
   listingId: number
 ): Promise<Listing> {
-  const response = await apiClient.get<Listing>(`${API_BASE}/${listingId}`);
+  const response = await apiClient.get<Listing>(`${API_BASE}${listingId}`);
   return response.data;
 }
 
@@ -64,7 +64,7 @@ export async function updateListing(
   data: ListingUpdate
 ): Promise<Listing> {
   const response = await apiClient.put<Listing>(
-    `${API_BASE}/${listingId}`,
+    `${API_BASE}${listingId}`,
     data
   );
   return response.data;
@@ -77,7 +77,7 @@ export async function deleteListing(
   apiClient: AxiosInstance,
   listingId: number
 ): Promise<void> {
-  await apiClient.delete(`${API_BASE}/${listingId}`);
+  await apiClient.delete(`${API_BASE}${listingId}`);
 }
 
 /**
@@ -94,7 +94,7 @@ export async function fetchUserListings(
   }
 ): Promise<ListingListResponse> {
   const response = await apiClient.get<ListingListResponse>(
-    `${API_BASE}/user/${userId}`,
+    `${API_BASE}user/${userId}`,
     { params }
   );
   return response.data;
@@ -115,7 +115,7 @@ export async function confirmCheckout(
   }
 ): Promise<Listing> {
   const response = await apiClient.post<Listing>(
-    `${API_BASE}/${listingId}/checkout`,
+    `${API_BASE}${listingId}/checkout`,
     data
   );
   return response.data;

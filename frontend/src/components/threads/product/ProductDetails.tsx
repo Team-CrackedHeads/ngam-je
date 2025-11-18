@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import ProductFAQSummary from "./ProductFAQSummary";
@@ -9,6 +10,7 @@ import ProductDetailsMiddle from "./ProductDetailsMiddle";
 import ProductDetailsBottom from "./ProductDetailsBottom";
 import MakeOfferBuy from "@/components/create-listing/MakeOfferBuy";
 import MakeOfferSell from "@/components/create-listing/MakeOfferSell";
+import { createClerkApiClient } from "@/lib/clerk-api-client";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -36,6 +38,26 @@ export const ProductDetails = ({
   const router = useRouter();
   const params = useParams();
   const threadId = params.threadId ? parseInt(params.threadId as string) : undefined;
+  const { getToken } = useAuth();
+
+  // Check if current user owns this listing (using database user ID)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const isOwnListing = currentUserId !== null && currentUserId.toString() === listing.userId;
+
+  // Fetch current user's database ID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = await getToken();
+        const apiClient = createClerkApiClient(token);
+        const user = await apiClient.get<{ id: number }>("/api/v1/users/me");
+        setCurrentUserId(user.id);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      }
+    };
+    fetchCurrentUser();
+  }, [getToken]);
 
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,6 +138,8 @@ export const ProductDetails = ({
           onChat={handleChatClick}
           onFAQ={handleFAQClick}
           onBuyNow={handleMakeOfferClick}
+          isOwnListing={isOwnListing}
+          listingType={listing.listingType}
         />
       </div>
 

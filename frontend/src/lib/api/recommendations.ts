@@ -5,7 +5,7 @@
 
 import { AxiosInstance } from "axios";
 
-const API_BASE = "/api/v1/recommendations";
+const API_BASE = "/api/v1/recommendations/";
 
 export interface Recommendation {
   id: number;
@@ -15,7 +15,16 @@ export interface Recommendation {
   recommendation_type: "ai_match" | "user_offer" | "similar";
   match_score: number;
   match_reasons: string[] | null;
-  status: "pending" | "liked_by_source" | "liked_by_target" | "matched" | "checkout_by_source" | "checkout_by_target" | "completed" | "rejected" | "expired";
+  status:
+    | "pending"
+    | "liked_by_source"
+    | "liked_by_target"
+    | "matched"
+    | "checkout_by_source"
+    | "checkout_by_target"
+    | "completed"
+    | "rejected"
+    | "expired";
   message: string | null;
   created_at: string;
   updated_at: string;
@@ -37,7 +46,16 @@ export interface RecommendationCreate {
 }
 
 export interface RecommendationUpdate {
-  status?: "pending" | "liked_by_source" | "liked_by_target" | "matched" | "checkout_by_source" | "checkout_by_target" | "completed" | "rejected" | "expired";
+  status?:
+    | "pending"
+    | "liked_by_source"
+    | "liked_by_target"
+    | "matched"
+    | "checkout_by_source"
+    | "checkout_by_target"
+    | "completed"
+    | "rejected"
+    | "expired";
   match_score?: number;
   match_reasons?: string[];
 }
@@ -52,7 +70,7 @@ export async function fetchListingRecommendations(
 ): Promise<RecommendationListResponse> {
   const params = statusFilter ? { status_filter: statusFilter } : {};
   const response = await apiClient.get<RecommendationListResponse>(
-    `${API_BASE}/listing/${listingId}`,
+    `${API_BASE}listing/${listingId}`,
     { params }
   );
   return response.data;
@@ -67,7 +85,7 @@ export async function fetchMatchedListings(
   listingId: number
 ): Promise<RecommendationListResponse> {
   const response = await apiClient.get<RecommendationListResponse>(
-    `${API_BASE}/listing/${listingId}/matched`
+    `${API_BASE}listing/${listingId}/matched`
   );
   return response.data;
 }
@@ -91,7 +109,7 @@ export async function likeRecommendation(
   recommendationId: number
 ): Promise<Recommendation> {
   const response = await apiClient.patch<Recommendation>(
-    `${API_BASE}/${recommendationId}/like`
+    `${API_BASE}${recommendationId}/like`
   );
   return response.data;
 }
@@ -104,7 +122,7 @@ export async function checkoutRecommendation(
   recommendationId: number
 ): Promise<Recommendation> {
   const response = await apiClient.patch<Recommendation>(
-    `${API_BASE}/${recommendationId}/checkout`
+    `${API_BASE}${recommendationId}/checkout`
   );
   return response.data;
 }
@@ -117,7 +135,7 @@ export async function rejectRecommendation(
   recommendationId: number
 ): Promise<Recommendation> {
   const response = await apiClient.patch<Recommendation>(
-    `${API_BASE}/${recommendationId}/reject`
+    `${API_BASE}${recommendationId}/reject`
   );
   return response.data;
 }
@@ -131,7 +149,7 @@ export async function updateRecommendation(
   data: RecommendationUpdate
 ): Promise<Recommendation> {
   const response = await apiClient.patch<Recommendation>(
-    `${API_BASE}/${recommendationId}`,
+    `${API_BASE}${recommendationId}`,
     data
   );
   return response.data;
@@ -144,5 +162,5 @@ export async function deleteRecommendation(
   apiClient: AxiosInstance,
   recommendationId: number
 ): Promise<void> {
-  await apiClient.delete(`${API_BASE}/${recommendationId}`);
+  await apiClient.delete(`${API_BASE}${recommendationId}`);
 }

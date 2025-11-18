@@ -27,6 +27,8 @@ dependencies = [
     "redis>=7.0.1",
     "cloudinary>=1.44.1",
     "cloud-sql-python-connector[pg8000]>=1.14.2",
+    "python-json-logger>=3.2.1",
+    "stripe>=13.2.0",
 ]
 
 [dependency-groups]

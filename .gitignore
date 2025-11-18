@@ -85,7 +85,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-uv.lock
 
 # dependencies
 **/node_modules
@@ -134,7 +133,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Bun
-bun.lockb
+# bun.lockb - Lockfile should be committed for reproducible builds
 
 # IDEs
 .vscode/

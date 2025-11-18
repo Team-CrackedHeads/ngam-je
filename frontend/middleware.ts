@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 // Define which routes require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -11,6 +12,22 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  // Handle preflight OPTIONS requests before Clerk authentication
+  if (req.method === "OPTIONS") {
+    const origin = req.headers.get("origin");
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": origin || "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version, X-Clerk-Auth-Token",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "86400"
+      }
+    });
+  }
+
   // Protect routes that require authentication
   if (isProtectedRoute(req)) {
     await auth.protect();

@@ -6,7 +6,7 @@
 import { AxiosInstance } from "axios";
 import { Thread } from "@/types/thread";
 
-const API_BASE = "/api/v1/threads";
+const API_BASE = "/api/v1/threads/";
 
 /**
  * Fetch all threads with optional filters
@@ -34,7 +34,7 @@ export async function fetchThreadById(
   apiClient: AxiosInstance,
   threadId: number
 ): Promise<Thread> {
-  const response = await apiClient.get<Thread>(`${API_BASE}/${threadId}`);
+  const response = await apiClient.get<Thread>(`${API_BASE}${threadId}`);
   return response.data;
 }
 
@@ -70,10 +70,7 @@ export async function updateThread(
     is_active?: boolean;
   }
 ): Promise<Thread> {
-  const response = await apiClient.put<Thread>(
-    `${API_BASE}/${threadId}`,
-    data
-  );
+  const response = await apiClient.put<Thread>(`${API_BASE}${threadId}`, data);
   return response.data;
 }
 
@@ -84,7 +81,7 @@ export async function deleteThread(
   apiClient: AxiosInstance,
   threadId: number
 ): Promise<void> {
-  await apiClient.delete(`${API_BASE}/${threadId}`);
+  await apiClient.delete(`${API_BASE}${threadId}`);
 }
 
 /**
@@ -96,7 +93,7 @@ export async function contributeToThread(
   contributionAmount: number
 ): Promise<Thread> {
   const response = await apiClient.post<Thread>(
-    `${API_BASE}/${threadId}/contribute`,
+    `${API_BASE}${threadId}/contribute`,
     { contribution_amount: contributionAmount }
   );
   return response.data;
