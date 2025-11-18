@@ -49,7 +49,7 @@ steps:
       # VPC Connector for Cloud SQL private IP (if using)
       # - '--vpc-connector=${_VPC_CONNECTOR}'
       # Environment variables from Secret Manager
-      - '--set-secrets=POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,CLERK_SECRET_KEY=CLERK_SECRET_KEY:latest,CLERK_PUBLISHABLE_KEY=CLERK_PUBLISHABLE_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,SERPAPI_API_KEY=SERPAPI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest'
+      - '--set-secrets=POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,CLERK_SECRET_KEY=CLERK_SECRET_KEY:latest,CLERK_PUBLISHABLE_KEY=CLERK_PUBLISHABLE_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,SERPAPI_API_KEY=SERPAPI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,CLOUDINARY_CLOUD_NAME=CLOUDINARY_CLOUD_NAME:latest,CLOUDINARY_API_KEY=CLOUDINARY_API_KEY:latest,CLOUDINARY_API_SECRET=CLOUDINARY_API_SECRET:latest'
       # Environment variables (non-sensitive)
       - '--set-env-vars=ENV=production,DEBUG=false,GCP_PROJECT_ID=${PROJECT_ID},GCP_REGION=${_REGION},USE_SECRET_MANAGER=true,CORS_ORIGINS=https://ngamje-frontend-645994298827.asia-southeast1.run.app,POSTGRES_USER=postgres,POSTGRES_DB=ngamjedb,POSTGRES_HOST=/cloudsql/gaia-capstone4-prd:asia-southeast1:ngamje-db-sea1,INSTANCE_CONNECTION_NAME=gaia-capstone4-prd:asia-southeast1:ngamje-db-sea1'
     id: 'deploy-to-cloud-run'
