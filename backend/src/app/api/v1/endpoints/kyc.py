@@ -122,10 +122,14 @@ async def didit_webhook(
     """
     Receive webhook notifications from Didit when verification status changes.
 
+    This endpoint handles both:
+    1. Webhook notifications from Didit (server-to-server)
+    2. User redirects after completing verification (browser)
+
     This endpoint must be publicly accessible and configured in Didit dashboard.
     Didit sends webhooks as GET requests with query parameters.
     """
-    # Handle GET request (Didit sends status via query params)
+    # Handle GET request (Didit sends status via query params OR redirects user here)
     if request.method == "GET":
         # Didit sends it as 'status' but we capture it as 'verification_status'
         # Also check for 'status' param if sent that way
@@ -203,4 +207,17 @@ async def didit_webhook(
 
     db.commit()
 
+    # Check if this is a browser redirect (user completing KYC) vs webhook
+    # Browser requests have Accept: text/html header
+    accept_header = request.headers.get("accept", "")
+    is_browser = "text/html" in accept_header
+
+    if is_browser:
+        # Redirect user back to frontend profile page with success message
+        from fastapi.responses import RedirectResponse
+        frontend_url = settings.cors_origins[0] if settings.cors_origins else "http://localhost:3000"
+        redirect_url = f"{frontend_url}/profile?kyc_completed=true"
+        return RedirectResponse(url=redirect_url, status_code=303)
+
+    # Return JSON for webhook
     return {"message": "Webhook processed successfully", "user_id": user.id}

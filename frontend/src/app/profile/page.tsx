@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Star, CheckCircle, Camera, Lock, Loader2 } from "lucide-react";
 import { MOCK_ACHIEVEMENTS, getAchievementStats, PROFILE_TABS } from "@/utils/mock-all-data-used";
 import axios, { AxiosError } from "axios";
@@ -33,11 +33,13 @@ export default function ProfilePage() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [kycLoading, setKycLoading] = useState(false);
   const [kycTimeRemaining, setKycTimeRemaining] = useState<number | null>(null);
+  const [showKycSuccess, setShowKycSuccess] = useState(false);
 
   // Extract fetchProfile so it can be reused (initial load + timer expiry)
   const fetchProfile = async () => {
@@ -65,6 +67,17 @@ export default function ProfilePage() {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  // Check for KYC completion redirect
+  useEffect(() => {
+    if (searchParams.get('kyc_completed') === 'true') {
+      setShowKycSuccess(true);
+      // Auto-hide after 5 seconds
+      setTimeout(() => setShowKycSuccess(false), 5000);
+      // Refresh profile to show updated KYC status
+      fetchProfile();
+    }
+  }, [searchParams]);
 
   // KYC Countdown Timer
   useEffect(() => {
@@ -184,6 +197,22 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
       <div className="max-w-4xl mx-auto">
+        {/* KYC Success Alert */}
+        {showKycSuccess && (
+          <div className="mb-4 p-4 rounded-lg bg-success-50 border border-success-200 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-success-900">KYC Verification Complete!</p>
+              <p className="text-sm text-success-700">Your identity has been verified successfully.</p>
+            </div>
+            <button
+              onClick={() => setShowKycSuccess(false)}
+              className="text-success-600 hover:text-success-800 text-xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+        )}
         {/* Header */}
         {/* <div className="flex justify-center mb-4">
           <h1 className="text-xl font-bold">Profile</h1>
