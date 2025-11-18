@@ -42,7 +42,7 @@ export default function MatchedListingsMenuItem() {
         const apiClient = await getApiClient();
 
         // Get current user profile
-        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
+        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me/");
 
         // Fetch all user's listings (both sale and wanted)
         const saleListings = await fetchUserListings(apiClient.instance, userProfile.id, {

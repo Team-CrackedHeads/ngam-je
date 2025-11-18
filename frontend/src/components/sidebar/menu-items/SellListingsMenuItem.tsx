@@ -41,7 +41,7 @@ export default function SellListingsMenuItem() {
         const apiClient = await getApiClient();
 
         // Get current user profile to fetch user ID
-        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me");
+        const userProfile = await apiClient.get<{ id: number }>("/api/v1/users/me/");
 
         // Fetch user's sale listings (WTS = want to sell)
         const response = await fetchUserListings(apiClient.instance, userProfile.id, {

@@ -56,7 +56,7 @@ export default function ProductListingScreen() {
     try {
       const token = await getToken();
       const apiClient = createClerkApiClient(token);
-      const user = await apiClient.get<{ id: number }>("/api/v1/users/me");
+      const user = await apiClient.get<{ id: number }>("/api/v1/users/me/");
       setCurrentUserId(user.id);
     } catch (error) {
       console.error("Failed to fetch current user:", error);
