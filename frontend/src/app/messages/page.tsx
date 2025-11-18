@@ -53,7 +53,7 @@ export default function MessagesPage() {
     try {
       setLoading(true);
       const client = await apiClient();
-      const data = await client.get<ConversationListResponse>("/api/v1/conversations/user/");
+      const data = await client.get<ConversationListResponse>("/api/v1/conversations/user");
       setConversations(data.conversations);
     } catch (error) {
       console.error("Failed to load conversations:", error);
