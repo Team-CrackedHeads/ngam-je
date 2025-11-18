@@ -137,7 +137,7 @@ function NgamJeAssistantMenuItem({
   const { has } = useAuth();
 
   const handleNewChat = () => {
-    const isAllowed = has({feature: 'ngam_assistant'});
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
     if (!isAllowed) {
       showFeatureDisabledMessage();
       return;
@@ -146,7 +146,7 @@ function NgamJeAssistantMenuItem({
   };
 
   const handleChatClick = (chatId: number) => {
-    const isAllowed = has({feature: 'ngam_assistant'});
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
     if (!isAllowed) {
       showFeatureDisabledMessage();
       return;
@@ -155,7 +155,7 @@ function NgamJeAssistantMenuItem({
   };
 
   const handleChatHistoryClick = () => {
-    const isAllowed = has({feature: 'ngam_assistant'});
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
     if (!isAllowed) {
       showFeatureDisabledMessage();
       return;
@@ -315,7 +315,7 @@ function SignInMenuItem() {
         <SidebarMenuSub>
           <SidebarMenuSubItem>
             <div className="flex justify-center py-2" onClick={handleClick}>
-              <div className="text-xs text-black">Don't miss out! <span className="underline">Login</span> now to get access to all the features!</div>
+              <div className="text-xs text-black">Don&apos;t miss out! <span className="underline">Login</span> now to get access to all the features!</div>
             </div>
           </SidebarMenuSubItem>
         </SidebarMenuSub>
