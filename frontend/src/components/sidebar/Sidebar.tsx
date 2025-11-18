@@ -291,39 +291,6 @@ function NgamJeAssistantMenuItem({
   );
 }
 
-function SignInMenuItem() {
-  const { openSignIn } = useClerk();
-
-  const handleClick = () => {
-    openSignIn();
-  }
-
-  return (
-    <>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          onClick={handleClick}
-          className="group/menu-item text-accent-700 font-semibold"
-        >
-          <Sparkles className="w-5 h-5" />
-          <span>Ngam-je Assistant</span>
-          <ChevronDown className="ml-auto h-4 w-4 transition-transform" />
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    
-      <div>
-        <SidebarMenuSub>
-          <SidebarMenuSubItem>
-            <div className="flex justify-center py-2" onClick={handleClick}>
-              <div className="text-xs text-black">Don&apos;t miss out! <span className="underline">Login</span> now to get access to all the features!</div>
-            </div>
-          </SidebarMenuSubItem>
-        </SidebarMenuSub>
-      </div>
-    </>
-  );
-}
-
 function NavigationMenuItem() {
   const [isOpen, setIsOpen] = useState(true);
   const { state } = useSidebar();
@@ -531,7 +498,7 @@ export function AppSidebar() {
             <SidebarSeparator />
           </div>
 
-          {isSignedIn ? (<>
+          {isSignedIn && (<>
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -541,19 +508,11 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          </>) : (<>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SignInMenuItem />
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>)}
 
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
+          </>)}
 
           <SidebarGroup>
             <SidebarGroupContent>
