@@ -17,7 +17,7 @@ interface ProductDetailsBottomProps {
   onFAQ: () => void;
   onBuyNow: () => void;
   isOwnListing?: boolean;
-  listingType?: "sale" | "want";
+  listingType?: "sale" | "wanted";
 }
 
 const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({

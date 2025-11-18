@@ -10,7 +10,7 @@ interface ActionButtonsProps {
   onChat?: () => void;
   onFAQ?: () => void;
   onBuyNow?: () => void;
-  listingType?: "sale" | "want";
+  listingType?: "sale" | "wanted";
   isOwnListing?: boolean;
 }
 

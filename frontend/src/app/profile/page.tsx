@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -29,7 +29,7 @@ interface UserProfile {
   updated_at: string;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
@@ -394,5 +394,17 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-primary-100">
+        <Loader2 className="w-8 h-8 animate-spin text-accent-700" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }
