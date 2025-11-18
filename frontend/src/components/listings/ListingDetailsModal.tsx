@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
 import { useClerkApiClient } from "@/lib/clerk-api-client";
 import { confirmCheckout } from "@/lib/api/listings";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 interface ListingDetailsModalProps {
   listing: MockListing | MatchedListing | ApiListing;
@@ -22,6 +23,8 @@ interface ListingDetailsModalProps {
 export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsModalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
   const getApiClient = useClerkApiClient();
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
 
   // Helper function to check if listing is from API (has snake_case properties)
   const isApiListing = (l: typeof listing): l is ApiListing => {
@@ -74,6 +77,15 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
 
   const handleCheckout = () => {
     setShowCheckout(true);
+  };
+
+  const handleContact = () => {
+    if (isSignedIn) {
+      // TODO: Message the user/Reveal contact info here
+      console.log("Contact seller - feature coming soon");
+    } else {
+      openSignIn();
+    }
   };
 
   const handleCheckoutConfirm = async (dealDetails: DealDetails) => {
@@ -369,7 +381,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
           <div className="px-4 py-3 border-t border-neutral-200 bg-primary-50 shrink-0">
             {type !== "matched" ? (
               <div className="flex gap-3">
-                <Button className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
+                <Button onClick={handleContact} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Contact
                 </Button>
               </div>
@@ -378,7 +390,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <Button onClick={handleCheckout} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Checkout
                 </Button>
-                <Button className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
+                <Button onClick={handleContact} className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
                   Contact
                 </Button>
                 <Button className="flex-1 bg-error-500 hover:bg-error-900 text-white">
