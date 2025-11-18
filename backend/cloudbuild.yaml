@@ -29,7 +29,7 @@ steps:
     entrypoint: 'bash'
     args:
       - '-c'
-      - 'uv run alembic upgrade head'
+      - '/app/.venv/bin/alembic upgrade head'
     env:
       - 'ENV=production'
       - 'DEBUG=false'
