@@ -75,8 +75,10 @@ const ThreadDetailPage: React.FC = () => {
   const fetchThread = useCallback(async () => {
     try {
       setThreadLoading(true);
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/threads/${threadId}`
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+      const response = await apiClient.instance.get(
+        `/api/v1/threads/${threadId}`
       );
       setThread(response.data);
     } catch (error) {
@@ -84,7 +86,7 @@ const ThreadDetailPage: React.FC = () => {
     } finally {
       setThreadLoading(false);
     }
-  }, [threadId]);
+  }, [threadId, getToken]);
 
   // NEW: Fetch listings for this thread (filtered by thread_id)
   const fetchThreadListings = useCallback(async () => {
