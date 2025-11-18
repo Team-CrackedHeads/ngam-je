@@ -5,7 +5,7 @@
 
 import { AxiosInstance } from "axios";
 
-const API_BASE = "/api/v1/recommendations";
+const API_BASE = "/api/v1/recommendations/";
 
 export interface Recommendation {
   id: number;

@@ -33,6 +33,7 @@ app = FastAPI(
     version="0.1.0",
     debug=settings.debug,
     lifespan=lifespan,
+    redirect_slashes=False,  # Disable automatic slash redirects to prevent HTTP redirect on Cloud Run
 )
 
 # Configure CORS

@@ -6,7 +6,7 @@
 
 import { AxiosInstance } from "axios";
 
-const API_BASE = "/api/v1/faq-replies";
+const API_BASE = "/api/v1/faq-replies/";
 
 /**
  * FAQ Reply interfaces matching backend schemas

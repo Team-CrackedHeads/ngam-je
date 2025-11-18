@@ -11,7 +11,7 @@ import {
   ListingListResponse,
 } from "@/types/listing";
 
-const API_BASE = "/api/v1/listings";
+const API_BASE = "/api/v1/listings/";
 
 /**
  * Fetch all listings with optional filters

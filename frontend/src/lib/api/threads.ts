@@ -6,7 +6,7 @@
 import { AxiosInstance } from "axios";
 import { Thread } from "@/types/thread";
 
-const API_BASE = "/api/v1/threads";
+const API_BASE = "/api/v1/threads/";
 
 /**
  * Fetch all threads with optional filters
