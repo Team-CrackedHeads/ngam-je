@@ -6,12 +6,19 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { useAuth } from "@clerk/nextjs";
 
-// Force HTTPS in production - fallback to localhost in development only
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== "undefined" && window.location.hostname.includes("run.app")
-    ? "https://ngamje-backend-645994298827.asia-southeast1.run.app"
-    : "");
+// Get API base URL - prioritize env var, fallback to production URL on run.app, else localhost
+function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  if (typeof window !== "undefined" && window.location.hostname.includes("run.app")) {
+    return "https://ngamje-backend-645994298827.asia-southeast1.run.app";
+  }
+
+  // Development fallback - update this to your local backend URL
+  return "http://localhost:8000";
+}
 
 export interface ApiError {
   detail: string;
@@ -25,7 +32,7 @@ export interface ApiError {
 export function createClerkApiClient(token: string | null) {
   // Create Axios instance with base configuration
   const axiosInstance: AxiosInstance = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: getApiBaseUrl(),
     timeout: 30000, // 30 second timeout
     headers: {
       "Content-Type": "application/json",
