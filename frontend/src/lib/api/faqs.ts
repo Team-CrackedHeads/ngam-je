@@ -50,7 +50,7 @@ export async function createQuestion(
   apiClient: AxiosInstance,
   data: CreateQuestionRequest
 ): Promise<FAQ> {
-  const response = await apiClient.post<FAQ>(`${API_BASE}/questions`, data);
+  const response = await apiClient.post<FAQ>(`${API_BASE}questions`, data);
   return response.data;
 }
 
@@ -62,7 +62,10 @@ export async function answerQuestion(
   faqId: number,
   data: CreateAnswerRequest
 ): Promise<FAQ> {
-  const response = await apiClient.post<FAQ>(`${API_BASE}/${faqId}/answer`, data);
+  const response = await apiClient.post<FAQ>(
+    `${API_BASE}${faqId}/answer`,
+    data
+  );
   return response.data;
 }
 
@@ -81,7 +84,9 @@ export async function fetchFAQsByListingId(
   apiClient: AxiosInstance,
   listingId: number
 ): Promise<FAQ[]> {
-  const response = await apiClient.get<FAQListResponse>(`${API_BASE}/listing/${listingId}`);
+  const response = await apiClient.get<FAQListResponse>(
+    `${API_BASE}listing/${listingId}`
+  );
   return response.data.faqs; // Extract the faqs array from the response
 }
 
@@ -92,7 +97,7 @@ export async function fetchFAQById(
   apiClient: AxiosInstance,
   faqId: number
 ): Promise<FAQ> {
-  const response = await apiClient.get<FAQ>(`${API_BASE}/${faqId}`);
+  const response = await apiClient.get<FAQ>(`${API_BASE}${faqId}`);
   return response.data;
 }
 
@@ -104,7 +109,7 @@ export async function updateFAQ(
   faqId: number,
   data: UpdateFAQRequest
 ): Promise<FAQ> {
-  const response = await apiClient.patch<FAQ>(`${API_BASE}/${faqId}`, data);
+  const response = await apiClient.patch<FAQ>(`${API_BASE}${faqId}`, data);
   return response.data;
 }
 
@@ -115,7 +120,7 @@ export async function deleteFAQ(
   apiClient: AxiosInstance,
   faqId: number
 ): Promise<void> {
-  await apiClient.delete(`${API_BASE}/${faqId}`);
+  await apiClient.delete(`${API_BASE}${faqId}`);
 }
 
 /**
