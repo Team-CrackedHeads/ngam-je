@@ -37,31 +37,82 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [kycLoading, setKycLoading] = useState(false);
+  const [kycTimeRemaining, setKycTimeRemaining] = useState<number | null>(null);
 
+  // Extract fetchProfile so it can be reused (initial load + timer expiry)
+  const fetchProfile = async () => {
+    try {
+      const token = await getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setProfile(response.data);
+    } catch (err) {
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage = error.response?.data?.detail || error.message || "An error occurred";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch profile on mount
   useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const token = await getToken();
+    fetchProfile();
+  }, []);
 
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        setProfile(response.data);
-      } catch (err) {
-        const error = err as AxiosError<{ detail?: string }>;
-        const errorMessage = error.response?.data?.detail || error.message || "An error occurred";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+  // KYC Countdown Timer
+  useEffect(() => {
+    // Only run timer if KYC is in progress and we have a start time
+    if (profile?.kyc_status !== "in_progress" || !profile?.kyc_initiated_at) {
+      setKycTimeRemaining(null);
+      return;
     }
 
-    fetchProfile();
-  }, [getToken]);
+    const calculateTimeRemaining = () => {
+      const initiatedAt = new Date(profile.kyc_initiated_at!).getTime();
+      const now = Date.now();
+      const elapsed = (now - initiatedAt) / 1000; // seconds
+      const remaining = Math.max(0, 900 - elapsed); // 15 minutes = 900 seconds
+
+      if (remaining === 0) {
+        // Timer expired - fetch updated profile from backend
+        // Backend will auto-reset status to "pending"
+        setKycTimeRemaining(null);
+        fetchProfile();
+        return 0;
+      }
+
+      return remaining;
+    };
+
+    // Initial calculation
+    setKycTimeRemaining(calculateTimeRemaining());
+
+    // Update every second
+    const interval = setInterval(() => {
+      const remaining = calculateTimeRemaining();
+      setKycTimeRemaining(remaining);
+
+      if (remaining === 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [profile?.kyc_status, profile?.kyc_initiated_at]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const initiateKYC = async () => {
     setKycLoading(true);
@@ -90,6 +141,7 @@ export default function ProfilePage() {
           ...profile,
           kyc_status: "in_progress",
           kyc_session_id: data.session_id,
+          kyc_initiated_at: new Date().toISOString(), // Start the timer immediately
         });
       }
     } catch (err) {
@@ -186,8 +238,11 @@ export default function ProfilePage() {
                     KYC Verified
                   </span>
                 ) : profile?.kyc_status === "in_progress" ? (
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-warning-50 text-warning-900 font-medium">
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-warning-50 text-warning-900 font-medium flex items-center gap-1">
                     KYC In Progress
+                    {kycTimeRemaining !== null && (
+                      <span className="ml-1 font-mono">({formatTime(kycTimeRemaining)})</span>
+                    )}
                   </span>
                 ) : (
                   <button
