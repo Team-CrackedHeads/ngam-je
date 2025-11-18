@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from '@clerk/nextjs/server';
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-10-29.clover",
-});
-
 export async function POST(request: NextRequest) {
+  // Lazy initialize Stripe at runtime to avoid build-time errors
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-10-29.clover",
+  });
+
   // Get authenticated user ID from Clerk
   // Middleware already blocks unauthenticated users, but we get userId here for the session
   const { userId } = await auth();
