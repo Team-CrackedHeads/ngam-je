@@ -1,5 +1,5 @@
-"""User management services."""
+"""User management services - Authentication handled by Clerk."""
 
-from .user_service import UserService
+# Legacy UserService removed - all authentication is now managed by Clerk
 
-__all__ = ["UserService"]
+__all__ = []
