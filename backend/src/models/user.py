@@ -34,7 +34,8 @@ class User(Base):
     kyc_status = Column(
         String, default="pending", nullable=False
     )  # pending, in_progress, verified, failed
-    kyc_session_id = Column(String, nullable=True)  # Didit session ID
+    kyc_session_id = Column(String, nullable=True)  # Didit session ID (for API calls)
+    kyc_session_token = Column(String, nullable=True)  # Didit session token (for verification URL)
     kyc_initiated_at = Column(DateTime(timezone=True), nullable=True)  # When KYC was started
     kyc_verified_at = Column(DateTime(timezone=True), nullable=True)  # When KYC was completed
 

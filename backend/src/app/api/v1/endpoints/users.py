@@ -32,6 +32,7 @@ async def get_my_profile(
         ):
             current_user.kyc_status = "pending"
             current_user.kyc_session_id = None
+            current_user.kyc_session_token = None
             current_user.kyc_initiated_at = None
             db.commit()
 

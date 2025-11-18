@@ -41,14 +41,21 @@ async def initiate_kyc_verification(
             status_data = await didit_service.get_verification_status(current_user.kyc_session_id)
             # If session is still valid, return it
             if status_data.get("status") in ["pending", "in_progress"]:
+                # Use session_token to construct verification URL
+                verification_url = f"https://verify.didit.me/session/{current_user.kyc_session_token}"
                 return {
                     "message": "KYC verification already in progress",
-                    "verification_url": f"https://verify.didit.me/session/{current_user.kyc_session_id}",
+                    "verification_url": verification_url,
+                    "session_id": current_user.kyc_session_id,
                     "kyc_status": current_user.kyc_status,
                 }
         except Exception:
-            # Session might be expired or invalid, create a new one
-            pass
+            # Session might be expired or invalid, reset and create a new one
+            current_user.kyc_status = "pending"
+            current_user.kyc_session_id = None
+            current_user.kyc_session_token = None
+            current_user.kyc_initiated_at = None
+            db.commit()
 
     # Get webhook callback URL from settings
     callback_url = settings.DIDIT_CALLBACK_URL
@@ -70,9 +77,10 @@ async def initiate_kyc_verification(
             },
         )
 
-        # Update user's KYC status and session ID
+        # Update user's KYC status, session ID, and session token
         current_user.kyc_status = "in_progress"
         current_user.kyc_session_id = session_data["session_id"]
+        current_user.kyc_session_token = session_data["session_token"]
         current_user.kyc_initiated_at = datetime.now(timezone.utc)
         db.commit()
 
