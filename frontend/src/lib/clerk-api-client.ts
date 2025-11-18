@@ -6,7 +6,11 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { useAuth } from '@clerk/nextjs';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Force HTTPS in production - fallback to localhost in development only
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname.includes('run.app')
+    ? 'https://ngamje-backend-645994298827.asia-southeast1.run.app'
+    : 'http://localhost:8000');
 
 export interface ApiError {
   detail: string;
