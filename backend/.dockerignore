@@ -69,9 +69,5 @@ docs/
 # GCP service account keys (will be mounted in Cloud Run)
 .gcp/*.json
 
-# Alembic (migrations handled separately)
-alembic/
-alembic.ini
-
 # Tests
 tests/
