@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 // Define which routes require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -11,7 +11,7 @@ const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
 ]);
 
-export default function middleware(req: NextRequest) {
+export default clerkMiddleware(async (auth, req) => {
   // Handle preflight OPTIONS requests before Clerk authentication
   if (req.method === "OPTIONS") {
     const origin = req.headers.get("origin");
@@ -28,14 +28,11 @@ export default function middleware(req: NextRequest) {
     });
   }
 
-  // Continue with Clerk authentication for all other requests
-  return clerkMiddleware(async (auth, request) => {
-    // Protect routes that require authentication
-    if (isProtectedRoute(request)) {
-      await auth.protect();
-    }
-  })(req);
-}
+  // Protect routes that require authentication
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
