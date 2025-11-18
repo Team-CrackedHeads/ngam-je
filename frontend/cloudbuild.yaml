@@ -10,6 +10,7 @@ steps:
     args:
       - '-c'
       - |
+        echo "Building with NEXT_PUBLIC_API_URL=${_BACKEND_URL}"
         docker build \
           --build-arg "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$$CLERK_PUBLISHABLE_KEY" \
           --build-arg "NEXT_PUBLIC_API_URL=${_BACKEND_URL}" \
