@@ -10,8 +10,8 @@ from src.schemas.user import User as UserSchema
 
 router = APIRouter()
 
-# KYC session expiry time (15 seconds for testing, change to 900 for 15 minutes in production)
-KYC_EXPIRY_SECONDS = 15  # TODO: Change to 900 for production
+# KYC session expiry time (15 minutes for production)
+KYC_EXPIRY_SECONDS = 900
 
 
 @router.get("/me", response_model=UserSchema)

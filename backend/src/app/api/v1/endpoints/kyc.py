@@ -10,23 +10,12 @@ from sqlalchemy.orm import Session
 
 from src.app.api.deps import get_current_user, get_db
 
-# ============================================================================
-# TEMPORARY: KYC Bypass Mode for Development
-# TODO: Remove this import before production deployment
-# ============================================================================
 from src.app.core.config import get_settings
-
-# ============================================================================
 from src.app.services.kyc import didit_service
 from src.models.user import User
 
 router = APIRouter()
-# ============================================================================
-# TEMPORARY: KYC Bypass Mode for Development
-# TODO: Remove this line before production deployment
-# ============================================================================
 settings = get_settings()
-# ============================================================================
 
 
 @router.post("/initiate")
@@ -111,39 +100,6 @@ async def get_kyc_status(
         "kyc_session_id": current_user.kyc_session_id,
         "kyc_verified_at": current_user.kyc_verified_at,
     }
-
-
-# ============================================================================
-# TEMPORARY: KYC Bypass Mode for Development
-# TODO: Remove this entire endpoint before production deployment
-# ============================================================================
-@router.post("/dev/approve")
-async def dev_approve_kyc(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    DEV ONLY: Manually approve KYC for testing purposes.
-    Only works when KYC_SKIP_VERIFICATION is enabled.
-    """
-    if not settings.KYC_SKIP_VERIFICATION:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This endpoint is only available in bypass mode (KYC_SKIP_VERIFICATION=true)",
-        )
-
-    current_user.kyc_status = "verified"
-    current_user.kyc_verified_at = datetime.now(timezone.utc)
-    db.commit()
-
-    return {
-        "message": "KYC manually approved for development",
-        "kyc_status": "verified",
-        "kyc_verified_at": current_user.kyc_verified_at,
-    }
-
-
-# ============================================================================
 
 
 @router.get("/webhook")
