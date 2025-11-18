@@ -655,7 +655,7 @@ function ListingsPageContent() {
 
         // Get current user profile to fetch user ID
         const userProfile = await apiClient.get<{ id: number }>(
-          "/api/v1/users/me/"
+          "/api/v1/users/me"
         );
 
         if (activeTab === "matched") {

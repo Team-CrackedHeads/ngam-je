@@ -1067,8 +1067,8 @@ export default function CreateListingModal({
             const uploadFormData = new FormData();
             uploadFormData.append("file", file);
 
-            console.log("🚀 Sending to /api/v1/upload/image/...");
-            const uploadResponse = await apiClient.instance.post("/api/v1/upload/image/", uploadFormData, {
+            console.log("🚀 Sending to /api/v1/upload/image...");
+            const uploadResponse = await apiClient.instance.post("/api/v1/upload/image", uploadFormData, {
               headers: { "Content-Type": "multipart/form-data" },
               params: { folder: "listings" }
             });
