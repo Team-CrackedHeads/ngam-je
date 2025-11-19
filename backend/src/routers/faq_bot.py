@@ -5,7 +5,7 @@ from src.database import get_db
 from src.services.faq_service import FAQService
 from src.schemas.faq import FAQRequest, AIWidgetResponse, FAQResponse
 
-router = APIRouter(prefix="/api/v1/faq-bot", tags=["AI Assistant"])
+router = APIRouter(tags=["AI Assistant"])
 
 @router.post("/ask", response_model=FAQResponse)
 async def ask_question(payload: FAQRequest, db: Session = Depends(get_db)):
