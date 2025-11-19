@@ -22,6 +22,7 @@ from src.app.api.v1.endpoints import (
     messages,
     upload,
 )
+from src.routers import faq_bot
 
 api_router = APIRouter()
 
@@ -42,3 +43,4 @@ api_router.include_router(
 api_router.include_router(conversations.router, prefix="/conversations", tags=["conversations"])
 api_router.include_router(messages.router, prefix="/messages", tags=["messages"])
 api_router.include_router(upload.router, prefix="/upload", tags=["upload"])
+api_router.include_router(faq_bot.router, prefix="/faq-bot", tags=["AI Assistant"])

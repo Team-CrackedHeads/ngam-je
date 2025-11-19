@@ -144,3 +144,55 @@ export async function markFAQAsAccepted(
 ): Promise<FAQ> {
   return updateFAQ(apiClient, faqId, { is_accepted: true });
 }
+
+// =====================================================
+// AI FAQ Bot Endpoints
+// =====================================================
+
+const AI_BOT_BASE = "/api/v1/faq-bot";
+
+/**
+ * AI FAQ Bot interfaces
+ */
+export interface AIFAQRequest {
+  listing_id: number;
+  question: string;
+  user_id?: number;
+}
+
+export interface AIWidgetResponse {
+  summary: string;
+  key_features?: string[];
+  common_questions?: string[];
+}
+
+export interface AIFAQResponse {
+  status: "found" | "created";
+  message: string;
+  data: FAQ;
+  category?: string;
+}
+
+/**
+ * Ask AI assistant a question about a listing
+ * Uses semantic search to find similar questions, or generates an AI answer
+ */
+export async function askAIQuestion(
+  apiClient: AxiosInstance,
+  data: AIFAQRequest
+): Promise<AIFAQResponse> {
+  const response = await apiClient.post<AIFAQResponse>(`${AI_BOT_BASE}/ask`, data);
+  return response.data;
+}
+
+/**
+ * Get AI-generated summary widget for a listing
+ * Generates a comprehensive summary with key features and common questions
+ */
+export async function getAISummary(
+  apiClient: AxiosInstance,
+  listingId: number
+): Promise<AIWidgetResponse> {
+  const response = await apiClient.get<AIWidgetResponse>(`${AI_BOT_BASE}/summary/${listingId}`);
+  return response.data;
+}

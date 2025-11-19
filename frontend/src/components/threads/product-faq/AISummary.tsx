@@ -9,6 +9,10 @@ export interface AISummaryProps {
   content?: string;
   /** Loading state for the summary/long content generation */
   isLoading?: boolean;
+  /** Callback to trigger AI summary generation */
+  onGenerateSummary?: () => void;
+  /** Callback to ask AI a question */
+  onAskQuestion?: (question: string) => void;
 }
 
 /** Truncate plain text to ~N words. */
@@ -19,7 +23,12 @@ function truncateWords(text: string, min = 100, max = 250): string {
   return words.slice(0, target).join(" ") + "…";
 }
 
-export default function AISummary({ content, isLoading }: AISummaryProps) {
+export default function AISummary({
+  content,
+  isLoading,
+  onGenerateSummary,
+  onAskQuestion
+}: AISummaryProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [question, setQuestion] = useState("");
   // IMPORTANT: start false so the initial UI shows the Generate button
@@ -32,8 +41,11 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
 
   const handleSendQuestion = () => {
     if (question.trim()) {
-      // TODO: Implement the logic to send the question to AI
-      console.log("Question sent:", question);
+      if (onAskQuestion) {
+        onAskQuestion(question);
+      } else {
+        console.log("Question sent:", question);
+      }
       setQuestion("");
     }
   };
@@ -58,8 +70,11 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
   const handleGenerateAI = () => {
     // mark that user asked to generate — parent can start isLoading and then supply `content`
     setHasGenerated(true);
-    console.log("Generate AI Summary triggered");
-    // TODO: trigger parent's generation action (via prop callback) if needed
+    if (onGenerateSummary) {
+      onGenerateSummary();
+    } else {
+      console.log("Generate AI Summary triggered");
+    }
   };
 
   return (
