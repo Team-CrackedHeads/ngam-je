@@ -35,6 +35,10 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Check if route requires authentication
   if (isProtectedRoute(req)) {
+    console.log('[Middleware] Protected route accessed:', req.nextUrl.pathname);
+    const { userId } = await auth();
+    console.log('[Middleware] User ID:', userId);
+
     // This will automatically:
     // - Redirect to sign-in for page requests
     // - Return 401 for API requests

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import ProductFAQSummary from "./ProductFAQSummary";
@@ -38,7 +38,8 @@ export const ProductDetails = ({
   const router = useRouter();
   const params = useParams();
   const threadId = params.threadId ? parseInt(params.threadId as string) : undefined;
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
 
   // Check if current user owns this listing (using database user ID)
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
@@ -95,11 +96,6 @@ export const ProductDetails = ({
   };
 
   // ADDED: Action button handlers
-  const handleChatClick = () => {
-    console.log("Chat clicked");
-    // TODO: Implement chat functionality
-  };
-
   const handleFAQClick = () => {
     if (threadId) {
       router.push(`/threads/${threadId}/listings/${listing.id}/faq`);
@@ -107,7 +103,11 @@ export const ProductDetails = ({
   };
 
   const handleMakeOfferClick = () => {
-    setIsMakeOfferModalOpen(true);
+    if (isSignedIn) {
+      setIsMakeOfferModalOpen(true);
+    } else {
+      openSignIn();
+    }
   };
 
   // Set main image source - use imageUrl (first uploaded image), gallery contains remaining images
@@ -135,7 +135,6 @@ export const ProductDetails = ({
       <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white p-6">
         <ProductDetailsBottom
           seller={listing.seller}
-          onChat={handleChatClick}
           onFAQ={handleFAQClick}
           onBuyNow={handleMakeOfferClick}
           isOwnListing={isOwnListing}

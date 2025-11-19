@@ -13,7 +13,6 @@ interface SellerData {
 // Define the props for the ProductDetailsBottom component
 interface ProductDetailsBottomProps {
   seller: SellerData;
-  onChat: () => void;
   onFAQ: () => void;
   onBuyNow: () => void;
   isOwnListing?: boolean;
@@ -23,7 +22,6 @@ interface ProductDetailsBottomProps {
 
 const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
   seller,
-  onChat,
   onFAQ,
   onBuyNow,
   isOwnListing = false,
@@ -76,7 +74,6 @@ const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
 
       {/* Action Buttons */}
       <ActionButtons
-        onChat={onChat}
         onFAQ={onFAQ}
         onBuyNow={onBuyNow}
         isOwnListing={isOwnListing}

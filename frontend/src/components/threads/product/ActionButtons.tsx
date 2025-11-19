@@ -1,5 +1,5 @@
 // src/components/threads/product/ActionButtons.tsx
-import { MessageCircle, HandCoins, FileText } from "lucide-react";
+import { HandCoins, FileText } from "lucide-react";
 import Link from "next/link";
 // Import shared styles from the ProductDetails file
 import { wideButtonClasses } from "./ProductDetails";
@@ -7,7 +7,6 @@ import { wideButtonClasses } from "./ProductDetails";
 const glowStyle = "text-accent-500 focus:ring-accent-500";
 
 interface ActionButtonsProps {
-  onChat?: () => void;
   onFAQ?: () => void;
   onBuyNow?: () => void;
   listingType?: "sale" | "wanted";
@@ -16,7 +15,6 @@ interface ActionButtonsProps {
 }
 
 export const ActionButtons = ({
-  onChat,
   onFAQ: _onFAQ,
   onBuyNow,
   listingType = "sale",
@@ -26,15 +24,6 @@ export const ActionButtons = ({
 
   return (
   <div className="flex flex-col sm:flex-row gap-3 mt-6">
-    {!isOwnListing && (
-      <button
-        className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
-        onClick={onChat}
-      >
-        <MessageCircle className="w-5 h-5 text-accent-500" />
-        <span>Chat</span>
-      </button>
-    )}
     {/* <button
       className={`${wideButtonClasses} outline-solid outline-1 border-primary-200 ${glowStyle}`}
       onClick={_onFAQ}

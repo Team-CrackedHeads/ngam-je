@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import axios from "axios";
 import ListingCard from "@/components/threads/category/ListingCard";
 import { CategoryHeader } from "@/components/threads/category/CategoryHeader";
@@ -30,7 +30,8 @@ interface SortingFilters {
 const ThreadDetailPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
 
   // CHANGED: Use threadId instead of category
   const threadId = parseInt(params.threadId as string, 10);
@@ -214,7 +215,11 @@ const ThreadDetailPage: React.FC = () => {
   };
 
   const handleCreateListing = () => {
-    setIsCreateListingModalOpen(true);
+    if (isSignedIn) {
+      setIsCreateListingModalOpen(true);
+    } else {
+      openSignIn();
+    }
   };
 
   // NEW: Refresh listings after creating new one
