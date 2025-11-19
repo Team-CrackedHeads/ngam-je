@@ -23,6 +23,7 @@ from src.app.api.v1.endpoints import (
     upload,
     payments,
     ngam_overview,
+    ai_chat,
 )
 
 api_router = APIRouter()
@@ -46,3 +47,4 @@ api_router.include_router(messages.router, prefix="/messages", tags=["messages"]
 api_router.include_router(upload.router, prefix="/upload", tags=["upload"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(ngam_overview.router, prefix="/ngam-overview", tags=["ngam-overview"])
+api_router.include_router(ai_chat.router, prefix="/ai-chat", tags=["ai-chat"])

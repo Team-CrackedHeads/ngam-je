@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { sendChatMessage } from "@/lib/api/ai-chat";
 import {
   X,
   Send,
@@ -9,7 +11,6 @@ import {
   User,
   MessageSquare,
   Clock,
-  Zap,
   Search,
   DollarSign,
   ShieldCheck,
@@ -32,10 +33,13 @@ type Message = {
   content: string;
   timestamp: Date;
   toolCalls?: ToolCall[];
+  links?: Array<{
+    text: string;
+    url: string;
+  }>;
 };
 
 type Tab = "chat" | "history";
-type Mode = "reactive" | "proactive";
 
 export type ChatHistoryItem = {
   id: number;
@@ -58,9 +62,17 @@ const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
   content:
-    "**Ngam AI** activated!\n\nI'm your intelligent marketplace assistant. I can:\n\n• **Search & Compare**: Find best deals across listings\n\n• **Verify Sellers**: Check ratings and authenticity\n\n• **Price Tracking**: Monitor items and alert you to deals\n\n• **Smart Analysis**: Break down complex marketplace tasks\n\nSwitch between **Reactive** (I respond) and **Proactive** (I take initiative) modes using the toggle below.\n\nWhat can I help you find today?",
+    "**Ngam AI** activated!\n\nI'm your intelligent marketplace assistant. I can:\n\n• **Search & Compare**: Find best deals across listings\n\n• **Verify Sellers**: Check ratings and authenticity\n\n• **Personal Insights**: Analyze your listings and marketplace activity\n\n• **Smart Analysis**: Break down complex marketplace tasks\n\nWhat can I help you find today?",
   timestamp: new Date(),
 };
+
+// Loading messages for AI thinking
+const LOADING_MESSAGES = [
+  "Ngam is warming up...",
+  "Ngam is thinking...",
+  "Ngam is crawling...",
+  "Almost there...",
+];
 
 // Mock data (renamed from mockHistoryChats for consistency with SearchHistory.tsx)
 const mockHistory: ChatHistoryItem[] = [
@@ -193,13 +205,13 @@ export default function SidebarAIChat({
   initialMessages = [],
 }: SidebarAIChatProps) {
   const router = useRouter(); // Initialize useRouter
+  const { getToken } = useAuth(); // Add Clerk auth
   const [messages, setMessages] = useState<Message[]>(
     initialMessages.length > 0 ? initialMessages : [WELCOME_MESSAGE]
   );
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
-  const [mode, setMode] = useState<Mode>("reactive");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -230,8 +242,8 @@ export default function SidebarAIChat({
     }
   }, [isOpen, activeTab]);
 
-  // Simulate AI with tool calls (Claude CLI style)
-  const handleSendMessage = () => {
+  // Send message to real AI backend
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
@@ -241,162 +253,68 @@ export default function SidebarAIChat({
       timestamp: new Date(),
     };
 
+    const messageText = inputValue;
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI thinking with tool execution
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+    try {
+      // Get auth token
+      const token = await getToken();
+
+      // Show a loading message with cycling text
+      const loadingMessageId = (Date.now() + 1).toString();
+      const randomLoadingMessage =
+        LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
+      const loadingMessage: Message = {
+        id: loadingMessageId,
         role: "assistant",
-        content:
-          "Let me help you with that. I'll search our listings and analyze the best options...",
+        content: randomLoadingMessage,
         timestamp: new Date(),
-        toolCalls: [
-          { name: "search_listings", status: "pending" },
-          { name: "compare_prices", status: "pending" },
-          { name: "verify_sellers", status: "pending" },
-        ],
+        // No toolCalls - we just want to show the loading text
       };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsTyping(false);
+      setMessages((prev) => [...prev, loadingMessage]);
 
-      // Simulate tool execution
-      simulateToolExecution(aiMessage.id);
-    }, 800);
-  };
+      // Build conversation history (excluding the current user message and loading message)
+      const conversationHistory = messages
+        .filter((msg) => msg.role === "user" || msg.role === "assistant")
+        .filter((msg) => !msg.toolCalls) // Exclude loading messages with tool calls
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
 
-  const simulateToolExecution = (messageId: string) => {
-    // Tool 1: Search
-    setTimeout(() => {
+      // Call the real API with conversation history
+      const response = await sendChatMessage(token, messageText, conversationHistory);
+
+      // Update with real response
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === messageId
+          msg.id === loadingMessageId
             ? {
                 ...msg,
-                toolCalls: msg.toolCalls?.map((tool) =>
-                  tool.name === "search_listings"
-                    ? { ...tool, status: "running" }
-                    : tool
-                ),
+                content: response.content,
+                // No toolCalls - we don't want to show "[search_marketplace] Done"
+                links: response.links,
               }
             : msg
         )
       );
-    }, 500);
-
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                toolCalls: msg.toolCalls?.map((tool) =>
-                  tool.name === "search_listings"
-                    ? {
-                        ...tool,
-                        status: "completed",
-                        result: "Found 12 listings",
-                        duration: 1.2,
-                      }
-                    : tool
-                ),
-              }
-            : msg
-        )
-      );
-    }, 1700);
-
-    // Tool 2: Compare
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                toolCalls: msg.toolCalls?.map((tool) =>
-                  tool.name === "compare_prices"
-                    ? { ...tool, status: "running" }
-                    : tool
-                ),
-              }
-            : msg
-        )
-      );
-    }, 1800);
-
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                toolCalls: msg.toolCalls?.map((tool) =>
-                  tool.name === "compare_prices"
-                    ? {
-                        ...tool,
-                        status: "completed",
-                        result: "Best price: RM3,500",
-                        duration: 0.8,
-                      }
-                    : tool
-                ),
-              }
-            : msg
-        )
-      );
-    }, 2600);
-
-    // Tool 3: Verify
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                toolCalls: msg.toolCalls?.map((tool) =>
-                  tool.name === "verify_sellers"
-                    ? { ...tool, status: "running" }
-                    : tool
-                ),
-              }
-            : msg
-        )
-      );
-    }, 2700);
-
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                toolCalls: msg.toolCalls?.map((tool) =>
-                  tool.name === "verify_sellers"
-                    ? {
-                        ...tool,
-                        status: "completed",
-                        result: "8 verified sellers",
-                        duration: 1.0,
-                      }
-                    : tool
-                ),
-              }
-            : msg
-        )
-      );
-
-      // Final response
-      const finalMessage: Message = {
+    } catch (error) {
+      console.error("AI chat error:", error);
+      // Show error message
+      const errorMessage: Message = {
         id: (Date.now() + 2).toString(),
         role: "assistant",
         content:
-          "✅ **Analysis Complete!**\n\nI found **12 gaming PCs** under RM4000. Here are your best options:\n\n1. **RTX 4070 Gaming PC** - RM3,500 (Verified seller)\n2. **Custom Build RTX 4060 Ti** - RM3,200 (Top rated)\n3. **Pre-built Gaming Rig** - RM3,800 (Like new)\n\nAll sellers have 4.5+ ratings. Would you like me to track prices or get more details on any listing?",
+          "Sorry, I encountered an error processing your request. Please try again or visit [all threads](/threads) to browse manually.",
         timestamp: new Date(),
+        toolCalls: [{ name: "search_marketplace", status: "failed" }],
       };
-      setMessages((prev) => [...prev, finalMessage]);
-    }, 3700);
+      setMessages((prev) => [...prev.slice(0, -1), errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -404,26 +322,6 @@ export default function SidebarAIChat({
       e.preventDefault();
       handleSendMessage();
     }
-  };
-
-  const toggleMode = () => {
-    const newMode = mode === "reactive" ? "proactive" : "reactive";
-    setMode(newMode);
-
-    // Show mode change message
-    const modeMessage: Message = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content: `Switched to **${
-        newMode === "proactive" ? "Proactive" : "Reactive"
-      }** mode.\n\n${
-        newMode === "proactive"
-          ? "I'll now actively monitor listings, track prices, and alert you to opportunities automatically."
-          : "I'll respond to your requests and questions as you ask them."
-      }`,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, modeMessage]);
   };
 
   // Tool icon helper
@@ -561,9 +459,61 @@ export default function SidebarAIChat({
                             : "bg-white text-accent-700 border border-primary-200"
                         }`}
                       >
-                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-accent-700 prose-strong:font-bold">
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+                          <ReactMarkdown
+                            components={{
+                              a: ({ node, ...props }) => (
+                                <a
+                                  {...props}
+                                  style={{
+                                    color: "#F5CB5C",
+                                    fontWeight: "bold",
+                                    textDecoration: "none",
+                                  }}
+                                  className="hover:underline"
+                                />
+                              ),
+                              strong: ({ node, ...props }) => (
+                                <strong
+                                  {...props}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "#1D1C1A",
+                                  }}
+                                />
+                              ),
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
                         </div>
+
+                        {/* Actionable Links */}
+                        {message.links && message.links.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-primary-100 space-y-2">
+                            {message.links.map((link, idx) => {
+                              if (!link || !link.url) return null;
+                              return (
+                                <a
+                                  key={idx}
+                                  href={link.url}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    router.push(link.url);
+                                  }}
+                                  className="flex items-center gap-2 text-xs font-bold transition-colors group"
+                                  style={{ color: "#F5CB5C" }}
+                                >
+                                  <ExternalLink className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                                  <span className="underline decoration-dotted underline-offset-2 hover:no-underline">
+                                    {link.text}
+                                  </span>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         <span className="text-[10px] opacity-60 mt-1 block">
                           {message.timestamp.toLocaleTimeString([], {
                             hour: "2-digit",
@@ -687,36 +637,6 @@ export default function SidebarAIChat({
         <div className="px-4 md:px-6 py-3 bg-white/80 backdrop-blur-sm border-t border-primary-200">
           {activeTab === "chat" && (
             <>
-              {/* Mode Toggle (inside chat) */}
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-xs text-accent-500">AI Mode:</span>
-                <button
-                  onClick={toggleMode}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                    mode === "proactive"
-                      ? "bg-secondary-100 border-secondary-300 hover:bg-secondary-200"
-                      : "bg-white border-primary-300 hover:bg-primary-50"
-                  }`}
-                >
-                  <Zap
-                    className={`w-3 h-3 ${
-                      mode === "proactive"
-                        ? "text-secondary-700"
-                        : "text-accent-400"
-                    }`}
-                  />
-                  <span
-                    className={`font-semibold ${
-                      mode === "proactive"
-                        ? "text-secondary-700"
-                        : "text-accent-700"
-                    }`}
-                  >
-                    {mode === "proactive" ? "Proactive" : "Reactive"}
-                  </span>
-                </button>
-              </div>
-
               {/* Input */}
               <div className="flex gap-3 items-end">
                 <input
