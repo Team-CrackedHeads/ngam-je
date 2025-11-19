@@ -12,7 +12,6 @@ import {
   Answer,
   VoteType,
 } from "@/components/threads/product-faq/types";
-import { mockAiSummary } from "@/utils/mock-all-data-used";
 import { createClerkApiClient } from "@/lib/clerk-api-client";
 import { fetchListingById } from "@/lib/api/listings";
 import {
@@ -21,6 +20,8 @@ import {
   answerQuestion,
   voteFAQ,
   FAQ,
+  getAISummary,  // ========== AI INTEGRATION: Added ==========
+  askAIQuestion, // ========== AI INTEGRATION: Added ==========
 } from "@/lib/api/faqs";
 import {
   fetchRepliesByFAQId,
@@ -188,9 +189,11 @@ const FAQPage: React.FC = () => {
   const [showAskQuestion, setShowAskQuestion] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState("");
 
-  const aiSummary = mockAiSummary;
+  // ========== AI INTEGRATION: State for AI Summary ==========
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  // ===========================================================
 
-  // ... rest of your existing handler functions stay exactly the same ...
   const toggleQuestion = (questionId: string) => {
     setExpandedQuestionId((prev) => (prev === questionId ? null : questionId));
   };
@@ -450,6 +453,96 @@ const FAQPage: React.FC = () => {
     }
   };
 
+  // ========== AI INTEGRATION: Generate AI Summary Handler ==========
+  const handleGenerateAISummary = async () => {
+    try {
+      setAiSummaryLoading(true);
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      const summaryData = await getAISummary(apiClient.instance, listingId);
+
+      // Format the summary with key features and common questions
+      let formattedSummary = summaryData.summary;
+
+      if (summaryData.key_features && summaryData.key_features.length > 0) {
+        formattedSummary += "\n\n## Key Features\n";
+        summaryData.key_features.forEach(feature => {
+          formattedSummary += `- ${feature}\n`;
+        });
+      }
+
+      if (summaryData.common_questions && summaryData.common_questions.length > 0) {
+        formattedSummary += "\n\n## Common Questions\n";
+        summaryData.common_questions.forEach(q => {
+          formattedSummary += `- ${q}\n`;
+        });
+      }
+
+      setAiSummary(formattedSummary);
+    } catch (error) {
+      console.error("Failed to generate AI summary:", error);
+      setAiSummary("Failed to generate summary. Please try again later.");
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  // ========== AI INTEGRATION: Ask AI Question Handler ==========
+  const handleAskAIQuestion = async (question: string) => {
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Get current user data to extract user_id
+      const userResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const aiResponse = await askAIQuestion(apiClient.instance, {
+        listing_id: listingId,
+        question: question,
+        user_id: userResponse.data.id,
+      });
+
+      // Add the AI-answered question to the questions list
+      const newQuestion: QuestionType = {
+        id: aiResponse.data.id.toString(),
+        question: aiResponse.data.question,
+        description: "",
+        answers: aiResponse.data.answer ? [{
+          id: `answer-${aiResponse.data.id}`,
+          user: aiResponse.data.answer_username || "AI Assistant",
+          text: aiResponse.data.answer,
+          isAccepted: aiResponse.data.is_accepted,
+          likes: aiResponse.data.helpful_count,
+          dislikes: aiResponse.data.not_helpful_count,
+          replies: [],
+        }] : [],
+        isAnsweredByPoster: false,
+      };
+
+      setQuestions((prev) => [newQuestion, ...prev]);
+
+      // Show a notification based on whether it was found or created
+      if (aiResponse.status === "found") {
+        alert("Similar question found! Showing existing answer.");
+      } else {
+        alert("AI has generated an answer for your question!");
+      }
+
+      // Switch to answered tab to see the result
+      setActiveTab("answered");
+    } catch (error) {
+      console.error("Failed to ask AI question:", error);
+      alert("Failed to get AI answer. Please try again.");
+    }
+  };
+  // ==================================================================
+
   const filteredQuestions = questions.filter((q) =>
     activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0
   );
@@ -504,7 +597,14 @@ const FAQPage: React.FC = () => {
         {/* ... everything else stays the same ... */}
         <div className="md:col-span-2 space-y-6">
           <div className="lg:hidden">
-            <AISummary content={aiSummary} />
+            {/* ========== AI INTEGRATION: Connected AI Summary (Mobile) ========== */}
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+            />
+            {/* =================================================================== */}
           </div>
 
           <div className="flex justify-center border-b border-[color:var(--color-border)] mt-4 space-x-6">
@@ -639,7 +739,14 @@ const FAQPage: React.FC = () => {
         </div>
 
         <div className="hidden lg:block">
-          <AISummary content={aiSummary} />
+          {/* ========== AI INTEGRATION: Connected AI Summary (Desktop) ========== */}
+          <AISummary
+            content={aiSummary}
+            isLoading={aiSummaryLoading}
+            onGenerateSummary={handleGenerateAISummary}
+            onAskQuestion={handleAskAIQuestion}
+          />
+          {/* ==================================================================== */}
         </div>
       </div>
     </div>
