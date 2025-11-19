@@ -192,6 +192,8 @@ const FAQPage: React.FC = () => {
   // ========== AI INTEGRATION: State for AI Summary ==========
   const [aiSummary, setAiSummary] = useState<string>("");
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiQuestionLoading, setAiQuestionLoading] = useState(false);
+  const [aiProgressMessage, setAiProgressMessage] = useState<string>("");
   // ===========================================================
 
   const toggleQuestion = (questionId: string) => {
@@ -509,10 +511,20 @@ const FAQPage: React.FC = () => {
   // ========== AI INTEGRATION: Ask AI Question Handler ==========
   const handleAskAIQuestion = async (question: string) => {
     try {
+      // Step 1: Start loading with progress messages
+      setAiQuestionLoading(true);
+      setAiProgressMessage("Understanding your question...");
+
+      // Small delay to show the first message
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 2: Authenticating
+      setAiProgressMessage("Authenticating your request...");
       const token = await getToken();
       const apiClient = createClerkApiClient(token);
 
-      // Get current user data to extract user_id
+      // Step 3: Getting user info
+      setAiProgressMessage("Retrieving user information...");
       const userResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
         {
@@ -520,11 +532,28 @@ const FAQPage: React.FC = () => {
         }
       );
 
+      // Step 4: Analyzing product context
+      setAiProgressMessage("Analyzing product details...");
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Step 5: Searching database
+      setAiProgressMessage("Searching for similar questions...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 6: Generating AI response
+      setAiProgressMessage("Consulting AI knowledge base...");
       const aiResponse = await askAIQuestion(apiClient.instance, {
         listing_id: listingId,
         question: question,
         user_id: userResponse.data.id,
       });
+
+      // Step 7: Processing and formatting
+      setAiProgressMessage("Formatting the answer...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 8: Finalizing
+      setAiProgressMessage("Almost done...");
 
       // Add the AI-answered question to the questions list
       const newQuestion: QuestionType = {
@@ -557,6 +586,10 @@ const FAQPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to ask AI question:", error);
       alert("Failed to get AI answer. Please try again.");
+    } finally {
+      // Clear loading state
+      setAiQuestionLoading(false);
+      setAiProgressMessage("");
     }
   };
   // ==================================================================
@@ -619,6 +652,8 @@ const FAQPage: React.FC = () => {
               isLoading={aiSummaryLoading}
               onGenerateSummary={handleGenerateAISummary}
               onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
             />
             {/* =================================================================== */}
           </div>
@@ -761,6 +796,8 @@ const FAQPage: React.FC = () => {
             isLoading={aiSummaryLoading}
             onGenerateSummary={handleGenerateAISummary}
             onAskQuestion={handleAskAIQuestion}
+            isQuestionLoading={aiQuestionLoading}
+            progressMessage={aiProgressMessage}
           />
           {/* ==================================================================== */}
         </div>

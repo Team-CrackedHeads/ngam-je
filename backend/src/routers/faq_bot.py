@@ -6,7 +6,7 @@ from src.services.faq_service import FAQService
 from src.schemas.faq import FAQRequest, FAQResponse
 from typing import Dict, Any
 
-router = APIRouter(tags=["AI Assistant"])
+router = APIRouter(tags=["AIAssistant"])
 
 @router.post("/ask")
 async def ask_question(payload: FAQRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
