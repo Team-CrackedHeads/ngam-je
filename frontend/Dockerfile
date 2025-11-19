@@ -42,11 +42,9 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY \
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
-# Debug: Print environment variables
-RUN echo "DEBUG: NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
-
-# Build Next.js application with standalone output
-RUN bun run build
+# Debug: Print environment variables and build Next.js application with standalone output
+RUN echo "DEBUG: NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" && \
+    bun run build
 
 # ============================================================================
 # Stage 3: Runner - Minimal production image with Node.js

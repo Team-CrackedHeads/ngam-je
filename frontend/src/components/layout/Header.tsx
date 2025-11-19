@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Puzzle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -11,7 +11,6 @@ const Header = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
-  const router = useRouter();
   const { signOut } = useClerk();
 
   return (

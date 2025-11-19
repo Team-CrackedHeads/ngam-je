@@ -7,7 +7,7 @@ import {
   Home,
   MessageCircle,
   User,
-  Settings,
+  // Settings,
   Menu,
   Plus,
   ChevronDown,
@@ -43,15 +43,16 @@ import SellListingsMenuItem from "@/components/sidebar/menu-items/SellListingsMe
 import MatchedListingsMenuItem from "@/components/sidebar/menu-items/MatchedListingsMenuItem";
 const navItems = [
   { href: "/threads", label: "Threads", icon: Home },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/messages", label: "Messages", icon: MessageCircle, isLoginRequired: true },
+  { href: "/profile", label: "Profile", icon: User, isLoginRequired: true },
+  // { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 // Mock chat history data - 2nd hand marketplace purchase decisions
 // Use centralized chat history data
 const mockChatHistory = SIDEBAR_CHAT_HISTORY;
-
 
 function FollowingMenuItem() {
   const [isOpen, setIsOpen] = useState(false);
@@ -133,13 +134,33 @@ function NgamJeAssistantMenuItem({
   const KEEP_RECENT_COUNT = 10;
   const MAX_LOADED_COUNT = 25;
   const DELOAD_TO_COUNT = 15;
+  const { has } = useAuth();
 
   const handleNewChat = () => {
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
+    if (!isAllowed) {
+      showFeatureDisabledMessage();
+      return;
+    }
     onNewChat();
   };
 
   const handleChatClick = (chatId: number) => {
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
+    if (!isAllowed) {
+      showFeatureDisabledMessage();
+      return;
+    }
     router.push(`/chat/history?id=${chatId}`);
+  };
+
+  const handleChatHistoryClick = () => {
+    const isAllowed = has ? has({feature: 'ngam_assistant'}) : false;
+    if (!isAllowed) {
+      showFeatureDisabledMessage();
+      return;
+    }
+    router.push('/chat/history');
   };
 
   const loadMoreChats = () => {
@@ -176,6 +197,10 @@ function NgamJeAssistantMenuItem({
     }
   };
 
+  const showFeatureDisabledMessage = () => {
+    alert("Your current plan does not support Ngam-je Assistant. Please upgrade your plan to access this feature.");
+  }
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -202,10 +227,10 @@ function NgamJeAssistantMenuItem({
               asChild
               className="text-accent-500 hover:bg-primary-200 hover:text-accent-700"
             >
-              <Link href="/chat/history" className="flex items-center gap-2">
+              <SidebarMenuButton onClick={handleChatHistoryClick} className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm font-medium">Chat History</span>
-              </Link>
+              </SidebarMenuButton>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
 
@@ -271,12 +296,16 @@ function NavigationMenuItem() {
   const { state } = useSidebar();
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
+  const { isSignedIn } = useAuth();
 
   if (isCollapsed) {
     return (
       <>
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          if (!isSignedIn && item.isLoginRequired) {
+            return (<></>);
+          }
           return (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -321,6 +350,9 @@ function NavigationMenuItem() {
         <SidebarMenuSub>
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            if (!isSignedIn && item.isLoginRequired) {
+              return null;
+            }
             return (
               <SidebarMenuSubItem key={item.href}>
                 <SidebarMenuSubButton
@@ -373,6 +405,8 @@ export function AppSidebar() {
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+  
+  const { isSignedIn } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -464,19 +498,21 @@ export function AppSidebar() {
             <SidebarSeparator />
           </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <NgamJeAssistantMenuItem
-                  onNewChat={handleNewChat}
-                />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {isSignedIn && (<>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <NgamJeAssistantMenuItem
+                    onNewChat={handleNewChat}
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
+          </>)}
 
           <SidebarGroup>
             <SidebarGroupContent>
@@ -486,53 +522,57 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
+          {isSignedIn && (<>
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <FollowingMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
-
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <BuyListingsMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <FollowingMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>)}
 
           <div className="ml-1 mr-5">
             <SidebarSeparator />
           </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SellListingsMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {isSignedIn && (<>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <BuyListingsMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-          <div className="ml-1 mr-5">
-            <SidebarSeparator />
-          </div>
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
 
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <MatchedListingsMenuItem />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SellListingsMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <div className="ml-1 mr-5">
+              <SidebarSeparator />
+            </div>
+
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <MatchedListingsMenuItem />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>)}
 
         </SidebarContent>{" "}
         {/* <-- This closes SidebarContent */}
