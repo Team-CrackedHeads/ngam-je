@@ -1,6 +1,7 @@
 # help to manage & respond about the the products
 # pyright: reportPrivateImportUsage=false, reportAttributeAccessIssue=false
 import google.generativeai as genai
+from google.generativeai.types import GenerationConfig
 import json
 import os
 from dotenv import load_dotenv
@@ -12,7 +13,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 class FAQModeratorAgent:
     def __init__(self):
         self.model_name = "gemini-2.5-flash"
-        self.config_json = {"response_mime_type": "application/json"}
+        self.config_json = GenerationConfig(response_mime_type="application/json")
 
     # classify the intent of the question into 5 cat (Product Features, Pricing, Warranty, Returns, General Inquiry)
     def classify_intent(self, question: str) -> str:
