@@ -28,9 +28,26 @@ async def get_summary(listing_id: int, db: Session = Depends(get_db)) -> Dict[st
     Get AI-generated summary widget for a listing.
     Returns summary, negotiation_score, readiness_tips, and reliability_quote.
     """
+    from src.models.listing import Listing
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Check if listing exists first
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        logger.error(f"Listing with ID {listing_id} not found")
+        raise HTTPException(status_code=404, detail=f"Listing with ID {listing_id} not found")
+
     service = FAQService(db)
     try:
         result = service.get_widget_data(listing_id)
+
+        # Validate the result structure
+        if not isinstance(result, dict):
+            logger.error(f"Invalid response from get_widget_data: {type(result)}")
+            raise ValueError("Invalid response from AI service")
+
         # Service returns: {"summary": str, "negotiation_score": int, "readiness_tips": list, "reliability_quote": str}
         # Frontend expects: {"summary": str, "key_features": list, "common_questions": list}
         # Map the backend format to frontend format
@@ -41,5 +58,9 @@ async def get_summary(listing_id: int, db: Session = Depends(get_db)) -> Dict[st
             "negotiation_score": result.get("negotiation_score", 0),  # Extra field
             "reliability_quote": result.get("reliability_quote", "")  # Extra field
         }
+    except ValueError as e:
+        logger.error(f"ValueError in get_summary for listing {listing_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error in get_summary for listing {listing_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate AI summary: {str(e)}")
