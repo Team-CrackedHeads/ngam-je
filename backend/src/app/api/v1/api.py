@@ -50,3 +50,4 @@ api_router.include_router(payments.router, prefix="/payments", tags=["payments"]
 api_router.include_router(ngam_overview.router, prefix="/ngam-overview", tags=["ngam-overview"])
 api_router.include_router(ai_chat.router, prefix="/ai-chat", tags=["ai-chat"])
 api_router.include_router(faq_bot.router, prefix="/faq-bot", tags=["AI Assistant"])
+api_router.include_router(faq_bot.router, prefix="/faq-bot")
