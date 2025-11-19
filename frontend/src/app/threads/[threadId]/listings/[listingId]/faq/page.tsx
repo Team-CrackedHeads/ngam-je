@@ -481,8 +481,26 @@ const FAQPage: React.FC = () => {
 
       setAiSummary(formattedSummary);
     } catch (error) {
-      console.error("Failed to generate AI summary:", error);
-      setAiSummary("Failed to generate summary. Please try again later.");
+      // Enhanced error logging to see the actual error details
+      console.error("Failed to generate AI summary:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error: error,
+        response: axios.isAxiosError(error) ? error.response?.data : undefined,
+        status: axios.isAxiosError(error) ? error.response?.status : undefined,
+      });
+
+      // Show more specific error message to user
+      let errorMessage = "Failed to generate summary. Please try again later.";
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          errorMessage = "Listing not found. Please refresh the page.";
+        } else if (error.response?.status === 500) {
+          errorMessage = "Server error. The AI service might be unavailable.";
+        } else if (error.response?.data?.detail) {
+          errorMessage = `Error: ${error.response.data.detail}`;
+        }
+      }
+      setAiSummary(errorMessage);
     } finally {
       setAiSummaryLoading(false);
     }
@@ -592,9 +610,7 @@ const FAQPage: React.FC = () => {
         </h1>
       </div>
 
-      {/* Rest of your existing JSX stays exactly the same */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ... everything else stays the same ... */}
         <div className="md:col-span-2 space-y-6">
           <div className="lg:hidden">
             {/* ========== AI INTEGRATION: Connected AI Summary (Mobile) ========== */}

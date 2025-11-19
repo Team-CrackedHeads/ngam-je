@@ -1,7 +1,12 @@
 # help to manage & respond about the the products
 import google.generativeai as genai
 import json
+import os
+from dotenv import load_dotenv
 from ai_faq_moderator.tools import generate_grounded_response
+
+# Load environment variables from the ai_faq_moderator/.env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 class FAQModeratorAgent:
     def __init__(self):

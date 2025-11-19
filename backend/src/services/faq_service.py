@@ -6,16 +6,26 @@ to generate answers when no good match exists
 from sqlalchemy.orm import Session, joinedload
 from src.models.faq import FAQ
 from src.models.faq_embeddings import FAQEmbedding
-from src.models.listing import Listing 
+from src.models.listing import Listing
 from ai_faq_moderator.moderator import FAQModeratorAgent
 import google.generativeai as genai
 import numpy as np
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 class FAQService:
     def __init__(self, db: Session):
         self.db = db
         self.agent = FAQModeratorAgent()
         self.embedding_model = "models/embedding-001"
+
+        # Ensure Gemini API is configured
+        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if api_key:
+            genai.configure(api_key=api_key)
 
     def get_vector(self, text: str):
         """Calculates embedding using Gemini API."""
