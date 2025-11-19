@@ -140,6 +140,7 @@ export const ProductDetails = ({
           onBuyNow={handleMakeOfferClick}
           isOwnListing={isOwnListing}
           listingType={listing.listingType}
+          listingId={listing.id}
         />
       </div>
 

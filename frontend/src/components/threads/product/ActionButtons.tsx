@@ -12,6 +12,7 @@ interface ActionButtonsProps {
   onBuyNow?: () => void;
   listingType?: "sale" | "wanted";
   isOwnListing?: boolean;
+  listingId?: number | string;
 }
 
 export const ActionButtons = ({
@@ -20,6 +21,7 @@ export const ActionButtons = ({
   onBuyNow,
   listingType = "sale",
   isOwnListing = false,
+  listingId,
 }: ActionButtonsProps) => {
 
   return (
@@ -42,7 +44,7 @@ export const ActionButtons = ({
     </button> */}
     {isOwnListing ? (
       <Link
-        href={`/listings?type=${listingType === "sale" ? "sale" : "wanted"}`}
+        href={`/listings/${listingId}/matches?type=${listingType}`}
         className={`${wideButtonClasses} font-semibold shadow-md outline-solid outline-1 bg-gradient-to-r from-secondary-500 to-secondary-600 text-accent-700 focus:ring-accent-500 no-underline`}
       >
         <FileText className="w-5 h-5" />

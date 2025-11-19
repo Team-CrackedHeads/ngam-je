@@ -7,7 +7,6 @@ const isProtectedRoute = createRouteMatcher([
   '/profile(.*)',
   '/settings(.*)',
   '/chat/history(.*)',
-  '/subscription(.*)',
   // Protect API routes
   '/api/create-checkout-session(.*)',
 ]);
@@ -56,8 +55,10 @@ export default clerkMiddleware(async (auth, req) => {
         );
       }
 
-      // For pages, redirect to subscription page
-      return Response.redirect(new URL('/subscription', req.url));
+      // For pages, redirect to current page with billing modal trigger
+      const url = new URL(req.url);
+      url.searchParams.set('showBilling', 'true');
+      return Response.redirect(url);
     }
   }
 });
