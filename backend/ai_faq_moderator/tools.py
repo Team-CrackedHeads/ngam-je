@@ -6,9 +6,17 @@ import os
 import numpy as np
 from typing import List, Tuple
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+
+# Load environment variables from the ai_faq_moderator/.env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 # Configure environment
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Try both GOOGLE_API_KEY and GEMINI_API_KEY for compatibility
+api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY environment variable must be set")
+genai.configure(api_key=api_key)
 
 def get_query_embedding(query: str) -> List[float]:
     """
