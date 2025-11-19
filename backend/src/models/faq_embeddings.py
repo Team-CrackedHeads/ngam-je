@@ -4,7 +4,7 @@ act as a long-term memory for the embeddings
 """
 from sqlalchemy import Column, Integer, ForeignKey, Float
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from src.database import Base
 
 # table name: faq_embeddings
@@ -22,8 +22,8 @@ class FAQEmbedding(Base):
     # gemini model / gemini-embedding-001 (768 dimension)
     embedding = Column(ARRAY(Float), nullable=False)
 
-    # Relationship to FAQ
-    faq = relationship("FAQ", backref="embedding")
+    # Relationship to FAQ (one-to-one since faq_id is unique)
+    faq = relationship("FAQ", backref=backref("embedding", uselist=False))
 
     def __repr__(self):
         return f"<FAQEmbedding(id={self.id}, faq_id={self.faq_id})>"
