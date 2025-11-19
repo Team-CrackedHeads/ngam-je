@@ -1,7 +1,7 @@
 # help to manage & respond about the the products
 import google.generativeai as genai
 import json
-from ai_faq_moderator import generate_grounded_response
+from ai_faq_moderator.tools import generate_grounded_response
 
 class FAQModeratorAgent:
     def __init__(self):
