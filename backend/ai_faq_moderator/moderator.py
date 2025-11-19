@@ -1,4 +1,5 @@
 # help to manage & respond about the the products
+# pyright: reportPrivateImportUsage=false, reportAttributeAccessIssue=false
 import google.generativeai as genai
 import json
 import os

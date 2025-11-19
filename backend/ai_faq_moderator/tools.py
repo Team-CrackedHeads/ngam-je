@@ -1,10 +1,10 @@
 """
 RAG (Retrieval Augmented Generation) system for FAQ queries
 """
-import google.generativeai as genai
+import google.generativeai as genai  # type: ignore
 import os
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
@@ -16,7 +16,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY environment variable must be set")
-genai.configure(api_key=api_key)
+genai.configure(api_key=api_key)  # type: ignore
 
 def get_query_embedding(query: str) -> List[float]:
     """
@@ -26,7 +26,7 @@ def get_query_embedding(query: str) -> List[float]:
     Returns:
         List of floats representing the embedding vector (768 dimensions)
     """
-    result = genai.embed_content(
+    result = genai.embed_content(  # type: ignore
         model="models/embedding-001",
         content=query,
         task_type="retrieval_query"
@@ -58,7 +58,7 @@ def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
 def retrieve_similar_faqs(
     db: Session,
     query: str,
-    listing_id: int = None,
+    listing_id: Optional[int] = None,
     top_k: int = 3,
     similarity_threshold: float = 0.7 # can change to 0.75 or 0.80 to prevent AI from giving off topic answers
 ) -> List[Tuple[dict, float]]:
@@ -122,10 +122,10 @@ def generate_grounded_response(query: str, context_text: str) -> str:
     Returns:
         AI-generated response grounded in the context
     """
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')  # type: ignore
 
     prompt = f"""
-    You are a helpful e-commerce assistant.
+    You are a helpful e-commerce assistant for a marketplace platform.
 
     CONTEXT DATA:
     {context_text}
@@ -134,9 +134,18 @@ def generate_grounded_response(query: str, context_text: str) -> str:
     {query}
 
     INSTRUCTIONS:
-    1. Answer based ONLY on the Context Data above.
-    2. If the answer is not in the context, say "I don't have that information, please ask the seller."
-    3. Be concise and polite to the prospective user.
+    1. Answer the question using the product details, specifications, and information provided in the Context Data.
+    2. If the Context Data contains relevant information (title, description, price, condition, location, shipping, etc.), use it to answer the question directly.
+    3. For questions about specific details not mentioned in the context (e.g., exact measurements, warranty period, manufacturing date), suggest that the user contact the seller for those specific details.
+    4. Be concise, helpful, and polite.
+    5. Format your response in a natural, conversational way.
+    6. If answering questions about availability, condition, or features - reference the specific information from the context.
+
+    EXAMPLES:
+    - Question: "What is the resolution?" - If screen resolution or specs are in description, provide them. Otherwise, suggest asking the seller for technical specifications.
+    - Question: "Is this available?" - Based on listing status, you can confirm it appears to be listed for sale.
+    - Question: "What's the price?" - Provide the exact price from the context.
+    - Question: "What condition is it in?" - Provide the condition information from the context.
     """
     response = model.generate_content(prompt)
     return response.text.strip()
@@ -144,7 +153,7 @@ def generate_grounded_response(query: str, context_text: str) -> str:
 def rag_query(
     db: Session,
     query: str,
-    listing_id: int = None,
+    listing_id: Optional[int] = None,
     top_k: int = 5
 ) -> str:
     """

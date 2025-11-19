@@ -37,25 +37,41 @@ class FAQService:
 
     def _build_context(self, listing: Listing, include_faqs: bool = False) -> str:
         """
-        CRITICAL: Converts your Listing's JSONB fields and numeric data 
+        CRITICAL: Converts your Listing's JSONB fields and numeric data
         into a plain text story the gemini is able to read.
         """
         # Safe handling of JSONB lists (tags, shipping) which might be None
         shipping = ", ".join([str(x) for x in (listing.shipping_options or [])])
         tags = ", ".join([str(x) for x in (listing.tags or [])])
-        
+
+        # Build price information
+        price_info = f"{listing.price} {listing.currency}"
+        if listing.min_price and listing.max_price:
+            price_info += f" (Price range: {listing.min_price} - {listing.max_price} {listing.currency})"
+
+        # Availability status
+        availability = "Available" if listing.is_active else "Not Available"
+        if listing.is_matched:
+            availability = "Matched with buyer/seller"
+        elif listing.is_checked_out:
+            availability = "Sold/Completed"
+
         context = f"""
         --- PRODUCT DATA ---
         Title: {listing.title}
-        Price: {listing.price} {listing.currency}
-        Condition: {listing.listing_type} (Is New? {listing.condition if hasattr(listing, 'condition') else 'Not specified'})
+        Listing Type: {listing.listing_type}
+        Price: {price_info}
         Description: {listing.description}
-        
+        Availability Status: {availability}
+
         --- LOGISTICS & METADATA ---
         Location: {listing.creator_location}
+        Seller/Poster Name: {listing.creator_name}
         Verified Seller: {'Yes' if listing.creator_verified else 'No'}
-        Shipping Options: {shipping}
-        Tags: {tags}
+        Shipping Options: {shipping if shipping else 'Not specified'}
+        Tags/Categories: {tags if tags else 'None'}
+        Views: {listing.views}
+        Inventory Quantity: {listing.inventory_quantity if listing.inventory_quantity else 'Not specified'}
         """
 
         if include_faqs:
@@ -63,7 +79,7 @@ class FAQService:
             faqs = self.db.query(FAQ).filter(FAQ.listing_id == listing.id).limit(10).all()
             qa_text = "\n".join([f"Q: {f.question} A: {f.answer}" for f in faqs])
             context += f"\n\n--- EXISTING Q&A HISTORY ---\n{qa_text}"
-            
+
         return context
 
     def process_question(self, req):
