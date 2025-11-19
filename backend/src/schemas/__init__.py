@@ -3,8 +3,7 @@
 from src.schemas.user import User, UserUpdate
 from src.schemas.thread import ThreadCreate, ThreadUpdate, ThreadResponse
 from src.schemas.listing import ListingCreate, ListingUpdate, ListingResponse
-from src.schemas.faq import FAQQuestionCreate, FAQAnswerCreate, FAQUpdate
-from src.schemas.faq_schema import FAQRequest, AIWidgetResponse, FAQResponse
+from src.schemas.faq import FAQQuestionCreate, FAQAnswerCreate, FAQUpdate, FAQResponse
 from src.schemas.faq_reply import FAQReplyCreate, FAQReplyUpdate, FAQReplyResponse
 from src.schemas.recommendation import (
     RecommendationCreate,
@@ -30,8 +29,6 @@ __all__ = [
     "FAQQuestionCreate",
     "FAQAnswerCreate",
     "FAQUpdate",
-    "FAQRequest",
-    "AIWidgetResponse",
     "FAQResponse",
     # FAQ Reply schemas
     "FAQReplyCreate",
