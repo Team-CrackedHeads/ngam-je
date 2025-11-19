@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.services.faq_service import FAQService
-from src.schemas.faq import FAQRequest
+from src.schemas.faq import FAQRequest, FAQResponse
 from typing import Dict, Any
 
 router = APIRouter(tags=["AI Assistant"])
@@ -18,6 +18,9 @@ async def ask_question(payload: FAQRequest, db: Session = Depends(get_db)) -> Di
     try:
         result = service.process_question(payload)
         # Service returns: {"status": "found"|"created", "message": str, "data": FAQ, "category": str}
+        # Convert SQLAlchemy FAQ model to Pydantic schema for serialization
+        if "data" in result and result["data"] is not None:
+            result["data"] = FAQResponse.model_validate(result["data"])
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
