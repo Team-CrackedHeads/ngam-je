@@ -53,3 +53,17 @@ class FAQListResponse(BaseModel):
     """Response for listing FAQs"""
     faqs: list[FAQResponse]
     total: int
+
+
+class FAQRequest(BaseModel):
+    """Schema for FAQ bot question requests"""
+    listing_id: int = Field(..., gt=0, description="ID of the listing to ask about")
+    question: str = Field(..., min_length=5, max_length=1000, description="The question text")
+    user_id: Optional[int] = Field(None, description="ID of the user asking the question")
+
+
+class AIWidgetResponse(BaseModel):
+    """Schema for AI-generated sidebar widget data"""
+    summary: str = Field(..., description="AI-generated summary of the listing")
+    key_features: Optional[list[str]] = Field(None, description="Key features extracted by AI")
+    common_questions: Optional[list[str]] = Field(None, description="Common questions about the listing")
