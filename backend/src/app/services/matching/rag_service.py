@@ -20,6 +20,17 @@ def get_gemini_client():
 
 def export_listing_to_json(listing: Listing) -> dict:
     """Export listing to JSON format for RAG"""
+    # Export FAQs (only answered ones for context)
+    faqs = []
+    if hasattr(listing, 'faq_questions') and listing.faq_questions:
+        for faq in listing.faq_questions:
+            if faq.is_answered and faq.answer:
+                faqs.append({
+                    "question": faq.question,
+                    "answer": faq.answer,
+                    "helpful_count": faq.helpful_count,
+                })
+
     return {
         "listing_id": listing.id,
         "title": listing.title,
@@ -35,6 +46,7 @@ def export_listing_to_json(listing: Listing) -> dict:
         "shipping_options": listing.shipping_options or [],
         "inventory_quantity": listing.inventory_quantity,
         "created_at": listing.created_at.isoformat() if listing.created_at else None,
+        "faqs": faqs,  # Include answered FAQs for additional context
     }
 
 

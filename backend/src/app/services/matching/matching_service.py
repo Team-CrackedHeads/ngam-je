@@ -141,8 +141,14 @@ async def run_matching_for_listing(listing_id: int, db: Session):
     logger.info(f"=== Starting matching for listing {listing_id} ===")
 
     try:
-        # 1. Get the listing
-        listing = db.query(Listing).filter(Listing.id == listing_id).first()
+        # 1. Get the listing (eager load FAQs for RAG context)
+        from sqlalchemy.orm import selectinload
+        listing = (
+            db.query(Listing)
+            .options(selectinload(Listing.faq_questions))
+            .filter(Listing.id == listing_id)
+            .first()
+        )
         if not listing:
             logger.error(f"Listing {listing_id} not found")
             return
@@ -178,8 +184,14 @@ async def run_matching_and_negotiation(
     """
     logger.info(f"Negotiating: {source_listing.id} <-> {target_listing_id}")
 
-    # Get target listing
-    target_listing = db.query(Listing).filter(Listing.id == target_listing_id).first()
+    # Get target listing (eager load FAQs for RAG context)
+    from sqlalchemy.orm import selectinload
+    target_listing = (
+        db.query(Listing)
+        .options(selectinload(Listing.faq_questions))
+        .filter(Listing.id == target_listing_id)
+        .first()
+    )
     if not target_listing:
         logger.error(f"Target listing {target_listing_id} not found")
         return

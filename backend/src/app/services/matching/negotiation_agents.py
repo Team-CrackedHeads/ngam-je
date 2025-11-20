@@ -21,18 +21,29 @@ def create_buyer_prompt(wtb_listing: Listing) -> str:
     return f"""You are negotiating to BUY on behalf of listing #{wtb_listing.id}.
 
 **Your Budget:** ${wtb_listing.min_price:.2f} - ${wtb_listing.max_price:.2f}
+**Your Needs:** {wtb_listing.description[:150]}...
+**Your Location:** {wtb_listing.creator_location}
 **Your Goal:** Get the best price within budget
+
+**NEGOTIATION STRATEGY:**
+1. Use File Search to review the seller's listing details (condition, description, tags, shipping, FAQs)
+2. Reference SPECIFIC details from their listing to show genuine interest
+3. Check their FAQs - they may have already answered common questions
+4. Mention why you need this item (from your description)
+5. Consider shipping options and location compatibility
+6. Ask about condition, shipping cost, or other concerns NOT covered in FAQs
+7. Build rapport by acknowledging the item's value/condition
 
 **RULES:**
 1. You have MAX {DEFAULT_CONFIG.MAX_TURNS} turns to reach a deal
 2. Start with a reasonable offer (not your max budget)
 3. If seller's price is within budget, say "I agree to $XXX" with the EXACT price
 4. If price is too high and won't budge, say "No deal, too expensive"
-5. Be concise - max 2-3 sentences per turn
-6. Always state a specific dollar amount in your response
-7. Use the File Search to understand the seller's listing details
+5. Keep responses concise (2-3 sentences)
+6. Always state a specific dollar amount
+7. Make the conversation natural - mention product details, not just price
 
-Be professional but friendly. Focus on reaching a mutually beneficial deal."""
+Be professional, friendly, and show you've read their listing. Focus on mutual benefit."""
 
 
 def create_seller_prompt(wts_listing: Listing) -> str:
@@ -40,18 +51,31 @@ def create_seller_prompt(wts_listing: Listing) -> str:
     return f"""You are negotiating to SELL on behalf of listing #{wts_listing.id}.
 
 **Your Price Range:** ${wts_listing.min_price:.2f} - ${wts_listing.max_price:.2f}
+**Your Item:** {wts_listing.title}
+**Condition:** {wts_listing.description[:150]}...
+**Your Location:** {wts_listing.creator_location}
+**Shipping Options:** {', '.join(wts_listing.shipping_options) if wts_listing.shipping_options else 'Not specified'}
 **Your Goal:** Sell at the best price within range
+
+**NEGOTIATION STRATEGY:**
+1. Use File Search to review the buyer's listing (their needs, budget, location, FAQs)
+2. Highlight SPECIFIC features that match their needs
+3. Reference answers from your FAQs if relevant to their questions
+4. Mention item condition, completeness, and any extras
+5. Address shipping/delivery based on their location
+6. Show you understand their use case (if mentioned in their description)
+7. Build trust by providing detailed, honest information from FAQs
 
 **RULES:**
 1. You have MAX {DEFAULT_CONFIG.MAX_TURNS} turns to reach a deal
 2. Start with a reasonable asking price (not your minimum)
 3. If buyer's offer is within range, say "I agree to $XXX" with the EXACT price
 4. If offer is too low and won't improve, say "No deal, too low"
-5. Be concise - max 2-3 sentences per turn
-6. Always state a specific dollar amount in your response
-7. Use the File Search to understand the buyer's listing details
+5. Keep responses concise (2-3 sentences)
+6. Always state a specific dollar amount
+7. Make the conversation natural - highlight value, not just defend price
 
-Be professional but friendly. Focus on reaching a mutually beneficial deal."""
+Be professional, friendly, and show you understand their needs. Focus on mutual benefit."""
 
 
 def price_ranges_overlap(wtb_listing: Listing, wts_listing: Listing) -> bool:
@@ -60,21 +84,25 @@ def price_ranges_overlap(wtb_listing: Listing, wts_listing: Listing) -> bool:
 
 
 def extract_price_from_message(message: str) -> Optional[float]:
-    """Extract dollar amount from message"""
+    """Extract price amount from message (supports multiple currencies)"""
     import re
 
-    # Look for patterns like $123, $123.45, 123, etc.
+    # Look for patterns like MYR 560.00, $123, RM 500, etc.
     patterns = [
-        r'\$(\d+(?:\.\d{2})?)',  # $123 or $123.45
-        r'(\d+(?:\.\d{2})?)\s*(?:dollars|bucks)',  # 123 dollars
-        r'(?:^|\s)(\d+(?:\.\d{2})?)(?:\s|$)',  # standalone number
+        r'(?:MYR|RM|USD|\$)\s*(\d+(?:[.,]\d{2})?)',  # MYR 560.00, $123, RM 500
+        r'(\d+(?:[.,]\d{2})?)\s*(?:MYR|RM|USD|dollars|bucks)',  # 560.00 MYR, 123 dollars
+        r'\$(\d+(?:[.,]\d{2})?)',  # $123 or $123.45
+        r'(\d+(?:[.,]\d{2})?)\s*(?:dollars|bucks)',  # 123 dollars
+        r'(?:^|\s)(\d+(?:[.,]\d{2})?)(?:\s|$)',  # standalone number
     ]
 
     for pattern in patterns:
-        match = re.search(pattern, message)
+        match = re.search(pattern, message, re.IGNORECASE)
         if match:
             try:
-                return float(match.group(1))
+                # Replace comma with dot for European format
+                price_str = match.group(1).replace(',', '.')
+                return float(price_str)
             except (ValueError, IndexError):
                 continue
 
@@ -283,7 +311,10 @@ async def run_ai_negotiation(
     if agreed:
         termination_reason = "agreement_reached"
         match_score = 90.0  # High score for agreement
-        summary = f"Agreement reached at ${final_price:.2f} after {len(conversation)} messages"
+        if final_price:
+            summary = f"Agreement reached at ${final_price:.2f} after {len(conversation)} messages"
+        else:
+            summary = f"Agreement reached after {len(conversation)} messages (price extraction failed)"
     elif rejected:
         termination_reason = "rejected"
         match_score = 20.0  # Low score for rejection
