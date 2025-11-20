@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { ArrowLeft, Search, Send, Loader2, Bot } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useClerkApiClient } from "@/lib/clerk-api-client";
 import { useUser } from "@clerk/nextjs";
 import type {
@@ -13,8 +13,9 @@ import type {
   ConversationListResponse
 } from "@/types/messages";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const apiClient = useClerkApiClient();
 
@@ -48,6 +49,21 @@ export default function MessagesPage() {
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }, [messages]);
+
+  // Handle recommendation query parameter - auto-select conversation
+  useEffect(() => {
+    const recommendationId = searchParams.get('recommendation');
+    if (recommendationId && conversations.length > 0) {
+      // Find conversation with this recommendation_id
+      const conversation = conversations.find(c => c.recommendation_id === parseInt(recommendationId));
+      if (conversation) {
+        console.log('📧 Auto-selecting conversation for recommendation:', recommendationId, '-> conversation:', conversation.id);
+        setSelectedConversationId(conversation.id);
+      } else {
+        console.warn('⚠️ No conversation found for recommendation:', recommendationId);
+      }
+    }
+  }, [searchParams, conversations]);
 
   const loadConversations = async () => {
     try {
@@ -402,5 +418,13 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin" /></div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }

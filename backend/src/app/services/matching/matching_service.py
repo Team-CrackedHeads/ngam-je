@@ -240,7 +240,7 @@ async def run_matching_and_negotiation(
             created_by_user_id=None,  # AI-generated
             recommendation_type="ai_match",
             match_score=negotiation_result.match_score,
-            match_reasons=[negotiation_result.conversation_summary],
+            match_reasons=negotiation_result.match_reasons,  # Use extracted match reasons
             status="pending",  # Always start as pending - users must like to match
             message=negotiation_result.conversation_summary,
         )

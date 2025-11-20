@@ -24,6 +24,7 @@ class NegotiationResult(BaseModel):
     termination_reason: str
     conversation: list[NegotiationMessage]
     conversation_summary: str
+    match_reasons: list[str] = []  # Key reasons why listings match
     turn_count: int
     duration_seconds: float
     match_score: float = Field(ge=0, le=100)  # 0-100 score

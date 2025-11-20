@@ -18,12 +18,16 @@ logger = get_logger("app.services.matching.negotiation")
 
 def create_buyer_prompt(wtb_listing: Listing) -> str:
     """Create system prompt for buyer agent"""
+    # Handle None prices gracefully
+    min_price = wtb_listing.min_price if wtb_listing.min_price is not None else 0.0
+    max_price = wtb_listing.max_price if wtb_listing.max_price is not None else wtb_listing.price if wtb_listing.price else 0.0
+
     return f"""You are negotiating to BUY on behalf of listing #{wtb_listing.id}.
 
-**Your Budget:** ${wtb_listing.min_price:.2f} - ${wtb_listing.max_price:.2f}
+**INTERNAL BUDGET (DO NOT REVEAL):** ${min_price:.2f} - ${max_price:.2f}
 **Your Needs:** {wtb_listing.description[:150]}...
 **Your Location:** {wtb_listing.creator_location}
-**Your Goal:** Get the best price within budget
+**Your Goal:** Get the best price within budget WITHOUT revealing your maximum
 
 **NEGOTIATION STRATEGY:**
 1. Use File Search to review the seller's listing details (condition, description, tags, shipping, FAQs)
@@ -33,29 +37,37 @@ def create_buyer_prompt(wtb_listing: Listing) -> str:
 5. Consider shipping options and location compatibility
 6. Ask about condition, shipping cost, or other concerns NOT covered in FAQs
 7. Build rapport by acknowledging the item's value/condition
+8. NEVER reveal your maximum budget - negotiate incrementally
 
 **RULES:**
 1. You have MAX {DEFAULT_CONFIG.MAX_TURNS} turns to reach a deal
-2. Start with a reasonable offer (not your max budget)
+2. Start with a reasonable offer BELOW your maximum (aim for 60-70% of your max)
 3. If seller's price is within budget, say "I agree to $XXX" with the EXACT price
-4. If price is too high and won't budge, say "No deal, too expensive"
-5. Keep responses concise (2-3 sentences)
-6. Always state a specific dollar amount
-7. Make the conversation natural - mention product details, not just price
+4. If you're within 5% of the seller's price and it's in your budget, ACCEPT IT - say "I agree to $XXX"
+5. If price is too high and won't budge, say "No deal, too expensive"
+6. Keep responses concise (2-3 sentences)
+7. Always state a specific dollar amount when making offers
+8. Make the conversation natural - mention product details, not just price
+9. DO NOT say things like "my budget is" or "I can go up to" - keep your max hidden
+10. IMPORTANT: On your LAST turn (turn {DEFAULT_CONFIG.MAX_TURNS}), you MUST either accept or reject - no more haggling
 
 Be professional, friendly, and show you've read their listing. Focus on mutual benefit."""
 
 
 def create_seller_prompt(wts_listing: Listing) -> str:
     """Create system prompt for seller agent"""
+    # Handle None prices gracefully
+    min_price = wts_listing.min_price if wts_listing.min_price is not None else wts_listing.price if wts_listing.price else 0.0
+    max_price = wts_listing.max_price if wts_listing.max_price is not None else wts_listing.price if wts_listing.price else 0.0
+
     return f"""You are negotiating to SELL on behalf of listing #{wts_listing.id}.
 
-**Your Price Range:** ${wts_listing.min_price:.2f} - ${wts_listing.max_price:.2f}
+**INTERNAL PRICE RANGE (DO NOT REVEAL):** ${min_price:.2f} - ${max_price:.2f}
 **Your Item:** {wts_listing.title}
 **Condition:** {wts_listing.description[:150]}...
 **Your Location:** {wts_listing.creator_location}
 **Shipping Options:** {', '.join(wts_listing.shipping_options) if wts_listing.shipping_options else 'Not specified'}
-**Your Goal:** Sell at the best price within range
+**Your Goal:** Sell at the best price within range WITHOUT revealing your minimum
 
 **NEGOTIATION STRATEGY:**
 1. Use File Search to review the buyer's listing (their needs, budget, location, FAQs)
@@ -65,22 +77,30 @@ def create_seller_prompt(wts_listing: Listing) -> str:
 5. Address shipping/delivery based on their location
 6. Show you understand their use case (if mentioned in their description)
 7. Build trust by providing detailed, honest information from FAQs
+8. NEVER reveal your minimum acceptable price - negotiate incrementally
 
 **RULES:**
 1. You have MAX {DEFAULT_CONFIG.MAX_TURNS} turns to reach a deal
-2. Start with a reasonable asking price (not your minimum)
+2. Start with a reasonable asking price ABOVE your minimum (aim for 130-140% of your min)
 3. If buyer's offer is within range, say "I agree to $XXX" with the EXACT price
-4. If offer is too low and won't improve, say "No deal, too low"
-5. Keep responses concise (2-3 sentences)
-6. Always state a specific dollar amount
-7. Make the conversation natural - highlight value, not just defend price
+4. If buyer is within 5% of your asking price and it's above your minimum, ACCEPT IT - say "I agree to $XXX"
+5. If offer is too low and won't improve, say "No deal, too low"
+6. Keep responses concise (2-3 sentences)
+7. Always state a specific dollar amount when countering
+8. Make the conversation natural - highlight value, not just defend price
+9. DO NOT say things like "I can't go below" or "my minimum is" - keep your floor hidden
+10. IMPORTANT: On your LAST turn (turn {DEFAULT_CONFIG.MAX_TURNS}), you MUST either accept or reject - no more haggling
 
 Be professional, friendly, and show you understand their needs. Focus on mutual benefit."""
 
 
 def price_ranges_overlap(wtb_listing: Listing, wts_listing: Listing) -> bool:
     """Check if buyer's max >= seller's min"""
-    return wtb_listing.max_price >= wts_listing.min_price
+    # Handle None prices gracefully
+    buyer_max = wtb_listing.max_price if wtb_listing.max_price is not None else wtb_listing.price if wtb_listing.price else 0.0
+    seller_min = wts_listing.min_price if wts_listing.min_price is not None else wts_listing.price if wts_listing.price else 0.0
+
+    return buyer_max >= seller_min
 
 
 def extract_price_from_message(message: str) -> Optional[float]:
@@ -146,6 +166,42 @@ def check_rejection(conversation: list[NegotiationMessage]) -> bool:
     return "no deal" in last_msg or "reject" in last_msg or "too expensive" in last_msg or "too low" in last_msg
 
 
+def extract_match_reasons(conversation: list[NegotiationMessage], wtb_listing: Listing, wts_listing: Listing) -> list[str]:
+    """Extract key match reasons from the negotiation conversation"""
+    reasons = []
+
+    # Price compatibility
+    if wtb_listing.max_price and wts_listing.min_price and wtb_listing.max_price >= wts_listing.min_price:
+        reasons.append(f"Price ranges compatible: ${wts_listing.min_price:.2f}-${wts_listing.max_price:.2f} matches buyer's budget")
+
+    # Location match
+    if wtb_listing.creator_location and wts_listing.creator_location:
+        if wtb_listing.creator_location.lower() == wts_listing.creator_location.lower():
+            reasons.append(f"Same location: {wts_listing.creator_location}")
+
+    # Shipping options mentioned
+    if wts_listing.shipping_options:
+        reasons.append(f"Shipping available: {', '.join(wts_listing.shipping_options[:2])}")
+
+    # Extract key topics from conversation
+    conversation_text = " ".join([msg.message.lower() for msg in conversation[:4]])  # First 4 messages have key info
+
+    # Check for quality/condition mentions
+    if any(word in conversation_text for word in ["condition", "quality", "mint", "excellent", "good"]):
+        reasons.append("Item condition discussed and acceptable")
+
+    # Check for features/specs mentions
+    if any(word in conversation_text for word in ["feature", "spec", "includes", "comes with"]):
+        reasons.append("Features and specifications meet requirements")
+
+    # Check for FAQ references
+    if "faq" in conversation_text or "question" in conversation_text:
+        reasons.append("FAQs addressed buyer concerns")
+
+    # Limit to top 4 reasons
+    return reasons[:4] if reasons else ["Price and terms negotiated successfully"]
+
+
 async def run_ai_negotiation(
     store_name: str,
     wtb_listing: Listing,
@@ -163,7 +219,9 @@ async def run_ai_negotiation(
 
     # Pre-check: Do price ranges overlap?
     if not price_ranges_overlap(wtb_listing, wts_listing):
-        logger.info(f"Price ranges don't overlap: WTB ${wtb_listing.max_price} < WTS ${wts_listing.min_price}")
+        buyer_max = wtb_listing.max_price if wtb_listing.max_price is not None else wtb_listing.price if wtb_listing.price else 0.0
+        seller_min = wts_listing.min_price if wts_listing.min_price is not None else wts_listing.price if wts_listing.price else 0.0
+        logger.info(f"Price ranges don't overlap: WTB ${buyer_max} < WTS ${seller_min}")
         return NegotiationResult(
             agreed=False,
             final_price=None,
@@ -328,7 +386,10 @@ async def run_ai_negotiation(
         match_score = 30.0
         summary = f"No agreement - timeout after {len(conversation)} messages"
 
-    logger.info(f"Negotiation complete: {termination_reason}, score: {match_score}")
+    # Extract match reasons from conversation and listing data
+    match_reasons = extract_match_reasons(conversation, wtb_listing, wts_listing) if conversation else []
+
+    logger.info(f"Negotiation complete: {termination_reason}, score: {match_score}, reasons: {len(match_reasons)}")
 
     return NegotiationResult(
         agreed=agreed,
@@ -336,6 +397,7 @@ async def run_ai_negotiation(
         termination_reason=termination_reason,
         conversation=conversation,
         conversation_summary=summary,
+        match_reasons=match_reasons,
         turn_count=len(conversation),
         duration_seconds=duration,
         match_score=match_score,

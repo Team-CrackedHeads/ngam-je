@@ -13,6 +13,7 @@ import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal"
 import { useClerkApiClient } from "@/lib/clerk-api-client";
 import { confirmCheckout } from "@/lib/api/listings";
 import { useAuth, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface ListingDetailsModalProps {
   listing: MockListing | MatchedListing | ApiListing;
@@ -25,6 +26,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
   const getApiClient = useClerkApiClient();
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
+  const router = useRouter();
 
   // Helper function to check if listing is from API (has snake_case properties)
   const isApiListing = (l: typeof listing): l is ApiListing => {
@@ -80,11 +82,24 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
   };
 
   const handleContact = () => {
-    if (isSignedIn) {
-      // TODO: Message the user/Reveal contact info here
-      console.log("Contact seller - feature coming soon");
-    } else {
+    if (!isSignedIn) {
       openSignIn();
+      return;
+    }
+
+    // Check if this listing has a recommendation ID (from matched listings)
+    const extendedListing = listing as ApiListing & { recommendationId?: number };
+
+    if (extendedListing.recommendationId) {
+      // Navigate to messages page - it will show conversations, and user can select the one for this listing
+      console.log('📧 Opening messages for recommendation:', extendedListing.recommendationId);
+      router.push(`/messages?recommendation=${extendedListing.recommendationId}`);
+      onClose(); // Close the modal
+    } else {
+      // For listings without recommendations, navigate to messages anyway
+      console.log('📧 Opening messages page');
+      router.push('/messages');
+      onClose();
     }
   };
 

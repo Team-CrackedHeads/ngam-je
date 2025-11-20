@@ -66,6 +66,24 @@ export function ListingComparisonModal({
     });
   };
 
+  // Format timestamp to relative time
+  const formatTimeAgo = (timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+      if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+      if (seconds < 2592000) return `${Math.floor(seconds / 604800)}w ago`;
+      return `${Math.floor(seconds / 2592000)}mo ago`;
+    } catch {
+      return timestamp;
+    }
+  };
+
   if (!isOpen || listings.length === 0) return null;
 
   const comparisonFields = [
@@ -188,7 +206,9 @@ export function ListingComparisonModal({
                               ? value ? `RM ${value.toLocaleString()}` : "N/A"
                               : field.key === "matchScore"
                                 ? "Your Match"
-                                : value}
+                                : field.key === "timeAgo"
+                                  ? formatTimeAgo(value as string)
+                                  : value}
                           </span>
                         </div>
                       </div>
@@ -285,7 +305,9 @@ export function ListingComparisonModal({
                                       ? value ? `RM ${value.toLocaleString()}` : "N/A"
                                       : field.key === "matchScore"
                                         ? `${value}%`
-                                        : value}
+                                        : field.key === "timeAgo"
+                                          ? formatTimeAgo(value as string)
+                                          : value}
                                   </span>
                                 </div>
                               </div>
@@ -304,14 +326,18 @@ export function ListingComparisonModal({
                         <span className="text-xs font-semibold text-accent-600">Match Reasons</span>
                       </div>
                       <div className="p-3 rounded-lg min-h-[6rem] bg-white border border-neutral-200">
-                        <div className="space-y-2">
-                          {listing.matchReasons.slice(0, 3).map((reason, i) => (
-                            <div key={i} className="flex items-start gap-2 text-sm">
-                              <div className="w-1.5 h-1.5 rounded-full bg-success-500 mt-1.5 shrink-0" />
-                              <span className="text-accent-600">{reason}</span>
-                            </div>
-                          ))}
-                        </div>
+                        {listing.matchReasons && listing.matchReasons.length > 0 ? (
+                          <div className="space-y-2">
+                            {listing.matchReasons.slice(0, 3).map((reason, i) => (
+                              <div key={i} className="flex items-start gap-2 text-sm">
+                                <div className="w-1.5 h-1.5 rounded-full bg-success-500 mt-1.5 shrink-0" />
+                                <span className="text-accent-600">{reason}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-accent-500 italic">No match reasons available</p>
+                        )}
                       </div>
                     </div>
                   ))}

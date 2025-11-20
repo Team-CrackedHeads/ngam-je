@@ -30,6 +30,7 @@ export interface ListingType {
   type: "sell" | "buy";
   category: string;
   matchScore?: number;
+  matchReasons?: string[];
   showMatchScore?: boolean;
 }
 

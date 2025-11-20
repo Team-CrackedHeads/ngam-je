@@ -87,8 +87,8 @@ export function AIMatchingKanban({
       seller: listing.seller || "Unknown",
       type: listing.type,
       category: listing.category || "general",
-      matchScore: 0,
-      matchReasons: [],
+      matchScore: listing.matchScore ?? 0,
+      matchReasons: listing.matchReasons || [],
     };
   };
 
