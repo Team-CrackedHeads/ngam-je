@@ -270,6 +270,9 @@ export default function SidebarAIChat({
         conversationHistory
       );
 
+      // Debug: Log the links to see what we're receiving
+      console.log("AI Response Links:", response.links);
+
       // Add the AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),

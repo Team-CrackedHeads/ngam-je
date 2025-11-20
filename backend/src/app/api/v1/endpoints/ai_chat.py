@@ -65,9 +65,27 @@ async def send_chat_message(
 
         logger.info(f"AI response generated: {len(response.content)} chars, {len(response.links)} links")
 
+        # Normalize links: ensure 'text' field exists (AI sometimes uses 'label')
+        normalized_links = []
+        for link in response.links:
+            normalized_link = {}
+            # Handle 'url' field
+            if 'url' in link:
+                normalized_link['url'] = link['url']
+
+            # Handle 'text' or 'label' field
+            if 'text' in link:
+                normalized_link['text'] = link['text']
+            elif 'label' in link:
+                normalized_link['text'] = link['label']  # Convert 'label' to 'text'
+
+            # Only add link if it has both url and text
+            if 'url' in normalized_link and 'text' in normalized_link:
+                normalized_links.append(normalized_link)
+
         return ChatMessageResponse(
             content=response.content,
-            links=response.links
+            links=normalized_links
         )
 
     except Exception as e:
