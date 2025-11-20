@@ -28,6 +28,39 @@ export default function ListingMatchesPage() {
   const listingId = parseInt(params.listingId as string);
   const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted" | "matched";
 
+  // Transform API listing to component format
+  const transformListing = (apiListing: ApiListing): import("@/components/matching/types").ListingType => {
+    return {
+      id: apiListing.id,
+      title: apiListing.title,
+      description: apiListing.description,
+      price: apiListing.price,
+      images: [apiListing.image_url, ...(apiListing.gallery || [])].filter(Boolean),
+      tags: apiListing.tags || [],
+      location: apiListing.creator_location || "Unknown",
+      timestamp: apiListing.created_at,
+      seller: apiListing.creator_name || "Unknown",
+      type: apiListing.listing_type === "sale" ? "sell" : "buy",
+      category: "general"
+    };
+  };
+
+  // 🥚 Easter egg: Manual matching trigger
+  const triggerMatching = async () => {
+    try {
+      const apiClient = await getApiClient();
+      const response = await apiClient.instance.post(
+        `/api/v1/listings/${listingId}/match-now`
+      );
+      console.log('🔥 Matching triggered!', response.data);
+      // Optional: Show toast notification
+      alert('🔥 AI Matching triggered! Check your backend logs.');
+    } catch (error) {
+      console.error('Error triggering match:', error);
+      alert('❌ Failed to trigger matching. Check console.');
+    }
+  };
+
   // Fetch listing and its recommendations from database
   useEffect(() => {
     let isMounted = true;
@@ -243,6 +276,7 @@ export default function ListingMatchesPage() {
             listingType={listingType}
             listingTitle={yourListing.title}
             matchCount={matchedListings.length}
+            onCompareClick={triggerMatching}
           />
 
           <div className="px-4 md:px-12 py-6">
@@ -324,11 +358,14 @@ export default function ListingMatchesPage() {
               {/* AI Matching Component */}
               <AIMatchingContainer
                 userMode={listingType === "sale" ? "seller" : "buyer"}
-                userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
-                availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
+                userListings={[transformListing(yourListing)]}
+                availableListings={matchedListings.map(transformListing)}
                 onMatch={() => { }}
                 onMessage={() => { }}
-                onViewDetails={(listing) => setSelectedListing(listing as unknown as ApiListing)}
+                onViewDetails={(listing) => {
+                  const matched = matchedListings.find(l => l.id === listing.id);
+                  if (matched) setSelectedListing(matched);
+                }}
                 onClose={() => { }}
               />
             </>

@@ -35,6 +35,18 @@ export default function SafeImage({
   const [retryCount, setRetryCount] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(src);
 
+  // Handle empty or null src
+  if (!src || src.trim() === "") {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center bg-neutral-100 w-full h-full ${className}`}
+      >
+        <ImageOff className="w-8 h-8 text-neutral-400 mb-2" />
+        <span className="text-xs text-neutral-500">No Image</span>
+      </div>
+    );
+  }
+
   const handleError = () => {
     if (retryCount < maxRetries) {
       // Retry loading the image
