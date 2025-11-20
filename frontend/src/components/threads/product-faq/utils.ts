@@ -14,14 +14,14 @@ export const getRelativeTime = (dateString: string | undefined): string => {
   return date.toLocaleDateString();
 };
 
-export const getRoleBadge = (role: "seller" | "buyer" | "helper" | null | undefined): { text: string; color: string } | null => {
+export const getRoleBadge = (role: "seller" | "buyer" | "helper" | null | undefined, name?: string): { text: string; color: string } | null => {
   switch (role) {
     case "seller":
-      return { text: "Seller", color: "bg-blue-500/10 text-blue-700 border-blue-200" };
+      return { text: name || "Seller", color: "bg-[color:var(--color-primary-400)]/10 text-[color:var(--color-primary-800)] border-[color:var(--color-primary-300)]" };
     case "helper":
-      return { text: "Helper", color: "bg-green-500/10 text-green-700 border-green-200" };
+      return { text: name || "Helper", color: "bg-[color:var(--color-success-500)]/10 text-[color:var(--color-success-900)] border-[color:var(--color-success-500)]" };
     case "buyer":
-      return { text: "Buyer", color: "bg-purple-500/10 text-purple-700 border-purple-200" };
+      return { text: name || "Buyer", color: "bg-[color:var(--color-secondary-400)]/10 text-[color:var(--color-accent-700)] border-[color:var(--color-secondary-600)]" };
     default:
       return null;
   }
