@@ -87,7 +87,7 @@ const Answer: React.FC<AnswerProps> = ({
     setVisibleRepliesCount(totalReplies);
   };
 
-  const roleBadge = getRoleBadge(answer.userRole);
+  const roleBadge = getRoleBadge(answer.userRole, answer.user);
 
   return (
     <div className="relative">
