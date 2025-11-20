@@ -32,7 +32,7 @@ import {
   KANBAN_COLUMNS,
 } from "@/utils/mock-all-data-used";
 import { useClerkApiClient } from "@/lib/clerk-api-client";
-import { likeRecommendation, rejectRecommendation } from "@/lib/api/recommendations";
+import { likeRecommendation, rejectRecommendation, updateRecommendation } from "@/lib/api/recommendations";
 
 // Use centralized column configuration and add icons
 const columns = KANBAN_COLUMNS.map((col) => ({
@@ -89,6 +89,11 @@ export function AIMatchingKanban({
       category: listing.category || "general",
       matchScore: listing.matchScore ?? 0,
       matchReasons: listing.matchReasons || [],
+      recommendationId: listing.recommendationId,
+      recommendationStatus: listing.recommendationStatus,
+      sourceListingId: listing.sourceListingId,
+      targetListingId: listing.targetListingId,
+      currentUserIsSource: listing.currentUserIsSource,
     };
   };
 
@@ -96,12 +101,58 @@ export function AIMatchingKanban({
   const matchedListings = availableListings.map(convertToMatchedListing);
 
   // Card organization by column - stores listing IDs instead of indices
+  // Organize listings based on their recommendation status from database
   const [cardsByColumn, setCardsByColumn] = useState<
     Record<ColumnType, string[]>
-  >({
-    passed: [],
-    queue: matchedListings.map((listing) => listing.id), // All listings start in queue
-    liked: [],
+  >(() => {
+    const initial: Record<ColumnType, string[]> = {
+      passed: [],
+      queue: [],
+      liked: [],
+    };
+
+    matchedListings.forEach((listing) => {
+      const status = listing.recommendationStatus;
+      const currentUserIsSource = listing.currentUserIsSource ?? false;
+
+      // Organize based on recommendation status from database
+      if (status === "matched") {
+        // Both parties liked - always show in liked
+        initial.liked.push(listing.id);
+      } else if (status === "liked_by_source") {
+        // Source liked it
+        if (currentUserIsSource) {
+          // I'm the source and I liked it → show in liked
+          initial.liked.push(listing.id);
+        } else {
+          // I'm the target and they liked it → show in queue (waiting for my approval)
+          initial.queue.push(listing.id);
+        }
+      } else if (status === "liked_by_target") {
+        // Target liked it
+        if (currentUserIsSource) {
+          // I'm the source and they liked it → show in queue (waiting for my approval)
+          initial.queue.push(listing.id);
+        } else {
+          // I'm the target and I liked it → show in liked
+          initial.liked.push(listing.id);
+        }
+      } else if (status === "rejected" || status === "passed") {
+        // Rejected/passed recommendations
+        initial.passed.push(listing.id);
+      } else {
+        // "pending" or any other status goes to queue
+        initial.queue.push(listing.id);
+      }
+    });
+
+    console.log('📊 Initial column organization:', {
+      queue: initial.queue.length,
+      liked: initial.liked.length,
+      passed: initial.passed.length
+    });
+
+    return initial;
   });
 
   // Drag state
@@ -536,7 +587,22 @@ export function AIMatchingKanban({
                         {(expandedPopupColumn === "liked" ||
                           expandedPopupColumn === "passed") && (
                             <button
-                              onClick={() => {
+                              onClick={async () => {
+                                // Call API to reset status to pending for each selected card
+                                for (const listingId of selectedForCompare) {
+                                  const listing = availableListings.find((l) => String(l.id) === listingId);
+                                  const extendedListing = listing as ListingType & { recommendationId?: number };
+                                  if (extendedListing?.recommendationId) {
+                                    try {
+                                      const apiClient = await getApiClient();
+                                      await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                      console.log(`✅ Reset recommendation ${extendedListing.recommendationId} to pending`);
+                                    } catch (error) {
+                                      console.error("❌ Failed to reset recommendation:", error);
+                                    }
+                                  }
+                                }
+
                                 // Move selected cards back to queue
                                 setCardsByColumn((prev) => ({
                                   ...prev,
@@ -718,8 +784,11 @@ export function AIMatchingKanban({
                                   expandedPopupColumn === "queue" && (
                                     <div className="flex gap-2">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reject recommendation
+                                          await handleRecommendationAction(listingId, "pass");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             queue: prev.queue.filter(
@@ -736,8 +805,11 @@ export function AIMatchingKanban({
                                         </span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to like recommendation
+                                          await handleRecommendationAction(listingId, "like");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             queue: prev.queue.filter(
@@ -762,8 +834,21 @@ export function AIMatchingKanban({
                                   expandedPopupColumn === "liked" && (
                                     <div className="flex gap-2 mt-4">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reset status to pending
+                                          const listing = availableListings.find((l) => String(l.id) === listingId);
+                                          const extendedListing = listing as ListingType & { recommendationId?: number };
+                                          if (extendedListing?.recommendationId) {
+                                            try {
+                                              const apiClient = await getApiClient();
+                                              await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                              console.log("✅ Reset recommendation to pending");
+                                            } catch (error) {
+                                              console.error("❌ Failed to reset recommendation:", error);
+                                            }
+                                          }
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             liked: prev.liked.filter(
@@ -783,8 +868,11 @@ export function AIMatchingKanban({
                                         </span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reject recommendation
+                                          await handleRecommendationAction(listingId, "pass");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             liked: prev.liked.filter(
@@ -806,8 +894,21 @@ export function AIMatchingKanban({
                                   expandedPopupColumn === "passed" && (
                                     <div className="flex gap-2 mt-4">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reset status to pending
+                                          const listing = availableListings.find((l) => String(l.id) === listingId);
+                                          const extendedListing = listing as ListingType & { recommendationId?: number };
+                                          if (extendedListing?.recommendationId) {
+                                            try {
+                                              const apiClient = await getApiClient();
+                                              await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                              console.log("✅ Reset recommendation to pending");
+                                            } catch (error) {
+                                              console.error("❌ Failed to reset recommendation:", error);
+                                            }
+                                          }
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             passed: prev.passed.filter(
@@ -827,8 +928,11 @@ export function AIMatchingKanban({
                                         </span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to like recommendation
+                                          await handleRecommendationAction(listingId, "like");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             passed: prev.passed.filter(
@@ -1013,18 +1117,27 @@ export function AIMatchingKanban({
               onDrop={async (e) => {
                 e.preventDefault();
                 if (draggedCard && draggedCard.sourceColumn !== column.id) {
-                  // Show animation based on target column
+                  // Handle API calls for all drag transitions
                   if (column.id === "liked") {
                     showCardAnimation("like");
-                    // Call API when dragging from queue to liked
-                    if (draggedCard.sourceColumn === "queue") {
-                      await handleRecommendationAction(draggedCard.listingId, "like");
-                    }
+                    // Call like API when dragging to liked from any column
+                    await handleRecommendationAction(draggedCard.listingId, "like");
                   } else if (column.id === "passed") {
                     showCardAnimation("pass");
-                    // Call API when dragging from queue to passed
-                    if (draggedCard.sourceColumn === "queue") {
-                      await handleRecommendationAction(draggedCard.listingId, "pass");
+                    // Call reject API when dragging to passed from any column
+                    await handleRecommendationAction(draggedCard.listingId, "pass");
+                  } else if (column.id === "queue") {
+                    // Reset status to pending when dragging back to queue
+                    const listing = availableListings.find((l) => String(l.id) === draggedCard.listingId);
+                    const extendedListing = listing as ListingType & { recommendationId?: number };
+                    if (extendedListing?.recommendationId) {
+                      try {
+                        const apiClient = await getApiClient();
+                        await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                        console.log("✅ Reset recommendation to pending via drag");
+                      } catch (error) {
+                        console.error("❌ Failed to reset recommendation:", error);
+                      }
                     }
                   }
 
@@ -1363,11 +1476,14 @@ export function AIMatchingKanban({
                       {column.id === "queue" && (
                         <>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               // Move top card to passed
                               const topCard = cardsByColumn.queue[0];
                               if (topCard !== undefined) {
+                                // Call API to reject recommendation
+                                await handleRecommendationAction(topCard, "pass");
+
                                 showCardAnimation("pass");
                                 setCardsByColumn((prev) => ({
                                   ...prev,
@@ -1384,11 +1500,14 @@ export function AIMatchingKanban({
                             </span>
                           </button>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               // Move top card to liked
                               const topCard = cardsByColumn.queue[0];
                               if (topCard !== undefined) {
+                                // Call API to like recommendation
+                                await handleRecommendationAction(topCard, "like");
+
                                 showCardAnimation("like");
                                 setCardsByColumn((prev) => ({
                                   ...prev,
@@ -1411,11 +1530,24 @@ export function AIMatchingKanban({
                       {(column.id === "liked" ||
                         column.id === "passed") && (
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               // Move top card back to queue
                               const topCard = cardsByColumn[column.id][0];
                               if (topCard !== undefined) {
+                                // Call API to reset status to pending
+                                const listing = availableListings.find((l) => String(l.id) === topCard);
+                                const extendedListing = listing as ListingType & { recommendationId?: number };
+                                if (extendedListing?.recommendationId) {
+                                  try {
+                                    const apiClient = await getApiClient();
+                                    await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                    console.log("✅ Reset recommendation to pending");
+                                  } catch (error) {
+                                    console.error("❌ Failed to reset recommendation:", error);
+                                  }
+                                }
+
                                 setCardsByColumn((prev) => ({
                                   ...prev,
                                   [column.id]: prev[column.id].slice(1),

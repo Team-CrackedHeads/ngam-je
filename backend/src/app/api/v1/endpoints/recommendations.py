@@ -240,8 +240,8 @@ async def like_recommendation(
         )
 
     # Update status based on current state
-    if recommendation.status == "pending":
-        # First like
+    if recommendation.status == "pending" or recommendation.status == "rejected":
+        # First like (or un-rejecting)
         if is_source_owner:
             recommendation.status = "liked_by_source"
         else:

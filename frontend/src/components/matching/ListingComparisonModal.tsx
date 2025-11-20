@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import {
   X,
   MapPin,
@@ -14,6 +15,7 @@ import {
   Tag,
   TrendingUp,
   CheckCircle,
+  MessageCircle,
 } from "lucide-react";
 
 interface MatchedListing {
@@ -31,6 +33,7 @@ interface MatchedListing {
   category: string;
   matchScore: number;
   matchReasons: string[];
+  recommendationId?: number;
 }
 
 interface ListingComparisonModalProps {
@@ -52,6 +55,7 @@ export function ListingComparisonModal({
   onMessage,
   onNegotiate,
 }: ListingComparisonModalProps) {
+  const router = useRouter();
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
 
   const toggleTags = (id: string) => {
@@ -195,12 +199,12 @@ export function ListingComparisonModal({
                     const Icon = field.icon;
                     const value = userListing[field.key as keyof MatchedListing];
                     return (
-                      <div key={field.key}>
-                        <div className="flex items-center gap-2 mb-2">
+                      <div key={field.key} className="h-[5rem]">
+                        <div className="flex items-center gap-2 mb-2 h-[1.5rem]">
                           <Icon className="h-4 w-4 text-accent-500" />
                           <span className="text-xs font-semibold text-accent-600">{field.label}</span>
                         </div>
-                        <div className="p-3 rounded-lg min-h-[3.5rem] flex items-center bg-secondary-50 border-2 border-secondary-200">
+                        <div className="p-3 rounded-lg h-[3.5rem] flex items-center bg-secondary-50 border-2 border-secondary-200">
                           <span className="text-accent-700 font-semibold text-sm">
                             {field.key === "price" || field.key === "originalAsk"
                               ? value ? `RM ${value.toLocaleString()}` : "N/A"
@@ -216,18 +220,18 @@ export function ListingComparisonModal({
                   })}
 
                   {/* Match Reasons */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
+                  <div className="h-[11.5rem]">
+                    <div className="flex items-center gap-2 mb-2 h-[1.5rem]">
                       <TrendingUp className="h-4 w-4 text-accent-500" />
                       <span className="text-xs font-semibold text-accent-600">Match Reasons</span>
                     </div>
-                    <div className="p-3 rounded-lg min-h-[6rem] bg-secondary-50 border-2 border-secondary-200">
+                    <div className="p-3 rounded-lg h-[10rem] bg-secondary-50 border-2 border-secondary-200">
                       <p className="text-sm text-accent-500 italic">Your original listing</p>
                     </div>
                   </div>
 
-                  {/* Empty space for action buttons */}
-                  <div className="min-h-[8rem]"></div>
+                  {/* Action Buttons - Empty for user's listing */}
+                  <div className="h-[3.5rem]"></div>
                 </div>
 
                 {/* Column 2: Vertical Separator */}
@@ -285,13 +289,13 @@ export function ListingComparisonModal({
                           const value = listing[field.key as keyof MatchedListing];
                           const isBest = isBestValue(listing, field.key);
                           return (
-                            <div key={`${field.key}-${listing.id}`}>
-                              <div className="flex items-center gap-2 mb-2">
+                            <div key={`${field.key}-${listing.id}`} className="h-[5rem]">
+                              <div className="flex items-center gap-2 mb-2 h-[1.5rem]">
                                 <Icon className="h-4 w-4 text-accent-500" />
                                 <span className="text-xs font-semibold text-accent-600">{field.label}</span>
                               </div>
                               <div
-                                className={`p-3 rounded-lg min-h-[3.5rem] flex items-center ${isBest
+                                className={`p-3 rounded-lg h-[3.5rem] flex items-center ${isBest
                                     ? "bg-success-50 border-2 border-success-500"
                                     : "bg-white border border-neutral-200"
                                   }`}
@@ -319,60 +323,49 @@ export function ListingComparisonModal({
                   })}
 
                   {/* Match Reasons Row */}
-                  {listings.map((listing) => (
-                    <div key={`reasons-${listing.id}`}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="h-4 w-4 text-accent-500" />
-                        <span className="text-xs font-semibold text-accent-600">Match Reasons</span>
+                  {listings.map((listing) => {
+                    console.log(`🎨 Rendering match reasons for listing ${listing.id}:`, listing.matchReasons);
+                    return (
+                      <div key={`reasons-${listing.id}`} className="h-[11.5rem]">
+                        <div className="flex items-center gap-2 mb-2 h-[1.5rem]">
+                          <TrendingUp className="h-4 w-4 text-accent-500" />
+                          <span className="text-xs font-semibold text-accent-600">Match Reasons</span>
+                        </div>
+                        <div className="p-3 rounded-lg h-[10rem] bg-white border border-neutral-200">
+                          {listing.matchReasons && listing.matchReasons.length > 0 ? (
+                            <div className="space-y-2">
+                              {listing.matchReasons.slice(0, 3).map((reason, i) => (
+                                <div key={i} className="flex items-start gap-2 text-sm">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-success-500 mt-1.5 shrink-0" />
+                                  <span className="text-accent-600">{reason}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-accent-500 italic">No match reasons available</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="p-3 rounded-lg min-h-[6rem] bg-white border border-neutral-200">
-                        {listing.matchReasons && listing.matchReasons.length > 0 ? (
-                          <div className="space-y-2">
-                            {listing.matchReasons.slice(0, 3).map((reason, i) => (
-                              <div key={i} className="flex items-start gap-2 text-sm">
-                                <div className="w-1.5 h-1.5 rounded-full bg-success-500 mt-1.5 shrink-0" />
-                                <span className="text-accent-600">{reason}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-accent-500 italic">No match reasons available</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Action Buttons Row */}
                   {listings.map((listing) => (
-                    <div key={`actions-${listing.id}`} className="space-y-2">
+                    <div key={`actions-${listing.id}`} className="h-[3.5rem]">
                       <Button
                         onClick={() => {
-                          onNegotiate(listing);
-                          onClose();
+                          if (listing.recommendationId) {
+                            router.push(`/messages?recommendation=${listing.recommendationId}`);
+                            onClose();
+                          } else {
+                            console.warn('No recommendation ID for listing:', listing.id);
+                          }
                         }}
-                        className="w-full bg-secondary-500 hover:bg-secondary-600 text-white font-medium shadow-md transition-all"
+                        className="w-full h-full bg-secondary-500 hover:bg-secondary-600 text-white font-medium shadow-md transition-all flex items-center justify-center gap-2"
                       >
-                        Negotiate Price
+                        <MessageCircle className="h-4 w-4" />
+                        Message User
                       </Button>
-                      <Button
-                        onClick={() => {
-                          onMessage(listing);
-                          onClose();
-                        }}
-                        variant="outline"
-                        className="w-full border-neutral-300 hover:bg-primary-50 text-accent-700 font-medium"
-                      >
-                        Send Message
-                      </Button>
-                      <button
-                        onClick={() => {
-                          onSelectListing(listing);
-                          onClose();
-                        }}
-                        className="w-full text-accent-600 hover:text-accent-700 font-medium underline text-sm text-center"
-                      >
-                        View Details
-                      </button>
                     </div>
                   ))}
                 </div>

@@ -34,14 +34,20 @@ export default function ListingMatchesPage() {
     const extendedListing = apiListing as ApiListing & {
       matchScore?: number;
       recommendationStatus?: string;
+      matchReasons?: string[];
+      recommendationId?: number;
+      sourceListingId?: number;
+      targetListingId?: number;
+      currentUserIsSource?: boolean;
     };
 
     const matchScore = extendedListing.matchScore ?? 0;
 
     // Debug: Check what we're getting in transform
     console.log(`Transform listing ${apiListing.id}: matchScore=${extendedListing.matchScore}, final=${matchScore}, showBadge=${matchScore > 0}`);
+    console.log(`   📋 matchReasons in extendedListing:`, extendedListing.matchReasons);
 
-    return {
+    const transformed: import("@/components/matching/types").ListingType = {
       id: apiListing.id,
       title: apiListing.title,
       description: apiListing.description,
@@ -51,12 +57,21 @@ export default function ListingMatchesPage() {
       location: apiListing.creator_location || "Unknown",
       timestamp: apiListing.created_at,
       seller: apiListing.creator_name || "Unknown",
-      type: apiListing.listing_type === "sale" ? "sell" : "buy",
+      type: (apiListing.listing_type === "sale" ? "sell" : "buy") as "sell" | "buy",
       category: "general",
       matchScore: matchScore,
+      matchReasons: extendedListing.matchReasons,
+      recommendationId: extendedListing.recommendationId,
+      recommendationStatus: extendedListing.recommendationStatus,
+      sourceListingId: extendedListing.sourceListingId,
+      targetListingId: extendedListing.targetListingId,
+      currentUserIsSource: extendedListing.currentUserIsSource,
       // Show match score badge for any recommendation with a valid score > 0
       showMatchScore: matchScore > 0,
     };
+
+    console.log(`   ✅ Transformed listing ${apiListing.id} with status:`, transformed.recommendationStatus);
+    return transformed;
   };
 
   // 🥚 Easter egg: Manual matching trigger
@@ -130,15 +145,23 @@ export default function ListingMatchesPage() {
               recommendationId?: number;
               matchScore?: number;
               matchReasons?: string[];
-              recommendationStatus?: string
+              recommendationStatus?: string;
+              sourceListingId?: number;
+              targetListingId?: number;
+              currentUserIsSource?: boolean;
             };
             extendedListing.recommendationId = rec.id;
             extendedListing.matchScore = rec.match_score;
             extendedListing.matchReasons = rec.match_reasons ?? undefined;
             extendedListing.recommendationStatus = rec.status;
+            extendedListing.sourceListingId = rec.source_listing_id;
+            extendedListing.targetListingId = rec.target_listing_id;
+            extendedListing.currentUserIsSource = rec.source_listing_id === listingId;
 
             // Debug: Log match score and reasons
-            console.log(`✅ Attached score ${rec.match_score} to listing ${matchedListing.id}, reasons:`, rec.match_reasons);
+            console.log(`✅ Attached score ${rec.match_score} to listing ${matchedListing.id}`);
+            console.log(`   📋 Match reasons from API (${rec.match_reasons?.length || 0} reasons):`, rec.match_reasons);
+            console.log(`   📋 Extended listing matchReasons:`, extendedListing.matchReasons);
 
             matches.push(matchedListing);
           } catch (err) {
