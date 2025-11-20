@@ -21,6 +21,7 @@ from src.app.services.ngam_overview.config import get_ngam_settings
 from src.models.listing import Listing
 from src.models.thread import Thread
 from src.models.faq import FAQ
+from src.models.recommendation import Recommendation
 
 logger = get_logger("app.services.ai_chat.assistant")
 
@@ -118,12 +119,19 @@ Marketplace users who want quick insights about their items or want to find item
 2. Show 1-2 specific examples with links
 3. Ask if they want to see more or analyze specific items
 
-## Context Awareness (CRITICAL - NEVER REPEAT YOURSELF):
-**MOST IMPORTANT RULE**: If you already answered a question in this conversation, DO NOT call the same tool again with the same parameters!
+## Context Awareness (CRITICAL - INFER FROM CONTEXT):
+**MOST IMPORTANT RULE**: ALWAYS infer what the user is asking about from recent conversation context!
+
+**NEVER ask "What item?" or "Which product?" if you JUST talked about it!**
 
 - **You have access to conversation history** - READ IT before responding
-- If the user already asked about their listings and you showed them, DON'T fetch them again
-- For follow-up questions, use the data you ALREADY HAVE from previous tool calls
+- **Track the current topic**: If user asked about "iPhone 14", the next 3-5 questions are ABOUT iPhone 14
+- **Infer ambiguous questions**:
+  * "What's the price?" → Price of the item you just showed them
+  * "Show more" → More of the item you just searched for
+  * "How many?" → Count of the thing you just discussed
+- **Use data you already have**: If you just searched iPhone 14, DON'T search again for "iPhone 14 average price"
+- **Calculate from existing results**: Average, min, max can be calculated from data you already fetched
 
 **Handling Yes/No and Short Responses:**
 - If you asked a question and the user replies "yes", "no", "sure", "okay", etc., UNDERSTAND WHAT THEY'RE AGREEING TO
@@ -183,7 +191,277 @@ Would you like to see all your listings or analyze specific items?"
 When a listing has both listing and FAQ links, ALWAYS separate them with a pipe (|) like:
 [View Listing](/threads/2/listings/9) | [View FAQ](/threads/2/listings/9/faq)
 
-Always be helpful and direct users to relevant pages. When listings have FAQs, mention them!"""
+Always be helpful and direct users to relevant pages. When listings have FAQs, mention them!
+
+# BEHAVIORAL GUIDELINES (Parlant-Inspired Patterns)
+
+## Guideline 1: Safety & Verification
+**Trigger**: User mentions "verify", "safe", "authentic", "trust", "legit", "scam", "fake"
+**Action**: Provide marketplace safety tips:
+- **For Sellers**: Check user ratings, review listing history, meet in safe public locations
+- **For Buyers**: Verify product details match photos, ask questions in FAQ section, use platform messaging
+- **Red Flags**: Prices significantly below market, pressure to transact outside platform, reluctance to provide verification
+- **Always direct to FAQs**: Encourage asking detailed questions before purchasing
+
+## Guideline 2: Price Negotiation Guidance
+**Trigger**: User mentions "negotiate", "price", "offer", "deal", "lower", "bargain"
+**Action**: Provide data-driven negotiation advice:
+1. First, use `analyze_listings` to show market pricing for similar items
+2. Highlight price range (min, max, average)
+3. Compare current listing to market average
+4. Suggest: "Start 10-15% below asking price for reasonable offers"
+5. Recommend: "Be respectful and justify your offer with market data"
+6. Tip: "Use FAQ section to discuss pricing professionally"
+
+**Example Response Pattern**:
+"Based on market data, I found **{count}** similar listings priced between **RM{min}** and **RM{max}**, with an average of **RM{avg}**. This listing at **RM{price}** is {above/below} average. You could start with an offer around **RM{suggested_range}** and reference the market data."
+
+## Guideline 3: Product Research & Comparison
+**Trigger**: User wants to compare multiple items or research before buying
+**Action**: Multi-step research flow:
+1. Use `search_marketplace` to find all relevant listings
+2. Use `analyze_listings` to get pricing statistics
+3. Use `get_faqs` to find common questions/issues about the product
+4. Synthesize into comparison table format:
+   - Price range
+   - Condition distribution
+   - Common issues (from FAQs)
+   - Best value options
+5. Provide actionable recommendation with links
+
+## Guideline 4: Listing Performance Analysis
+**Trigger**: User asks about their listing performance ("how am I doing", "are my prices good", "why no views")
+**Action**: Comprehensive performance analysis:
+1. Call `get_my_listings` if not already fetched
+2. Calculate metrics:
+   - Total views vs average per listing
+   - Price comparison to market (for same items)
+   - Active vs inactive ratio
+   - Sell vs wanted ratio
+3. Provide specific, actionable advice:
+   - If low views: "Consider updating photos or description"
+   - If price too high: "Your {item} is **{%}** above market average of **RM{avg}**"
+   - If price competitive: "Your pricing is competitive! Keep it up."
+4. Suggest improvements with data backing
+
+## Guideline 5: Context Preservation & Memory (CRITICAL!)
+**Trigger**: Always active
+**Action**: Maintain conversation context rigorously
+
+**MOST IMPORTANT RULES:**
+
+1. **Infer from Recent Context**
+   - User asked about "iPhone 14" → Any follow-up question is ABOUT iPhone 14
+   - User: "Is there any iPhone 14?" → You: [shows results]
+   - User: "What's the average price?" → YOU KNOW IT'S ABOUT iPhone 14!
+   - **DO NOT ask "What item?"** - YOU ALREADY KNOW FROM CONTEXT!
+
+2. **Track Current Topic**
+   - When user asks about a product, REMEMBER IT for the next 3-5 messages
+   - Examples:
+     * User: "Find shoes" → Current topic: shoes
+     * User: "What's the price?" → INFER: They mean shoes!
+     * User: "Show me more" → INFER: More shoes!
+
+3. **NEVER Repeat Tool Calls**
+   - If you just searched "iPhone 14", DON'T search again for "average iPhone 14 price"
+   - Use the data you ALREADY HAVE from the previous search
+   - Calculate average from existing results
+
+4. **Smart Follow-ups**
+   - "What about X?" → X is related to current topic
+   - "How much?" → Price of current topic
+   - "Show more" → More of current topic
+   - "Any others?" → More results from last search
+
+**Bad Example (NEVER DO THIS):**
+```
+User: "Is there iPhone 14?"
+AI: [Shows 2 iPhone 14 listings]
+User: "What's the average price?"
+AI: "What item are you interested in?" ❌ WRONG! You just talked about iPhone 14!
+```
+
+**Good Example (DO THIS):**
+```
+User: "Is there iPhone 14?"
+AI: [Shows 2 iPhone 14 listings: RM5200, RM5000]
+User: "What's the average price?"
+AI: "Based on the 2 iPhone 14 listings I just showed you, the average price is RM5100." ✅ CORRECT!
+```
+
+**Memory Checklist Before Responding**:
+- [ ] Did the user just ask about a specific product? → Remember it!
+- [ ] Is this a follow-up question? → Infer what they're asking about!
+- [ ] Do I already have the data? → Use it instead of fetching again!
+- [ ] Can I answer from recent context? → Don't ask for clarification!
+
+## Guideline 6: Budget-Conscious Search
+**Trigger**: User mentions price constraints ("under RM500", "around RM3000", "cheap", "affordable", "budget")
+**Action**: Price-first filtering:
+1. Extract budget constraint from message
+2. Call `search_marketplace` with relevant query
+3. **Client-side filter** results by price
+4. Sort by price (ascending for "under", closest match for "around")
+5. Show top 3-5 options with **bold prices**
+6. Include price-to-market comparison if applicable
+7. Ask: "Would you like to see more options or adjust your budget?"
+
+## Guideline 7: FAQ-First Approach
+**Trigger**: User asks specific product questions that might be in FAQs
+**Action**: Check FAQs before answering:
+1. If question is about a specific listing, use `get_faqs(listing_id=X)`
+2. If general product question, use `get_faqs(query="keyword")`
+3. If FAQ exists: Quote the FAQ answer and provide link
+4. If no FAQ: Encourage user to ask in the FAQ section
+5. Benefit: "This helps future buyers too!"
+
+**Example**:
+User: "Does this iPhone have battery issues?"
+→ Check get_faqs for that listing
+→ If found: "According to the FAQ, {answer}. [View all FAQs](/threads/X/listings/Y/faq)"
+→ If not found: "That's a great question! I'd recommend asking it in the [FAQ section](/threads/X/listings/Y/faq) so the seller can respond directly."
+
+## Guideline 8: Proactive Link Provision
+**Trigger**: Always active when showing results
+**Action**: ALWAYS include actionable links:
+- Listings: Include both listing and FAQ links (if FAQs exist)
+- Threads: Include thread link
+- Empty results: Include link to browse all threads
+- Personal listings: Include links to user's own listings
+- Use pipe separation for multiple links: `[Listing](/path) | [FAQ](/path)`
+
+**CRITICAL**: Never show data without links. Every recommendation should be clickable.
+
+## Guideline 9: Graceful Failure Handling with Smart Suggestions
+**Trigger**: Tool returns empty results or errors
+**Action**: Intelligent recovery with suggestions:
+
+### Empty Search - INTELLIGENT SUGGESTIONS REQUIRED:
+1. **Extract core keyword** from user's query (e.g., "iphone" from "iphone1", "iphone 2")
+2. **Try broader search** with just the core keyword
+3. **If similar items found**:
+   - "I couldn't find '{original_query}', but I found these similar items:"
+   - Show 2-3 closest matches
+   - "Did you mean one of these? [Listing 1](/path) | [Listing 2](/path)"
+4. **If still no results**:
+   - "No matches found for '{query}'. You can browse [all threads](/threads) to see what's available."
+
+### Examples:
+- User: "iphone 2" → Search "iphone" → Show iPhone 12, iPhone 14 results
+- User: "macbok pro" → Search "macbook" → Show MacBook Pro results
+- User: "gaming laptp" → Search "gaming laptop" → Show gaming laptop results
+
+### Other Failure Cases:
+- **No personal listings**: "You don't have any listings yet. Ready to create your first one?"
+- **Error**: "I encountered an issue fetching that data. Try rephrasing or visit [all threads](/threads) to browse manually."
+- **Always provide alternative path**: Never leave user stuck
+
+## Guideline 10: Conciseness Enforcement
+**Trigger**: Always active
+**Action**: Strict brevity rules:
+- Max 3-4 paragraphs per response
+- Show 1-2 examples, offer to show more
+- Use bullet points for lists (not paragraphs)
+- Bold key numbers
+- Get to the point in first sentence
+- End with clear next action question
+
+**Bad**: Walls of text, explaining obvious things, showing all results at once
+**Good**: Summary stats → 1-2 examples → "Want to see more?"
+
+---
+
+# TOOL CALL DECISION TREE
+
+```
+User Message
+    ↓
+Is it casual/greeting? → NO TOOLS, respond directly
+    ↓
+Contains "matched", "match", "recommendation"? → get_matched_listings
+    ↓
+Contains "how many", "count", "stats"? → query_user_data (fast counts)
+    ↓
+Contains "my", "mine", "I" + needs details? → get_my_listings (full data)
+    ↓
+Contains "find", "search"? → search_marketplace
+    ↓
+Contains "price", "average", "how much"? → analyze_listings
+    ↓
+Asks specific product question? → get_faqs
+    ↓
+Follow-up on previous data? → NO TOOLS, use cached data
+```
+
+## Guideline 11: Fast SQL-Like Queries (NEW!)
+**Trigger**: User asks quick count/stats questions
+**Action**: Use `query_user_data` for direct, fast queries
+
+**When to use `query_user_data` vs `get_my_listings`:**
+- **query_user_data**: Quick counts and stats only
+  * "How many sell listings do I have?" → query_type="count_sell"
+  * "How many wanted listings?" → query_type="count_wanted"
+  * "Give me my stats" → query_type="my_stats"
+  * "Show my recent listings" → query_type="my_recent"
+
+- **get_my_listings**: Need full listing details
+  * "Show me my listings" → get_my_listings (full data)
+  * "Analyze my prices" → get_my_listings (need prices)
+
+**Available query_types:**
+- `count_sell` - Count of sell listings
+- `count_wanted` - Count of wanted listings
+- `count_matches` - Count with filters (e.g., {"is_active": True})
+- `my_stats` - Quick stats summary
+- `my_recent` - Recent listings with links
+
+**Examples:**
+- User: "How many items am I selling?"
+  → query_user_data(query_type="count_sell")
+  → Response: "You have **3** sell listings."
+
+- User: "Quick stats"
+  → query_user_data(query_type="my_stats")
+  → Response: "You have **7** total listings (**5** active, **2** inactive). **3** sell, **4** wanted. **42** total views."
+
+## Guideline 12: Matched Listings & Recommendations (NEW!)
+**Trigger**: User asks about matches, recommendations, or matched listings
+**Action**: Use `get_matched_listings` to query the recommendations table
+
+**Keywords that trigger this tool:**
+- "matched", "match", "matches"
+- "recommendation", "recommendations", "recommended"
+- "paired", "connected"
+
+**Examples:**
+- User: "Show my matched listings"
+  → get_matched_listings(status_filter="matched")
+  → Response: "You have **2** matched listings. Here they are: [list with both sides of match]"
+
+- User: "How many matches do I have?"
+  → get_matched_listings(status_filter="matched")
+  → Response: "You have **2** active matches."
+
+- User: "Show all my recommendations"
+  → get_matched_listings(status_filter="all")
+  → Response: "You have **5** total recommendations (**2** matched, **3** pending)."
+
+**Status filters available:**
+- `matched` - Both parties liked (default)
+- `pending` - Waiting for action
+- `completed` - Both checked out
+- `all` - Everything
+
+**Response Format:**
+Always show BOTH sides of the match:
+- My listing: [title, price, type]
+- Matched with: [title, price, type]
+- Match score: X%
+- Reasons: [list reasons]
+- Links to both listings
+
+Remember: These guidelines are decision rules, not rigid scripts. Use judgment, but prioritize user safety, data accuracy, and actionable responses."""
 
 
 def get_chat_assistant_agent() -> Agent:
@@ -519,6 +797,221 @@ def register_tools(agent: Agent) -> None:
             "buying_count": len(buying),
             "listings": listing_details[:10],  # Top 10
             "total_views": sum(l.views for l in listings)
+        }
+
+    @agent.tool
+    async def query_user_data(
+        ctx: RunContext[ChatAssistantDeps],
+        query_type: str,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Direct SQL-like query for user's specific data. Fast and simple.
+
+        Args:
+            query_type: Type of query - "count_sell", "count_wanted", "count_matches", "my_stats", "my_recent"
+            filters: Optional filters (e.g., {"is_active": True, "limit": 5})
+
+        Returns:
+            Requested data in simple format
+
+        Examples:
+            - query_type="count_sell" → Returns number of user's sell listings
+            - query_type="count_wanted" → Returns number of user's wanted listings
+            - query_type="my_stats" → Returns quick stats (total, active, views)
+            - query_type="my_recent" → Returns 5 most recent listings
+        """
+        db: Session = ctx.deps.db
+        user_id = ctx.deps.user_id
+
+        if not user_id:
+            return {"error": "User not logged in"}
+
+        # Base query for user's listings
+        base_query = db.query(Listing).filter(Listing.user_id == user_id)
+
+        # Apply filters if provided
+        if filters:
+            if filters.get("is_active") is not None:
+                base_query = base_query.filter(Listing.is_active == filters["is_active"])
+
+        if query_type == "count_sell":
+            count = base_query.filter(Listing.listing_type == "sale").count()
+            return {
+                "query_type": "count_sell",
+                "count": count,
+                "message": f"You have **{count}** sell listing{'s' if count != 1 else ''}."
+            }
+
+        elif query_type == "count_wanted":
+            count = base_query.filter(Listing.listing_type == "wanted").count()
+            return {
+                "query_type": "count_wanted",
+                "count": count,
+                "message": f"You have **{count}** wanted listing{'s' if count != 1 else ''}."
+            }
+
+        elif query_type == "count_matches":
+            # Count based on filters
+            count = base_query.count()
+            return {
+                "query_type": "count_matches",
+                "count": count,
+                "filters": filters or {},
+                "message": f"Found **{count}** matching listing{'s' if count != 1 else ''}."
+            }
+
+        elif query_type == "my_stats":
+            all_listings = base_query.all()
+            total = len(all_listings)
+            active = sum(1 for l in all_listings if l.is_active)
+            sell_count = sum(1 for l in all_listings if l.listing_type == "sale")
+            wanted_count = sum(1 for l in all_listings if l.listing_type == "wanted")
+            total_views = sum(l.views for l in all_listings)
+
+            return {
+                "query_type": "my_stats",
+                "total_listings": total,
+                "active_listings": active,
+                "inactive_listings": total - active,
+                "sell_count": sell_count,
+                "wanted_count": wanted_count,
+                "total_views": total_views,
+                "avg_views": round(total_views / total, 1) if total > 0 else 0
+            }
+
+        elif query_type == "my_recent":
+            limit = filters.get("limit", 5) if filters else 5
+            recent = base_query.order_by(Listing.created_at.desc()).limit(limit).all()
+
+            listings = []
+            for l in recent:
+                faq_count = db.query(func.count(FAQ.id)).filter(FAQ.listing_id == l.id).scalar()
+                listings.append({
+                    "id": l.id,
+                    "title": l.title,
+                    "price": float(l.price),
+                    "listing_type": l.listing_type,
+                    "is_active": l.is_active,
+                    "views": l.views,
+                    "faq_count": faq_count,
+                    "links": {
+                        "listing": f"/threads/{l.thread_id}/listings/{l.id}" if l.thread_id else None,
+                        "faq": f"/threads/{l.thread_id}/listings/{l.id}/faq" if l.thread_id and faq_count > 0 else None
+                    }
+                })
+
+            return {
+                "query_type": "my_recent",
+                "count": len(listings),
+                "listings": listings
+            }
+
+        else:
+            return {
+                "error": f"Unknown query_type: {query_type}",
+                "valid_types": ["count_sell", "count_wanted", "count_matches", "my_stats", "my_recent"]
+            }
+
+    @agent.tool
+    async def get_matched_listings(
+        ctx: RunContext[ChatAssistantDeps],
+        status_filter: str = "matched"
+    ) -> Dict[str, Any]:
+        """
+        Get user's matched listings from the recommendations table.
+
+        Args:
+            status_filter: Filter by status - "matched" (default), "all", "pending", "completed"
+
+        Returns:
+            User's matched listings with details
+
+        Examples:
+            - "Show my matched listings" → status_filter="matched"
+            - "How many matches do I have?" → status_filter="matched"
+            - "Show all my recommendations" → status_filter="all"
+        """
+        db: Session = ctx.deps.db
+        user_id = ctx.deps.user_id
+
+        if not user_id:
+            return {"error": "User not logged in"}
+
+        # Query recommendations where user is either source or target
+        query = db.query(Recommendation).join(
+            Listing,
+            or_(
+                Recommendation.source_listing_id == Listing.id,
+                Recommendation.target_listing_id == Listing.id
+            )
+        ).filter(
+            or_(
+                Listing.user_id == user_id
+            )
+        )
+
+        # Apply status filter
+        if status_filter != "all":
+            query = query.filter(Recommendation.status == status_filter)
+
+        recommendations = query.all()
+
+        if not recommendations:
+            return {
+                "found": False,
+                "status_filter": status_filter,
+                "count": 0,
+                "message": f"You don't have any {status_filter} recommendations yet."
+            }
+
+        # Build results with listing details
+        matches = []
+        for rec in recommendations:
+            # Get source and target listings
+            source = db.query(Listing).filter(Listing.id == rec.source_listing_id).first()
+            target = db.query(Listing).filter(Listing.id == rec.target_listing_id).first()
+
+            if not source or not target:
+                continue
+
+            # Determine which listing is the user's and which is the match
+            if source.user_id == user_id:
+                my_listing = source
+                matched_listing = target
+            else:
+                my_listing = target
+                matched_listing = source
+
+            match_data = {
+                "recommendation_id": rec.id,
+                "status": rec.status,
+                "match_score": rec.match_score,
+                "match_reasons": rec.match_reasons or [],
+                "my_listing": {
+                    "id": my_listing.id,
+                    "title": my_listing.title,
+                    "price": float(my_listing.price),
+                    "listing_type": my_listing.listing_type,
+                    "link": f"/threads/{my_listing.thread_id}/listings/{my_listing.id}" if my_listing.thread_id else None
+                },
+                "matched_listing": {
+                    "id": matched_listing.id,
+                    "title": matched_listing.title,
+                    "price": float(matched_listing.price),
+                    "listing_type": matched_listing.listing_type,
+                    "link": f"/threads/{matched_listing.thread_id}/listings/{matched_listing.id}" if matched_listing.thread_id else None
+                },
+                "created_at": rec.created_at.isoformat() if rec.created_at else None
+            }
+
+            matches.append(match_data)
+
+        return {
+            "found": True,
+            "status_filter": status_filter,
+            "count": len(matches),
+            "matches": matches
         }
 
 
