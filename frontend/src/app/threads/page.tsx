@@ -282,13 +282,14 @@ function ThreadsPage() {
     setLastQuery("");
   };
 
-<<<<<<< HEAD
   const handleCreateClick = () => {
     if (isSignedIn) {
       setIsCreateOpen(true);
     } else {
       openSignIn();
-=======
+    }
+  };
+
   const handleRegenerateOverview = async (newQuery: string) => {
     if (!newQuery.trim()) return;
 
@@ -310,7 +311,6 @@ function ThreadsPage() {
       // Optionally show error toast/notification
     } finally {
       setIsAILoading(false);
->>>>>>> 2747a48 (Added guide to create listing, edited system prompt to make it more. Also, allow user to use our Ngam Overview a few times, and randomizeing pre-defined suggestion to give an illusion that its regenerated -m-)
     }
   };
 
