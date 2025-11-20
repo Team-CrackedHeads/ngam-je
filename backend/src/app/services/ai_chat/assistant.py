@@ -165,7 +165,7 @@ Want details on these or see other options?"
 
 ---
 
-**That's it! Keep responses under 3 paragraphs. Use tools wisely. Track context. Include links.**"""
+**That's it! Keep responses under 3 paragraphs. Use tools wisely. Track context PLEASE. Include links.**"""
 
 
 def get_chat_assistant_agent() -> Agent:
@@ -230,10 +230,12 @@ def register_tools(agent: Agent) -> None:
             # Build search filter with all query variations (handles plurals)
             search_conditions = []
             for search_term in search_queries:
-                search_conditions.extend([
-                    Listing.title.ilike(f"%{search_term}%"),
-                    Listing.description.ilike(f"%{search_term}%")
-                ])
+                search_conditions.extend(
+                    [
+                        Listing.title.ilike(f"%{search_term}%"),
+                        Listing.description.ilike(f"%{search_term}%"),
+                    ]
+                )
 
             search_filter = or_(*search_conditions)
             listings = (
@@ -275,10 +277,12 @@ def register_tools(agent: Agent) -> None:
         # Build search filter with all query variations (handles plurals)
         thread_conditions = []
         for search_term in search_queries:
-            thread_conditions.extend([
-                Thread.title.ilike(f"%{search_term}%"),
-                Thread.description.ilike(f"%{search_term}%")
-            ])
+            thread_conditions.extend(
+                [
+                    Thread.title.ilike(f"%{search_term}%"),
+                    Thread.description.ilike(f"%{search_term}%"),
+                ]
+            )
 
         search_filter = or_(*thread_conditions)
         threads = db.query(Thread).filter(search_filter).limit(limit).all()
