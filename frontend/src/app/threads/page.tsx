@@ -13,14 +13,14 @@ import { Thread, ThreadDisplay } from "@/types/thread";
 import axios from "axios";
 
 import CreateThreadsSection from "@/components/threads/CreateThreadsSection";
-import AIAgentSearch from "@/components/threads/AIAgentSearch";
+import AIAgentSearch, { NgamOverviewResponse } from "@/components/threads/AIAgentSearch";
 import NgamOverview from "@/components/threads/NgamOverview";
 import FilterButton, { FilterType } from "@/components/threads/FilterButton";
 import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
-import { MockAIResponse } from "@/utils/mock-all-data-used";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth, useClerk } from "@clerk/nextjs";
+import { generateNgamOverview } from "@/lib/api/ngam-overview";
 
 type ViewType = "grid" | "list";
 
@@ -37,7 +37,7 @@ function ThreadsPage() {
   const [threadsLoading, setThreadsLoading] = useState(true);
 
   // AI overview / query
-  const [currentOverview, setCurrentOverview] = useState<MockAIResponse | null>(
+  const [currentOverview, setCurrentOverview] = useState<(NgamOverviewResponse & { prompt: string }) | null>(
     null
   );
   const [isAILoading, setIsAILoading] = useState(false);
@@ -266,10 +266,10 @@ function ThreadsPage() {
     }
   };
 
-  const handleAISearchComplete = (r: MockAIResponse) => {
+  const handleAISearchComplete = (r: NgamOverviewResponse & { prompt: string }) => {
     setCurrentOverview(r);
     setIsAILoading(false);
-    setLastQuery((r as MockAIResponse & { prompt?: string })?.prompt || "");
+    setLastQuery(r.prompt || "");
   };
 
   const handleOpenAI = () => {
@@ -287,6 +287,30 @@ function ThreadsPage() {
       setIsCreateOpen(true);
     } else {
       openSignIn();
+    }
+  };
+
+  const handleRegenerateOverview = async (newQuery: string) => {
+    if (!newQuery.trim()) return;
+
+    try {
+      setIsAILoading(true);
+      const response = await generateNgamOverview({
+        query: newQuery,
+        include_images: true,
+        max_results: 10,
+      });
+
+      setCurrentOverview({
+        ...response,
+        prompt: newQuery,
+      });
+      setLastQuery(newQuery);
+    } catch (error) {
+      console.error("Failed to regenerate overview:", error);
+      // Optionally show error toast/notification
+    } finally {
+      setIsAILoading(false);
     }
   };
 
@@ -431,6 +455,8 @@ function ThreadsPage() {
                     images={currentOverview?.images}
                     sources={currentOverview?.sources}
                     isLoading={isAILoading}
+                    onAsk={handleRegenerateOverview}
+                    isAsking={isAILoading}
                   />
                 </div>
               </>
