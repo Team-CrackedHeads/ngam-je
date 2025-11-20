@@ -643,20 +643,9 @@ const FAQPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <div className="lg:hidden">
-            <AISummary
-              content={aiSummary}
-              isLoading={aiSummaryLoading}
-              onGenerateSummary={handleGenerateAISummary}
-              onAskQuestion={handleAskAIQuestion}
-              isQuestionLoading={aiQuestionLoading}
-              progressMessage={aiProgressMessage}
-            />
-          </div>
-
+        <div className="lg:col-span-2 space-y-6">
           {/* Tabs */}
-          <div className="flex justify-center border-b border-[color:var(--color-border)] mt-4 space-x-6">
+          <div className="flex justify-center border-b border-[color:var(--color-border)] space-x-6">
             <button
               className={`px-6 py-3 text-base font-semibold ${
                 activeTab === "answered"
@@ -679,6 +668,18 @@ const FAQPage: React.FC = () => {
             </button>
           </div>
 
+          {/* AI Summary - Mobile */}
+          <div className="lg:hidden mt-6">
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
+            />
+          </div>
+
           <div className="space-y-4 mb-20 lg:mb-6">
             {filteredQuestions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -694,7 +695,7 @@ const FAQPage: React.FC = () => {
                 </p>
                 <p className="text-sm text-[color:var(--color-muted-foreground)] text-center max-w-md mb-4">
                   {activeTab === "unanswered"
-                    ? "Be the first to ask a question about this listing!"
+                    ? "No unanswered questions yet. Be the first to ask!"
                     : "No questions have been answered yet. Check back later!"}
                 </p>
                 {activeTab === "unanswered" && (
@@ -793,14 +794,16 @@ const FAQPage: React.FC = () => {
         </div>
 
         <div className="hidden lg:block">
-          <AISummary
-            content={aiSummary}
-            isLoading={aiSummaryLoading}
-            onGenerateSummary={handleGenerateAISummary}
-            onAskQuestion={handleAskAIQuestion}
-            isQuestionLoading={aiQuestionLoading}
-            progressMessage={aiProgressMessage}
-          />
+          <div className="sticky top-6">
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
+            />
+          </div>
         </div>
       </div>
     </div>
