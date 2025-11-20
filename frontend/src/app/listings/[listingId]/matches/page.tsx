@@ -30,6 +30,12 @@ export default function ListingMatchesPage() {
 
   // Transform API listing to component format
   const transformListing = (apiListing: ApiListing): import("@/components/matching/types").ListingType => {
+    // Check if this listing has recommendation metadata attached
+    const extendedListing = apiListing as ApiListing & {
+      matchScore?: number;
+      recommendationStatus?: string;
+    };
+
     return {
       id: apiListing.id,
       title: apiListing.title,
@@ -41,7 +47,10 @@ export default function ListingMatchesPage() {
       timestamp: apiListing.created_at,
       seller: apiListing.creator_name || "Unknown",
       type: apiListing.listing_type === "sale" ? "sell" : "buy",
-      category: "general"
+      category: "general",
+      matchScore: extendedListing.matchScore || 0,
+      // Only show match score badge for "matched" status recommendations with valid scores
+      showMatchScore: extendedListing.recommendationStatus === "matched" && (extendedListing.matchScore ?? 0) > 0,
     };
   };
 

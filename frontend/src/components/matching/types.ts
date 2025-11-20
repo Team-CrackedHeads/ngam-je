@@ -29,6 +29,8 @@ export interface ListingType {
   seller?: string;
   type: "sell" | "buy";
   category: string;
+  matchScore?: number;
+  showMatchScore?: boolean;
 }
 
 export interface AIMatchingProps {

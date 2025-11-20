@@ -229,16 +229,17 @@ async def run_matching_and_negotiation(
             recommendation_type="ai_match",
             match_score=negotiation_result.match_score,
             match_reasons=[negotiation_result.conversation_summary],
-            status="matched" if negotiation_result.agreed else "pending",
+            status="pending",  # Always start as pending - users must like to match
             message=negotiation_result.conversation_summary,
         )
         db.add(recommendation)
         db.commit()
         db.refresh(recommendation)
 
-        logger.info(f"Created recommendation {recommendation.id}")
+        logger.info(f"Created recommendation {recommendation.id} with score {negotiation_result.match_score}")
 
-        # 4. Create conversation
+        # 4. Create conversation with AI negotiation messages
+        # This allows users to PREVIEW the AI negotiation before deciding to like/pass
         conversation = Conversation(
             recommendation_id=recommendation.id, is_active=True
         )
@@ -248,23 +249,7 @@ async def run_matching_and_negotiation(
 
         logger.info(f"Created conversation {conversation.id}")
 
-        # 5. Add system summary message
-        system_message = Message(
-            conversation_id=conversation.id,
-            sender_id=None,
-            content=f"🤖 **AI Negotiation Summary**\n\n"
-            f"**Status:** {'✅ Agreement Reached' if negotiation_result.agreed else '⏳ Pending'}\n"
-            f"{'**Final Price:** $' + f'{negotiation_result.final_price:.2f}' if negotiation_result.final_price else ''}\n"
-            f"**Turns:** {negotiation_result.turn_count}\n"
-            f"**Duration:** {negotiation_result.duration_seconds:.1f}s\n\n"
-            f"The conversation below shows how our AI agents negotiated on your behalf. "
-            f"Feel free to continue the conversation!",
-            message_type="system",
-            is_read=False,
-        )
-        db.add(system_message)
-
-        # 6. Add AI negotiation messages
+        # 5. Add AI negotiation messages
         for msg in negotiation_result.conversation:
             ai_message = Message(
                 conversation_id=conversation.id,
@@ -280,7 +265,7 @@ async def run_matching_and_negotiation(
 
         logger.info(f"Added {len(negotiation_result.conversation)} AI messages")
 
-        # 7. Cleanup store (optional - comment out to keep for debugging)
+        # 6. Cleanup store (optional - comment out to keep for debugging)
         # await cleanup_match_store(store_name)
 
         logger.info(f"Successfully completed matching for {source_listing.id} <-> {target_listing_id}")
