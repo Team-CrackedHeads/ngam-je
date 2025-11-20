@@ -2,6 +2,7 @@ export interface Answer {
   id: string;
   user: string;
   text: string;
+  userRole?: "seller" | "buyer" | "helper";
   isAccepted?: boolean;
   likes?: number;
   dislikes?: number;
