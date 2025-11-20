@@ -9,8 +9,11 @@ import {
   MessageSquare,
   Send,
   CornerDownRight,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { Answer as AnswerType } from "./types";
+import { getRelativeTime, getRoleBadge } from "./utils";
 
 interface AnswerProps {
   questionId: string;
@@ -84,104 +87,126 @@ const Answer: React.FC<AnswerProps> = ({
     setVisibleRepliesCount(totalReplies);
   };
 
+  const roleBadge = getRoleBadge(answer.userRole);
+
   return (
     <div className="relative">
-      {/* Thread line */}
+      {/* Thread line - Enhanced Discord style */}
       {depth > 0 && (
         <div
-          className="absolute left-0 top-0 bottom-0 border-l-2 border-[color:var(--color-border)]"
+          className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[color:var(--color-primary-300)] to-[color:var(--color-border)]"
           style={{ marginLeft: `${(depth - 1) * 16 + 8}px` }}
         />
       )}
 
       <div
-        className="bg-[color:var(--color-secondary-50)] p-3 rounded-md relative"
+        className={`p-4 rounded-lg relative transition-all duration-200 ${
+          depth === 0
+            ? "bg-white border-2 border-[color:var(--color-border)] shadow-sm hover:shadow-md"
+            : "bg-[color:var(--color-secondary-50)] border border-[color:var(--color-border)]"
+        } ${answer.isAccepted ? "ring-2 ring-green-500/30 border-green-300" : ""}`}
         style={{ marginLeft: `${depth * 16}px` }}
       >
-        <div className="flex justify-between items-center">
+        {/* Accepted Answer Badge */}
+        {answer.isAccepted && (
+          <div className="absolute -top-2 left-4 px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full shadow-md flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" />
+            Best Answer
+          </div>
+        )}
+
+        <div className="flex justify-between items-start gap-3">
           <div
-            className="flex items-center gap-1 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
             onClick={() => onToggleCollapse(answer.id)}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-4 w-4 text-[color:var(--color-muted-foreground)]" />
+              <ChevronRight className="h-4 w-4 text-[color:var(--color-muted-foreground)] flex-shrink-0" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[color:var(--color-muted-foreground)]" />
+              <ChevronDown className="h-4 w-4 text-[color:var(--color-muted-foreground)] flex-shrink-0" />
             )}
-            <p className="text-sm font-medium text-[color:var(--color-secondary-800)]">
-              {answer.user}{" "}
-              {answer.isAccepted && (
-                <span className="text-xs text-[color:var(--color-secondary-600)]">
-                  (Accepted)
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-semibold text-[color:var(--color-primary-800)]">
+                {answer.user}
+              </p>
+              {roleBadge && (
+                <span className={`px-2 py-0.5 border rounded-full text-xs font-medium ${roleBadge.color}`}>
+                  {roleBadge.text}
                 </span>
               )}
-            </p>
+              <span className="text-xs text-[color:var(--color-muted-foreground)] flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {getRelativeTime(answer.createdAt)}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 userVote === "like"
-                  ? "bg-[color:var(--color-primary-600)] text-white"
-                  : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)]"
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm"
+                  : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)] hover:text-blue-600"
               }`}
               onClick={(e) => {
                 e.stopPropagation();
                 onLikeDislike(answer.id, "like");
               }}
             >
-              <ThumbsUp className="h-4 w-4" /> {answer.likes ?? 0}
+              <ThumbsUp className="h-3.5 w-3.5" />
+              <span className="font-semibold">{answer.likes ?? 0}</span>
             </button>
             <button
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 userVote === "dislike"
-                  ? "bg-[color:var(--color-primary-600)] text-white"
-                  : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)]"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm"
+                  : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)] hover:text-red-600"
               }`}
               onClick={(e) => {
                 e.stopPropagation();
                 onLikeDislike(answer.id, "dislike");
               }}
             >
-              <ThumbsDown className="h-4 w-4" /> {answer.dislikes ?? 0}
+              <ThumbsDown className="h-3.5 w-3.5" />
+              <span className="font-semibold">{answer.dislikes ?? 0}</span>
             </button>
           </div>
         </div>
 
         {!isCollapsed && (
           <>
-            <p className="text-sm text-[color:var(--color-muted-foreground)] mt-1">
+            <p className="text-sm text-[color:var(--color-foreground)] mt-3 leading-relaxed whitespace-pre-wrap bg-[color:var(--color-primary-50)] p-3 rounded-lg border-l-4 border-[color:var(--color-primary-400)]">
               {answer.text}
             </p>
 
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-[color:var(--color-border)]">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleReply(answer.id);
                 }}
-                className="text-sm text-[color:var(--color-primary-700)] hover:underline flex items-center gap-1"
+                className="text-xs font-medium text-[color:var(--color-primary-700)] hover:bg-[color:var(--color-primary-100)] px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-3.5 w-3.5" />
                 Reply
               </button>
 
               {totalReplies > 0 && (
-                <span className="text-xs text-[color:var(--color-muted-foreground)]">
+                <span className="text-xs text-[color:var(--color-muted-foreground)] font-medium">
                   {totalReplies} {totalReplies === 1 ? "reply" : "replies"}
                 </span>
               )}
             </div>
 
             {isReplyVisible && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-3 bg-white rounded-lg shadow-sm border border-[color:var(--color-border)] p-1">
                 <input
                   type="text"
-                  placeholder="Reply..."
-                  className="flex-grow p-2 rounded-lg border border-[color:var(--color-border)] text-sm"
+                  placeholder="Write a reply..."
+                  className="flex-grow p-2 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
                   value={replyInput}
                   onChange={(e) => onReplyChange(answer.id, e.target.value)}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
                       onSubmitReply(answer.id);
@@ -194,7 +219,7 @@ const Answer: React.FC<AnswerProps> = ({
                     e.stopPropagation();
                     onSubmitReply(answer.id);
                   }}
-                  className="p-2 rounded-md bg-[color:var(--color-primary-700)] text-white hover:opacity-90"
+                  className="mr-1 p-2 rounded-lg bg-gradient-to-r from-[#f5cb5c] to-[#8a9256] text-white hover:shadow-md transition-all"
                 >
                   <Send className="h-4 w-4" />
                 </button>
