@@ -2,7 +2,7 @@
  * API functions for Ngam Overview (market research)
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface NgamOverviewRequest {
   query: string;
@@ -34,16 +34,21 @@ export interface FollowUpResponse {
 export async function generateNgamOverview(
   request: NgamOverviewRequest
 ): Promise<NgamOverviewResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/ngam-overview/generate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/ngam-overview/generate`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    }
+  );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to generate overview" }));
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to generate overview" }));
     throw new Error(error.detail || "Failed to generate overview");
   }
 
@@ -56,16 +61,21 @@ export async function generateNgamOverview(
 export async function askFollowUpQuestion(
   request: FollowUpRequest
 ): Promise<FollowUpResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/ngam-overview/followup`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/ngam-overview/followup`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    }
+  );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to answer follow-up" }));
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to answer follow-up" }));
     throw new Error(error.detail || "Failed to answer follow-up question");
   }
 
