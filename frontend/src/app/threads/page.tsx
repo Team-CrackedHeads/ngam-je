@@ -20,6 +20,7 @@ import ViewDropdown from "@/components/threads/ViewDropdown";
 import PageHeader from "@/components/threads/PageHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth, useClerk } from "@clerk/nextjs";
+import { generateNgamOverview } from "@/lib/api/ngam-overview";
 
 type ViewType = "grid" | "list";
 
@@ -281,11 +282,35 @@ function ThreadsPage() {
     setLastQuery("");
   };
 
+<<<<<<< HEAD
   const handleCreateClick = () => {
     if (isSignedIn) {
       setIsCreateOpen(true);
     } else {
       openSignIn();
+=======
+  const handleRegenerateOverview = async (newQuery: string) => {
+    if (!newQuery.trim()) return;
+
+    try {
+      setIsAILoading(true);
+      const response = await generateNgamOverview({
+        query: newQuery,
+        include_images: true,
+        max_results: 10,
+      });
+
+      setCurrentOverview({
+        ...response,
+        prompt: newQuery,
+      });
+      setLastQuery(newQuery);
+    } catch (error) {
+      console.error("Failed to regenerate overview:", error);
+      // Optionally show error toast/notification
+    } finally {
+      setIsAILoading(false);
+>>>>>>> 2747a48 (Added guide to create listing, edited system prompt to make it more. Also, allow user to use our Ngam Overview a few times, and randomizeing pre-defined suggestion to give an illusion that its regenerated -m-)
     }
   };
 
@@ -430,6 +455,8 @@ function ThreadsPage() {
                     images={currentOverview?.images}
                     sources={currentOverview?.sources}
                     isLoading={isAILoading}
+                    onAsk={handleRegenerateOverview}
+                    isAsking={isAILoading}
                   />
                 </div>
               </>

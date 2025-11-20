@@ -31,7 +31,7 @@ async def send_chat_message(
     - Finding FAQs about products
     - Providing links to relevant pages
 
-    **Note**: Chat history is not stored in the database.
+    **Note**: Chat history is NOT stored in the database.
     The frontend should maintain the conversation state.
     """
     try:
@@ -40,19 +40,30 @@ async def send_chat_message(
         # Build conversation history for Pydantic AI
         message_history = []
         if request.conversation_history:
-            for msg in request.conversation_history:
+            logger.info(f"Received {len(request.conversation_history)} messages in conversation history")
+            for i, msg in enumerate(request.conversation_history):
+                if not msg.role or not msg.content:
+                    logger.warning(f"Skipping invalid message at index {i}: role={msg.role}, content_len={len(msg.content) if msg.content else 0}")
+                    continue
+
                 message_history.append({
                     "role": msg.role,
                     "content": msg.content
                 })
+
+            logger.info(f"Processed {len(message_history)} valid messages from conversation history")
+        else:
+            logger.info("No conversation history provided")
 
         # Call the AI assistant with user context and conversation history
         response = await chat_with_assistant(
             message=request.message,
             db=db,
             user_id=current_user.id,
-            conversation_history=message_history
+            conversation_history=message_history if message_history else None
         )
+
+        logger.info(f"AI response generated: {len(response.content)} chars, {len(response.links)} links")
 
         return ChatMessageResponse(
             content=response.content,
@@ -60,7 +71,7 @@ async def send_chat_message(
         )
 
     except Exception as e:
-        logger.error(f"Error in AI chat: {str(e)}", exc_info=True)
+        logger.error(f"Error in AI chat endpoint: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"AI chat service error: {str(e)}"

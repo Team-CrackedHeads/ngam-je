@@ -62,17 +62,9 @@ const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
   content:
-    "**Ngam AI** activated!\n\nI'm your intelligent marketplace assistant. I can:\n\n• **Search & Compare**: Find best deals across listings\n\n• **Verify Sellers**: Check ratings and authenticity\n\n• **Personal Insights**: Analyze your listings and marketplace activity\n\n• **Smart Analysis**: Break down complex marketplace tasks\n\nWhat can I help you find today?",
+    "**Ngam AI** activated!\n\nI'm your intelligent marketplace assistant. I can:\n\n• **Search & Compare**: Find best deals across listings\n\n• **Personal Insights**: Analyze your listings and marketplace activity\n\n\nWhat can I help you find today?",
   timestamp: new Date(),
 };
-
-// Loading messages for AI thinking
-const LOADING_MESSAGES = [
-  "Ngam is warming up...",
-  "Ngam is thinking...",
-  "Ngam is crawling...",
-  "Almost there...",
-];
 
 // Mock data (renamed from mockHistoryChats for consistency with SearchHistory.tsx)
 const mockHistory: ChatHistoryItem[] = [
@@ -262,44 +254,31 @@ export default function SidebarAIChat({
       // Get auth token
       const token = await getToken();
 
-      // Show a loading message with cycling text
-      const loadingMessageId = (Date.now() + 1).toString();
-      const randomLoadingMessage =
-        LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
-      const loadingMessage: Message = {
-        id: loadingMessageId,
-        role: "assistant",
-        content: randomLoadingMessage,
-        timestamp: new Date(),
-        // No toolCalls - we just want to show the loading text
-      };
-      setMessages((prev) => [...prev, loadingMessage]);
-
-      // Build conversation history (excluding the current user message and loading message)
+      // Build conversation history (excluding the current user message)
       const conversationHistory = messages
         .filter((msg) => msg.role === "user" || msg.role === "assistant")
-        .filter((msg) => !msg.toolCalls) // Exclude loading messages with tool calls
+        .filter((msg) => !msg.toolCalls) // Exclude messages with tool calls
         .map((msg) => ({
           role: msg.role,
           content: msg.content,
         }));
 
       // Call the real API with conversation history
-      const response = await sendChatMessage(token, messageText, conversationHistory);
-
-      // Update with real response
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === loadingMessageId
-            ? {
-                ...msg,
-                content: response.content,
-                // No toolCalls - we don't want to show "[search_marketplace] Done"
-                links: response.links,
-              }
-            : msg
-        )
+      const response = await sendChatMessage(
+        token,
+        messageText,
+        conversationHistory
       );
+
+      // Add the AI response
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: response.content,
+        timestamp: new Date(),
+        links: response.links,
+      };
+      setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("AI chat error:", error);
       // Show error message
@@ -309,9 +288,8 @@ export default function SidebarAIChat({
         content:
           "Sorry, I encountered an error processing your request. Please try again or visit [all threads](/threads) to browse manually.",
         timestamp: new Date(),
-        toolCalls: [{ name: "search_marketplace", status: "failed" }],
       };
-      setMessages((prev) => [...prev.slice(0, -1), errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
     }
@@ -466,7 +444,7 @@ export default function SidebarAIChat({
                                 <a
                                   {...props}
                                   style={{
-                                    color: "#F5CB5C",
+                                    color: "#B59410",
                                     fontWeight: "bold",
                                     textDecoration: "none",
                                   }}
@@ -502,7 +480,7 @@ export default function SidebarAIChat({
                                     router.push(link.url);
                                   }}
                                   className="flex items-center gap-2 text-xs font-bold transition-colors group"
-                                  style={{ color: "#F5CB5C" }}
+                                  style={{ color: "#B59410" }}
                                 >
                                   <ExternalLink className="w-3 h-3 group-hover:scale-110 transition-transform" />
                                   <span className="underline decoration-dotted underline-offset-2 hover:no-underline">

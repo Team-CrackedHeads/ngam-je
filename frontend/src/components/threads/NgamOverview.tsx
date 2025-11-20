@@ -51,13 +51,27 @@ function truncateWords(text: string, min = 100, max = 250): string {
   return words.slice(0, target).join(" ") + "…";
 }
 
-// Default suggestions for the "Continue asking" feature
-const DEFAULT_SUGGESTIONS = [
-  "Show me more details",
-  "Is the price fair right now?",
-  "Common defects to check?",
-  "How to verify authenticity?",
+// Default suggestions for the "Continue asking" feature (pool of 8, display 3 at random)
+const DEFAULT_SUGGESTIONS_POOL = [
+  "What are rare items in demand in Malaysian secondhand market?",
+  "How to verify if I'm buying genuine secondhand product in Malaysia?",
+  "Any rare trading cards in Malaysia?",
+  "Best luxury watches brands to re-sell in Malaysia?",
+  "How to price vintage sneakers correctly in Malaysia?",
+  "What electronics hold their value best?",
+  "Common scams to avoid when buying secondhand?",
+  "Tips for negotiating prices on high-value items?",
 ];
+
+// Shuffle array helper
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function NgamOverview({
   longContent,
@@ -76,6 +90,9 @@ export default function NgamOverview({
   const [isExpanded, setIsExpanded] = useState(false);
   const [askValue, setAskValue] = useState("");
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [displayedSuggestions, setDisplayedSuggestions] = useState<string[]>(
+    []
+  );
 
   // Rotating loading messages
   const loadingMessages = [
@@ -102,11 +119,21 @@ export default function NgamOverview({
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  // Initialize and reshuffle suggestions when expanded
+  useEffect(() => {
+    if (isExpanded) {
+      const shuffled = shuffleArray(DEFAULT_SUGGESTIONS_POOL);
+      setDisplayedSuggestions(shuffled.slice(0, 3));
+    }
+  }, [isExpanded]);
+
   // Defaults for suggestion bubbles (expanded mode only)
   const bubbles = useMemo(
     () =>
-      suggestions && suggestions.length > 0 ? suggestions : DEFAULT_SUGGESTIONS,
-    [suggestions]
+      suggestions && suggestions.length > 0
+        ? suggestions
+        : displayedSuggestions,
+    [suggestions, displayedSuggestions]
   );
 
   // Determine which content/images to show based on mode
