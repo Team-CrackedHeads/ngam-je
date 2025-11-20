@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import SafeImage from "@/components/ui/SafeImage";
 import { useAuth } from "@clerk/nextjs";
@@ -183,8 +183,10 @@ const FAQPage: React.FC = () => {
   );
   const [showAskQuestion, setShowAskQuestion] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
 
-  // AI FAQ INTEGRATION: State for AI Summary 
+  // AI FAQ INTEGRATION: State for AI Summary
   const [aiSummary, setAiSummary] = useState<string>("");
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [aiQuestionLoading, setAiQuestionLoading] = useState(false);
@@ -588,9 +590,42 @@ const FAQPage: React.FC = () => {
     }
   };
 
-  const filteredQuestions = questions.filter((q) =>
-    activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0
-  );
+  // Predefined tags for filtering
+  const tags = [
+    { id: "all", label: "All" },
+    { id: "solved", label: "Solved" },
+    { id: "unanswered", label: "Unanswered" },
+    { id: "popular", label: "Popular" },
+    { id: "recent", label: "Recent" },
+  ];
+
+  // Filter questions based on tab, search, and tag
+  const filteredQuestions = questions.filter((q) => {
+    // Tab filter
+    const tabMatch = activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0;
+
+    // Search filter
+    const searchMatch = searchQuery.trim() === "" ||
+      q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.answers.some(a => a.text.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Tag filter
+    let tagMatch = true;
+    if (selectedTag === "solved") {
+      tagMatch = q.answers.some(a => a.isAccepted);
+    } else if (selectedTag === "unanswered") {
+      tagMatch = q.answers.length === 0;
+    } else if (selectedTag === "popular") {
+      const totalLikes = q.answers.reduce((sum, a) => sum + (a.likes || 0), 0);
+      tagMatch = totalLikes >= 3;
+    } else if (selectedTag === "recent") {
+      const questionDate = new Date(q.createdAt || Date.now());
+      const daysSince = (Date.now() - questionDate.getTime()) / (1000 * 60 * 60 * 24);
+      tagMatch = daysSince <= 7;
+    }
+
+    return tabMatch && searchMatch && tagMatch;
+  });
 
   // Loading state
   if (loading) {
@@ -644,6 +679,39 @@ const FAQPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {/* Search Bar */}
+          <div className="bg-white rounded-xl shadow-sm border border-[color:var(--color-border)] p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[color:var(--color-muted-foreground)]" />
+              <input
+                type="text"
+                placeholder="Search questions and answers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-[color:var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Tags/Filters */}
+          <div className="bg-white rounded-xl shadow-sm border border-[color:var(--color-border)] p-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              {tags.map((tag) => (
+                <button
+                  key={tag.id}
+                  onClick={() => setSelectedTag(tag.id)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                    selectedTag === tag.id
+                      ? "bg-[#f5cb5c] text-white shadow-md"
+                      : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)]"
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="flex justify-center border-b border-[color:var(--color-border)] space-x-6">
             <button
