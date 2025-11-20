@@ -2629,11 +2629,20 @@ export default function CreateListingModal({
                         </Button>
                         <Button
                           onClick={handleSendMessage}
-                          disabled={selectedExternalImages.length === 0 && uploadedImages.length === 0}
+                          disabled={isGeneratingAll || (selectedExternalImages.length === 0 && uploadedImages.length === 0)}
                           className="flex-1 bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-black disabled:opacity-50"
                         >
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Generate Listing
+                          {isGeneratingAll ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Generate Listing
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -2765,11 +2774,20 @@ export default function CreateListingModal({
                 ) : (
                   <Button
                     onClick={handleSubmit}
-                    disabled={!isStepValid()}
+                    disabled={isSubmitting || !isStepValid()}
                     className="px-8 bg-[var(--color-success-500)] hover:bg-[var(--color-success-900)] text-lg font-semibold text-white"
                   >
-                    <Check className="w-5 h-5 mr-2" />
-                    Publish {listingType === "buy" ? "Buy" : "Sell"} Listing
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-5 h-5 mr-2" />
+                        Publish {listingType === "buy" ? "Buy" : "Sell"} Listing
+                      </>
+                    )}
                   </Button>
                 )}
               </div>
