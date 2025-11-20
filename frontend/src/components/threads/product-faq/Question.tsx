@@ -95,7 +95,7 @@ const Question: React.FC<QuestionProps> = ({
     (acc, answer) => acc + (answer.replies?.length || 0),
     0
   );
-  const roleBadge = getRoleBadge(userRole);
+  const roleBadge = getRoleBadge(userRole, askedBy);
 
   return (
     <div

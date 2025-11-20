@@ -593,10 +593,10 @@ const FAQPage: React.FC = () => {
   // Predefined tags for filtering
   const tags = [
     { id: "all", label: "All" },
-    { id: "solved", label: "Solved" },
-    { id: "unanswered", label: "Unanswered" },
     { id: "popular", label: "Popular" },
     { id: "recent", label: "Recent" },
+    { id: "buyer", label: "Buyer" },
+    { id: "seller", label: "Seller" },
   ];
 
   // Filter questions based on tab, search, and tag
@@ -611,10 +611,8 @@ const FAQPage: React.FC = () => {
 
     // Tag filter
     let tagMatch = true;
-    if (selectedTag === "solved") {
-      tagMatch = q.answers.some(a => a.isAccepted);
-    } else if (selectedTag === "unanswered") {
-      tagMatch = q.answers.length === 0;
+    if (selectedTag === "all") {
+      tagMatch = true;
     } else if (selectedTag === "popular") {
       const totalLikes = q.answers.reduce((sum, a) => sum + (a.likes || 0), 0);
       tagMatch = totalLikes >= 3;
@@ -622,6 +620,12 @@ const FAQPage: React.FC = () => {
       const questionDate = new Date(q.createdAt || Date.now());
       const daysSince = (Date.now() - questionDate.getTime()) / (1000 * 60 * 60 * 24);
       tagMatch = daysSince <= 7;
+    } else if (selectedTag === "buyer") {
+      // Show questions asked by buyers (isAnsweredByPoster = false means buyer asked)
+      tagMatch = !q.isAnsweredByPoster;
+    } else if (selectedTag === "seller") {
+      // Show questions asked by sellers (isAnsweredByPoster = true means seller asked)
+      tagMatch = q.isAnsweredByPoster;
     }
 
     return tabMatch && searchMatch && tagMatch;
@@ -694,22 +698,20 @@ const FAQPage: React.FC = () => {
           </div>
 
           {/* Tags/Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-[color:var(--color-border)] p-4">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => setSelectedTag(tag.id)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-                    selectedTag === tag.id
-                      ? "bg-[#f5cb5c] text-white shadow-md"
-                      : "bg-[color:var(--color-secondary-100)] text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-200)]"
-                  }`}
-                >
-                  {tag.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth [-webkit-overflow-scrolling:touch]">
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => setSelectedTag(tag.id)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all snap-start flex-shrink-0 ${
+                  selectedTag === tag.id
+                    ? "bg-[#f5cb5c] text-[#242423] shadow-md font-bold"
+                    : "bg-white text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-100)] border border-[color:var(--color-border)] font-medium"
+                }`}
+              >
+                {tag.label}
+              </button>
+            ))}
           </div>
 
           {/* Tabs */}
