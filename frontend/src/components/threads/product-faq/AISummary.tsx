@@ -103,7 +103,7 @@ export default function AISummary({
         <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center">
           <button
             onClick={handleGenerateAI}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary-500 text-white hover:bg-secondary-600 transition-all shadow-md hover:shadow-lg font-medium"
+            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary-500 text-black hover:bg-secondary-600 transition-all shadow-md hover:shadow-lg font-medium"
           >
             <Sparkles className="w-5 h-5" />
             Generate AI Summary
