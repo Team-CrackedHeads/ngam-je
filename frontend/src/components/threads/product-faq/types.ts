@@ -7,8 +7,6 @@ export interface Answer {
   dislikes?: number;
   replies?: Answer[];
   createdAt?: string;
-  userAvatar?: string;
-  userRole?: "seller" | "buyer" | "helper" | null;
 }
 
 export interface Question {
