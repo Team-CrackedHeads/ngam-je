@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Search, Send, Loader2 } from "lucide-react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
+import { ArrowLeft, Search, Send, Loader2, Bot } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useClerkApiClient } from "@/lib/clerk-api-client";
 import { useUser } from "@clerk/nextjs";
 import type {
@@ -13,8 +13,9 @@ import type {
   ConversationListResponse
 } from "@/types/messages";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const apiClient = useClerkApiClient();
 
@@ -48,6 +49,21 @@ export default function MessagesPage() {
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }, [messages]);
+
+  // Handle recommendation query parameter - auto-select conversation
+  useEffect(() => {
+    const recommendationId = searchParams.get('recommendation');
+    if (recommendationId && conversations.length > 0) {
+      // Find conversation with this recommendation_id
+      const conversation = conversations.find(c => c.recommendation_id === parseInt(recommendationId));
+      if (conversation) {
+        console.log('📧 Auto-selecting conversation for recommendation:', recommendationId, '-> conversation:', conversation.id);
+        setSelectedConversationId(conversation.id);
+      } else {
+        console.warn('⚠️ No conversation found for recommendation:', recommendationId);
+      }
+    }
+  }, [searchParams, conversations]);
 
   const loadConversations = async () => {
     try {
@@ -278,10 +294,74 @@ export default function MessagesPage() {
               ) : (
                 <>
                   {messages.map((msg) => {
-                    // If the sender_id matches the other_user_id, it's from the other person
-                    // Otherwise, it's from the current user
-                    const isCurrentUser = msg.sender_id !== selectedConversation.other_user_id;
+                    // Determine message alignment based on type
+                    let isCurrentUser: boolean;
+                    let isSystemMessage = false;
+                    let isAiMessage = false;
+                    let aiLabel = "";
 
+                    if (msg.message_type === "system") {
+                      isSystemMessage = true;
+                      isCurrentUser = false; // System messages show centered
+                    } else if (msg.message_type === "ai_buyer") {
+                      isCurrentUser = false; // AI buyer shows on left
+                      isAiMessage = true;
+                      aiLabel = "AI Buyer";
+                    } else if (msg.message_type === "ai_seller") {
+                      isCurrentUser = true; // AI seller shows on right
+                      isAiMessage = true;
+                      aiLabel = "AI Seller";
+                    } else {
+                      // Regular user messages: check sender_id
+                      isCurrentUser = msg.sender_id !== selectedConversation.other_user_id;
+                    }
+
+                    // System messages (AI summary)
+                    if (isSystemMessage) {
+                      return (
+                        <div key={msg.id} className="flex justify-center">
+                          <div className="max-w-md px-4 py-3 rounded-2xl bg-amber-100 text-amber-900 border border-amber-200">
+                            <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                            <p className="text-xs mt-1 text-amber-700">
+                              {formatMessageTime(msg.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // AI messages with special styling
+                    if (isAiMessage) {
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className="flex flex-col items-start max-w-sm">
+                            {/* AI Label */}
+                            <div className={`flex items-center gap-1 mb-1 ${isCurrentUser ? "self-end" : "self-start"}`}>
+                              <Bot className={`w-3 h-3 ${isCurrentUser ? "text-secondary-700" : "text-primary-700"}`} />
+                              <span className={`text-xs font-medium ${isCurrentUser ? "text-secondary-700" : "text-primary-700"}`}>{aiLabel}</span>
+                            </div>
+                            {/* Message Bubble */}
+                            <div
+                              className={`px-4 py-2 rounded-2xl ${
+                                isCurrentUser
+                                  ? "bg-gradient-to-br from-secondary-400 to-secondary-600 text-accent-700 rounded-br-sm border border-secondary-300"
+                                  : "bg-gradient-to-br from-primary-400 to-primary-600 text-white rounded-bl-sm border border-primary-300"
+                              }`}
+                            >
+                              <p className="text-sm">{msg.content}</p>
+                              <p className={`text-xs mt-1 ${isCurrentUser ? "text-accent-700/70" : "text-white/80"}`}>
+                                {formatMessageTime(msg.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Regular user messages
                     return (
                       <div
                         key={msg.id}
@@ -338,5 +418,13 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin" /></div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }

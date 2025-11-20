@@ -14,6 +14,11 @@ export interface MatchedListing {
   category: string;
   matchScore: number;
   matchReasons: string[];
+  recommendationId?: number;
+  recommendationStatus?: string;
+  sourceListingId?: number;
+  targetListingId?: number;
+  currentUserIsSource?: boolean;
 }
 
 export interface ListingType {
@@ -29,6 +34,14 @@ export interface ListingType {
   seller?: string;
   type: "sell" | "buy";
   category: string;
+  matchScore?: number;
+  matchReasons?: string[];
+  recommendationId?: number;
+  recommendationStatus?: string;
+  showMatchScore?: boolean;
+  sourceListingId?: number;
+  targetListingId?: number;
+  currentUserIsSource?: boolean;
 }
 
 export interface AIMatchingProps {

@@ -1,6 +1,6 @@
 """Listing API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -19,6 +19,7 @@ from src.schemas.listing import (
     CheckoutConfirm,
 )
 from src.models.recommendation import Recommendation
+from src.app.services.matching import run_matching_for_listing
 
 router = APIRouter()
 
@@ -175,6 +176,7 @@ async def get_listing(listing_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=ListingResponse, status_code=status.HTTP_201_CREATED)
 async def create_listing(
     listing_data: ListingCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -249,7 +251,26 @@ async def create_listing(
 
         db.commit()
 
+    # Trigger AI matching in background (non-blocking)
+    background_tasks.add_task(run_matching_for_listing, new_listing.id, db)
+
     return new_listing
+
+
+@router.post("/{listing_id}/match-now", status_code=status.HTTP_202_ACCEPTED)
+async def trigger_matching_now(
+    listing_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """🥚 Secret manual trigger for AI matching"""
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+
+    background_tasks.add_task(run_matching_for_listing, listing_id, db)
+
+    return {"message": "🔥 Matching triggered!", "listing_id": listing_id}
 
 
 @router.put("/{listing_id}", response_model=ListingResponse)
@@ -441,3 +462,20 @@ async def confirm_checkout(
     db.refresh(listing)
 
     return listing
+
+
+# 🥚 Easter egg endpoint - Manual matching trigger
+@router.post("/{listing_id}/match-now", status_code=status.HTTP_202_ACCEPTED)
+async def trigger_matching_now(
+    listing_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """Secret manual trigger for AI matching"""
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+    
+    background_tasks.add_task(run_matching_for_listing, listing_id, db)
+    
+    return {"message": "🔥 Matching triggered!", "listing_id": listing_id}

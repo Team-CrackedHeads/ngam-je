@@ -41,7 +41,7 @@ class Message(Base):
     # Message metadata
     message_type = Column(
         String(20), nullable=False, default="text"
-    )  # "text" | "system" (e.g., "User liked your item") | "image" (future)
+    )  # "text" | "system" | "ai_buyer" | "ai_seller" | "image" (future)
 
     # Read tracking
     is_read = Column(Boolean, nullable=False, default=False, index=True)

@@ -28,6 +28,68 @@ export default function ListingMatchesPage() {
   const listingId = parseInt(params.listingId as string);
   const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted" | "matched";
 
+  // Transform API listing to component format
+  const transformListing = (apiListing: ApiListing): import("@/components/matching/types").ListingType => {
+    // Check if this listing has recommendation metadata attached
+    const extendedListing = apiListing as ApiListing & {
+      matchScore?: number;
+      recommendationStatus?: string;
+      matchReasons?: string[];
+      recommendationId?: number;
+      sourceListingId?: number;
+      targetListingId?: number;
+      currentUserIsSource?: boolean;
+    };
+
+    const matchScore = extendedListing.matchScore ?? 0;
+
+    // Debug: Check what we're getting in transform
+    console.log(`Transform listing ${apiListing.id}: matchScore=${extendedListing.matchScore}, final=${matchScore}, showBadge=${matchScore > 0}`);
+    console.log(`   📋 matchReasons in extendedListing:`, extendedListing.matchReasons);
+
+    const transformed: import("@/components/matching/types").ListingType = {
+      id: apiListing.id,
+      title: apiListing.title,
+      description: apiListing.description,
+      price: apiListing.price,
+      images: [apiListing.image_url, ...(apiListing.gallery || [])].filter((img): img is string => Boolean(img)),
+      tags: apiListing.tags || [],
+      location: apiListing.creator_location || "Unknown",
+      timestamp: apiListing.created_at,
+      seller: apiListing.creator_name || "Unknown",
+      type: (apiListing.listing_type === "sale" ? "sell" : "buy") as "sell" | "buy",
+      category: "general",
+      matchScore: matchScore,
+      matchReasons: extendedListing.matchReasons,
+      recommendationId: extendedListing.recommendationId,
+      recommendationStatus: extendedListing.recommendationStatus,
+      sourceListingId: extendedListing.sourceListingId,
+      targetListingId: extendedListing.targetListingId,
+      currentUserIsSource: extendedListing.currentUserIsSource,
+      // Show match score badge for any recommendation with a valid score > 0
+      showMatchScore: matchScore > 0,
+    };
+
+    console.log(`   ✅ Transformed listing ${apiListing.id} with status:`, transformed.recommendationStatus);
+    return transformed;
+  };
+
+  // 🥚 Easter egg: Manual matching trigger
+  const triggerMatching = async () => {
+    try {
+      const apiClient = await getApiClient();
+      const response = await apiClient.instance.post(
+        `/api/v1/listings/${listingId}/match-now`
+      );
+      console.log('🔥 Matching triggered!', response.data);
+      // Optional: Show toast notification
+      alert('🔥 AI Matching triggered! Check your backend logs.');
+    } catch (error) {
+      console.error('Error triggering match:', error);
+      alert('❌ Failed to trigger matching. Check console.');
+    }
+  };
+
   // Fetch listing and its recommendations from database
   useEffect(() => {
     let isMounted = true;
@@ -65,12 +127,17 @@ export default function ListingMatchesPage() {
 
         // Fetch the actual matched listings with their recommendation data
         const matches: ApiListing[] = [];
+        console.log(`📋 Current listing ID: ${listingId}, Found ${recommendations.recommendations.length} recommendations`);
+
         for (const rec of recommendations.recommendations) {
           try {
             // Get the other listing (if this is source, get target; if target, get source)
             const matchedListingId = rec.source_listing_id === listingId
               ? rec.target_listing_id
               : rec.source_listing_id;
+
+            console.log(`🔍 Rec ${rec.id}: source=${rec.source_listing_id}, target=${rec.target_listing_id}, fetching listing ${matchedListingId}, score=${rec.match_score}`);
+
             const matchedListing = await fetchListingById(apiClient.instance, matchedListingId);
 
             // Attach recommendation metadata to the listing for the UI
@@ -78,12 +145,23 @@ export default function ListingMatchesPage() {
               recommendationId?: number;
               matchScore?: number;
               matchReasons?: string[];
-              recommendationStatus?: string
+              recommendationStatus?: string;
+              sourceListingId?: number;
+              targetListingId?: number;
+              currentUserIsSource?: boolean;
             };
             extendedListing.recommendationId = rec.id;
             extendedListing.matchScore = rec.match_score;
             extendedListing.matchReasons = rec.match_reasons ?? undefined;
             extendedListing.recommendationStatus = rec.status;
+            extendedListing.sourceListingId = rec.source_listing_id;
+            extendedListing.targetListingId = rec.target_listing_id;
+            extendedListing.currentUserIsSource = rec.source_listing_id === listingId;
+
+            // Debug: Log match score and reasons
+            console.log(`✅ Attached score ${rec.match_score} to listing ${matchedListing.id}`);
+            console.log(`   📋 Match reasons from API (${rec.match_reasons?.length || 0} reasons):`, rec.match_reasons);
+            console.log(`   📋 Extended listing matchReasons:`, extendedListing.matchReasons);
 
             matches.push(matchedListing);
           } catch (err) {
@@ -92,6 +170,10 @@ export default function ListingMatchesPage() {
         }
 
         if (!isMounted) return;
+        console.log(`💾 Setting matchedListings state with ${matches.length} listings:`, matches.map(m => {
+          const extended = m as ApiListing & { matchScore?: number };
+          return `${m.id}(score:${extended.matchScore})`;
+        }));
         setMatchedListings(matches);
       } catch (error) {
         console.error("Error fetching listing data:", error);
@@ -215,21 +297,25 @@ export default function ListingMatchesPage() {
   return (
     <>
       {/* Listing Details Modal */}
+      {console.log('🔍 Rendering with selectedListing:', selectedListing?.id)}
       <AnimatePresence>
         {selectedListing && (
-          <ListingDetailsModal
-            listing={selectedListing}
-            type={
-              selectedListing.id === yourListing.id
-                ? listingType
-                : (selectedListing as ApiListing & { recommendationStatus?: string }).recommendationStatus === "matched"
-                  ? "matched"
-                  : listingType === "sale"
-                    ? "wanted"
-                    : "sale"
-            }
-            onClose={() => setSelectedListing(null)}
-          />
+          <>
+            {console.log('✅ Rendering ListingDetailsModal for listing:', selectedListing.id)}
+            <ListingDetailsModal
+              listing={selectedListing}
+              type={
+                selectedListing.id === yourListing.id
+                  ? listingType
+                  : (selectedListing as ApiListing & { recommendationStatus?: string }).recommendationStatus === "matched"
+                    ? "matched"
+                    : listingType === "sale"
+                      ? "wanted"
+                      : "sale"
+              }
+              onClose={() => setSelectedListing(null)}
+            />
+          </>
         )}
       </AnimatePresence>
 
@@ -243,6 +329,7 @@ export default function ListingMatchesPage() {
             listingType={listingType}
             listingTitle={yourListing.title}
             matchCount={matchedListings.length}
+            onCompareClick={triggerMatching}
           />
 
           <div className="px-4 md:px-12 py-6">
@@ -322,13 +409,29 @@ export default function ListingMatchesPage() {
           {listingType !== "matched" && (
             <>
               {/* AI Matching Component */}
+              {console.log(`🎨 Rendering AIMatchingContainer with ${matchedListings.length} matchedListings:`, matchedListings.map(m => {
+                const extended = m as ApiListing & { matchScore?: number };
+                return `${m.id}(score:${extended.matchScore})`;
+              }))}
               <AIMatchingContainer
                 userMode={listingType === "sale" ? "seller" : "buyer"}
-                userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
-                availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
+                userListings={[transformListing(yourListing)]}
+                availableListings={matchedListings.map(transformListing)}
                 onMatch={() => { }}
                 onMessage={() => { }}
-                onViewDetails={(listing) => setSelectedListing(listing as unknown as ApiListing)}
+                onViewDetails={(listing) => {
+                  console.log('📍 onViewDetails called for listing:', listing.id, 'type:', typeof listing.id);
+                  // listing.id is a string, matchedListings[].id is a number - need to compare as numbers
+                  const listingIdNum = typeof listing.id === 'string' ? parseInt(listing.id) : listing.id;
+                  const matched = matchedListings.find(l => l.id === listingIdNum);
+                  console.log('📍 Found matched listing:', matched?.id, 'in matchedListings array:', matchedListings.map(l => l.id));
+                  if (matched) {
+                    console.log('📍 Setting selectedListing to:', matched.id);
+                    setSelectedListing(matched);
+                  } else {
+                    console.warn('⚠️ Listing not found! Looking for:', listingIdNum, 'in array:', matchedListings.map(l => l.id));
+                  }
+                }}
                 onClose={() => { }}
               />
             </>
