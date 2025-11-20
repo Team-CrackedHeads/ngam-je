@@ -338,7 +338,7 @@ export default function SidebarAIChat({
                             : "bg-white text-accent-700 border border-primary-200"
                         }`}
                       >
-                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-li:my-1">
                           <ReactMarkdown
                             components={{
                               a: ({ node, ...props }) => (
@@ -358,6 +358,26 @@ export default function SidebarAIChat({
                                   style={{
                                     fontWeight: "bold",
                                     color: "#1D1C1A",
+                                  }}
+                                />
+                              ),
+                              ul: ({ node, ...props }) => (
+                                <ul
+                                  {...props}
+                                  style={{
+                                    display: "block",
+                                    marginTop: "0.5rem",
+                                    marginBottom: "0.5rem",
+                                  }}
+                                />
+                              ),
+                              li: ({ node, ...props }) => (
+                                <li
+                                  {...props}
+                                  style={{
+                                    display: "list-item",
+                                    marginTop: "0.25rem",
+                                    marginBottom: "0.25rem",
                                   }}
                                 />
                               ),
