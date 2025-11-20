@@ -92,6 +92,7 @@ Buyers/sellers who want quick answers, not essays.
 ### When to Use Tools:
 - "my/mine" → `get_my_listings` or `query_user_data`
 - "find/search iPhone" → `search_marketplace(query="iPhone")`
+- "show threads for X" / "which thread for X" → `search_marketplace(query="X", search_type="threads")`
 - "average price" → `analyze_listings` OR calculate from search results
 - "seller verified?" → `get_user_info`
 - "matches/recommendations" → `get_matched_listings`
@@ -100,12 +101,14 @@ Buyers/sellers who want quick answers, not essays.
 
 ### Smart Search Strategy:
 When searching for items/threads:
-1. First try the EXACT term user provided
-2. If no results, think of BROADER categories and try again:
-   - "mouse" → try "Logitech", "peripherals", "gaming"
-   - "Nokia" → try "phones", "vintage", "retro"
+1. First try the EXACT term user provided with search_type="all" (searches both listings AND threads)
+2. If no listings found, ALWAYS check the `suggestions` array - it contains relevant threads!
+3. If no results at all, think of BROADER categories and search again:
+   - "mouse" / "macbook" → try "Logitech", "Apple", "peripherals", "laptops"
+   - "Nokia" → try "phones", "vintage", "retro", "mobile"
    - Specific model → try brand name or category
-3. Always search for threads (search_type="threads") when user asks "which thread for X?"
+4. When user explicitly asks "which thread for X?" → use search_type="threads"
+5. ALWAYS show thread suggestions with **bold listing counts** like: "Check **[Pre-loved Apple](/threads/1)** with **8 listings**"
 
 ### Context Memory:
 **You have message_history** - track what we just discussed!
@@ -115,8 +118,14 @@ When searching for items/threads:
 
 ###  Formatting:
 - Bold numbers: **5** listings, **RM1000**
+- Thread links with counts: "**[Pre-loved Apple](/threads/1)** thread has **8 listings**"
 - Links with pipes: [Listing](/path) | [FAQ](/path)
 - Show stats first, then 1-2 examples
+
+### Fuzzy Matching:
+- Treat plurals as same: "macbook" = "macbooks", "mouse" = "mouses" = "mice"
+- Search is case-insensitive: "iPhone" = "iphone" = "IPHONE"
+- Partial matches work: "mac" finds "MacBook", "Macintosh", "iMac"
 
 ### Example Response:
 "Found **2** iPhones: **RM5000** to **RM5200** (avg **RM5100**)
@@ -207,11 +216,26 @@ def register_tools(agent: Agent) -> None:
         # Normalize query for better matching
         normalized_query = query.lower().strip()
 
+        # Handle plurals - create search variations
+        search_queries = [query]
+        if normalized_query.endswith("s") and len(normalized_query) > 3:
+            # Try singular form: "macbooks" -> "macbook"
+            search_queries.append(query[:-1])
+        else:
+            # Try plural form: "macbook" -> "macbooks"
+            search_queries.append(query + "s")
+
         # Search listings
         if search_type in ["listings", "all"]:
-            search_filter = or_(
-                Listing.title.ilike(f"%{query}%"), Listing.description.ilike(f"%{query}%")
-            )
+            # Build search filter with all query variations (handles plurals)
+            search_conditions = []
+            for search_term in search_queries:
+                search_conditions.extend([
+                    Listing.title.ilike(f"%{search_term}%"),
+                    Listing.description.ilike(f"%{search_term}%")
+                ])
+
+            search_filter = or_(*search_conditions)
             listings = (
                 db.query(Listing)
                 .filter(and_(Listing.is_active == True, search_filter))
@@ -248,9 +272,15 @@ def register_tools(agent: Agent) -> None:
                 results["listings"].append(listing_data)
 
         # Search threads (always search threads for suggestions)
-        search_filter = or_(
-            Thread.title.ilike(f"%{query}%"), Thread.description.ilike(f"%{query}%")
-        )
+        # Build search filter with all query variations (handles plurals)
+        thread_conditions = []
+        for search_term in search_queries:
+            thread_conditions.extend([
+                Thread.title.ilike(f"%{search_term}%"),
+                Thread.description.ilike(f"%{search_term}%")
+            ])
+
+        search_filter = or_(*thread_conditions)
         threads = db.query(Thread).filter(search_filter).limit(limit).all()
 
         for thread in threads:
