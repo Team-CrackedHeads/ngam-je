@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -7,11 +6,7 @@ import SafeImage from "@/components/ui/SafeImage";
 import { useAuth } from "@clerk/nextjs";
 import AISummary from "@/components/threads/product-faq/AISummary";
 import Question from "@/components/threads/product-faq/Question";
-import {
-  Question as QuestionType,
-  Answer,
-  VoteType,
-} from "@/components/threads/product-faq/types";
+import {Question as QuestionType,Answer,VoteType} from "@/components/threads/product-faq/types";
 import { createClerkApiClient } from "@/lib/clerk-api-client";
 import { fetchListingById } from "@/lib/api/listings";
 import {
@@ -20,8 +15,8 @@ import {
   answerQuestion,
   voteFAQ,
   FAQ,
-  getAISummary,  // ========== AI INTEGRATION: Added ==========
-  askAIQuestion, // ========== AI INTEGRATION: Added ==========
+  getAISummary,  // AI INTEGRATION
+  askAIQuestion // AI INTEGRATION
 } from "@/lib/api/faqs";
 import {
   fetchRepliesByFAQId,
@@ -181,7 +176,7 @@ const FAQPage: React.FC = () => {
     new Set()
   );
   const [activeTab, setActiveTab] = useState<"unanswered" | "answered">(
-    "unanswered"
+    "answered"
   );
   const [userVotes, setUserVotes] = useState<{ [answerId: string]: VoteType }>(
     {}
@@ -189,12 +184,12 @@ const FAQPage: React.FC = () => {
   const [showAskQuestion, setShowAskQuestion] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState("");
 
-  // ========== AI INTEGRATION: State for AI Summary ==========
+  // AI FAQ INTEGRATION: State for AI Summary 
   const [aiSummary, setAiSummary] = useState<string>("");
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [aiQuestionLoading, setAiQuestionLoading] = useState(false);
   const [aiProgressMessage, setAiProgressMessage] = useState<string>("");
-  // ===========================================================
+  
 
   const toggleQuestion = (questionId: string) => {
     setExpandedQuestionId((prev) => (prev === questionId ? null : questionId));
@@ -455,7 +450,7 @@ const FAQPage: React.FC = () => {
     }
   };
 
-  // ========== AI INTEGRATION: Generate AI Summary Handler ==========
+  // AI FAQ INTEGRATION: Generate AI Summary Handler 
   const handleGenerateAISummary = async () => {
     try {
       setAiSummaryLoading(true);
@@ -508,7 +503,7 @@ const FAQPage: React.FC = () => {
     }
   };
 
-  // ========== AI INTEGRATION: Ask AI Question Handler ==========
+  // AI INTEGRATION: Ask AI Question Handler
   const handleAskAIQuestion = async (question: string) => {
     try {
       // Step 1: Start loading with progress messages
@@ -592,7 +587,6 @@ const FAQPage: React.FC = () => {
       setAiProgressMessage("");
     }
   };
-  // ==================================================================
 
   const filteredQuestions = questions.filter((q) =>
     activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0
@@ -629,24 +623,28 @@ const FAQPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[color:var(--color-primary-100)] text-[color:var(--color-primary-900)] p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Header - Card Style */}
+      <div className="flex items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-[color:var(--color-border)]">
         <button
           onClick={handleBackClick}
-          className="p-2 rounded-full hover:bg-secondary-subtle transition-colors"
+          className="p-2.5 rounded-lg hover:bg-[color:var(--color-primary-100)] transition-all hover:shadow-sm"
           aria-label="Go back"
         >
           <ChevronLeft className="h-6 w-6 text-[color:var(--color-primary-700)]" />
         </button>
-        <h1 className="text-2xl font-semibold text-[color:var(--color-primary-800)]">
-          FAQ - {listing.title}
-        </h1>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-[color:var(--color-primary-800)]">
+            {listing.title}
+          </h1>
+          <p className="text-sm text-[color:var(--color-muted-foreground)] mt-1">
+            Community Q&A and Discussions
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div className="lg:hidden">
-            {/* ========== AI INTEGRATION: Connected AI Summary (Mobile) ========== */}
             <AISummary
               content={aiSummary}
               isLoading={aiSummaryLoading}
@@ -655,22 +653,12 @@ const FAQPage: React.FC = () => {
               isQuestionLoading={aiQuestionLoading}
               progressMessage={aiProgressMessage}
             />
-            {/* =================================================================== */}
           </div>
 
+          {/* Tabs */}
           <div className="flex justify-center border-b border-[color:var(--color-border)] mt-4 space-x-6">
             <button
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === "unanswered"
-                  ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
-                  : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
-              }`}
-              onClick={() => setActiveTab("unanswered")}
-            >
-              Unanswered
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium ${
+              className={`px-6 py-3 text-base font-semibold ${
                 activeTab === "answered"
                   ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
                   : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
@@ -678,6 +666,16 @@ const FAQPage: React.FC = () => {
               onClick={() => setActiveTab("answered")}
             >
               Answered
+            </button>
+            <button
+              className={`px-6 py-3 text-base font-semibold ${
+                activeTab === "unanswered"
+                  ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
+                  : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
+              }`}
+              onClick={() => setActiveTab("unanswered")}
+            >
+              Unanswered
             </button>
           </div>
 
@@ -784,13 +782,17 @@ const FAQPage: React.FC = () => {
                 initialVisibleAnswers={3}
                 initialVisibleReplies={3}
                 maxDepth={3}
+                createdAt={q.createdAt}
+                askedBy={q.askedBy}
+                userRole={q.isAnsweredByPoster ? "seller" : "buyer"}
+                lastActivity={q.lastActivity}
+                viewCount={q.viewCount}
               />
             ))}
           </div>
         </div>
 
         <div className="hidden lg:block">
-          {/* ========== AI INTEGRATION: Connected AI Summary (Desktop) ========== */}
           <AISummary
             content={aiSummary}
             isLoading={aiSummaryLoading}
@@ -799,7 +801,6 @@ const FAQPage: React.FC = () => {
             isQuestionLoading={aiQuestionLoading}
             progressMessage={aiProgressMessage}
           />
-          {/* ==================================================================== */}
         </div>
       </div>
     </div>
