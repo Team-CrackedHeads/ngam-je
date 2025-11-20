@@ -3,6 +3,7 @@ RAG (Retrieval Augmented Generation) system for FAQ queries
 """
 import google.generativeai as genai  # type: ignore
 import os
+import logging
 import numpy as np
 from typing import List, Tuple, Optional
 from sqlalchemy.orm import Session
@@ -10,6 +11,8 @@ from dotenv import load_dotenv
 
 # Load environment variables from the ai_faq_moderator/.env file
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+
+logger = logging.getLogger(__name__)
 
 # Configure environment
 # Try both GOOGLE_API_KEY and GEMINI_API_KEY for compatibility
@@ -122,33 +125,44 @@ def generate_grounded_response(query: str, context_text: str) -> str:
     Returns:
         AI-generated response grounded in the context
     """
-    model = genai.GenerativeModel('gemini-2.5-flash')  # type: ignore
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash')  # type: ignore
 
-    prompt = f"""
-    You are a helpful e-commerce assistant for a marketplace platform.
+        prompt = f"""
+        You are a helpful e-commerce assistant for a marketplace platform.
 
-    CONTEXT DATA:
-    {context_text}
+        CONTEXT DATA:
+        {context_text}
 
-    USER QUESTION:
-    {query}
+        USER QUESTION:
+        {query}
 
-    INSTRUCTIONS:
-    1. Answer the question using the product details, specifications, and information provided in the Context Data.
-    2. If the Context Data contains relevant information (title, description, price, condition, location, shipping, etc.), use it to answer the question directly.
-    3. For questions about specific details not mentioned in the context (e.g., exact measurements, warranty period, manufacturing date), suggest that the user contact the seller for those specific details.
-    4. Be concise, helpful, and polite.
-    5. Format your response in a natural, conversational way.
-    6. If answering questions about availability, condition, or features - reference the specific information from the context.
+        INSTRUCTIONS:
+        1. Answer the question using the product details, specifications, and information provided in the Context Data.
+        2. If the Context Data contains relevant information (title, description, price, condition, location, shipping, etc.), use it to answer the question directly.
+        3. For questions about specific details not mentioned in the context (e.g., exact measurements, warranty period, manufacturing date), suggest that the user contact the seller for those specific details.
+        4. Be concise, helpful, and polite.
+        5. Format your response in a natural, conversational way.
+        6. If answering questions about availability, condition, or features - reference the specific information from the context.
 
-    EXAMPLES:
-    - Question: "What is the resolution?" - If screen resolution or specs are in description, provide them. Otherwise, suggest asking the seller for technical specifications.
-    - Question: "Is this available?" - Based on listing status, you can confirm it appears to be listed for sale.
-    - Question: "What's the price?" - Provide the exact price from the context.
-    - Question: "What condition is it in?" - Provide the condition information from the context.
-    """
-    response = model.generate_content(prompt)
-    return response.text.strip()
+        EXAMPLES:
+        - Question: "What is the resolution?" - If screen resolution or specs are in description, provide them. Otherwise, suggest asking the seller for technical specifications.
+        - Question: "Is this available?" - Based on listing status, you can confirm it appears to be listed for sale.
+        - Question: "What's the price?" - Provide the exact price from the context.
+        - Question: "What condition is it in?" - Provide the condition information from the context.
+        """
+
+        logger.info("Calling Gemini API for grounded response generation...")
+        response = model.generate_content(
+            prompt,
+            request_options={"timeout": 20}  # 20 second timeout
+        )
+        logger.info("Gemini API call successful for grounded response")
+        return response.text.strip()
+
+    except Exception as e:
+        logger.error(f"Error generating grounded response: {str(e)}", exc_info=True)
+        return "I apologize, but I'm having trouble generating a response at the moment. Please try again in a few moments, or contact the seller directly for specific information about this listing."
 
 def rag_query(
     db: Session,

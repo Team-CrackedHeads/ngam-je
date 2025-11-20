@@ -4,11 +4,14 @@ import google.generativeai as genai
 from google.generativeai.types import GenerationConfig
 import json
 import os
+import logging
 from dotenv import load_dotenv
 from ai_faq_moderator.tools import generate_grounded_response
 
 # Load environment variables from the ai_faq_moderator/.env file
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+
+logger = logging.getLogger(__name__)
 
 class FAQModeratorAgent:
     def __init__(self):
@@ -18,8 +21,9 @@ class FAQModeratorAgent:
     # classify the intent of the question into 5 cat (Product Features, Pricing, Warranty, Returns, General Inquiry)
     def classify_intent(self, question: str) -> str:
         """Classifies the question into 5 specific buckets."""
-        model = genai.GenerativeModel(self.model_name)
-        prompt = f"""You are an expert e-commerce customer service classifier. Your task is to categorize customer questions accurately.
+        try:
+            model = genai.GenerativeModel(self.model_name)
+            prompt = f"""You are an expert e-commerce customer service classifier. Your task is to categorize customer questions accurately.
 
 CATEGORIES AND THEIR DEFINITIONS:
 1. "Product Features" - Questions about specifications, functionality, condition, compatibility, or what's included
@@ -39,10 +43,15 @@ INSTRUCTIONS:
 
 OUTPUT FORMAT (strict JSON):
 {{ "category": "Category Name" }}"""
-        response = model.generate_content(prompt, generation_config=self.config_json)
-        try:
+
+            response = model.generate_content(
+                prompt,
+                generation_config=self.config_json,
+                request_options={"timeout": 15}  # 15 second timeout
+            )
             return json.loads(response.text).get("category", "General Inquiry")
-        except:
+        except Exception as e:
+            logger.warning(f"Error classifying intent: {str(e)}")
             return "General Inquiry"
 
     # generate answer based on retrieved similar faqs
@@ -55,8 +64,16 @@ OUTPUT FORMAT (strict JSON):
         """
         Generates the "AI Summary" and "Negotiation Readiness Score" for the sidebar widget.
         """
-        model = genai.GenerativeModel(self.model_name)
-        prompt = f"""You are an expert marketplace analyst. Analyze the product listing and provide actionable insights for potential buyers.
+        try:
+            model = genai.GenerativeModel(
+                self.model_name,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                )
+            )
+
+            prompt = f"""You are an expert marketplace analyst. Analyze the product listing and provide actionable insights for potential buyers.
 
 TASK:
 Evaluate the product listing's completeness, reliability, and readiness for buyer decision-making.
@@ -94,13 +111,27 @@ IMPORTANT:
 - Negotiation score must reflect actual listing quality
 - Tips should be actionable (e.g., "Ask seller about original purchase date" not "More details needed")
 - Quote should build trust, not undermine seller"""
-        response = model.generate_content(prompt, generation_config=self.config_json)
-        try:
-            return json.loads(response.text) # if ai response fails, the below will be generated
-        except:
+
+            logger.info("Calling Gemini API for sidebar widget generation...")
+
+            # Set a request timeout via the request_options parameter
+            response = model.generate_content(
+                prompt,
+                request_options={"timeout": 20}  # 20 second timeout for Gemini API
+            )
+
+            logger.info("Gemini API call successful, parsing response...")
+
+            result = json.loads(response.text)
+            logger.info(f"Successfully generated sidebar widget: {result.get('summary', '')[:50]}...")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error generating sidebar widget: {str(e)}", exc_info=True)
+            # Return a user-friendly fallback response
             return {
-                "summary": "Analysis pending.",
+                "summary": "Unable to generate AI summary at this time. Please try again later.",
                 "negotiation_score": 50,
-                "readiness_tips": ["Check back later"],
+                "readiness_tips": ["AI analysis temporarily unavailable"],
                 "reliability_quote": ""
             }
