@@ -9,6 +9,14 @@ export interface AISummaryProps {
   content?: string;
   /** Loading state for the summary/long content generation */
   isLoading?: boolean;
+  /** Callback to trigger AI summary generation */
+  onGenerateSummary?: () => void;
+  /** Callback to ask AI a question */
+  onAskQuestion?: (question: string) => void;
+  /** Loading state for asking a question */
+  isQuestionLoading?: boolean;
+  /** Progress message to display during loading */
+  progressMessage?: string;
 }
 
 /** Truncate plain text to ~N words. */
@@ -19,7 +27,14 @@ function truncateWords(text: string, min = 100, max = 250): string {
   return words.slice(0, target).join(" ") + "…";
 }
 
-export default function AISummary({ content, isLoading }: AISummaryProps) {
+export default function AISummary({
+  content,
+  isLoading,
+  onGenerateSummary,
+  onAskQuestion,
+  isQuestionLoading,
+  progressMessage
+}: AISummaryProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [question, setQuestion] = useState("");
   // IMPORTANT: start false so the initial UI shows the Generate button
@@ -32,8 +47,11 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
 
   const handleSendQuestion = () => {
     if (question.trim()) {
-      // TODO: Implement the logic to send the question to AI
-      console.log("Question sent:", question);
+      if (onAskQuestion) {
+        onAskQuestion(question);
+      } else {
+        console.log("Question sent:", question);
+      }
       setQuestion("");
     }
   };
@@ -58,8 +76,11 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
   const handleGenerateAI = () => {
     // mark that user asked to generate — parent can start isLoading and then supply `content`
     setHasGenerated(true);
-    console.log("Generate AI Summary triggered");
-    // TODO: trigger parent's generation action (via prop callback) if needed
+    if (onGenerateSummary) {
+      onGenerateSummary();
+    } else {
+      console.log("Generate AI Summary triggered");
+    }
   };
 
   return (
@@ -82,7 +103,7 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
         <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center">
           <button
             onClick={handleGenerateAI}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary-500 text-white hover:bg-secondary-600 transition-all shadow-md hover:shadow-lg font-medium"
+            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary-500 text-black hover:bg-secondary-600 transition-all shadow-md hover:shadow-lg font-medium"
           >
             <Sparkles className="w-5 h-5" />
             Generate AI Summary
@@ -199,24 +220,37 @@ export default function AISummary({ content, isLoading }: AISummaryProps) {
           {/* Ask AI (only expanded) */}
           {isExpanded && (
             <div className="px-4 my-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ask AI about this product..."
-                  className="flex-1 px-4 py-2.5 rounded-lg border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent transition-all"
-                />
-                <button
-                  onClick={handleSendQuestion}
-                  disabled={!question.trim()}
-                  className="p-2.5 rounded-lg bg-secondary-500 text-white hover:bg-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Send question"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </div>
+              {/* Show progress indicator when question is being processed */}
+              {isQuestionLoading ? (
+                <div className="flex flex-col items-center justify-center py-6 gap-3">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-secondary-500" />
+                  <div className="text-center space-y-1">
+                    <p className="text-base font-medium text-foreground">
+                      {progressMessage || "Processing your question..."}
+                    </p>
+                    <p className="text-xs text-muted-foreground">This may take a moment</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Ask AI about this product..."
+                    className="flex-1 px-4 py-2.5 rounded-lg border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent transition-all"
+                  />
+                  <button
+                    onClick={handleSendQuestion}
+                    disabled={!question.trim()}
+                    className="p-2.5 rounded-lg bg-secondary-500 text-white hover:bg-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Send question"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

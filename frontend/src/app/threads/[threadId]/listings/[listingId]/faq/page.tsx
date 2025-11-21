@@ -1,18 +1,12 @@
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import SafeImage from "@/components/ui/SafeImage";
 import { useAuth } from "@clerk/nextjs";
 import AISummary from "@/components/threads/product-faq/AISummary";
 import Question from "@/components/threads/product-faq/Question";
-import {
-  Question as QuestionType,
-  Answer,
-  VoteType,
-} from "@/components/threads/product-faq/types";
-import { mockAiSummary } from "@/utils/mock-all-data-used";
+import {Question as QuestionType,Answer,VoteType} from "@/components/threads/product-faq/types";
 import { createClerkApiClient } from "@/lib/clerk-api-client";
 import { fetchListingById } from "@/lib/api/listings";
 import {
@@ -21,6 +15,8 @@ import {
   answerQuestion,
   voteFAQ,
   FAQ,
+  getAISummary,  // AI INTEGRATION
+  askAIQuestion // AI INTEGRATION
 } from "@/lib/api/faqs";
 import {
   fetchRepliesByFAQId,
@@ -180,17 +176,23 @@ const FAQPage: React.FC = () => {
     new Set()
   );
   const [activeTab, setActiveTab] = useState<"unanswered" | "answered">(
-    "unanswered"
+    "answered"
   );
   const [userVotes, setUserVotes] = useState<{ [answerId: string]: VoteType }>(
     {}
   );
   const [showAskQuestion, setShowAskQuestion] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
 
-  const aiSummary = mockAiSummary;
+  // AI FAQ INTEGRATION: State for AI Summary
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiQuestionLoading, setAiQuestionLoading] = useState(false);
+  const [aiProgressMessage, setAiProgressMessage] = useState<string>("");
+  
 
-  // ... rest of your existing handler functions stay exactly the same ...
   const toggleQuestion = (questionId: string) => {
     setExpandedQuestionId((prev) => (prev === questionId ? null : questionId));
   };
@@ -450,9 +452,184 @@ const FAQPage: React.FC = () => {
     }
   };
 
-  const filteredQuestions = questions.filter((q) =>
-    activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0
-  );
+  // AI FAQ INTEGRATION: Generate AI Summary Handler 
+  const handleGenerateAISummary = async () => {
+    try {
+      setAiSummaryLoading(true);
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      const summaryData = await getAISummary(apiClient.instance, listingId);
+
+      // Format the summary with key features and common questions
+      let formattedSummary = summaryData.summary;
+
+      if (summaryData.key_features && summaryData.key_features.length > 0) {
+        formattedSummary += "\n\n## Key Features\n";
+        summaryData.key_features.forEach(feature => {
+          formattedSummary += `- ${feature}\n`;
+        });
+      }
+
+      if (summaryData.common_questions && summaryData.common_questions.length > 0) {
+        formattedSummary += "\n\n## Common Questions\n";
+        summaryData.common_questions.forEach(q => {
+          formattedSummary += `- ${q}\n`;
+        });
+      }
+
+      setAiSummary(formattedSummary);
+    } catch (error) {
+      // Enhanced error logging to see the actual error details
+      console.error("Failed to generate AI summary:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error: error,
+        response: axios.isAxiosError(error) ? error.response?.data : undefined,
+        status: axios.isAxiosError(error) ? error.response?.status : undefined,
+      });
+
+      // Show more specific error message to user
+      let errorMessage = "Failed to generate summary. Please try again later.";
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          errorMessage = "Listing not found. Please refresh the page.";
+        } else if (error.response?.status === 500) {
+          errorMessage = "Server error. The AI service might be unavailable.";
+        } else if (error.response?.data?.detail) {
+          errorMessage = `Error: ${error.response.data.detail}`;
+        }
+      }
+      setAiSummary(errorMessage);
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  // AI INTEGRATION: Ask AI Question Handler
+  const handleAskAIQuestion = async (question: string) => {
+    try {
+      // Step 1: Start loading with progress messages
+      setAiQuestionLoading(true);
+      setAiProgressMessage("Understanding your question...");
+
+      // Small delay to show the first message
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 2: Authenticating
+      setAiProgressMessage("Authenticating your request...");
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Step 3: Getting user info
+      setAiProgressMessage("Retrieving user information...");
+      const userResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Step 4: Analyzing product context
+      setAiProgressMessage("Analyzing product details...");
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Step 5: Searching database
+      setAiProgressMessage("Searching for similar questions...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 6: Generating AI response
+      setAiProgressMessage("Consulting AI knowledge base...");
+      const aiResponse = await askAIQuestion(apiClient.instance, {
+        listing_id: listingId,
+        question: question,
+        user_id: userResponse.data.id,
+      });
+
+      // Step 7: Processing and formatting
+      setAiProgressMessage("Formatting the answer...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 8: Finalizing
+      setAiProgressMessage("Almost done...");
+
+      // Add the AI-answered question to the questions list
+      const newQuestion: QuestionType = {
+        id: aiResponse.data.id.toString(),
+        question: aiResponse.data.question,
+        description: "",
+        answers: aiResponse.data.answer ? [{
+          id: `answer-${aiResponse.data.id}`,
+          user: aiResponse.data.answer_username || "AI Assistant",
+          text: aiResponse.data.answer,
+          isAccepted: aiResponse.data.is_accepted,
+          likes: aiResponse.data.helpful_count,
+          dislikes: aiResponse.data.not_helpful_count,
+          replies: [],
+        }] : [],
+        isAnsweredByPoster: false,
+      };
+
+      setQuestions((prev) => [newQuestion, ...prev]);
+
+      // Show a notification based on whether it was found or created
+      if (aiResponse.status === "found") {
+        alert("Similar question found! Showing existing answer.");
+      } else {
+        alert("AI has generated an answer for your question!");
+      }
+
+      // Switch to answered tab to see the result
+      setActiveTab("answered");
+    } catch (error) {
+      console.error("Failed to ask AI question:", error);
+      alert("Failed to get AI answer. Please try again.");
+    } finally {
+      // Clear loading state
+      setAiQuestionLoading(false);
+      setAiProgressMessage("");
+    }
+  };
+
+  // Predefined tags for filtering
+  const tags = [
+    { id: "all", label: "All" },
+    { id: "popular", label: "Popular" },
+    { id: "recent", label: "Recent" },
+    { id: "buyer", label: "Buyer" },
+    { id: "seller", label: "Seller" },
+  ];
+
+  // Filter questions based on tab, search, and tag
+  const filteredQuestions = questions.filter((q) => {
+    // Tab filter
+    const tabMatch = activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0;
+
+    // Search filter
+    const searchMatch = searchQuery.trim() === "" ||
+      q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.answers.some(a => a.text.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Tag filter
+    let tagMatch = true;
+    if (selectedTag === "all") {
+      tagMatch = true;
+    } else if (selectedTag === "popular") {
+      const totalLikes = q.answers.reduce((sum, a) => sum + (a.likes || 0), 0);
+      tagMatch = totalLikes >= 3;
+    } else if (selectedTag === "recent") {
+      const questionDate = new Date(q.createdAt || Date.now());
+      const daysSince = (Date.now() - questionDate.getTime()) / (1000 * 60 * 60 * 24);
+      tagMatch = daysSince <= 7;
+    } else if (selectedTag === "buyer") {
+      // Show questions asked by buyers (isAnsweredByPoster = false means buyer asked)
+      tagMatch = !q.isAnsweredByPoster;
+    } else if (selectedTag === "seller") {
+      // Show questions asked by sellers (isAnsweredByPoster = true means seller asked)
+      tagMatch = q.isAnsweredByPoster;
+    }
+
+    return tabMatch && searchMatch && tagMatch;
+  });
 
   // Loading state
   if (loading) {
@@ -485,41 +662,62 @@ const FAQPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[color:var(--color-primary-100)] text-[color:var(--color-primary-900)] p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Header - Card Style */}
+      <div className="flex items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-[color:var(--color-border)]">
         <button
           onClick={handleBackClick}
-          className="p-2 rounded-full hover:bg-secondary-subtle transition-colors"
+          className="p-2.5 rounded-lg hover:bg-[color:var(--color-primary-100)] transition-all hover:shadow-sm"
           aria-label="Go back"
         >
           <ChevronLeft className="h-6 w-6 text-[color:var(--color-primary-700)]" />
         </button>
-        <h1 className="text-2xl font-semibold text-[color:var(--color-primary-800)]">
-          FAQ - {listing.title}
-        </h1>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-[color:var(--color-primary-800)]">
+            {listing.title}
+          </h1>
+          <p className="text-sm text-[color:var(--color-muted-foreground)] mt-1">
+            Community Q&A and Discussions
+          </p>
+        </div>
       </div>
 
-      {/* Rest of your existing JSX stays exactly the same */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ... everything else stays the same ... */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="lg:hidden">
-            <AISummary content={aiSummary} />
+        <div className="lg:col-span-2 space-y-6">
+          {/* Search Bar */}
+          <div className="bg-white rounded-xl shadow-sm border border-[color:var(--color-border)] p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[color:var(--color-muted-foreground)]" />
+              <input
+                type="text"
+                placeholder="Search questions and answers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-[color:var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-center border-b border-[color:var(--color-border)] mt-4 space-x-6">
+          {/* Tags/Filters */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth [-webkit-overflow-scrolling:touch]">
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => setSelectedTag(tag.id)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all snap-start flex-shrink-0 ${
+                  selectedTag === tag.id
+                    ? "bg-[#f5cb5c] text-[#242423] shadow-md font-bold"
+                    : "bg-white text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-100)] border border-[color:var(--color-border)] font-medium"
+                }`}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex justify-center border-b border-[color:var(--color-border)] space-x-6">
             <button
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === "unanswered"
-                  ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
-                  : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
-              }`}
-              onClick={() => setActiveTab("unanswered")}
-            >
-              Unanswered
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium ${
+              className={`px-6 py-3 text-base font-semibold ${
                 activeTab === "answered"
                   ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
                   : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
@@ -528,6 +726,28 @@ const FAQPage: React.FC = () => {
             >
               Answered
             </button>
+            <button
+              className={`px-6 py-3 text-base font-semibold ${
+                activeTab === "unanswered"
+                  ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
+                  : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
+              }`}
+              onClick={() => setActiveTab("unanswered")}
+            >
+              Unanswered
+            </button>
+          </div>
+
+          {/* AI Summary - Mobile */}
+          <div className="lg:hidden mt-6">
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
+            />
           </div>
 
           <div className="space-y-4 mb-20 lg:mb-6">
@@ -545,7 +765,7 @@ const FAQPage: React.FC = () => {
                 </p>
                 <p className="text-sm text-[color:var(--color-muted-foreground)] text-center max-w-md mb-4">
                   {activeTab === "unanswered"
-                    ? "Be the first to ask a question about this listing!"
+                    ? "No unanswered questions yet. Be the first to ask!"
                     : "No questions have been answered yet. Check back later!"}
                 </p>
                 {activeTab === "unanswered" && (
@@ -633,13 +853,27 @@ const FAQPage: React.FC = () => {
                 initialVisibleAnswers={3}
                 initialVisibleReplies={3}
                 maxDepth={3}
+                createdAt={q.createdAt}
+                askedBy={q.askedBy}
+                userRole={q.isAnsweredByPoster ? "seller" : "buyer"}
+                lastActivity={q.lastActivity}
+                viewCount={q.viewCount}
               />
             ))}
           </div>
         </div>
 
         <div className="hidden lg:block">
-          <AISummary content={aiSummary} />
+          <div className="sticky top-6">
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
+            />
+          </div>
         </div>
       </div>
     </div>

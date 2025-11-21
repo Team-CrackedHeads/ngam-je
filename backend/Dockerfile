@@ -63,4 +63,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 # Run the application
 # Cloud Run sets PORT env var, we override API_PORT to use it
-CMD uvicorn src.app.main:app --host 0.0.0.0 --port ${PORT}
+CMD ["sh", "-c", "uvicorn src.app.main:app --host 0.0.0.0 --port ${PORT}"]
