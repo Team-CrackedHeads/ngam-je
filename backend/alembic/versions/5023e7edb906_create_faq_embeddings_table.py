@@ -1,7 +1,7 @@
 """create faq_embeddings table
 
 Revision ID: 5023e7edb906
-Revises: 9b439cc5f433
+Revises: 54bdf29d8110
 Create Date: 2025-11-17 22:23:47.428597
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '5023e7edb906'
-down_revision: Union[str, Sequence[str], None] = '9b439cc5f433'
+down_revision: Union[str, Sequence[str], None] = '54bdf29d8110'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
