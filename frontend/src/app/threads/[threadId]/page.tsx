@@ -355,6 +355,28 @@ const ThreadDetailPage: React.FC = () => {
     );
   }
 
+  // Handle delete thread
+  const handleDeleteThread = async () => {
+    if (!confirm("Are you sure you want to delete this thread? All listings in this thread will also be deleted. This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      await apiClient.delete(`/api/v1/threads/${threadId}`);
+
+      // Navigate back to threads list after successful deletion
+      router.push("/threads");
+    } catch (error) {
+      console.error("Failed to delete thread:", error);
+      alert("Failed to delete thread. Please try again.");
+    }
+  };
+
+  const isThreadOwner = currentUserId !== null && thread && currentUserId === thread.created_by_user_id;
+
   return (
     <div className="min-h-screen bg-primary-50">
       <CategoryHeader
@@ -362,6 +384,8 @@ const ThreadDetailPage: React.FC = () => {
         category={thread.category}
         activeType={activeType}
         isScrolled={isScrolled}
+        isOwner={isThreadOwner}
+        onDeleteThread={handleDeleteThread}
       />
       <div className="container mx-auto px-4 py-8 mb-12">
         {/* Thread Info */}

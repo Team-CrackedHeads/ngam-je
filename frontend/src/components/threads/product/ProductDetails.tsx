@@ -11,6 +11,7 @@ import ProductDetailsBottom from "./ProductDetailsBottom";
 import MakeOfferBuy from "@/components/create-listing/MakeOfferBuy";
 import MakeOfferSell from "@/components/create-listing/MakeOfferSell";
 import { createClerkApiClient } from "@/lib/clerk-api-client";
+import { fetchListingRecommendations } from "@/lib/api/recommendations";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -45,6 +46,9 @@ export const ProductDetails = ({
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const isOwnListing = currentUserId !== null && currentUserId.toString() === listing.userId;
 
+  // State for recommendation count
+  const [recommendationCount, setRecommendationCount] = useState<number>(0);
+
   // Fetch current user's database ID
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -59,6 +63,26 @@ export const ProductDetails = ({
     };
     fetchCurrentUser();
   }, [getToken]);
+
+  // Fetch recommendation count for own listings
+  useEffect(() => {
+    const fetchRecommendationCount = async () => {
+      if (!isOwnListing) return;
+
+      try {
+        const token = await getToken();
+        const apiClient = createClerkApiClient(token);
+        const response = await fetchListingRecommendations(
+          apiClient.instance,
+          typeof listing.id === 'string' ? parseInt(listing.id) : listing.id
+        );
+        setRecommendationCount(response.total);
+      } catch (error) {
+        console.error("Failed to fetch recommendation count:", error);
+      }
+    };
+    fetchRecommendationCount();
+  }, [isOwnListing, listing.id, getToken]);
 
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -140,6 +164,7 @@ export const ProductDetails = ({
           isOwnListing={isOwnListing}
           listingType={listing.listingType}
           listingId={listing.id}
+          recommendationCount={recommendationCount}
         />
       </div>
 

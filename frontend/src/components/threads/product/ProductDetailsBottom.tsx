@@ -18,6 +18,7 @@ interface ProductDetailsBottomProps {
   isOwnListing?: boolean;
   listingType?: "sale" | "wanted";
   listingId?: number | string;
+  recommendationCount?: number;
 }
 
 const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
@@ -27,6 +28,7 @@ const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
   isOwnListing = false,
   listingType = "sale",
   listingId,
+  recommendationCount = 0,
 }) => {
   return (
     <>
@@ -79,6 +81,7 @@ const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
         isOwnListing={isOwnListing}
         listingType={listingType}
         listingId={listingId}
+        recommendationCount={recommendationCount}
       />
     </>
   );

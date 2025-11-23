@@ -12,6 +12,7 @@ interface ActionButtonsProps {
   listingType?: "sale" | "wanted";
   isOwnListing?: boolean;
   listingId?: number | string;
+  recommendationCount?: number;
 }
 
 export const ActionButtons = ({
@@ -20,6 +21,7 @@ export const ActionButtons = ({
   listingType = "sale",
   isOwnListing = false,
   listingId,
+  recommendationCount = 0,
 }: ActionButtonsProps) => {
 
   return (
@@ -38,6 +40,11 @@ export const ActionButtons = ({
       >
         <FileText className="w-5 h-5" />
         <span>View Offers</span>
+        {recommendationCount > 0 && (
+          <span className="ml-2 bg-primary-100 text-accent-700 text-xs font-bold rounded-full px-2 py-0.5">
+            {recommendationCount}
+          </span>
+        )}
       </Link>
     ) : (
       <button

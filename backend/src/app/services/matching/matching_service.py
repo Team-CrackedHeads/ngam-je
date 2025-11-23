@@ -2,6 +2,7 @@
 Main Matching Service - Orchestrates the entire matching and negotiation flow
 """
 
+import asyncio
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from src.app.core.logging_config import get_logger
@@ -9,10 +10,11 @@ from src.models.listing import Listing
 from src.models.recommendation import Recommendation
 from src.models.conversation import Conversation
 from src.models.message import Message
+from src.database import SessionLocal
 from .config import DEFAULT_CONFIG
 from .models import MatchCandidate
 from .rag_service import create_match_store, cleanup_match_store
-from .negotiation_agents import run_ai_negotiation
+from .negotiation_agents import run_ai_negotiation, run_ai_negotiation_with_live_messages
 
 logger = get_logger("app.services.matching.matching_service")
 
@@ -132,14 +134,17 @@ def calculate_match_score(listing_a: Listing, listing_b: Listing) -> tuple[float
     return score, reasons
 
 
-async def run_matching_for_listing(listing_id: int, db: Session):
+async def run_matching_for_listing(listing_id: int):
     """
     Main entry point: Run matching for a newly created listing
 
-    This is called as a background task when a listing is created
+    This is called as a background task when a listing is created.
+    Creates its own database session to avoid using closed sessions from the request.
     """
     logger.info(f"=== Starting matching for listing {listing_id} ===")
 
+    # Create a new database session for this background task
+    db = SessionLocal()
     try:
         # 1. Get the listing (eager load FAQs for RAG context)
         from sqlalchemy.orm import selectinload
@@ -160,20 +165,74 @@ async def run_matching_for_listing(listing_id: int, db: Session):
             logger.info(f"No matches found for listing {listing_id}")
             return
 
-        # 3. For each candidate, run AI negotiation
-        for candidate in candidates:
-            try:
-                await run_matching_and_negotiation(listing, candidate.listing_id, db)
-            except Exception as e:
-                logger.error(
-                    f"Error matching listing {listing_id} with {candidate.listing_id}: {e}"
-                )
-                continue
+        # 3. Run AI negotiations in parallel using asyncio.gather
+        logger.info(f"Processing {len(candidates)} candidates in parallel")
 
-        logger.info(f"=== Matching complete for listing {listing_id} ===")
+        # Create tasks for all candidates
+        tasks = [
+            run_matching_and_negotiation_with_session(listing, candidate.listing_id)
+            for candidate in candidates
+        ]
+
+        # Execute all tasks concurrently and collect results
+        # return_exceptions=True ensures one failure doesn't stop others
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Log results
+        success_count = sum(1 for r in results if not isinstance(r, Exception))
+        error_count = sum(1 for r in results if isinstance(r, Exception))
+
+        logger.info(
+            f"=== Matching complete for listing {listing_id}: "
+            f"{success_count} successful, {error_count} failed ==="
+        )
+
+        # Log any errors that occurred
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                candidate_id = candidates[idx].listing_id
+                logger.error(
+                    f"Error matching listing {listing_id} with {candidate_id}: {result}"
+                )
 
     except Exception as e:
         logger.error(f"Fatal error in run_matching_for_listing: {e}")
+    finally:
+        # Always close the database session
+        db.close()
+        logger.info(f"Closed database session for listing {listing_id}")
+
+
+async def run_matching_and_negotiation_with_session(
+    source_listing: Listing, target_listing_id: int
+):
+    """
+    Wrapper function that creates its own database session for concurrent execution
+
+    This is needed because asyncio.gather runs tasks concurrently, and each task
+    needs its own database session to avoid conflicts.
+    """
+    # Create a new database session for this task
+    db = SessionLocal()
+    try:
+        # Re-query the source listing in this session to avoid detached instance issues
+        from sqlalchemy.orm import selectinload
+        source_listing_fresh = (
+            db.query(Listing)
+            .options(selectinload(Listing.faq_questions))
+            .filter(Listing.id == source_listing.id)
+            .first()
+        )
+
+        if not source_listing_fresh:
+            logger.error(f"Source listing {source_listing.id} not found in new session")
+            return
+
+        # Run the negotiation with the fresh listing and this session
+        await run_matching_and_negotiation(source_listing_fresh, target_listing_id, db)
+    finally:
+        # Always close the session
+        db.close()
 
 
 async def run_matching_and_negotiation(
@@ -227,31 +286,25 @@ async def run_matching_and_negotiation(
         return
 
     try:
-        # 1. Create File Search store
-        store_name = await create_match_store(wtb_listing, wts_listing)
-
-        # 2. Run AI negotiation
-        negotiation_result = await run_ai_negotiation(store_name, wtb_listing, wts_listing)
-
-        # 3. Create recommendation
+        # 1. Create recommendation FIRST (with placeholder score)
         recommendation = Recommendation(
             source_listing_id=source_listing.id,
             target_listing_id=target_listing.id,
             created_by_user_id=None,  # AI-generated
             recommendation_type="ai_match",
-            match_score=negotiation_result.match_score,
-            match_reasons=negotiation_result.match_reasons,  # Use extracted match reasons
-            status="pending",  # Always start as pending - users must like to match
-            message=negotiation_result.conversation_summary,
+            match_score=0.0,  # Will be updated after negotiation
+            match_reasons=[],  # Will be updated after negotiation
+            status="pending",
+            message="AI negotiation in progress...",
         )
         db.add(recommendation)
         db.commit()
         db.refresh(recommendation)
 
-        logger.info(f"Created recommendation {recommendation.id} with score {negotiation_result.match_score}")
+        logger.info(f"Created recommendation {recommendation.id} (negotiation pending)")
 
-        # 4. Create conversation with AI negotiation messages
-        # This allows users to PREVIEW the AI negotiation before deciding to like/pass
+        # 2. Create conversation IMMEDIATELY (before negotiation)
+        # This allows users to see the conversation appear and watch messages in real-time
         conversation = Conversation(
             recommendation_id=recommendation.id, is_active=True
         )
@@ -259,28 +312,92 @@ async def run_matching_and_negotiation(
         db.commit()
         db.refresh(conversation)
 
-        logger.info(f"Created conversation {conversation.id}")
+        logger.info(f"Created conversation {conversation.id} - ready for live messages")
 
-        # 5. Add AI negotiation messages
-        for msg in negotiation_result.conversation:
-            ai_message = Message(
-                conversation_id=conversation.id,
-                sender_id=None,
-                content=msg.message,
-                message_type="ai_buyer" if msg.role == "buyer" else "ai_seller",
-                is_read=False,
-                created_at=msg.timestamp,
-            )
-            db.add(ai_message)
-
+        # IMPORTANT: Commit and close the session NOW before expensive operations
+        # This releases all database locks and allows other queries to proceed
         db.commit()
+        logger.info(f"✅ Committed recommendation {recommendation.id} and conversation {conversation.id}")
 
-        logger.info(f"Added {len(negotiation_result.conversation)} AI messages")
+        # Store IDs before closing session
+        recommendation_id = recommendation.id
+        conversation_id = conversation.id
+        wtb_listing_id = wtb_listing.id
+        wts_listing_id = wts_listing.id
 
-        # 6. Cleanup store (optional - comment out to keep for debugging)
-        # await cleanup_match_store(store_name)
+        # Close the session to release all locks
+        db.close()
+        logger.info(f"✅ Released database session - users can now query while we work")
 
-        logger.info(f"Successfully completed matching for {source_listing.id} <-> {target_listing_id}")
+        # 4. Query the listings we need, then close session before expensive operations
+        db = SessionLocal()
+        try:
+            # Re-query the listings with eager loading of FAQs
+            from sqlalchemy.orm import selectinload
+            wtb_listing = (
+                db.query(Listing)
+                .options(selectinload(Listing.faq_questions))
+                .filter(Listing.id == wtb_listing_id)
+                .first()
+            )
+            wts_listing = (
+                db.query(Listing)
+                .options(selectinload(Listing.faq_questions))
+                .filter(Listing.id == wts_listing_id)
+                .first()
+            )
+
+            if not wtb_listing or not wts_listing:
+                logger.error("Failed to re-query listings in new session")
+                return
+
+            # Expunge from session so we can use them after closing
+            db.expunge(wtb_listing)
+            db.expunge(wts_listing)
+
+            # Close session BEFORE the expensive File Search operation
+            db.close()
+            logger.info(f"✅ Closed DB session before File Search - store creation won't block queries")
+
+        finally:
+            # Make sure we don't try to close again in the outer finally block
+            pass
+
+        # 3. Create File Search store (this takes ~15 seconds) - NO DB SESSION HELD
+        store_name = await create_match_store(wtb_listing, wts_listing)
+
+        # 5. Open a NEW session for the negotiation
+        db = SessionLocal()
+        try:
+
+            # Run AI negotiation with live message saving
+            negotiation_result = await run_ai_negotiation_with_live_messages(
+                store_name, wtb_listing, wts_listing, conversation_id, db
+            )
+
+            # 5. Update recommendation with final results
+            # Re-fetch the recommendation in this new session
+            recommendation = db.query(Recommendation).filter(
+                Recommendation.id == recommendation_id
+            ).first()
+
+            if recommendation:
+                recommendation.match_score = negotiation_result.match_score
+                recommendation.match_reasons = negotiation_result.match_reasons
+                recommendation.message = negotiation_result.conversation_summary
+                db.commit()
+
+                logger.info(
+                    f"Updated recommendation {recommendation_id} with final score {negotiation_result.match_score}"
+                )
+
+            # 6. Cleanup store (optional - comment out to keep for debugging)
+            # await cleanup_match_store(store_name)
+
+            logger.info(f"Successfully completed matching for {source_listing.id} <-> {target_listing_id}")
+        finally:
+            # Close the second session
+            db.close()
 
     except Exception as e:
         logger.error(f"Error in negotiation: {e}")

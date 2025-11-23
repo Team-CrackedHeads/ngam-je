@@ -179,7 +179,28 @@ export default function ProductListingScreen() {
     router.push(`/threads/${threadId}`);
   };
 
+  // Handle delete listing
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      await apiClient.delete(`/api/v1/listings/${listingId}`);
+
+      // Navigate back to thread after successful deletion
+      router.push(`/threads/${threadId}`);
+    } catch (error) {
+      console.error("Failed to delete listing:", error);
+      alert("Failed to delete listing. Please try again.");
+    }
+  };
+
   const unifiedListing = convertToUnified(listing);
+  const isOwner = currentUserId !== null && currentUserId === listing.user_id;
 
   return (
     <div className="min-h-screen w-full pb-32 bg-primary-50">
@@ -189,6 +210,8 @@ export default function ProductListingScreen() {
         category={thread?.category || "general"}
         listingTitle={listing.title}
         isScrolled={isScrolled}
+        isOwner={isOwner}
+        onDelete={handleDelete}
       />
       <div className="container mx-auto px-4 py-6">
         <ProductDetails listing={unifiedListing} />

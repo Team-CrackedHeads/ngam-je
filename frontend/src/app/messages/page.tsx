@@ -43,6 +43,29 @@ function MessagesContent() {
     }
   }, [selectedConversationId]);
 
+  // Poll for new messages every 3 seconds when a conversation is selected
+  useEffect(() => {
+    if (!selectedConversationId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const client = await apiClient();
+        const data = await client.get<MessageListResponse>(`/api/v1/messages/conversation/${selectedConversationId}`);
+
+        // Only update if we have new messages (avoid unnecessary re-renders)
+        if (data.messages.length !== messages.length) {
+          console.log(`🔄 New messages detected: ${messages.length} -> ${data.messages.length}`);
+          setMessages(data.messages);
+        }
+      } catch (error) {
+        console.error("Failed to poll messages:", error);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    // Cleanup interval on unmount or conversation change
+    return () => clearInterval(pollInterval);
+  }, [selectedConversationId, messages.length]);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
@@ -81,12 +104,13 @@ function MessagesContent() {
   const loadMessages = async (conversationId: number) => {
     try {
       setLoadingMessages(true);
-      setMessages([]); // Clear previous messages
+      // Don't clear messages immediately - keep old ones visible while loading
       const client = await apiClient();
       const data = await client.get<MessageListResponse>(`/api/v1/messages/conversation/${conversationId}`);
       setMessages(data.messages);
     } catch (error) {
       console.error("Failed to load messages:", error);
+      setMessages([]); // Only clear on error
     } finally {
       setLoadingMessages(false);
     }

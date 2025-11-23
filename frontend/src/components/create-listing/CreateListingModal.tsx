@@ -149,7 +149,6 @@ export default function CreateListingModal({
     "SGD",
   ]);
   const [selectedCurrencyIndex, setSelectedCurrencyIndex] = useState(-1);
-  const [showDescriptionHints, setShowDescriptionHints] = useState(true);
   const [showEvaluationFeedback, setShowEvaluationFeedback] = useState(true);
 
   // Sell-specific states
@@ -2505,9 +2504,46 @@ export default function CreateListingModal({
 
                     {/* Product Description */}
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-accent-700">
-                        Tell us about the product
-                      </label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <label className="block text-sm font-medium text-accent-700">
+                          Tell us about the product
+                        </label>
+                        {/* Writing Tips & Guidelines Tooltip */}
+                        <div className="relative group">
+                          <Info className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+                          {/* Tooltip */}
+                          <div className="absolute left-0 bottom-full mb-2 w-72 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div className="bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg">
+                              <p className="text-xs font-medium mb-2">
+                                Writing Tips & Guidelines
+                              </p>
+                              <p className="text-xs text-gray-300 mb-2">
+                                For best results, include:
+                              </p>
+                              <ul className="text-xs text-gray-300 space-y-1.5">
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-400)] mt-0.5">•</span>
+                                  <span>Brand, model, or specific product name</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-400)] mt-0.5">•</span>
+                                  <span>Condition (new, used, like-new, etc.)</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-400)] mt-0.5">•</span>
+                                  <span>Key features, specifications, or requirements</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-[var(--color-secondary-400)] mt-0.5">•</span>
+                                  <span>Any preferences or deal-breakers</span>
+                                </li>
+                              </ul>
+                              {/* Arrow */}
+                              <div className="absolute left-4 top-full w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-800"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       <div className="relative">
                         <textarea
                           value={userInput}
@@ -2521,50 +2557,8 @@ export default function CreateListingModal({
                         />
                       </div>
 
-                      {/* Writing Tips & Guidelines and Evaluation Feedback */}
+                      {/* Evaluation Feedback */}
                       <div className="mt-2 space-y-2">
-                        {/* Writing Tips & Guidelines */}
-                        <div>
-                          <button
-                            onClick={() => setShowDescriptionHints(!showDescriptionHints)}
-                            className="w-full flex items-center justify-between text-xs text-gray-600 font-medium py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <Info className="w-3.5 h-3.5" />
-                              Writing Tips & Guidelines
-                            </span>
-                            {showDescriptionHints ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </button>
-                          {showDescriptionHints && (
-                            <div className="mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                              <p className="text-xs text-gray-600 font-medium mb-2">
-                                For best results, include:
-                              </p>
-                              <ul className="text-xs text-gray-500 space-y-1">
-                                <li className="flex items-start gap-2">
-                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                  <span>Brand, model, or specific product name</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                  <span>Condition (new, used, like-new, etc.)</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                  <span>Key features, specifications, or requirements</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <span className="text-[var(--color-secondary-600)] mt-0.5">•</span>
-                                  <span>Any preferences or deal-breakers</span>
-                                </li>
-                              </ul>
-                            </div>
-                          )}
-                        </div>
 
                         {/* AI Feedback - Collapsible */}
                         {(evaluation || isEvaluating || evaluationError) && (

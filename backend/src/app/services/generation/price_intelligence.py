@@ -18,6 +18,65 @@ logger = get_logger("app.services.generation.price_intelligence")
 price_cache = TTLCache(maxsize=1000, ttl=86400)  # 24 hours
 
 
+async def clean_search_query_with_llm(raw_query: str) -> str:
+    """
+    Use LLM to extract a clean product search query from a listing description.
+
+    Args:
+        raw_query: Raw listing title/description (e.g., "WTB: iPhone 16 Blue, 128GB - Looking to buy...")
+
+    Returns:
+        Clean product search query (e.g., "iPhone 16 Blue 128GB")
+    """
+    settings = get_ai_settings()
+
+    if not settings.gemini_api_key:
+        logger.warning("Gemini API key not configured, returning raw query")
+        return raw_query[:100]  # Fallback: just truncate
+
+    try:
+        genai.configure(api_key=settings.gemini_api_key)
+        model = genai.GenerativeModel(settings.default_model)
+
+        prompt = f"""Extract a clean product search query for Google Shopping from this listing.
+
+Input: "{raw_query}"
+
+Requirements:
+- Remove prefixes like "WTB:", "WTS:", "Looking for", etc.
+- Extract only the product name and key specifications (brand, model, color, storage, condition)
+- Remove personal context, stories, or explanations
+- Keep it concise (2-8 words ideal)
+- Make it suitable for e-commerce search
+
+Examples:
+Input: "WTB: iPhone 16 Blue, 128GB - Looking to buy because my phone broke"
+Output: iPhone 16 Blue 128GB
+
+Input: "Selling my MacBook Pro 2023 M2 16GB - barely used, need to upgrade"
+Output: MacBook Pro 2023 M2 16GB
+
+Now extract the search query from the input above. Respond with ONLY the clean query, nothing else."""
+
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                "temperature": 0.1,  # Low temperature for consistent extraction
+                "max_output_tokens": 50,
+            },
+        )
+
+        clean_query = response.text.strip().strip('"').strip("'")
+        logger.info(f"🧹 Cleaned query: '{raw_query[:50]}...' → '{clean_query}'")
+        return clean_query
+
+    except Exception as e:
+        logger.warning(f"⚠️ LLM query cleaning failed: {e}, using raw query")
+        # Fallback: basic cleanup
+        clean = raw_query.replace("WTB:", "").replace("WTS:", "").strip()
+        return clean[:100]
+
+
 async def search_similar_products(product_query: str, location: str = "Malaysia") -> List[Dict]:
     """
     Search for similar products using SerpAPI Google Shopping.
@@ -36,11 +95,14 @@ async def search_similar_products(product_query: str, location: str = "Malaysia"
         return []
 
     try:
-        logger.info(f"🔍 Searching for: {product_query[:50]}...")
+        # Clean the search query using LLM
+        clean_query = await clean_search_query_with_llm(product_query)
+
+        logger.info(f"🔍 Searching for: {clean_query}")
 
         search = GoogleSearch(
             {
-                "q": product_query,
+                "q": clean_query,  # Use cleaned query instead of raw
                 "location": location,
                 "hl": "en",
                 "gl": "my",

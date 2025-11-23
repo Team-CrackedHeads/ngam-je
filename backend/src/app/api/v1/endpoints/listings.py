@@ -251,26 +251,22 @@ async def create_listing(
 
         db.commit()
 
-    # Trigger AI matching in background (non-blocking)
-    background_tasks.add_task(run_matching_for_listing, new_listing.id, db)
+    # Store the listing ID before closing session
+    listing_id = new_listing.id
+
+    # Expunge the listing from session so it can be safely returned after session closes
+    db.expunge(new_listing)
+
+    # Close the database session NOW to release all locks
+    # This allows the background task to proceed immediately
+    db.close()
+
+    # Trigger AI matching in Celery worker (completely independent process)
+    # This ensures zero blocking of the web server
+    from src.app.services.matching.tasks import run_matching_task
+    run_matching_task.delay(listing_id)
 
     return new_listing
-
-
-@router.post("/{listing_id}/match-now", status_code=status.HTTP_202_ACCEPTED)
-async def trigger_matching_now(
-    listing_id: int,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-):
-    """🥚 Secret manual trigger for AI matching"""
-    listing = db.query(Listing).filter(Listing.id == listing_id).first()
-    if not listing:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
-
-    background_tasks.add_task(run_matching_for_listing, listing_id, db)
-
-    return {"message": "🔥 Matching triggered!", "listing_id": listing_id}
 
 
 @router.put("/{listing_id}", response_model=ListingResponse)
@@ -324,9 +320,10 @@ async def delete_listing(
     db: Session = Depends(get_db),
 ):
     """
-    Delete a listing (soft delete - sets is_active=False).
+    Delete a listing (hard delete - removes from database).
 
     Only the listing creator can delete it.
+    This will cascade delete all related FAQs, recommendations, conversations, and messages.
     """
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not listing:
@@ -342,8 +339,8 @@ async def delete_listing(
             detail="Only the listing creator can delete it",
         )
 
-    # Soft delete
-    listing.is_active = False
+    # Hard delete - will cascade to FAQs, recommendations, conversations, and messages
+    db.delete(listing)
     db.commit()
 
     return None
@@ -462,20 +459,3 @@ async def confirm_checkout(
     db.refresh(listing)
 
     return listing
-
-
-# 🥚 Easter egg endpoint - Manual matching trigger
-@router.post("/{listing_id}/match-now", status_code=status.HTTP_202_ACCEPTED)
-async def trigger_matching_now(
-    listing_id: int,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-):
-    """Secret manual trigger for AI matching"""
-    listing = db.query(Listing).filter(Listing.id == listing_id).first()
-    if not listing:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
-    
-    background_tasks.add_task(run_matching_for_listing, listing_id, db)
-    
-    return {"message": "🔥 Matching triggered!", "listing_id": listing_id}

@@ -74,19 +74,13 @@ export default function ListingMatchesPage() {
     return transformed;
   };
 
-  // 🥚 Easter egg: Manual matching trigger
-  const triggerMatching = async () => {
-    try {
-      const apiClient = await getApiClient();
-      const response = await apiClient.instance.post(
-        `/api/v1/listings/${listingId}/match-now`
-      );
-      console.log('🔥 Matching triggered!', response.data);
-      // Optional: Show toast notification
-      alert('🔥 AI Matching triggered! Check your backend logs.');
-    } catch (error) {
-      console.error('Error triggering match:', error);
-      alert('❌ Failed to trigger matching. Check console.');
+  // Handle clicking on "Your Listing" - navigate to thread for wanted listings, show modal for others
+  const handleYourListingClick = () => {
+    if (!yourListing) return;
+    if (listingType === "wanted" && yourListing.thread_id) {
+      router.push(`/threads/${yourListing.thread_id}/listings/${yourListing.id}`);
+    } else {
+      setSelectedListing(yourListing);
     }
   };
 
@@ -329,7 +323,6 @@ export default function ListingMatchesPage() {
             listingType={listingType}
             listingTitle={yourListing.title}
             matchCount={matchedListings.length}
-            onCompareClick={triggerMatching}
           />
 
           <div className="px-4 md:px-12 py-6">
@@ -352,7 +345,7 @@ export default function ListingMatchesPage() {
 
               {/* Your Listing Card */}
               <div
-                onClick={() => setSelectedListing(yourListing)}
+                onClick={handleYourListingClick}
                 className="cursor-pointer hover:ring-2 hover:ring-secondary-400 rounded-2xl transition-all"
               >
                 <ListingCard />
@@ -364,7 +357,7 @@ export default function ListingMatchesPage() {
           {/* Mobile: Compact Your Listing Banner */}
           {isMobile && (
             <div
-              onClick={() => setSelectedListing(yourListing)}
+              onClick={handleYourListingClick}
               className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
             >
               {/* Header with icon and label */}

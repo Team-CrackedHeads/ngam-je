@@ -6,10 +6,12 @@ import time
 import asyncio
 from datetime import datetime
 from typing import Optional
+from sqlalchemy.orm import Session
 from google import genai
 from google.genai import types
 from src.app.core.logging_config import get_logger
 from src.models.listing import Listing
+from src.models.message import Message
 from .config import DEFAULT_CONFIG, NegotiationConfig
 from .models import NegotiationResult, NegotiationMessage
 
@@ -390,6 +392,251 @@ async def run_ai_negotiation(
     match_reasons = extract_match_reasons(conversation, wtb_listing, wts_listing) if conversation else []
 
     logger.info(f"Negotiation complete: {termination_reason}, score: {match_score}, reasons: {len(match_reasons)}")
+
+    return NegotiationResult(
+        agreed=agreed,
+        final_price=final_price,
+        termination_reason=termination_reason,
+        conversation=conversation,
+        conversation_summary=summary,
+        match_reasons=match_reasons,
+        turn_count=len(conversation),
+        duration_seconds=duration,
+        match_score=match_score,
+    )
+
+
+async def run_ai_negotiation_with_live_messages(
+    store_name: str,
+    wtb_listing: Listing,
+    wts_listing: Listing,
+    conversation_id: int,
+    db: Session,
+    config: NegotiationConfig = DEFAULT_CONFIG,
+) -> NegotiationResult:
+    """
+    Run AI negotiation and save messages to database in real-time using Gemini.
+
+    This version integrates message saving DURING the negotiation, not after.
+    Each message is saved immediately after it's generated, then the session
+    is closed to release database locks while the AI thinks.
+
+    Args:
+        store_name: File Search store name for RAG context
+        wtb_listing: Buyer's listing
+        wts_listing: Seller's listing
+        conversation_id: Database conversation ID to save messages to
+        db: Database session (not used - we create our own sessions)
+        config: Negotiation configuration
+
+    Returns:
+        NegotiationResult with conversation summary
+    """
+    from src.database import SessionLocal
+
+    client = genai.Client()
+    start_time = time.time()
+    conversation: list[NegotiationMessage] = []
+
+    # Pre-check: Do price ranges overlap?
+    if not price_ranges_overlap(wtb_listing, wts_listing):
+        buyer_max = wtb_listing.max_price if wtb_listing.max_price is not None else wtb_listing.price if wtb_listing.price else 0.0
+        seller_min = wts_listing.min_price if wts_listing.min_price is not None else wts_listing.price if wts_listing.price else 0.0
+        logger.info(f"Price ranges don't overlap: WTB ${buyer_max} < WTS ${seller_min}")
+        return NegotiationResult(
+            agreed=False,
+            final_price=None,
+            termination_reason="price_ranges_incompatible",
+            conversation=[],
+            conversation_summary="Price ranges don't overlap - no negotiation possible",
+            turn_count=0,
+            duration_seconds=0,
+            match_score=0.0,
+        )
+
+    buyer_prompt = create_buyer_prompt(wtb_listing)
+    seller_prompt = create_seller_prompt(wts_listing)
+
+    logger.info(f"Starting live negotiation: WTB {wtb_listing.id} <-> WTS {wts_listing.id}")
+
+    # Helper to save a message with a fresh session
+    def save_message(role: str, content: str, timestamp: datetime):
+        session = SessionLocal()
+        try:
+            ai_message = Message(
+                conversation_id=conversation_id,
+                sender_id=None,
+                content=content,
+                message_type="ai_buyer" if role == "buyer" else "ai_seller",
+                is_read=False,
+                created_at=timestamp,
+            )
+            session.add(ai_message)
+            session.commit()
+            logger.info(f"Saved {role} message to conversation {conversation_id}")
+        finally:
+            session.close()  # Always close to release locks!
+
+    try:
+        # Negotiation loop
+        for turn in range(config.MAX_TURNS):
+            elapsed = time.time() - start_time
+
+            # Check timeout
+            if elapsed > config.MAX_DURATION_SECONDS:
+                logger.info("Negotiation timeout")
+                break
+
+            # === BUYER'S TURN ===
+            try:
+                if turn == 0:
+                    buyer_message = buyer_prompt
+                else:
+                    # Build conversation history
+                    history = "\n\n".join([f"{msg.role.upper()}: {msg.message}" for msg in conversation])
+                    buyer_message = f"{buyer_prompt}\n\n**CONVERSATION SO FAR:**\n{history}\n\n**Your turn - respond to the seller's latest message:**"
+
+                buyer_response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=buyer_message,
+                    config=types.GenerateContentConfig(
+                        tools=[
+                            types.Tool(
+                                file_search=types.FileSearch(
+                                    file_search_store_names=[store_name]
+                                )
+                            )
+                        ],
+                        max_output_tokens=config.MAX_TOKENS_PER_TURN,
+                        thinking_config=types.ThinkingConfig(thinking_budget=0),  # Disable thinking
+                    ),
+                )
+
+                # Extract text from response
+                buyer_text = buyer_response.text if hasattr(buyer_response, 'text') and buyer_response.text else str(buyer_response)
+
+                if not buyer_text or buyer_text == "None":
+                    logger.error(f"Buyer response has no text: {buyer_response}")
+                    break
+
+                timestamp = datetime.now()
+                buyer_msg = NegotiationMessage(
+                    role="buyer",
+                    message=buyer_text,
+                    turn=turn * 2,
+                    timestamp=timestamp,
+                )
+                conversation.append(buyer_msg)
+                logger.info(f"Buyer (turn {turn}): {buyer_msg.message}")
+
+                # Save immediately with fresh session
+                save_message("buyer", buyer_text, timestamp)
+
+            except Exception as e:
+                logger.error(f"Buyer agent error: {e}")
+                break
+
+            # Check for agreement/rejection
+            agreed, price = check_agreement(conversation)
+            if agreed:
+                logger.info(f"Agreement reached at ${price}")
+                break
+
+            if check_rejection(conversation):
+                logger.info("Negotiation rejected")
+                break
+
+            # === SELLER'S TURN ===
+            try:
+                if turn == 0:
+                    seller_message = seller_prompt
+                else:
+                    # Build conversation history
+                    history = "\n\n".join([f"{msg.role.upper()}: {msg.message}" for msg in conversation])
+                    seller_message = f"{seller_prompt}\n\n**CONVERSATION SO FAR:**\n{history}\n\n**Your turn - respond to the buyer's latest message:**"
+
+                seller_response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=seller_message,
+                    config=types.GenerateContentConfig(
+                        tools=[
+                            types.Tool(
+                                file_search=types.FileSearch(
+                                    file_search_store_names=[store_name]
+                                )
+                            )
+                        ],
+                        max_output_tokens=config.MAX_TOKENS_PER_TURN,
+                        thinking_config=types.ThinkingConfig(thinking_budget=0),  # Disable thinking
+                    ),
+                )
+
+                # Extract text from response
+                seller_text = seller_response.text if hasattr(seller_response, 'text') and seller_response.text else str(seller_response)
+
+                if not seller_text or seller_text == "None":
+                    logger.error(f"Seller response has no text: {seller_response}")
+                    break
+
+                timestamp = datetime.now()
+                seller_msg = NegotiationMessage(
+                    role="seller",
+                    message=seller_text,
+                    turn=turn * 2 + 1,
+                    timestamp=timestamp,
+                )
+                conversation.append(seller_msg)
+                logger.info(f"Seller (turn {turn}): {seller_msg.message}")
+
+                # Save immediately with fresh session
+                save_message("seller", seller_text, timestamp)
+
+            except Exception as e:
+                logger.error(f"Seller agent error: {e}")
+                break
+
+            # Check for agreement/rejection after seller
+            agreed, price = check_agreement(conversation)
+            if agreed:
+                logger.info(f"Agreement reached at ${price}")
+                break
+
+            if check_rejection(conversation):
+                logger.info("Negotiation rejected")
+                break
+
+    except Exception as e:
+        logger.error(f"Negotiation error: {e}")
+
+    # Analyze result
+    duration = time.time() - start_time
+    agreed, final_price = check_agreement(conversation)
+    rejected = check_rejection(conversation)
+
+    if agreed:
+        termination_reason = "agreement_reached"
+        match_score = 90.0  # High score for agreement
+        if final_price:
+            summary = f"Agreement reached at ${final_price:.2f} after {len(conversation)} messages"
+        else:
+            summary = f"Agreement reached after {len(conversation)} messages (price extraction failed)"
+    elif rejected:
+        termination_reason = "rejected"
+        match_score = 20.0  # Low score for rejection
+        summary = f"No agreement - negotiation rejected after {len(conversation)} messages"
+    elif len(conversation) >= config.MAX_TURNS * 2:
+        termination_reason = "max_turns_reached"
+        match_score = 40.0
+        summary = f"No agreement - max turns reached ({len(conversation)} messages)"
+    else:
+        termination_reason = "timeout"
+        match_score = 30.0
+        summary = f"No agreement - timeout after {len(conversation)} messages"
+
+    # Extract match reasons from conversation and listing data
+    match_reasons = extract_match_reasons(conversation, wtb_listing, wts_listing) if conversation else []
+
+    logger.info(f"Live negotiation complete: {termination_reason}, score: {match_score}, saved {len(conversation)} messages")
 
     return NegotiationResult(
         agreed=agreed,
