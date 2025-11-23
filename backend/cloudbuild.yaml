@@ -76,7 +76,7 @@ steps:
     args:
       - 'builds'
       - 'submit'
-      - '--config=backend/cloudbuild.worker.yaml'
+      - '--config=backend/worker/cloudbuild.yaml'
       - '--project=${PROJECT_ID}'
       - '--substitutions=SHORT_SHA=${SHORT_SHA}'
     id: 'deploy-celery-worker'

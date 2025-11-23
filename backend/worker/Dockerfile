@@ -36,5 +36,5 @@ ENV PYTHONUNBUFFERED=1
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD celery -A src.celery_app inspect ping -d celery@$HOSTNAME || exit 1
 
-# Run Celery worker
-CMD ["celery", "-A", "src.celery_app", "worker", "--loglevel=info", "--concurrency=2", "--max-tasks-per-child=50"]
+# Run both health server (for Cloud Run health checks) and Celery worker
+CMD ["/bin/bash", "-c", "uvicorn worker.health_server:app --host 0.0.0.0 --port ${PORT:-8080} --log-level warning & celery -A src.celery_app worker --loglevel=info --concurrency=2 --max-tasks-per-child=50"]

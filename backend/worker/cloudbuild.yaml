@@ -9,7 +9,7 @@ steps:
     args:
       - 'build'
       - '-f'
-      - 'Dockerfile.worker'
+      - 'worker/Dockerfile'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:${SHORT_SHA}'
       - '-t'
