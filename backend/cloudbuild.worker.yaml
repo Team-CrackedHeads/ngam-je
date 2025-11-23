@@ -37,6 +37,7 @@ steps:
       - '--region=${_REGION}'
       - '--platform=managed'
       - '--no-allow-unauthenticated'  # Workers don't need public access
+      - '--no-traffic'  # Background worker - no HTTP endpoint needed
       - '--memory=${_MEMORY}'
       - '--cpu=${_CPU}'
       - '--min-instances=${_MIN_INSTANCES}'
