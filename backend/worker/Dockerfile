@@ -56,7 +56,7 @@ USER appuser
 
 # Health check for Celery worker
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD celery -A src.celery_app inspect ping -d celery@$HOSTNAME || exit 1
+    CMD /app/.venv/bin/celery -A src.celery_app inspect ping -d celery@$HOSTNAME || exit 1
 
 # Run both health server (for Cloud Run health checks) and Celery worker
-CMD ["sh", "-c", "uvicorn worker.health_server:app --host 0.0.0.0 --port ${PORT} --log-level warning & celery -A src.celery_app worker --loglevel=info --concurrency=2 --max-tasks-per-child=50"]
+CMD ["sh", "-c", "/app/.venv/bin/uvicorn worker.health_server:app --host 0.0.0.0 --port ${PORT} --log-level warning & /app/.venv/bin/celery -A src.celery_app worker --loglevel=info --concurrency=2 --max-tasks-per-child=50"]
