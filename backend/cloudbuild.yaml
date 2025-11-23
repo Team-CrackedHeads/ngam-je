@@ -70,6 +70,16 @@ steps:
       - '--set-env-vars=ENV=production,DEBUG=false,GCP_PROJECT_ID=${PROJECT_ID},GCP_REGION=${_REGION},USE_SECRET_MANAGER=true,CORS_ORIGINS=https://ngamje-frontend-645994298827.asia-southeast1.run.app,POSTGRES_USER=postgres,POSTGRES_DB=ngamjedb,POSTGRES_HOST=/cloudsql/gaia-capstone4-prd:asia-southeast1:ngamje-db-sea1,INSTANCE_CONNECTION_NAME=gaia-capstone4-prd:asia-southeast1:ngamje-db-sea1,DIDIT_BASE_URL=https://verification.didit.me,DIDIT_CALLBACK_URL=https://ngamje-backend-645994298827.asia-southeast1.run.app/api/v1/kyc/webhook'
     id: 'deploy-to-cloud-run'
 
+  # Step 5: Deploy Celery Worker (triggered automatically with backend deployment)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'builds'
+      - 'submit'
+      - '--config=backend/cloudbuild.worker.yaml'
+      - '--project=${PROJECT_ID}'
+    id: 'deploy-celery-worker'
+
 # Substitutions (default values, can be overridden)
 substitutions:
   _SERVICE_NAME: 'ngamje-backend'
