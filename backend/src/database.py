@@ -34,6 +34,8 @@ def get_connector():
 # Google Cloud SQL Connector function
 def getconn():
     """Create a connection to Cloud SQL using the Connector."""
+    if not settings.instance_connection_name:
+        raise ValueError("INSTANCE_CONNECTION_NAME is not set in settings.")
     connector = get_connector()
     conn = connector.connect(
         settings.instance_connection_name,

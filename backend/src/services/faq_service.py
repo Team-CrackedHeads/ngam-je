@@ -8,7 +8,8 @@ from src.models.faq import FAQ
 from src.models.faq_embeddings import FAQEmbedding
 from src.models.listing import Listing
 from ai_faq_moderator.moderator import FAQModeratorAgent
-import google.generativeai as genai
+from google.generativeai.embedding import embed_content
+from google.generativeai.client import configure
 import numpy as np
 import os
 from dotenv import load_dotenv
@@ -25,11 +26,11 @@ class FAQService:
         # Ensure Gemini API is configured
         api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if api_key:
-            genai.configure(api_key=api_key)
+            configure(api_key=api_key)
 
     def get_vector(self, text: str):
         """Calculates embedding using Gemini API."""
-        return genai.embed_content(
+        return embed_content(
             model=self.embedding_model,
             content=text,
             task_type="retrieval_query"
@@ -46,14 +47,14 @@ class FAQService:
 
         # Build price information
         price_info = f"{listing.price} {listing.currency}"
-        if listing.min_price and listing.max_price:
+        if listing.min_price is not None and listing.max_price is not None:
             price_info += f" (Price range: {listing.min_price} - {listing.max_price} {listing.currency})"
 
         # Availability status
-        availability = "Available" if listing.is_active else "Not Available"
-        if listing.is_matched:
+        availability = "Available" if listing.is_active is True else "Not Available"
+        if listing.is_matched is True:
             availability = "Matched with buyer/seller"
-        elif listing.is_checked_out:
+        elif listing.is_checked_out is True:
             availability = "Sold/Completed"
 
         context = f"""
@@ -67,11 +68,11 @@ class FAQService:
         --- LOGISTICS & METADATA ---
         Location: {listing.creator_location}
         Seller/Poster Name: {listing.creator_name}
-        Verified Seller: {'Yes' if listing.creator_verified else 'No'}
+        Verified Seller: {'Yes' if listing.creator_verified is True else 'No'}
         Shipping Options: {shipping if shipping else 'Not specified'}
         Tags/Categories: {tags if tags else 'None'}
         Views: {listing.views}
-        Inventory Quantity: {listing.inventory_quantity if listing.inventory_quantity else 'Not specified'}
+        Inventory Quantity: {listing.inventory_quantity if listing.inventory_quantity is not None else 'Not specified'}
         """
 
         if include_faqs:
