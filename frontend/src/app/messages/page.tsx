@@ -1,119 +1,192 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Search, Send } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { messagesData, conversationsData, ConversationData } from "@/utils/mock-all-data-used";
+import React, { useState, useRef, useEffect, Suspense } from "react";
+import { ArrowLeft, Search, Send, Loader2, Bot } from "lucide-react";
+import SafeImage from "@/components/ui/SafeImage";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { useUser } from "@clerk/nextjs";
+import type {
+  ConversationResponse,
+  MessageResponse,
+  MessageListResponse,
+  ConversationListResponse
+} from "@/types/messages";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<ConversationData[]>(conversationsData);
+  const searchParams = useSearchParams();
+  const { user } = useUser();
+  const apiClient = useClerkApiClient();
+
+  const [conversations, setConversations] = useState<ConversationResponse[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [inputText, setInputText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const selectedMsg = messagesData.find((m) => m.id === selectedId);
-  const conversation = conversations.find((c) => c.id === selectedId);
+  const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
-  // Filter messages based on search
-  const filteredMessages = messagesData.filter((m) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return m.name.toLowerCase().includes(query) || m.message.toLowerCase().includes(query);
-  });
-
-  // Auto-scroll to bottom when conversation changes
+  // Fetch user's conversations on mount
   useEffect(() => {
-    if (conversation) {
+    loadConversations();
+  }, []);
+
+  // Fetch messages when conversation is selected
+  useEffect(() => {
+    if (selectedConversationId) {
+      loadMessages(selectedConversationId);
+    }
+  }, [selectedConversationId]);
+
+  // Poll for new messages every 3 seconds when a conversation is selected
+  useEffect(() => {
+    if (!selectedConversationId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const client = await apiClient();
+        const data = await client.get<MessageListResponse>(`/api/v1/messages/conversation/${selectedConversationId}`);
+
+        // Only update if we have new messages (avoid unnecessary re-renders)
+        if (data.messages.length !== messages.length) {
+          console.log(`🔄 New messages detected: ${messages.length} -> ${data.messages.length}`);
+          setMessages(data.messages);
+        }
+      } catch (error) {
+        console.error("Failed to poll messages:", error);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    // Cleanup interval on unmount or conversation change
+    return () => clearInterval(pollInterval);
+  }, [selectedConversationId, messages.length]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
-  }, [conversation, conversation?.messages.length]);
+  }, [messages]);
 
-  // Add product message when selecting a conversation with a product
+  // Handle recommendation query parameter - auto-select conversation
   useEffect(() => {
-    if (!selectedId) return;
-    const msg = messagesData.find((m) => m.id === selectedId);
-    if (!msg?.product) return;
-
-    setConversations((prev) => {
-      const existing = prev.find((c) => c.id === selectedId);
-      const productMsgId = `prod-${selectedId}`;
-
-      if (existing) {
-        if (existing.messages.some((m) => m.id === productMsgId)) return prev;
-        return prev.map((c) =>
-          c.id === selectedId
-            ? {
-              ...c,
-              messages: [
-                {
-                  id: productMsgId,
-                  sender: "them" as const,
-                  content: "",
-                  timestamp: new Date().toLocaleTimeString(),
-                  product: msg.product,
-                },
-                ...c.messages,
-              ],
-            }
-            : c
-        );
+    const recommendationId = searchParams.get('recommendation');
+    if (recommendationId && conversations.length > 0) {
+      // Find conversation with this recommendation_id
+      const conversation = conversations.find(c => c.recommendation_id === parseInt(recommendationId));
+      if (conversation) {
+        console.log('📧 Auto-selecting conversation for recommendation:', recommendationId, '-> conversation:', conversation.id);
+        setSelectedConversationId(conversation.id);
+      } else {
+        console.warn('⚠️ No conversation found for recommendation:', recommendationId);
       }
+    }
+  }, [searchParams, conversations]);
 
-      return [
-        ...prev,
-        {
-          id: selectedId,
-          messages: [
-            {
-              id: productMsgId,
-              sender: "them" as const,
-              content: "",
-              timestamp: new Date().toLocaleTimeString(),
-              product: msg.product,
-            },
-          ],
-        },
-      ];
-    });
-  }, [selectedId]);
-
-  const handleSend = () => {
-    if (!inputText.trim() || !selectedId) return;
-
-    setConversations((prev) => {
-      const existing = prev.find((c) => c.id === selectedId);
-      const newMsg = {
-        id: `msg-${Date.now()}`,
-        sender: "me" as const,
-        content: inputText.trim(),
-        timestamp: new Date().toLocaleTimeString(),
-      };
-
-      if (existing) {
-        return prev.map((c) => (c.id === selectedId ? { ...c, messages: [...c.messages, newMsg] } : c));
-      }
-
-      return [...prev, { id: selectedId, messages: [newMsg] }];
-    });
-
-    setInputText("");
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const client = await apiClient();
+      const data = await client.get<ConversationListResponse>("/api/v1/conversations/user");
+      setConversations(data.conversations);
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const loadMessages = async (conversationId: number) => {
+    try {
+      setLoadingMessages(true);
+      // Don't clear messages immediately - keep old ones visible while loading
+      const client = await apiClient();
+      const data = await client.get<MessageListResponse>(`/api/v1/messages/conversation/${conversationId}`);
+      setMessages(data.messages);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+      setMessages([]); // Only clear on error
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!inputText.trim() || !selectedConversationId || sendingMessage) return;
+
+    try {
+      setSendingMessage(true);
+      const client = await apiClient();
+
+      const newMessage = await client.post<MessageResponse>("/api/v1/messages/", {
+        conversation_id: selectedConversationId,
+        content: inputText.trim(),
+        message_type: "text"
+      });
+
+      // Add message to local state
+      setMessages((prev) => [...prev, newMessage]);
+      setInputText("");
+
+      // Update conversation's last_message_at in local state
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConversationId
+            ? { ...c, last_message_at: newMessage.created_at }
+            : c
+        )
+      );
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      alert("Failed to send message. Please try again.");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Format timestamp to human-readable format
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+    return date.toLocaleDateString();
+  };
+
+  const formatMessageTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Filter conversations based on search (placeholder - will need enriched data)
+  const filteredConversations = conversations.filter((conv) => {
+    if (!searchQuery) return true;
+    // TODO: Search by other user name or listing title when we have that data
+    return true;
+  });
 
   return (
     <div className="flex h-full bg-neutral-white overflow-hidden px-0">
       {/* Sidebar - Conversations List */}
       <div
-        className={`${selectedId ? "hidden lg:flex" : "flex"
-          } w-full lg:w-80 flex-col bg-neutral-white border-r border-neutral-200`}
+        className={`${
+          selectedConversationId ? "hidden lg:flex" : "flex"
+        } w-full lg:w-80 flex-col bg-neutral-white border-r border-neutral-200`}
       >
         {/* Header */}
         <div className="p-4 border-b border-neutral-200">
           <div className="flex items-center gap-3 mb-4">
             <button
-              onClick={() => router.push('/threads')}
+              onClick={() => router.push("/threads")}
               className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-neutral-700" />
@@ -136,57 +209,47 @@ export default function MessagesPage() {
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredMessages.length === 0 ? (
-            <div className="p-6 text-center text-neutral-500 text-sm">No conversations found</div>
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="w-6 h-6 animate-spin text-secondary-500" />
+              <span className="ml-2 text-sm text-neutral-500">Loading conversations...</span>
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="p-6 text-center text-neutral-500 text-sm">
+              No conversations yet. Match with someone to start chatting!
+            </div>
           ) : (
-            filteredMessages.map((msg) => (
+            filteredConversations.map((conv) => (
               <button
-                key={msg.id}
-                onClick={() => setSelectedId(msg.id)}
-                className={`w-full p-4 flex items-start gap-3 hover:bg-neutral-50 transition-colors border-b border-neutral-100 ${selectedId === msg.id ? "bg-secondary-50" : ""
-                  }`}
+                key={conv.id}
+                onClick={() => setSelectedConversationId(conv.id)}
+                className={`w-full p-4 flex items-start gap-3 hover:bg-neutral-50 transition-colors border-b border-neutral-100 ${
+                  selectedConversationId === conv.id ? "bg-secondary-50" : ""
+                }`}
               >
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">
-                    {msg.name[0]}
+                    {(conv.other_user_name || "?")[0].toUpperCase()}
                   </div>
-                  <span
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${msg.status === "online"
-                      ? "bg-success-500"
-                      : msg.status === "always"
-                        ? "bg-secondary-500"
-                        : "bg-neutral-400"
-                      }`}
-                  />
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-neutral-900 truncate">{msg.name}</span>
-                    <span className="text-xs text-neutral-500 ml-2 flex-shrink-0">{msg.time}</span>
+                    <span className="font-semibold text-neutral-900 truncate">
+                      {conv.other_user_name || "Unknown User"}
+                    </span>
+                    {conv.last_message_at && (
+                      <span className="text-xs text-neutral-500 ml-2 flex-shrink-0">
+                        {formatTime(conv.last_message_at)}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-neutral-600 truncate">{msg.message}</p>
-
-                  {msg.product && (
-                    <div className="mt-2 flex items-center gap-2 p-2 bg-white rounded-lg border border-neutral-200">
-                      <div className="relative w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
-                        <Image src={msg.product.image} alt={msg.product.title} fill className="object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-neutral-900 truncate">{msg.product.title}</p>
-                        <p className="text-xs text-secondary-600 font-semibold">{msg.product.price}</p>
-                      </div>
-                    </div>
-                  )}
+                  <p className="text-sm text-neutral-600 truncate">
+                    {conv.listing_title || "No listing"}
+                  </p>
                 </div>
-
-                {msg.unread > 0 && (
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-secondary-500 text-white text-xs font-bold flex items-center justify-center">
-                    {msg.unread}
-                  </div>
-                )}
               </button>
             ))
           )}
@@ -194,11 +257,11 @@ export default function MessagesPage() {
       </div>
 
       {/* Chat Area */}
-      <div className={`${selectedId ? "flex" : "hidden lg:flex"} flex-1 flex-col bg-white`}>
-        {!selectedMsg ? (
+      <div className={`${selectedConversationId ? "flex" : "hidden lg:flex"} flex-1 flex-col bg-white`}>
+        {!selectedConversation ? (
           <div className="flex-1 flex items-center justify-center text-neutral-500">
             <div className="text-center">
-              <Image
+              <SafeImage
                 src="/messages-placeholder.svg"
                 alt="Select a conversation"
                 width={250}
@@ -213,67 +276,35 @@ export default function MessagesPage() {
             {/* Chat Header */}
             <div className="p-4 border-b border-neutral-200 flex items-center gap-3">
               <button
-                onClick={() => setSelectedId(null)}
+                onClick={() => setSelectedConversationId(null)}
                 className="lg:hidden p-2 hover:bg-neutral-100 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-neutral-700" />
               </button>
               <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">
-                {selectedMsg.name[0]}
+                {(selectedConversation.other_user_name || "?")[0].toUpperCase()}
               </div>
               <div>
-                <h2 className="font-semibold text-neutral-900">{selectedMsg.name}</h2>
+                <h2 className="font-semibold text-neutral-900">
+                  {selectedConversation.other_user_name || "Unknown User"}
+                </h2>
                 <p className="text-xs text-neutral-500">
-                  {selectedMsg.status === "online" ? "Active now" : "Offline"}
+                  {selectedConversation.listing_title || "No listing"}
                 </p>
               </div>
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {conversation && conversation.messages.length > 0 ? (
-                <>
-                  {conversation.messages.map((m) => {
-                    if (m.product) {
-                      return (
-                        <div key={m.id} className="flex justify-start">
-                          <div className="max-w-xs bg-neutral-100 rounded-2xl p-3">
-                            <div className="relative w-full h-40 rounded-lg overflow-hidden mb-2">
-                              <Image src={m.product.image} alt={m.product.title} fill className="object-cover" />
-                            </div>
-                            <p className="font-semibold text-neutral-900">{m.product.title}</p>
-                            <p className="text-sm text-secondary-600 font-semibold">{m.product.price}</p>
-                            <p className="text-xs text-neutral-500 mt-1">{m.timestamp}</p>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div key={m.id} className={`flex ${m.sender === "me" ? "justify-end" : "justify-start"}`}>
-                        <div
-                          className={`max-w-xs px-4 py-2 rounded-2xl ${m.sender === "me"
-                            ? "bg-secondary-500 text-accent-700 rounded-br-sm"
-                            : "bg-neutral-100 text-neutral-900 rounded-bl-sm"
-                            }`}
-                        >
-                          <p className="text-sm">{m.content}</p>
-                          <p
-                            className={`text-xs mt-1 ${m.sender === "me" ? "text-accent-700/70" : "text-neutral-500"
-                              }`}
-                          >
-                            {m.timestamp}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </>
-              ) : (
+              {loadingMessages ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="w-8 h-8 animate-spin text-secondary-500" />
+                  <span className="ml-2 text-neutral-500">Loading messages...</span>
+                </div>
+              ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-neutral-500">
                   <div className="text-center">
-                    <Image
+                    <SafeImage
                       src="/sent-message.svg"
                       alt="No messages"
                       width={200}
@@ -284,6 +315,103 @@ export default function MessagesPage() {
                     <p className="text-xs">Type something to start the conversation</p>
                   </div>
                 </div>
+              ) : (
+                <>
+                  {messages.map((msg) => {
+                    // Determine message alignment based on type
+                    let isCurrentUser: boolean;
+                    let isSystemMessage = false;
+                    let isAiMessage = false;
+                    let aiLabel = "";
+
+                    if (msg.message_type === "system") {
+                      isSystemMessage = true;
+                      isCurrentUser = false; // System messages show centered
+                    } else if (msg.message_type === "ai_buyer") {
+                      isCurrentUser = false; // AI buyer shows on left
+                      isAiMessage = true;
+                      aiLabel = "AI Buyer";
+                    } else if (msg.message_type === "ai_seller") {
+                      isCurrentUser = true; // AI seller shows on right
+                      isAiMessage = true;
+                      aiLabel = "AI Seller";
+                    } else {
+                      // Regular user messages: check sender_id
+                      isCurrentUser = msg.sender_id !== selectedConversation.other_user_id;
+                    }
+
+                    // System messages (AI summary)
+                    if (isSystemMessage) {
+                      return (
+                        <div key={msg.id} className="flex justify-center">
+                          <div className="max-w-md px-4 py-3 rounded-2xl bg-amber-100 text-amber-900 border border-amber-200">
+                            <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                            <p className="text-xs mt-1 text-amber-700">
+                              {formatMessageTime(msg.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // AI messages with special styling
+                    if (isAiMessage) {
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className="flex flex-col items-start max-w-sm">
+                            {/* AI Label */}
+                            <div className={`flex items-center gap-1 mb-1 ${isCurrentUser ? "self-end" : "self-start"}`}>
+                              <Bot className={`w-3 h-3 ${isCurrentUser ? "text-secondary-700" : "text-primary-700"}`} />
+                              <span className={`text-xs font-medium ${isCurrentUser ? "text-secondary-700" : "text-primary-700"}`}>{aiLabel}</span>
+                            </div>
+                            {/* Message Bubble */}
+                            <div
+                              className={`px-4 py-2 rounded-2xl ${
+                                isCurrentUser
+                                  ? "bg-gradient-to-br from-secondary-400 to-secondary-600 text-accent-700 rounded-br-sm border border-secondary-300"
+                                  : "bg-gradient-to-br from-primary-400 to-primary-600 text-white rounded-bl-sm border border-primary-300"
+                              }`}
+                            >
+                              <p className="text-sm">{msg.content}</p>
+                              <p className={`text-xs mt-1 ${isCurrentUser ? "text-accent-700/70" : "text-white/80"}`}>
+                                {formatMessageTime(msg.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Regular user messages
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-xs px-4 py-2 rounded-2xl ${
+                            isCurrentUser
+                              ? "bg-secondary-500 text-accent-700 rounded-br-sm"
+                              : "bg-neutral-100 text-neutral-900 rounded-bl-sm"
+                          }`}
+                        >
+                          <p className="text-sm">{msg.content}</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isCurrentUser ? "text-accent-700/70" : "text-neutral-500"
+                            }`}
+                          >
+                            {formatMessageTime(msg.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </>
               )}
             </div>
 
@@ -294,20 +422,33 @@ export default function MessagesPage() {
                 placeholder="Type a message..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                className="flex-1 px-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                onKeyDown={(e) => e.key === "Enter" && !sendingMessage && handleSend()}
+                disabled={sendingMessage}
+                className="flex-1 px-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent disabled:opacity-50"
               />
               <button
                 onClick={handleSend}
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || sendingMessage}
                 className="p-3 bg-secondary-500 text-accent-700 rounded-lg hover:bg-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <Send className="w-5 h-5" />
+                {sendingMessage ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
               </button>
             </div>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin" /></div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }

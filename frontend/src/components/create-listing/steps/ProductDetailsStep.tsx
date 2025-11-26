@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
-import { Sparkles, Loader2, Upload, Trash2, Check } from 'lucide-react';
+import { Sparkles, Loader2, Upload, Trash2, Check, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import TagGenerator, { TagGeneratorRef } from '@/components/create-listing/tag-generator';
+import DescriptionEvaluator from '@/components/create-listing/DescriptionEvaluator';
+import { useDescriptionEvaluator } from '@/hooks/use-description-evaluator';
 import { PartialFormData } from '@/types/listing-form';
 
 interface ProductDetailsStepProps {
@@ -74,6 +75,18 @@ export default function ProductDetailsStep({
 
   const images = listingType === 'buy' ? formData.generatedImages : formData.uploadedImages;
 
+  // Description evaluator hook
+  const { evaluation, isEvaluating, error, evaluate } = useDescriptionEvaluator({
+    listingType,
+  });
+
+  // Evaluate description when it changes
+  useEffect(() => {
+    if (isAIModeEnabled && formData.generatedDescription) {
+      evaluate(formData.generatedDescription);
+    }
+  }, [formData.generatedDescription, isAIModeEnabled, evaluate]);
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -81,79 +94,22 @@ export default function ProductDetailsStep({
         <p className="text-lg text-[var(--color-primary-900)]">Fill in details or let AI help you generate content</p>
       </div>
 
-      {/* AI Action Bar */}
-      <div className="bg-[var(--color-primary-100)] border border-[var(--color-primary-200)] rounded-lg p-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="ai-mode"
-                checked={isAIModeEnabled}
-                onCheckedChange={setIsAIModeEnabled}
-                className="data-[state=checked]:bg-[var(--color-secondary-500)]"
-              />
-              <Label htmlFor="ai-mode" className="text-sm font-medium text-[var(--color-accent-700)] cursor-pointer flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[var(--color-secondary-600)]" />
-                AI Mode
-              </Label>
-            </div>
-            {isAIModeEnabled && (
-              <p className="text-xs text-[var(--color-primary-900)] italic hidden sm:block">
-                Upload photo or type to enable AI generation
-              </p>
-            )}
-          </div>
-          {isAIModeEnabled && (
-            <Button
-              size="sm"
-              className="text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
-              onClick={onGenerateAll}
-              disabled={isGeneratingAll || !hasAnyInput}
-            >
-              {isGeneratingAll ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--color-secondary-900)]" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2 text-[var(--color-secondary-900)]" />
-                  Generate All
-                </>
-              )}
-            </Button>
-          )}
-        </div>
+      <div className="flex justify-center mb-6">
+        <button
+          onClick={() => setIsAIModeEnabled(true)}
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-yellow-950 bg-yellow-500 hover:bg-yellow-600 transition-all duration-300 pulse-glow"
+        >
+          <Sparkles className="w-5 h-5" />
+          AI-Powered Listing
+        </button>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Images Section */}
         <div>
-          <div className="flex justify-between items-center mb-3">
-            <Label className="text-base font-medium text-[var(--color-accent-700)]">
-              Product Images
-            </Label>
-            {isAIModeEnabled && (
-              <Button
-                size="sm"
-                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
-                onClick={onGeneratePhotos}
-                disabled={isGeneratingPhotos || !hasAnyInput || (listingType === 'sell' && images?.length === 0)}
-              >
-                {isGeneratingPhotos ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                    {listingType === 'buy' ? 'Generate Photos' : 'Enhance Photos'}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          <Label className="text-base font-medium text-[var(--color-accent-700)] mb-3 block">
+            Product Images
+          </Label>
 
           <input
             type="file"
@@ -220,7 +176,7 @@ export default function ProductDetailsStep({
 
         {/* Ownership Proof Section (Sell only) */}
         {listingType === 'sell' && (
-          <div className="pt-6 border-t-2 border-[var(--color-primary-300)]">
+          <div>
             <Label className="text-base font-medium mb-3 block text-[var(--color-accent-700)]">
               Proof of Ownership
             </Label>
@@ -286,24 +242,23 @@ export default function ProductDetailsStep({
               Title
             </Label>
             {isAIModeEnabled && (
-              <Button
-                size="sm"
-                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+              <button
                 onClick={onGenerateTitle}
-                disabled={isGeneratingTitle || !hasAnyInput}
+                disabled={isGeneratingTitle || !formData.generatedTitle}
+                className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {isGeneratingTitle ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                    Generating...
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                    Generate Title
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Regenerate</span>
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
           <div className="relative">
@@ -365,24 +320,23 @@ export default function ProductDetailsStep({
               Description
             </Label>
             {isAIModeEnabled && (
-              <Button
-                size="sm"
+              <button
                 onClick={onGenerateDescription}
-                disabled={isGeneratingDescription || !hasAnyInput}
-                className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+                disabled={isGeneratingDescription || !formData.generatedDescription}
+                className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {isGeneratingDescription ? (
                   <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                    Generating...
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                    Generate Description
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Regenerate</span>
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
           <div className="relative">
@@ -435,6 +389,15 @@ export default function ProductDetailsStep({
               <span className="ml-2 text-[var(--color-secondary-500)]">• Press Tab to accept suggestion</span>
             )}
           </p>
+
+          {/* Description Evaluator - Password Checker Style */}
+          {isAIModeEnabled && (
+            <DescriptionEvaluator
+              evaluation={evaluation}
+              isEvaluating={isEvaluating}
+              error={error}
+            />
+          )}
         </div>
 
         {/* Tags Section */}

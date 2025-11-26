@@ -190,7 +190,7 @@ export default function PreviewStep({
                         key={img + idx}
                         type="button"
                         onClick={() => setSelectedImageIndex(idx)}
-                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx
+                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx
                           ? 'border-[var(--color-secondary-500)] scale-100'
                           : 'border-transparent opacity-70 hover:opacity-100'
                           }`}

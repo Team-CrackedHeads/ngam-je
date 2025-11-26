@@ -1,37 +1,204 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Package, MapPin, Clock, Eye, Heart, ShoppingCart, Handshake } from "lucide-react";
-import { mockSaleListings, mockWantedListings, getMockMatchedListings, type Listing } from "@/utils/mock-all-data-used";
-import { MatchedListing } from "@/components/matching/types";
-import { generateMatchesForListing } from "@/utils/mock-all-data-used";
+import { Package, MapPin, Clock, Eye, ShoppingCart, Handshake } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AIMatchingContainer } from "@/components/matching/AIMatchingContainer";
 import { ListingDetailsModal } from "@/components/listings/ListingDetailsModal";
 import { MatchesHeader } from "@/components/matching/MatchesHeader";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { fetchListingById } from "@/lib/api/listings";
+import { fetchListingRecommendations } from "@/lib/api/recommendations";
+import type { Listing as ApiListing } from "@/types/listing";
 
 export default function ListingMatchesPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
-  const [selectedListing, setSelectedListing] = useState<Listing | MatchedListing | null>(null);
+  const getApiClient = useClerkApiClient();
+
+  const [selectedListing, setSelectedListing] = useState<ApiListing | null>(null);
+  const [yourListing, setYourListing] = useState<ApiListing | null>(null);
+  const [matchedListings, setMatchedListings] = useState<ApiListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const listingId = parseInt(params.listingId as string);
   const listingType = (searchParams.get("type") || "sale") as "sale" | "wanted" | "matched";
 
-  // Get the current listing
-  const yourListing: Listing | undefined =
-    listingType === "sale" ? mockSaleListings.find(l => l.id === listingId) :
-      listingType === "wanted" ? mockWantedListings.find(l => l.id === listingId) :
-        getMockMatchedListings().find(l => l.id === listingId);
+  // Transform API listing to component format
+  const transformListing = (apiListing: ApiListing): import("@/components/matching/types").ListingType => {
+    // Check if this listing has recommendation metadata attached
+    const extendedListing = apiListing as ApiListing & {
+      matchScore?: number;
+      recommendationStatus?: string;
+      matchReasons?: string[];
+      recommendationId?: number;
+      sourceListingId?: number;
+      targetListingId?: number;
+      currentUserIsSource?: boolean;
+    };
 
-  // Get matches for this listing
-  const matches = yourListing && listingType !== "matched" ? generateMatchesForListing(listingId, listingType) : [];
-  const matchedListings = matches.map(match => match.matchedListing);
+    const matchScore = extendedListing.matchScore ?? 0;
 
+    // Debug: Check what we're getting in transform
+    console.log(`Transform listing ${apiListing.id}: matchScore=${extendedListing.matchScore}, final=${matchScore}, showBadge=${matchScore > 0}`);
+    console.log(`   📋 matchReasons in extendedListing:`, extendedListing.matchReasons);
+
+    const transformed: import("@/components/matching/types").ListingType = {
+      id: apiListing.id,
+      title: apiListing.title,
+      description: apiListing.description,
+      price: apiListing.price,
+      images: [apiListing.image_url, ...(apiListing.gallery || [])].filter((img): img is string => Boolean(img)),
+      tags: apiListing.tags || [],
+      location: apiListing.creator_location || "Unknown",
+      timestamp: apiListing.created_at,
+      seller: apiListing.creator_name || "Unknown",
+      type: (apiListing.listing_type === "sale" ? "sell" : "buy") as "sell" | "buy",
+      category: "general",
+      matchScore: matchScore,
+      matchReasons: extendedListing.matchReasons,
+      recommendationId: extendedListing.recommendationId,
+      recommendationStatus: extendedListing.recommendationStatus,
+      sourceListingId: extendedListing.sourceListingId,
+      targetListingId: extendedListing.targetListingId,
+      currentUserIsSource: extendedListing.currentUserIsSource,
+      // Show match score badge for any recommendation with a valid score > 0
+      showMatchScore: matchScore > 0,
+    };
+
+    console.log(`   ✅ Transformed listing ${apiListing.id} with status:`, transformed.recommendationStatus);
+    return transformed;
+  };
+
+  // Handle clicking on "Your Listing" - navigate to thread for wanted listings, show modal for others
+  const handleYourListingClick = () => {
+    if (!yourListing) return;
+    if (listingType === "wanted" && yourListing.thread_id) {
+      router.push(`/threads/${yourListing.thread_id}/listings/${yourListing.id}`);
+    } else {
+      setSelectedListing(yourListing);
+    }
+  };
+
+  // Fetch listing and its recommendations from database
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        // Get API client inside the effect to avoid dependency issues
+        const apiClient = await getApiClient();
+
+        if (!isMounted) return;
+
+        // Fetch the current listing
+        const listing = await fetchListingById(apiClient.instance, listingId);
+
+        if (!isMounted) return;
+
+        // Fetch ALL recommendations for this listing (pending, liked, matched)
+        const recommendations = await fetchListingRecommendations(
+          apiClient.instance,
+          listingId
+          // No status filter - we want ALL recommendations for the swipe interface
+        );
+
+        // Find a matched recommendation for this listing (if any)
+        const matchedRec = recommendations.recommendations.find(rec => rec.status === "matched");
+        if (matchedRec) {
+          // Attach recommendation ID to your listing for checkout
+          (listing as ApiListing & { recommendationId?: number; recommendationStatus?: string }).recommendationId = matchedRec.id;
+          (listing as ApiListing & { recommendationId?: number; recommendationStatus?: string }).recommendationStatus = matchedRec.status;
+        }
+
+        setYourListing(listing);
+
+        if (!isMounted) return;
+
+        // Fetch the actual matched listings with their recommendation data
+        const matches: ApiListing[] = [];
+        console.log(`📋 Current listing ID: ${listingId}, Found ${recommendations.recommendations.length} recommendations`);
+
+        for (const rec of recommendations.recommendations) {
+          try {
+            // Get the other listing (if this is source, get target; if target, get source)
+            const matchedListingId = rec.source_listing_id === listingId
+              ? rec.target_listing_id
+              : rec.source_listing_id;
+
+            console.log(`🔍 Rec ${rec.id}: source=${rec.source_listing_id}, target=${rec.target_listing_id}, fetching listing ${matchedListingId}, score=${rec.match_score}`);
+
+            const matchedListing = await fetchListingById(apiClient.instance, matchedListingId);
+
+            // Attach recommendation metadata to the listing for the UI
+            const extendedListing = matchedListing as ApiListing & {
+              recommendationId?: number;
+              matchScore?: number;
+              matchReasons?: string[];
+              recommendationStatus?: string;
+              sourceListingId?: number;
+              targetListingId?: number;
+              currentUserIsSource?: boolean;
+            };
+            extendedListing.recommendationId = rec.id;
+            extendedListing.matchScore = rec.match_score;
+            extendedListing.matchReasons = rec.match_reasons ?? undefined;
+            extendedListing.recommendationStatus = rec.status;
+            extendedListing.sourceListingId = rec.source_listing_id;
+            extendedListing.targetListingId = rec.target_listing_id;
+            extendedListing.currentUserIsSource = rec.source_listing_id === listingId;
+
+            // Debug: Log match score and reasons
+            console.log(`✅ Attached score ${rec.match_score} to listing ${matchedListing.id}`);
+            console.log(`   📋 Match reasons from API (${rec.match_reasons?.length || 0} reasons):`, rec.match_reasons);
+            console.log(`   📋 Extended listing matchReasons:`, extendedListing.matchReasons);
+
+            matches.push(matchedListing);
+          } catch (err) {
+            console.error(`Failed to fetch matched listing:`, err);
+          }
+        }
+
+        if (!isMounted) return;
+        console.log(`💾 Setting matchedListings state with ${matches.length} listings:`, matches.map(m => {
+          const extended = m as ApiListing & { matchScore?: number };
+          return `${m.id}(score:${extended.matchScore})`;
+        }));
+        setMatchedListings(matches);
+      } catch (error) {
+        console.error("Error fetching listing data:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingId]); // Only depend on listingId, not getApiClient
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-primary-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-500 mx-auto mb-4"></div>
+          <p className="text-accent-600">Loading matches...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
   if (!yourListing) {
     return (
       <div className="min-h-screen bg-primary-100 flex items-center justify-center">
@@ -53,11 +220,19 @@ export default function ListingMatchesPage() {
   const ListingCard = () => (
     <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-neutral-200">
       <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-        {/* Image Placeholder */}
+        {/* Image */}
         <div className="flex-shrink-0 w-full md:w-auto">
-          <div className="w-full aspect-square md:w-40 md:h-40 bg-primary-100 rounded-xl flex items-center justify-center">
-            <span className="text-accent-400 text-sm">Image</span>
-          </div>
+          {yourListing.image_url ? (
+            <img
+              src={yourListing.image_url}
+              alt={yourListing.title}
+              className="w-full aspect-square md:w-40 md:h-40 object-cover rounded-xl"
+            />
+          ) : (
+            <div className="w-full aspect-square md:w-40 md:h-40 bg-primary-100 rounded-xl flex items-center justify-center">
+              <span className="text-accent-400 text-sm">No Image</span>
+            </div>
+          )}
         </div>
 
         {/* Listing Details */}
@@ -68,15 +243,17 @@ export default function ListingMatchesPage() {
               {yourListing.title}
             </h1>
             <span className="text-xl md:text-2xl font-bold text-secondary-600 whitespace-nowrap">
-              {listingType === "sale" ? yourListing.price : yourListing.budget}
+              {yourListing.currency} {yourListing.price}
             </span>
           </div>
 
-          {/* Category Badge */}
-          <div className="mb-3">
-            <span className="inline-block px-3 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium">
-              {yourListing.category}
-            </span>
+          {/* Tags */}
+          <div className="mb-3 flex flex-wrap gap-2">
+            {yourListing.tags.map((tag, i) => (
+              <span key={i} className="inline-block px-3 py-1 text-xs rounded-full bg-primary-200 text-accent-600 font-medium">
+                {tag}
+              </span>
+            ))}
           </div>
 
           {/* Description */}
@@ -89,13 +266,13 @@ export default function ListingMatchesPage() {
             {/* Location */}
             <div className="flex items-center gap-2 text-sm text-accent-500">
               <MapPin className="w-4 h-4" />
-              <span>{yourListing.location}</span>
+              <span>{yourListing.creator_location || "Location not specified"}</span>
             </div>
 
             {/* Time Posted */}
             <div className="flex items-center gap-2 text-sm text-accent-500">
               <Clock className="w-4 h-4" />
-              <span>{yourListing.timestamp}</span>
+              <span>{new Date(yourListing.created_at).toLocaleDateString()}</span>
             </div>
 
             {/* Stats */}
@@ -103,10 +280,6 @@ export default function ListingMatchesPage() {
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
                 <span>{yourListing.views} views</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
-                <span>{yourListing.likes} likes</span>
               </div>
             </div>
           </div>
@@ -118,18 +291,25 @@ export default function ListingMatchesPage() {
   return (
     <>
       {/* Listing Details Modal */}
+      {console.log('🔍 Rendering with selectedListing:', selectedListing?.id)}
       <AnimatePresence>
         {selectedListing && (
-          <ListingDetailsModal
-            listing={selectedListing}
-            type={
-              selectedListing.id === yourListing.id
-                ? listingType : listingType === "sale"
-                  ? "wanted" : listingType === "wanted"
-                    ? "sale" : "matched"
-            }
-            onClose={() => setSelectedListing(null)}
-          />
+          <>
+            {console.log('✅ Rendering ListingDetailsModal for listing:', selectedListing.id)}
+            <ListingDetailsModal
+              listing={selectedListing}
+              type={
+                selectedListing.id === yourListing.id
+                  ? listingType
+                  : (selectedListing as ApiListing & { recommendationStatus?: string }).recommendationStatus === "matched"
+                    ? "matched"
+                    : listingType === "sale"
+                      ? "wanted"
+                      : "sale"
+              }
+              onClose={() => setSelectedListing(null)}
+            />
+          </>
         )}
       </AnimatePresence>
 
@@ -165,7 +345,7 @@ export default function ListingMatchesPage() {
 
               {/* Your Listing Card */}
               <div
-                onClick={() => setSelectedListing(yourListing)}
+                onClick={handleYourListingClick}
                 className="cursor-pointer hover:ring-2 hover:ring-secondary-400 rounded-2xl transition-all"
               >
                 <ListingCard />
@@ -177,7 +357,7 @@ export default function ListingMatchesPage() {
           {/* Mobile: Compact Your Listing Banner */}
           {isMobile && (
             <div
-              onClick={() => setSelectedListing(yourListing)}
+              onClick={handleYourListingClick}
               className="mb-6 bg-white rounded-xl shadow-sm p-4 border border-neutral-200 cursor-pointer active:scale-[0.98] transition-transform"
             >
               {/* Header with icon and label */}
@@ -194,9 +374,17 @@ export default function ListingMatchesPage() {
 
               <div className="flex items-center gap-3">
                 {/* Small Image */}
-                <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <span className="text-accent-400 text-xs">Image</span>
-                </div>
+                {yourListing.image_url ? (
+                  <img
+                    src={yourListing.image_url}
+                    alt={yourListing.title}
+                    className="flex-shrink-0 w-16 h-16 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="flex-shrink-0 w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
+                    <span className="text-accent-400 text-xs">Image</span>
+                  </div>
+                )}
 
                 {/* Listing Info */}
                 <div className="flex-1 min-w-0">
@@ -204,7 +392,7 @@ export default function ListingMatchesPage() {
                     {yourListing.title}
                   </h3>
                   <span className="text-lg font-bold text-secondary-600">
-                    {listingType === "sale" ? yourListing.price : yourListing.budget}
+                    {yourListing.currency} {yourListing.price}
                   </span>
                 </div>
               </div>
@@ -214,13 +402,29 @@ export default function ListingMatchesPage() {
           {listingType !== "matched" && (
             <>
               {/* AI Matching Component */}
+              {console.log(`🎨 Rendering AIMatchingContainer with ${matchedListings.length} matchedListings:`, matchedListings.map(m => {
+                const extended = m as ApiListing & { matchScore?: number };
+                return `${m.id}(score:${extended.matchScore})`;
+              }))}
               <AIMatchingContainer
                 userMode={listingType === "sale" ? "seller" : "buyer"}
-                userListings={[yourListing] as unknown as import("@/components/matching/types").ListingType[]}
-                availableListings={matchedListings as unknown as import("@/components/matching/types").ListingType[]}
+                userListings={[transformListing(yourListing)]}
+                availableListings={matchedListings.map(transformListing)}
                 onMatch={() => { }}
                 onMessage={() => { }}
-                onViewDetails={(listing) => setSelectedListing(listing)}
+                onViewDetails={(listing) => {
+                  console.log('📍 onViewDetails called for listing:', listing.id, 'type:', typeof listing.id);
+                  // listing.id is a string, matchedListings[].id is a number - need to compare as numbers
+                  const listingIdNum = typeof listing.id === 'string' ? parseInt(listing.id) : listing.id;
+                  const matched = matchedListings.find(l => l.id === listingIdNum);
+                  console.log('📍 Found matched listing:', matched?.id, 'in matchedListings array:', matchedListings.map(l => l.id));
+                  if (matched) {
+                    console.log('📍 Setting selectedListing to:', matched.id);
+                    setSelectedListing(matched);
+                  } else {
+                    console.warn('⚠️ Listing not found! Looking for:', listingIdNum, 'in array:', matchedListings.map(l => l.id));
+                  }
+                }}
                 onClose={() => { }}
               />
             </>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import SafeImage from "@/components/ui/SafeImage";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Heart,
@@ -19,6 +20,7 @@ import {
   AIMatchingProps,
   ColumnType,
   MatchedListing,
+  ListingType,
 } from "@/components/matching/types";
 import { ListingComparisonModal } from "@/components/matching/ListingComparisonModal";
 import { Card } from "@/components/ui/card";
@@ -29,6 +31,8 @@ import {
   userAIListing,
   KANBAN_COLUMNS,
 } from "@/utils/mock-all-data-used";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { likeRecommendation, rejectRecommendation, updateRecommendation } from "@/lib/api/recommendations";
 
 // Use centralized column configuration and add icons
 const columns = KANBAN_COLUMNS.map((col) => ({
@@ -44,13 +48,17 @@ const columns = KANBAN_COLUMNS.map((col) => ({
 }));
 
 export function AIMatchingKanban({
+  userListings,
+  availableListings,
   onMessage,
   onViewDetails,
+  onMatch,
 }: AIMatchingProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [expandedPopupColumn, setExpandedPopupColumn] =
     useState<ColumnType | null>(null);
+  const getApiClient = useClerkApiClient();
 
   // Animation state for card movements
   const [cardAnimation, setCardAnimation] = useState<{
@@ -64,13 +72,87 @@ export function AIMatchingKanban({
   // Comparison Modal
   const [showCompareModal, setShowCompareModal] = useState(false);
 
+  // Convert API listings to MatchedListing format
+  const convertToMatchedListing = (listing: ListingType): MatchedListing => {
+    return {
+      id: String(listing.id),
+      title: listing.title,
+      description: listing.description,
+      price: typeof listing.price === 'string' ? parseFloat(listing.price) || 0 : listing.price || 0,
+      originalAsk: typeof listing.price === 'string' ? parseFloat(listing.price) || 0 : listing.price || 0,
+      images: listing.images || [],
+      tags: listing.tags || [],
+      location: listing.location || "Unknown",
+      timeAgo: listing.timestamp || "Unknown",
+      seller: listing.seller || "Unknown",
+      type: listing.type,
+      category: listing.category || "general",
+      matchScore: listing.matchScore ?? 0,
+      matchReasons: listing.matchReasons || [],
+      recommendationId: listing.recommendationId,
+      recommendationStatus: listing.recommendationStatus,
+      sourceListingId: listing.sourceListingId,
+      targetListingId: listing.targetListingId,
+      currentUserIsSource: listing.currentUserIsSource,
+    };
+  };
+
+  // Convert available listings to MatchedListing format
+  const matchedListings = availableListings.map(convertToMatchedListing);
+
   // Card organization by column - stores listing IDs instead of indices
+  // Organize listings based on their recommendation status from database
   const [cardsByColumn, setCardsByColumn] = useState<
     Record<ColumnType, string[]>
-  >({
-    passed: [],
-    queue: mockAIMatchings.map((listing) => listing.id), // All listings start in queue
-    liked: [],
+  >(() => {
+    const initial: Record<ColumnType, string[]> = {
+      passed: [],
+      queue: [],
+      liked: [],
+    };
+
+    matchedListings.forEach((listing) => {
+      const status = listing.recommendationStatus;
+      const currentUserIsSource = listing.currentUserIsSource ?? false;
+
+      // Organize based on recommendation status from database
+      if (status === "matched") {
+        // Both parties liked - always show in liked
+        initial.liked.push(listing.id);
+      } else if (status === "liked_by_source") {
+        // Source liked it
+        if (currentUserIsSource) {
+          // I'm the source and I liked it → show in liked
+          initial.liked.push(listing.id);
+        } else {
+          // I'm the target and they liked it → show in queue (waiting for my approval)
+          initial.queue.push(listing.id);
+        }
+      } else if (status === "liked_by_target") {
+        // Target liked it
+        if (currentUserIsSource) {
+          // I'm the source and they liked it → show in queue (waiting for my approval)
+          initial.queue.push(listing.id);
+        } else {
+          // I'm the target and I liked it → show in liked
+          initial.liked.push(listing.id);
+        }
+      } else if (status === "rejected" || status === "passed") {
+        // Rejected/passed recommendations
+        initial.passed.push(listing.id);
+      } else {
+        // "pending" or any other status goes to queue
+        initial.queue.push(listing.id);
+      }
+    });
+
+    console.log('📊 Initial column organization:', {
+      queue: initial.queue.length,
+      liked: initial.liked.length,
+      passed: initial.passed.length
+    });
+
+    return initial;
   });
 
   // Drag state
@@ -94,20 +176,68 @@ export function AIMatchingKanban({
   };
 
   // Get user's listing
-  const getUserListing = (): MatchedListing => userAIListing;
+  const getUserListing = (): MatchedListing => {
+    return userListings.length > 0 ? convertToMatchedListing(userListings[0]) : userAIListing;
+  };
 
   // Get listings for comparison from selected IDs
   const getListingsForComparison = (): MatchedListing[] => {
     return selectedForCompare
       .map((listingId) =>
-        mockAIMatchings.find((listing) => listing.id === listingId)
+        matchedListings.find((listing) => listing.id === listingId)
       )
       .filter(Boolean) as MatchedListing[];
   };
 
   // Helper function to get listing by ID
   const getListingById = (id: string): MatchedListing | undefined => {
-    return mockAIMatchings.find((listing) => listing.id === id);
+    return matchedListings.find((listing) => listing.id === id);
+  };
+
+  // Handle API calls for like/pass actions
+  const handleRecommendationAction = async (listingId: string, action: "like" | "pass") => {
+    try {
+      const apiClient = await getApiClient();
+      const listing = availableListings.find((l) => String(l.id) === listingId);
+
+      console.log("🔍 Looking for listing:", listingId);
+      console.log("📦 Found listing:", listing);
+
+      const extendedListing = listing as MatchedListing & { recommendationId?: number };
+      console.log("🔑 Recommendation ID:", extendedListing?.recommendationId);
+
+      if (!listing) {
+        console.error("❌ Listing not found:", listingId);
+        alert(`Error: Listing ${listingId} not found`);
+        return;
+      }
+
+      if (!extendedListing.recommendationId) {
+        console.error("❌ No recommendation ID found for listing:", listingId);
+        console.error("Available listings:", availableListings);
+        alert(`Error: No recommendation ID found for listing ${listingId}`);
+        return;
+      }
+
+      const recommendationId = extendedListing.recommendationId;
+
+      console.log(`💚 ${action === "like" ? "Liking" : "Rejecting"} recommendation ${recommendationId}...`);
+
+      if (action === "like") {
+        const result = await likeRecommendation(apiClient.instance, recommendationId);
+        console.log("✅ Successfully liked recommendation:", result);
+      } else {
+        const result = await rejectRecommendation(apiClient.instance, recommendationId);
+        console.log("✅ Successfully rejected recommendation:", result);
+      }
+
+      // Call the onMatch callback
+      const matchedListing = convertToMatchedListing(listing);
+      onMatch(matchedListing, action);
+    } catch (error) {
+      console.error(`❌ Failed to ${action} recommendation:`, error);
+      alert(`Error: Failed to ${action} recommendation. Check console for details.`);
+    }
   };
 
   // Handle cycling cards in a column
@@ -243,7 +373,7 @@ export function AIMatchingKanban({
                     onClick={() => {
                       setCardsByColumn({
                         passed: [],
-                        queue: mockAIMatchings.map((listing) => listing.id),
+                        queue: matchedListings.map((listing) => listing.id),
                         liked: [],
                       });
                       setSelectedForCompare([]);
@@ -406,7 +536,12 @@ export function AIMatchingKanban({
                         {/* Pass Button */}
                         {expandedPopupColumn === "queue" && (
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              // Call API for each selected card
+                              for (const listingId of selectedForCompare) {
+                                await handleRecommendationAction(listingId, "pass");
+                              }
+
                               // Move selected cards to passed
                               setCardsByColumn((prev) => ({
                                 ...prev,
@@ -426,7 +561,12 @@ export function AIMatchingKanban({
                         {/* Like Button */}
                         {expandedPopupColumn === "queue" && (
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              // Call API for each selected card
+                              for (const listingId of selectedForCompare) {
+                                await handleRecommendationAction(listingId, "like");
+                              }
+
                               // Move selected cards to liked
                               setCardsByColumn((prev) => ({
                                 ...prev,
@@ -447,7 +587,22 @@ export function AIMatchingKanban({
                         {(expandedPopupColumn === "liked" ||
                           expandedPopupColumn === "passed") && (
                             <button
-                              onClick={() => {
+                              onClick={async () => {
+                                // Call API to reset status to pending for each selected card
+                                for (const listingId of selectedForCompare) {
+                                  const listing = availableListings.find((l) => String(l.id) === listingId);
+                                  const extendedListing = listing as ListingType & { recommendationId?: number };
+                                  if (extendedListing?.recommendationId) {
+                                    try {
+                                      const apiClient = await getApiClient();
+                                      await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                      console.log(`✅ Reset recommendation ${extendedListing.recommendationId} to pending`);
+                                    } catch (error) {
+                                      console.error("❌ Failed to reset recommendation:", error);
+                                    }
+                                  }
+                                }
+
                                 // Move selected cards back to queue
                                 setCardsByColumn((prev) => ({
                                   ...prev,
@@ -556,10 +711,20 @@ export function AIMatchingKanban({
                               }`}
                           >
                             {/* Card Image */}
-                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                              <span className="text-accent-400 text-sm">
-                                Image
-                              </span>
+                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200">
+                              {listing && listing.images && listing.images.length > 0 ? (
+                                <SafeImage
+                                  src={listing.images[0]}
+                                  alt={listing.title || 'Listing'}
+                                  fill
+                                  className="object-cover"
+                                  sizes="300px"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-accent-400 text-sm">No Image</span>
+                                </div>
+                              )}
                               {/* Match Score Badge */}
                               <div
                                 className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${colors.bg} ${colors.text} border ${colors.border} shadow-md`}
@@ -619,8 +784,11 @@ export function AIMatchingKanban({
                                   expandedPopupColumn === "queue" && (
                                     <div className="flex gap-2">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reject recommendation
+                                          await handleRecommendationAction(listingId, "pass");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             queue: prev.queue.filter(
@@ -637,8 +805,11 @@ export function AIMatchingKanban({
                                         </span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to like recommendation
+                                          await handleRecommendationAction(listingId, "like");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             queue: prev.queue.filter(
@@ -663,8 +834,21 @@ export function AIMatchingKanban({
                                   expandedPopupColumn === "liked" && (
                                     <div className="flex gap-2 mt-4">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reset status to pending
+                                          const listing = availableListings.find((l) => String(l.id) === listingId);
+                                          const extendedListing = listing as ListingType & { recommendationId?: number };
+                                          if (extendedListing?.recommendationId) {
+                                            try {
+                                              const apiClient = await getApiClient();
+                                              await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                              console.log("✅ Reset recommendation to pending");
+                                            } catch (error) {
+                                              console.error("❌ Failed to reset recommendation:", error);
+                                            }
+                                          }
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             liked: prev.liked.filter(
@@ -684,8 +868,11 @@ export function AIMatchingKanban({
                                         </span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reject recommendation
+                                          await handleRecommendationAction(listingId, "pass");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             liked: prev.liked.filter(
@@ -707,8 +894,21 @@ export function AIMatchingKanban({
                                   expandedPopupColumn === "passed" && (
                                     <div className="flex gap-2 mt-4">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to reset status to pending
+                                          const listing = availableListings.find((l) => String(l.id) === listingId);
+                                          const extendedListing = listing as ListingType & { recommendationId?: number };
+                                          if (extendedListing?.recommendationId) {
+                                            try {
+                                              const apiClient = await getApiClient();
+                                              await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                              console.log("✅ Reset recommendation to pending");
+                                            } catch (error) {
+                                              console.error("❌ Failed to reset recommendation:", error);
+                                            }
+                                          }
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             passed: prev.passed.filter(
@@ -728,8 +928,11 @@ export function AIMatchingKanban({
                                         </span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
+                                          // Call API to like recommendation
+                                          await handleRecommendationAction(listingId, "like");
+
                                           setCardsByColumn((prev) => ({
                                             ...prev,
                                             passed: prev.passed.filter(
@@ -911,14 +1114,31 @@ export function AIMatchingKanban({
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
               }}
-              onDrop={(e) => {
+              onDrop={async (e) => {
                 e.preventDefault();
                 if (draggedCard && draggedCard.sourceColumn !== column.id) {
-                  // Show animation based on target column
+                  // Handle API calls for all drag transitions
                   if (column.id === "liked") {
                     showCardAnimation("like");
+                    // Call like API when dragging to liked from any column
+                    await handleRecommendationAction(draggedCard.listingId, "like");
                   } else if (column.id === "passed") {
                     showCardAnimation("pass");
+                    // Call reject API when dragging to passed from any column
+                    await handleRecommendationAction(draggedCard.listingId, "pass");
+                  } else if (column.id === "queue") {
+                    // Reset status to pending when dragging back to queue
+                    const listing = availableListings.find((l) => String(l.id) === draggedCard.listingId);
+                    const extendedListing = listing as ListingType & { recommendationId?: number };
+                    if (extendedListing?.recommendationId) {
+                      try {
+                        const apiClient = await getApiClient();
+                        await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                        console.log("✅ Reset recommendation to pending via drag");
+                      } catch (error) {
+                        console.error("❌ Failed to reset recommendation:", error);
+                      }
+                    }
                   }
 
                   setCardsByColumn((prev) => ({
@@ -1164,10 +1384,20 @@ export function AIMatchingKanban({
                               }`}
                           >
                             {/* Card Image */}
-                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                              <span className="text-accent-400 text-sm">
-                                Image
-                              </span>
+                            <div className="relative w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200">
+                              {listing && listing.images && listing.images.length > 0 ? (
+                                <SafeImage
+                                  src={listing.images[0]}
+                                  alt={listing.title || 'Listing'}
+                                  fill
+                                  className="object-cover"
+                                  sizes="300px"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-accent-400 text-sm">No Image</span>
+                                </div>
+                              )}
                               {/* Match Score Badge - only show on top card */}
                               {index === 1 && (
                                 <div
@@ -1246,11 +1476,14 @@ export function AIMatchingKanban({
                       {column.id === "queue" && (
                         <>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               // Move top card to passed
                               const topCard = cardsByColumn.queue[0];
                               if (topCard !== undefined) {
+                                // Call API to reject recommendation
+                                await handleRecommendationAction(topCard, "pass");
+
                                 showCardAnimation("pass");
                                 setCardsByColumn((prev) => ({
                                   ...prev,
@@ -1267,11 +1500,14 @@ export function AIMatchingKanban({
                             </span>
                           </button>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               // Move top card to liked
                               const topCard = cardsByColumn.queue[0];
                               if (topCard !== undefined) {
+                                // Call API to like recommendation
+                                await handleRecommendationAction(topCard, "like");
+
                                 showCardAnimation("like");
                                 setCardsByColumn((prev) => ({
                                   ...prev,
@@ -1294,11 +1530,24 @@ export function AIMatchingKanban({
                       {(column.id === "liked" ||
                         column.id === "passed") && (
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               // Move top card back to queue
                               const topCard = cardsByColumn[column.id][0];
                               if (topCard !== undefined) {
+                                // Call API to reset status to pending
+                                const listing = availableListings.find((l) => String(l.id) === topCard);
+                                const extendedListing = listing as ListingType & { recommendationId?: number };
+                                if (extendedListing?.recommendationId) {
+                                  try {
+                                    const apiClient = await getApiClient();
+                                    await updateRecommendation(apiClient.instance, extendedListing.recommendationId, { status: "pending" });
+                                    console.log("✅ Reset recommendation to pending");
+                                  } catch (error) {
+                                    console.error("❌ Failed to reset recommendation:", error);
+                                  }
+                                }
+
                                 setCardsByColumn((prev) => ({
                                   ...prev,
                                   [column.id]: prev[column.id].slice(1),

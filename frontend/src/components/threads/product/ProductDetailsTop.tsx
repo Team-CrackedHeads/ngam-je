@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Eye, Shield } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 
 interface ProductCardDetailsProps {
@@ -20,14 +21,16 @@ const ProductDetailsTop: React.FC<ProductCardDetailsProps> = ({
   return (
     <div className="product-card-details-container">
       {/* Product Image - Clicking this opens the modal */}
-      <div className="relative w-full h-64 sm:h-[50vh]">
-        <Image
+      <div
+        className="relative w-full h-64 sm:h-[50vh]"
+        onClick={() => hasGalleryImages && openModal && openModal(0)}
+        style={{ cursor: hasGalleryImages && openModal ? "pointer" : "default" }}
+      >
+        <SafeImage
           src={mainImageSrc}
           alt={listing.title}
           fill
           className="object-cover sm:rounded-t-lg"
-          onClick={() => hasGalleryImages && openModal && openModal(0)}
-          style={{ cursor: hasGalleryImages && openModal ? "pointer" : "default" }}
         />
         {/* Updated badge logic */}
         <span

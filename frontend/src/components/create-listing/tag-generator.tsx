@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Tag, X, Plus, Loader2, Sparkles } from 'lucide-react';
+import { Tag, X, Plus, Loader2, Sparkles, RotateCcw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -95,11 +95,36 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
 
   const generateTagsFromContent = async () => {
     setIsGeneratingTags(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    onTagsChange(suggestedTags);
+    try {
+      // TODO: Get context from parent (title, description) for better tag generation
+      // For now, generate with empty context
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/generation/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: {
+            title: '',
+            description: '',
+            tags: tags,
+          },
+        }),
+      });
 
-    setIsGeneratingTags(false);
+      if (response.ok) {
+        const data = await response.json();
+        onTagsChange(data.tags);
+      } else {
+        // Fallback to suggested tags
+        onTagsChange(suggestedTags);
+      }
+    } catch (error) {
+      console.error('Error generating tags:', error);
+      // Fallback to suggested tags
+      onTagsChange(suggestedTags);
+    } finally {
+      setIsGeneratingTags(false);
+    }
   };
 
   // Expose generateTagsFromContent to parent via ref
@@ -181,30 +206,29 @@ const TagGenerator = forwardRef<TagGeneratorRef, TagGeneratorProps>(({ tags, onT
   };
 
   return (
-    <div className="pt-4 sm:pt-6 border-t-2 border-[var(--color-primary-300)]">
-      <div className="flex items-center justify-between mb-3">
+    <div className="pt-4 sm:pt-6">
+      <div className="flex justify-between items-center mb-3">
         <Label className="text-sm sm:text-base font-medium text-[var(--color-accent-700)]">
           Product Category Tags
         </Label>
         {isAIModeEnabled && (
-          <Button
-            size="sm"
+          <button
             onClick={generateTagsFromContent}
-            disabled={isGeneratingTags}
-            className="text-xs sm:text-sm bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)] text-[var(--color-accent-700)] border-0 shadow-md"
+            disabled={isGeneratingTags || tags.length === 0}
+            className="flex items-center gap-1.5 text-[var(--color-secondary-600)] hover:text-[var(--color-secondary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
             {isGeneratingTags ? (
               <>
-                <Loader2 className="w-3 h-3 mr-1 animate-spin text-[var(--color-secondary-900)]" />
-                Generating...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Generating...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-3 h-3 mr-1 text-[var(--color-secondary-900)]" />
-                Generate Tags
+                <RotateCcw className="w-4 h-4" />
+                <span>Regenerate</span>
               </>
             )}
-          </Button>
+          </button>
         )}
       </div>
 

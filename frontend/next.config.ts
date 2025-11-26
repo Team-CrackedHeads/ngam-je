@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone', // Required for Docker deployment
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    unoptimized: true, // Disable image optimization for external sources
     remotePatterns: [
       {
         protocol: 'https',
@@ -53,6 +55,31 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'al-ikhsan.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'store.storeimages.cdn-apple.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.dell.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.apple.com',
+      },
+      // SerpAPI image sources
+      {
+        protocol: 'https',
+        hostname: 'serpapi.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.gstatic.com', // Google Shopping images
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },

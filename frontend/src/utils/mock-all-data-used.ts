@@ -1,27 +1,15 @@
 //MARYAM
-// level 1: community/category data (existing, but with category added)
-export type ThreadData = {
-  id: number;
-  title: string;
-  description: string;
-  imageUrl: string;
-  comments: number;
-  views: number;
-  upvotes: number;
-  currentTokens: number;
-  goalTokens: number;
-  tags: string[];
-  isPinned: boolean;
-  isHot: boolean;
-  timeAgo: string;
-  contributions: number;
-  category: string; // new: for url routing
-  onlineUsers?: number;
-  totalUsers?: number;
-};
+import { ThreadDisplay } from "@/types/thread";
+import { UnifiedListingData } from "@/types/listing-form";
+
+// Type alias for backward compatibility
+export type ThreadData = ThreadDisplay;
+
+// Re-export UnifiedListingData from the new types file for backward compatibility
+export type { UnifiedListingData };
 
 // community data (level 1) - updated with category
-export const MOCK_THREADS: ThreadData[] = [
+export const MOCK_THREADS: ThreadDisplay[] = [
   {
     id: 1,
     title: "Pre-loved Apple",
@@ -396,44 +384,8 @@ export const MOCK_THREADS: ThreadData[] = [
     totalUsers: 840,
   },
 ];
-// Unified listing data type that works for both category listing and detail pages
-export type UnifiedListingData = {
-  // Core fields
-  id: string;
-  title: string;
-  subtitle?: string;
-  description: string;
 
-  // Price (better for calculations)
-  price: number;
-  currency: string;
-
-  // Owner (foreign key to users table)
-  userId: string; // FK to users.id (user-1 = Fitri, user-2 = Sani)
-
-  // Enhanced seller info (denormalized for display, but userId is the source of truth)
-  seller: {
-    name: string;
-    location: string;
-    verified: boolean;
-    timePosted: string;
-  };
-
-  // Images (support both single + gallery)
-  imageUrl: string; // main image for cards
-  gallery?: string[]; // additional images for detail view
-
-  // Categories & types
-  category: string;
-  listingType: "sale" | "wanted";
-
-  // Enhanced metadata
-  tags: string[];
-  views: number;
-  protected: boolean;
-  faqs?: Array<{ id: string; question: string; answer: string }>;
-};
-
+// Mock listing data (now uses the UnifiedListingData type from @/types/listing-form)
 export const UNIFIED_LISTINGS: UnifiedListingData[] = [
   {
     id: "sale-53",
@@ -2302,7 +2254,14 @@ function convertToLegacyListing(
   // Mark some listings as matched for testing checkout (listings from other user)
   // Sale listings: IDs 1-10, mark 2, 4, 6 as matched
   // Wanted listings: IDs 11-20, mark 12, 14, 16 as matched
-  const isMatchedListing = unified.userId === "user-2" && (numericId === 2 || numericId === 4 || numericId === 6 || numericId === 12 || numericId === 14 || numericId === 16);
+  const isMatchedListing =
+    unified.userId === "user-2" &&
+    (numericId === 2 ||
+      numericId === 4 ||
+      numericId === 6 ||
+      numericId === 12 ||
+      numericId === 14 ||
+      numericId === 16);
 
   return {
     id: numericId,
@@ -2356,6 +2315,7 @@ export interface Listing {
   title: string;
   price?: string;
   budget?: string;
+  currency?: string;
   location: string;
   timestamp: string;
   description: string;
@@ -2665,7 +2625,8 @@ export const messagesData: MessagePreview[] = [
     product: {
       title: "Nike Air Max - Blue/Orange",
       price: "$299.9",
-      image: "https://images.unsplash.com/photo-1595943606615-5973834c7efd?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687",
+      image:
+        "https://images.unsplash.com/photo-1595943606615-5973834c7efd?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687",
     },
   },
   {
@@ -2688,7 +2649,8 @@ export const messagesData: MessagePreview[] = [
     product: {
       title: "Vintage Leather Jacket",
       price: "$200",
-      image: "https://images.unsplash.com/photo-1731341869905-5ef9bcd272f1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170",
+      image:
+        "https://images.unsplash.com/photo-1731341869905-5ef9bcd272f1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170",
     },
   },
   {
@@ -3939,365 +3901,9 @@ export const mockFullChatHistory: ChatHistoryItem[] = [
       },
     ],
   },
-  {
-    id: 4,
-    title: "Gaming PC parts compatibility",
-    timestamp: "1 day ago",
-    created_at: "2025-10-02T13:30:00Z",
-    messages: [
-      {
-        id: "4-1",
-        role: "user",
-        content: "Are an Intel i7-12700K and an RTX 3070 compatible?",
-        timestamp: new Date("2025-10-02T13:28:00Z"),
-      },
-      {
-        id: "4-2",
-        role: "assistant",
-        content:
-          "Yes, an Intel i7-12700K and an RTX 3070 are generally compatible. You'll need a motherboard with an LGA 1700 socket for the CPU and a PCIe x16 slot for the GPU, along with a sufficient power supply.",
-        timestamp: new Date("2025-10-02T13:28:45Z"),
-      },
-    ],
-  },
-  {
-    id: 5,
-    title: "Vintage watch authenticity verification",
-    timestamp: "2 days ago",
-    created_at: "2025-10-01T19:45:00Z",
-    messages: [
-      {
-        id: "5-1",
-        role: "user",
-        content: "How to verify a vintage Rolex?",
-        timestamp: new Date("2025-10-01T19:43:00Z"),
-      },
-      {
-        id: "5-2",
-        role: "assistant",
-        content:
-          "Authenticating a vintage Rolex involves checking the serial number, movement, dial, case, and bracelet. It's highly recommended to consult a certified watchmaker or expert.",
-        timestamp: new Date("2025-10-01T19:43:50Z"),
-      },
-    ],
-  },
-  {
-    id: 6,
-    title: "Camera lens condition assessment",
-    timestamp: "3 days ago",
-    created_at: "2025-09-30T10:30:00Z",
-    messages: [
-      {
-        id: "6-1",
-        role: "user",
-        content: "What to look for when buying a used camera lens?",
-        timestamp: new Date("2025-09-30T10:28:00Z"),
-      },
-      {
-        id: "6-2",
-        role: "assistant",
-        content:
-          "Check for fungus, haze, scratches on glass elements, smooth focus and aperture rings, and proper functioning of autofocus and image stabilization.",
-        timestamp: new Date("2025-09-30T10:28:50Z"),
-      },
-    ],
-  },
-  {
-    id: 7,
-    title: "Furniture quality vs price analysis",
-    timestamp: "4 days ago",
-    created_at: "2025-09-29T14:20:00Z",
-    messages: [
-      {
-        id: "7-1",
-        role: "user",
-        content:
-          "Is solid wood always better than engineered wood for furniture?",
-        timestamp: new Date("2025-09-29T14:18:00Z"),
-      },
-      {
-        id: "7-2",
-        role: "assistant",
-        content:
-          "Solid wood is generally more durable and can be refinished, but engineered wood can be more stable in varying humidity and often more affordable. The 'better' choice depends on budget, use, and desired aesthetic.",
-        timestamp: new Date("2025-09-29T14:19:10Z"),
-      },
-    ],
-  },
-  {
-    id: 8,
-    title: "Electric bike safety standards",
-    timestamp: "5 days ago",
-    created_at: "2025-09-28T08:15:00Z",
-    messages: [
-      {
-        id: "8-1",
-        role: "user",
-        content: "What safety standards should an e-bike meet?",
-        timestamp: new Date("2025-09-28T08:13:00Z"),
-      },
-      {
-        id: "8-2",
-        role: "assistant",
-        content:
-          "Look for certifications like EN 15194 (Europe), UL 2849 (US for electrical systems), and ensure it has proper brakes, lights, and reflectors. Always wear a helmet!",
-        timestamp: new Date("2025-09-28T08:14:00Z"),
-      },
-    ],
-  },
-  {
-    id: 9,
-    title: "Designer handbag authentication tips",
-    timestamp: "1 week ago",
-    created_at: "2025-09-26T16:40:00Z",
-    messages: [
-      {
-        id: "9-1",
-        role: "user",
-        content: "How to spot a fake Louis Vuitton bag?",
-        timestamp: new Date("2025-09-26T16:38:00Z"),
-      },
-      {
-        id: "9-2",
-        role: "assistant",
-        content:
-          "Examine the stitching, hardware, date code, materials, and overall craftsmanship. Authentic bags have consistent patterns and high-quality details. When in doubt, use a professional authentication service.",
-        timestamp: new Date("2025-09-26T16:39:15Z"),
-      },
-    ],
-  },
-  {
-    id: 10,
-    title: "Motorcycle maintenance costs Honda",
-    timestamp: "1 week ago",
-    created_at: "2025-09-26T09:15:00Z",
-    messages: [
-      {
-        id: "10-1",
-        role: "user",
-        content: "What are typical maintenance costs for a Honda CBR500R?",
-        timestamp: new Date("2025-09-26T09:13:00Z"),
-      },
-      {
-        id: "10-2",
-        role: "assistant",
-        content:
-          "Routine maintenance for a Honda CBR500R typically includes oil changes, chain lubrication, tire checks, and brake fluid flushes. Costs vary by region and service provider, but expect a few hundred dollars annually for basic upkeep.",
-        timestamp: new Date("2025-09-26T09:14:30Z"),
-      },
-    ],
-  },
-  {
-    id: 11,
-    title: "Smartphone trade-in value check",
-    timestamp: "1 week ago",
-    created_at: "2025-09-25T12:30:00Z",
-    messages: [
-      {
-        id: "11-1",
-        role: "user",
-        content: "What's the trade-in value for an iPhone 12 Pro Max?",
-        timestamp: new Date("2025-09-25T12:28:00Z"),
-      },
-      {
-        id: "11-2",
-        role: "assistant",
-        content:
-          "Trade-in values for an iPhone 12 Pro Max depend on its condition, storage capacity, and the carrier/retailer. Expect anywhere from $200-$400 USD. Check specific trade-in programs for current offers.",
-        timestamp: new Date("2025-09-25T12:29:10Z"),
-      },
-    ],
-  },
-  {
-    id: 12,
-    title: "Laptop performance benchmarks",
-    timestamp: "1 week ago",
-    created_at: "2025-09-24T15:45:00Z",
-    messages: [
-      {
-        id: "12-1",
-        role: "user",
-        content: "What are good benchmarks for a gaming laptop?",
-        timestamp: new Date("2025-09-24T15:43:00Z"),
-      },
-      {
-        id: "12-2",
-        role: "assistant",
-        content:
-          "For gaming laptops, look at 3DMark scores (Time Spy, Fire Strike), Cinebench for CPU performance, and actual in-game FPS benchmarks for titles you play. Aim for consistent high FPS at your desired resolution.",
-        timestamp: new Date("2025-09-24T15:44:10Z"),
-      },
-    ],
-  },
-  {
-    id: 13,
-    title: "Art print value estimation",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-19T14:45:00Z",
-    messages: [
-      {
-        id: "13-1",
-        role: "user",
-        content: "How to estimate the value of a limited edition art print?",
-        timestamp: new Date("2025-09-19T14:43:00Z"),
-      },
-      {
-        id: "13-2",
-        role: "assistant",
-        content:
-          "Factors include the artist's reputation, edition size, condition of the print, signature, provenance, and recent auction results for similar works. Professional appraisal is recommended for accurate valuation.",
-        timestamp: new Date("2025-09-19T14:44:15Z"),
-      },
-    ],
-  },
-  {
-    id: 14,
-    title: "Kitchen appliance energy ratings",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-18T11:20:00Z",
-    messages: [
-      {
-        id: "14-1",
-        role: "user",
-        content: "What do energy star ratings mean for refrigerators?",
-        timestamp: new Date("2025-09-18T11:18:00Z"),
-      },
-      {
-        id: "14-2",
-        role: "assistant",
-        content:
-          "Energy Star ratings indicate that an appliance meets strict energy efficiency guidelines set by the EPA. For refrigerators, this means it consumes less energy than standard models, saving you money on electricity bills.",
-        timestamp: new Date("2025-09-18T11:19:10Z"),
-      },
-    ],
-  },
-  {
-    id: 15,
-    title: "Exercise equipment durability test",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-17T18:30:00Z",
-    messages: [
-      {
-        id: "15-1",
-        role: "user",
-        content: "How to check the durability of a used treadmill?",
-        timestamp: new Date("2025-09-17T18:28:00Z"),
-      },
-      {
-        id: "15-2",
-        role: "assistant",
-        content:
-          "Inspect the frame for cracks, test the motor for smooth operation and unusual noises, check the belt for wear and tear, and ensure all electronic functions work. A sturdy frame and powerful motor are key indicators of durability.",
-        timestamp: new Date("2025-09-17T18:29:15Z"),
-      },
-    ],
-  },
-  {
-    id: 16,
-    title: "Board game condition grading",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-12T15:30:00Z",
-    messages: [
-      {
-        id: "16-1",
-        role: "user",
-        content: "What are the common grading scales for used board games?",
-        timestamp: new Date("2025-09-12T15:28:00Z"),
-      },
-      {
-        id: "16-2",
-        role: "assistant",
-        content:
-          "Common scales include 'New/Sealed', 'Like New', 'Very Good', 'Good', 'Acceptable', and 'Poor'. These refer to the condition of the box, components, and rulebooks. Always ask for photos and detailed descriptions.",
-        timestamp: new Date("2025-09-12T15:29:10Z"),
-      },
-    ],
-  },
-  {
-    id: 17,
-    title: "Power tools safety inspection",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-11T08:45:00Z",
-    messages: [
-      {
-        id: "17-1",
-        role: "user",
-        content: "Safety checks for used power tools?",
-        timestamp: new Date("2025-09-11T08:43:00Z"),
-      },
-      {
-        id: "17-2",
-        role: "assistant",
-        content:
-          "Inspect the power cord for damage, ensure all guards and safety features are present and functional, check for loose parts, and test the on/off switch. Never use a damaged tool.",
-        timestamp: new Date("2025-09-11T08:44:10Z"),
-      },
-    ],
-  },
-  {
-    id: 18,
-    title: "Sneaker authenticity red flags",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-10T20:15:00Z",
-    messages: [
-      {
-        id: "18-1",
-        role: "user",
-        content: "How to tell if sneakers are fake?",
-        timestamp: new Date("2025-09-10T20:13:00Z"),
-      },
-      {
-        id: "18-2",
-        role: "assistant",
-        content:
-          "Look for inconsistencies in stitching, logo placement, material quality, and packaging. Compare with official images. If the price seems too good to be true, it probably is. Use authentication apps if unsure.",
-        timestamp: new Date("2025-09-10T20:14:15Z"),
-      },
-    ],
-  },
-  {
-    id: 19,
-    title: "Home theater setup compatibility",
-    timestamp: "1 month ago",
-    created_at: "2025-09-03T13:20:00Z",
-    messages: [
-      {
-        id: "19-1",
-        role: "user",
-        content: "Can I connect a new 4K TV to an old receiver?",
-        timestamp: new Date("2025-09-03T13:18:00Z"),
-      },
-      {
-        id: "19-2",
-        role: "assistant",
-        content:
-          "It depends on the receiver's ports. If your receiver has HDMI inputs that support HDCP 2.2 and 4K passthrough, it might work. Otherwise, you might need an HDMI audio extractor or a new receiver.",
-        timestamp: new Date("2025-09-03T13:19:10Z"),
-      },
-    ],
-  },
-  {
-    id: 20,
-    title: "Musical instrument condition check",
-    timestamp: "1 month ago",
-    created_at: "2025-08-28T16:10:00Z",
-    messages: [
-      {
-        id: "20-1",
-        role: "user",
-        content: "What to check when buying a used guitar?",
-        timestamp: new Date("2025-08-28T16:08:00Z"),
-      },
-      {
-        id: "20-2",
-        role: "assistant",
-        content:
-          "Inspect the neck for straightness, frets for wear, tuners for stability, electronics for functionality, and the body for cracks or damage. Play it to check intonation and action.",
-        timestamp: new Date("2025-08-28T16:09:15Z"),
-      },
-    ],
-  },
-]; // /utils/mock-threads-faq-data.ts
+];
+
+// /utils/mock-threads-faq-data.ts
 import { Question } from "@/components/threads/product-faq/types";
 
 // Structure: { [listingId: string]: Question[] }
@@ -4602,6 +4208,7 @@ export const KANBAN_COLUMNS = [
 export const LISTINGS_TABS = [
   { label: "Sale Listings", value: "sale", iconName: "ShoppingCart" },
   { label: "Want Listings", value: "wanted", iconName: "Package" },
+  { label: "Matched Listings", value: "matched", iconName: "Handshake" },
 ];
 
 // Profile Page - Tab Configuration
@@ -4633,108 +4240,6 @@ export const SIDEBAR_CHAT_HISTORY = [
     title: "Verify Nintendo Switch seller",
     timestamp: "1 day ago",
     created_at: "2025-10-02T16:00:00Z",
-  },
-  {
-    id: 4,
-    title: "Gaming PC parts compatibility",
-    timestamp: "1 day ago",
-    created_at: "2025-10-02T13:30:00Z",
-  },
-  {
-    id: 5,
-    title: "Vintage watch authenticity verification",
-    timestamp: "2 days ago",
-    created_at: "2025-10-01T19:45:00Z",
-  },
-  {
-    id: 6,
-    title: "Camera lens condition assessment",
-    timestamp: "3 days ago",
-    created_at: "2025-09-30T10:30:00Z",
-  },
-  {
-    id: 7,
-    title: "Furniture quality vs price analysis",
-    timestamp: "4 days ago",
-    created_at: "2025-09-29T14:20:00Z",
-  },
-  {
-    id: 8,
-    title: "Electric bike safety standards",
-    timestamp: "5 days ago",
-    created_at: "2025-09-28T08:15:00Z",
-  },
-  {
-    id: 9,
-    title: "Designer handbag authentication tips",
-    timestamp: "1 week ago",
-    created_at: "2025-09-26T16:40:00Z",
-  },
-  {
-    id: 10,
-    title: "Motorcycle maintenance costs Honda",
-    timestamp: "1 week ago",
-    created_at: "2025-09-26T09:15:00Z",
-  },
-  {
-    id: 11,
-    title: "Smartphone trade-in value check",
-    timestamp: "1 week ago",
-    created_at: "2025-09-25T12:30:00Z",
-  },
-  {
-    id: 12,
-    title: "Laptop performance benchmarks",
-    timestamp: "1 week ago",
-    created_at: "2025-09-24T15:45:00Z",
-  },
-  {
-    id: 13,
-    title: "Art print value estimation",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-19T14:45:00Z",
-  },
-  {
-    id: 14,
-    title: "Kitchen appliance energy ratings",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-18T11:20:00Z",
-  },
-  {
-    id: 15,
-    title: "Exercise equipment durability test",
-    timestamp: "2 weeks ago",
-    created_at: "2025-09-17T18:30:00Z",
-  },
-  {
-    id: 16,
-    title: "Board game condition grading",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-12T15:30:00Z",
-  },
-  {
-    id: 17,
-    title: "Power tools safety inspection",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-11T08:45:00Z",
-  },
-  {
-    id: 18,
-    title: "Sneaker authenticity red flags",
-    timestamp: "3 weeks ago",
-    created_at: "2025-09-10T20:15:00Z",
-  },
-  {
-    id: 19,
-    title: "Home theater setup compatibility",
-    timestamp: "1 month ago",
-    created_at: "2025-09-03T13:20:00Z",
-  },
-  {
-    id: 20,
-    title: "Musical instrument condition check",
-    timestamp: "1 month ago",
-    created_at: "2025-08-28T16:10:00Z",
   },
 ];
 

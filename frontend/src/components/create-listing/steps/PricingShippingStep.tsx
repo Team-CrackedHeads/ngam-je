@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShippingPreferences } from '@/components/create-listing/shipping-options';
 import { HistoricalPriceTrend } from '@/components/create-listing/price-chart';
-import { MOCK_PRICE_HISTORY } from '@/utils/mock-all-data-used';
 import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
 import dynamic from 'next/dynamic';
 
@@ -26,6 +25,11 @@ interface PricingShippingStepProps {
   formData: PartialFormData;
   setFormData: React.Dispatch<React.SetStateAction<PartialFormData>>;
   recommendedPriceRange: { min: number; max: number; average: number };
+  priceHistory?: Array<{ month: string; year: number; price: number }>;
+  isFetchingPrice?: boolean;
+  onRegeneratePrice?: () => void;
+  priceRegenerateCount?: number;
+  maxPriceRegenerations?: number;
   showLocationDropdown: boolean;
   setShowLocationDropdown: (show: boolean) => void;
   filteredLocations: string[];
@@ -45,6 +49,11 @@ function PricingShippingContent({
   formData,
   setFormData,
   recommendedPriceRange,
+  priceHistory,
+  isFetchingPrice = false,
+  onRegeneratePrice,
+  priceRegenerateCount = 0,
+  maxPriceRegenerations = 3,
   showLocationDropdown,
   setShowLocationDropdown,
   filteredLocations: _filteredLocations,
@@ -183,12 +192,52 @@ function PricingShippingContent({
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
-        <HistoricalPriceTrend
-          priceHistory={MOCK_PRICE_HISTORY}
-          recommendedRange={recommendedPriceRange}
-          currency={formData.currency || 'MYR'}
-          onQuickSelect={handleRecommendedClick}
-        />
+        {isFetchingPrice ? (
+          <div className="flex items-center justify-center py-12 bg-[var(--color-primary-50)] rounded-lg border-2 border-[var(--color-primary-200)]">
+            <div className="text-center space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin text-[var(--color-secondary-500)] mx-auto" />
+              <p className="text-[var(--color-primary-700)] font-medium">
+                Analyzing market prices...
+              </p>
+              <p className="text-sm text-[var(--color-primary-600)]">
+                Searching similar products to get you the best price estimate
+              </p>
+            </div>
+          </div>
+        ) : priceHistory && priceHistory.length > 0 ? (
+          <HistoricalPriceTrend
+            priceHistory={priceHistory}
+            recommendedRange={recommendedPriceRange}
+            currency={formData.currency || 'MYR'}
+            onQuickSelect={handleRecommendedClick}
+            onRegenerate={priceRegenerateCount < maxPriceRegenerations ? onRegeneratePrice : undefined}
+            isRegenerating={isFetchingPrice}
+          />
+        ) : (
+          <div className="flex items-center justify-center py-12 bg-amber-50 rounded-lg border-2 border-amber-200">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center">
+                <DollarSign className="w-8 h-8 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-amber-900 font-semibold text-lg">
+                  No Market Price Found
+                </p>
+                <p className="text-sm text-amber-700 mt-2 max-w-md mx-auto">
+                  We couldn&apos;t find similar products to estimate pricing. Please set your price range manually below.
+                </p>
+              </div>
+              {priceRegenerateCount < maxPriceRegenerations && onRegeneratePrice && (
+                <button
+                  onClick={onRegeneratePrice}
+                  className="mt-4 px-4 py-2 text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
+                >
+                  Try Again
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Separator */}
         <div className="border-t border-[var(--color-primary-200)]"></div>

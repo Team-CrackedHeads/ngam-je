@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from '@clerk/nextjs/server';
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-09-30.clover",
-});
-
 export async function POST(request: NextRequest) {
+  // Lazy initialize Stripe at runtime to avoid build-time errors
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-10-29.clover",
+  });
+
+  // Get authenticated user ID from Clerk
+  // Middleware already blocks unauthenticated users, but we get userId here for the session
+  const { userId } = await auth();
+
+  // Extra safety check (redundant with middleware but good practice)
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
     const { amount, title, description, metadata } = await request.json();
 
@@ -39,7 +53,12 @@ export async function POST(request: NextRequest) {
       ],
       mode: "payment",
       return_url: `${request.headers.get("origin")}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      metadata: metadata || {},
+      metadata: {
+        // Use VERIFIED userId from Clerk auth, not client-provided data
+        userId,
+        // Merge any additional metadata from the request
+        ...(metadata || {}),
+      },
     });
 
     return NextResponse.json({

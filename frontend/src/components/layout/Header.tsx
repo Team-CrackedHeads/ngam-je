@@ -4,13 +4,14 @@ import { usePathname } from "next/navigation";
 import { Puzzle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useAuth, useUser, SignInButton } from "@clerk/nextjs";
+import { useAuth, useUser, SignInButton, useClerk } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 
 const Header = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
+  const { signOut } = useClerk();
 
   return (
     <header className="w-full flex justify-between items-center px-4 sm:px-6 py-3 bg-primary-100 border-b-8 border-secondary-500">
@@ -47,7 +48,7 @@ const Header = () => {
                 avatarBox: "h-10 w-10",
               },
             }}
-            afterSignOutUrl={pathname}
+            afterSignOutUrl="/threads"
           />
         ) : (
           <SignInButton mode="modal" forceRedirectUrl={pathname}>

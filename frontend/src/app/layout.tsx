@@ -6,6 +6,8 @@ import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/Sidebar";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Suspense } from "react";
+import { BillingModalHandler } from "@/components/auth/BillingModalHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +36,9 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col overflow-y-auto`}
           style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
         >
+          <Suspense fallback={null}>
+            <BillingModalHandler />
+          </Suspense>
           <SidebarProvider className="flex-col">
             <Header />
             <div className="flex-1 flex min-h-0 w-full">

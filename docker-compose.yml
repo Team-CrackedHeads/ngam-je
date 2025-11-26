@@ -39,6 +39,23 @@ services:
     networks:
       - ngam-je-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: ngam-je-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - ngam-je-network
+
   # Uncomment when ready to run backend in Docker
   # backend:
   #   build:
@@ -63,6 +80,8 @@ volumes:
   postgres_data:
     driver: local
   pgadmin_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

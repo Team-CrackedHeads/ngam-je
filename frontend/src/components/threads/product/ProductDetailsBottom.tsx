@@ -13,16 +13,22 @@ interface SellerData {
 // Define the props for the ProductDetailsBottom component
 interface ProductDetailsBottomProps {
   seller: SellerData;
-  onChat: () => void;
   onFAQ: () => void;
   onBuyNow: () => void;
+  isOwnListing?: boolean;
+  listingType?: "sale" | "wanted";
+  listingId?: number | string;
+  recommendationCount?: number;
 }
 
 const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
   seller,
-  onChat,
   onFAQ,
   onBuyNow,
+  isOwnListing = false,
+  listingType = "sale",
+  listingId,
+  recommendationCount = 0,
 }) => {
   return (
     <>
@@ -70,9 +76,12 @@ const ProductDetailsBottom: React.FC<ProductDetailsBottomProps> = ({
 
       {/* Action Buttons */}
       <ActionButtons
-        onChat={onChat}
         onFAQ={onFAQ}
         onBuyNow={onBuyNow}
+        isOwnListing={isOwnListing}
+        listingType={listingType}
+        listingId={listingId}
+        recommendationCount={recommendationCount}
       />
     </>
   );

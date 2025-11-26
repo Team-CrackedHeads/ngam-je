@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Star, CheckCircle, Camera, Lock, Loader2 } from "lucide-react";
 import { MOCK_ACHIEVEMENTS, getAchievementStats, PROFILE_TABS } from "@/utils/mock-all-data-used";
 import axios, { AxiosError } from "axios";
@@ -29,39 +29,103 @@ interface UserProfile {
   updated_at: string;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [kycLoading, setKycLoading] = useState(false);
+  const [kycTimeRemaining, setKycTimeRemaining] = useState<number | null>(null);
+  const [showKycSuccess, setShowKycSuccess] = useState(false);
 
+  // Extract fetchProfile so it can be reused (initial load + timer expiry)
+  const fetchProfile = async () => {
+    try {
+      const token = await getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setProfile(response.data);
+    } catch (err) {
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage = error.response?.data?.detail || error.message || "An error occurred";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch profile on mount
   useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const token = await getToken();
+    fetchProfile();
+  }, []);
 
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+  // Check for KYC completion redirect
+  useEffect(() => {
+    if (searchParams.get('kyc_completed') === 'true') {
+      setShowKycSuccess(true);
+      // Auto-hide after 5 seconds
+      setTimeout(() => setShowKycSuccess(false), 5000);
+      // Refresh profile to show updated KYC status
+      fetchProfile();
+    }
+  }, [searchParams]);
 
-        setProfile(response.data);
-      } catch (err) {
-        const error = err as AxiosError<{ detail?: string }>;
-        const errorMessage = error.response?.data?.detail || error.message || "An error occurred";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+  // KYC Countdown Timer
+  useEffect(() => {
+    // Only run timer if KYC is in progress and we have a start time
+    if (profile?.kyc_status !== "in_progress" || !profile?.kyc_initiated_at) {
+      setKycTimeRemaining(null);
+      return;
     }
 
-    fetchProfile();
-  }, [getToken]);
+    const calculateTimeRemaining = () => {
+      const initiatedAt = new Date(profile.kyc_initiated_at!).getTime();
+      const now = Date.now();
+      const elapsed = (now - initiatedAt) / 1000; // seconds
+      const remaining = Math.max(0, 900 - elapsed); // 15 minutes = 900 seconds
+
+      if (remaining === 0) {
+        // Timer expired - fetch updated profile from backend
+        // Backend will auto-reset status to "pending"
+        setKycTimeRemaining(null);
+        fetchProfile();
+        return 0;
+      }
+
+      return remaining;
+    };
+
+    // Initial calculation
+    setKycTimeRemaining(calculateTimeRemaining());
+
+    // Update every second
+    const interval = setInterval(() => {
+      const remaining = calculateTimeRemaining();
+      setKycTimeRemaining(remaining);
+
+      if (remaining === 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [profile?.kyc_status, profile?.kyc_initiated_at]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const initiateKYC = async () => {
     setKycLoading(true);
@@ -90,6 +154,7 @@ export default function ProfilePage() {
           ...profile,
           kyc_status: "in_progress",
           kyc_session_id: data.session_id,
+          kyc_initiated_at: new Date().toISOString(), // Start the timer immediately
         });
       }
     } catch (err) {
@@ -132,6 +197,22 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 bg-primary-100 text-accent-500 overflow-auto">
       <div className="max-w-4xl mx-auto">
+        {/* KYC Success Alert */}
+        {showKycSuccess && (
+          <div className="mb-4 p-4 rounded-lg bg-success-50 border border-success-200 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-success-900">KYC Verification Complete!</p>
+              <p className="text-sm text-success-700">Your identity has been verified successfully.</p>
+            </div>
+            <button
+              onClick={() => setShowKycSuccess(false)}
+              className="text-success-600 hover:text-success-800 text-xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+        )}
         {/* Header */}
         {/* <div className="flex justify-center mb-4">
           <h1 className="text-xl font-bold">Profile</h1>
@@ -186,8 +267,11 @@ export default function ProfilePage() {
                     KYC Verified
                   </span>
                 ) : profile?.kyc_status === "in_progress" ? (
-                  <span className="px-2 py-0.5 text-xs rounded-full bg-warning-50 text-warning-900 font-medium">
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-warning-50 text-warning-900 font-medium flex items-center gap-1">
                     KYC In Progress
+                    {kycTimeRemaining !== null && (
+                      <span className="ml-1 font-mono">({formatTime(kycTimeRemaining)})</span>
+                    )}
                   </span>
                 ) : (
                   <button
@@ -310,5 +394,17 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-primary-100">
+        <Loader2 className="w-8 h-8 animate-spin text-accent-700" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }

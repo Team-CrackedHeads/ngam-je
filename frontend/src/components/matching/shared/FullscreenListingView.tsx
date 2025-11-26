@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -200,7 +200,7 @@ export function FullscreenListingView({
                         cardSelected ? "ring-4 ring-secondary-500" : ""
                       }`}
                     >
-                      <Image
+                      <SafeImage
                         src={currentListing.images[0]}
                         alt={currentListing.title}
                         width={600}

@@ -6,6 +6,9 @@ export interface Answer {
   likes?: number;
   dislikes?: number;
   replies?: Answer[];
+  createdAt?: string;
+  userAvatar?: string;
+  userRole?: "seller" | "buyer" | "helper" | null;
 }
 
 export interface Question {
@@ -14,6 +17,11 @@ export interface Question {
   description: string;
   answers: Answer[];
   isAnsweredByPoster: boolean;
+  createdAt?: string;
+  askedBy?: string;
+  askedByAvatar?: string;
+  lastActivity?: string;
+  viewCount?: number;
 }
 
 export type VoteType = "like" | "dislike" | null;

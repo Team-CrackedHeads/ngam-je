@@ -484,7 +484,7 @@ export default function MakeOfferSell({
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between items-center mt-8 pt-6 border-t">
+            <div className="flex justify-between items-center mt-8">
               <Button
                 variant="outline"
                 onClick={handleBack}

@@ -4,29 +4,153 @@ import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Package, Handshake, X, MapPin, Clock, Eye, Heart, Tag, BadgeCheck, TrendingUp, User } from "lucide-react";
-import { type Listing } from "@/utils/mock-all-data-used";
+import { type Listing as MockListing } from "@/utils/mock-all-data-used";
+import { type Listing as ApiListing } from "@/types/listing";
 import { MatchedListing } from "@/components/matching/types";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckoutModal, DealDetails } from "@/components/checkout/CheckoutModal";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
+import { confirmCheckout } from "@/lib/api/listings";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface ListingDetailsModalProps {
-  listing: Listing | MatchedListing;
+  listing: MockListing | MatchedListing | ApiListing;
   type: "sale" | "wanted" | "matched";
   onClose: () => void;
 }
 
 export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsModalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
+  const getApiClient = useClerkApiClient();
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+  const router = useRouter();
+
+  // Helper function to check if listing is from API (has snake_case properties)
+  const isApiListing = (l: typeof listing): l is ApiListing => {
+    return 'creator_location' in l || 'created_at' in l;
+  };
+
+  // Helper to get location regardless of format
+  const getLocation = () => {
+    if (isApiListing(listing)) {
+      return listing.creator_location || "Location not specified";
+    }
+    return 'location' in listing ? listing.location : "Location not specified";
+  };
+
+  // Helper to get timestamp/time ago
+  const getTimePosted = () => {
+    if (isApiListing(listing)) {
+      return new Date(listing.created_at).toLocaleDateString();
+    }
+    if ('timestamp' in listing) return listing.timestamp;
+    if ('timeAgo' in listing) return listing.timeAgo;
+    return "N/A";
+  };
+
+  // Helper to get price (handle budget for wanted listings)
+  const getPrice = () => {
+    if (type === "sale") {
+      return `${listing.currency || 'MYR'} ${listing.price}`;
+    }
+    if ('budget' in listing) {
+      return listing.budget;
+    }
+    if (isApiListing(listing) && listing.max_price) {
+      return `${listing.currency} ${listing.max_price}`;
+    }
+    return `${listing.currency || 'MYR'} ${listing.price}`;
+  };
+
+  // Helper to get image URL
+  const getImageUrl = () => {
+    if (isApiListing(listing)) {
+      return listing.image_url;
+    }
+    // Handle MatchedListing with images array
+    if ('images' in listing && listing.images && listing.images.length > 0) {
+      return listing.images[0];
+    }
+    return 'imageUrl' in listing ? listing.imageUrl : null;
+  };
 
   const handleCheckout = () => {
     setShowCheckout(true);
   };
 
-  const handleCheckoutConfirm = (dealDetails: DealDetails) => {
-    console.log("Deal confirmed:", dealDetails);
-    // TODO: Handle the deal confirmation (API call, navigation, etc.)
-    onClose();
+  const handleContact = () => {
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
+
+    // Check if this listing has a recommendation ID (from matched listings)
+    const extendedListing = listing as ApiListing & { recommendationId?: number };
+
+    if (extendedListing.recommendationId) {
+      // Navigate to messages page - it will show conversations, and user can select the one for this listing
+      console.log('📧 Opening messages for recommendation:', extendedListing.recommendationId);
+      router.push(`/messages?recommendation=${extendedListing.recommendationId}`);
+      onClose(); // Close the modal
+    } else {
+      // For listings without recommendations, navigate to messages anyway
+      console.log('📧 Opening messages page');
+      router.push('/messages');
+      onClose();
+    }
+  };
+
+  const handleCheckoutConfirm = async (dealDetails: DealDetails) => {
+    console.log("=== CHECKOUT CONFIRM TRIGGERED ===");
+    console.log("Deal details:", dealDetails);
+    console.log("Listing type:", type);
+    console.log("Is API listing:", isApiListing(listing));
+    console.log("Listing data:", listing);
+    const extendedListing = listing as ApiListing & { recommendationId?: number };
+    console.log("Recommendation ID:", extendedListing.recommendationId);
+
+    // For demo: Call API for any API listing (not just matched)
+    if (isApiListing(listing) && extendedListing.recommendationId) {
+      try {
+        console.log("Attempting to call checkout API...");
+        const apiClient = await getApiClient();
+
+        // Map deal type to transaction method
+        const transactionMethodMap: Record<string, string> = {
+          "in-person": "in-person",
+          "platform-logistics": "platform-logistics",
+          "platform-inspection": "platform-inspection",
+          "direct-shipping": "direct-shipping"
+        };
+
+        const checkoutData = {
+          recommendation_id: extendedListing.recommendationId,
+          transaction_method: transactionMethodMap[dealDetails.dealType] || dealDetails.dealType,
+          delivery_address: dealDetails.deliveryAddress,
+          payment_method: dealDetails.useEscrow ? "escrow" : "direct"
+        };
+
+        console.log("Checkout data to send:", checkoutData);
+
+        await confirmCheckout(apiClient.instance, listing.id, checkoutData);
+
+        console.log("✅ Checkout confirmed successfully!");
+        // TODO: Show success message, refresh listing data, or navigate
+      } catch (error) {
+        console.error("❌ Failed to confirm checkout:", error);
+        // TODO: Show error message to user
+      }
+    } else {
+      console.log("⚠️ Skipping checkout API call - missing requirements");
+      console.log("- Is API listing:", isApiListing(listing));
+      console.log("- Has recommendation ID:", !!extendedListing.recommendationId);
+    }
+
+    // Don't close modal here - let CheckoutModal handle the flow
+    // The modal will stay open for Stripe payment
   };
 
   const handleCheckoutBack = () => {
@@ -84,16 +208,24 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="w-full h-48 bg-primary-100 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-accent-400 text-sm">Image</span>
-            </div>
+            {getImageUrl() ? (
+              <img
+                src={getImageUrl()!}
+                alt={listing.title}
+                className="w-full h-48 object-cover rounded-lg mb-3"
+              />
+            ) : (
+              <div className="w-full h-48 bg-primary-100 rounded-lg flex items-center justify-center mb-3">
+                <span className="text-accent-400 text-sm">No Image</span>
+              </div>
+            )}
 
             <div className="mb-3">
               <h1 className="text-xl font-bold text-accent-700 mb-1">
                 {listing.title}
               </h1>
               <span className="text-2xl font-bold text-secondary-600">
-                {type === "sale" ? listing.price : "budget" in listing ? listing.budget : listing.price}
+                {getPrice()}
               </span>
             </div>
 
@@ -113,12 +245,12 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 </span>
               )}
               {/* Verified Badge */}
-              {"seller" in listing && listing.seller && (
+              {(isApiListing(listing) && listing.creator_verified) || ("seller" in listing && listing.seller) ? (
                 <span className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full bg-success-500 text-white font-medium">
                   <BadgeCheck className="w-3.5 h-3.5" />
                   Verified
                 </span>
-              )}
+              ) : null}
             </div>
 
             {/* Tags Section */}
@@ -149,7 +281,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <MapPin className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-[10px] font-medium text-accent-500">Location</div>
-                  <div className="text-xs font-semibold text-accent-700">{listing.location}</div>
+                  <div className="text-xs font-semibold text-accent-700">{getLocation()}</div>
                 </div>
               </div>
 
@@ -158,11 +290,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <div>
                   <div className="text-[10px] font-medium text-accent-500">Posted</div>
                   <div className="text-xs font-semibold text-accent-700">
-                    {"timestamp" in listing
-                      ? listing.timestamp
-                      : "timeAgo" in listing
-                      ? listing.timeAgo
-                      : "N/A"}
+                    {getTimePosted()}
                   </div>
                 </div>
               </div>
@@ -191,18 +319,18 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 </div>
               )}
 
-              {/* Seller Info */}
-              {"seller" in listing && listing.seller && (
+              {/* Seller/Creator Info */}
+              {(isApiListing(listing) && listing.creator_name) || ("seller" in listing && listing.seller) ? (
                 <div className="flex items-start gap-2 p-2 bg-primary-50 rounded-lg">
                   <User className="w-4 h-4 text-secondary-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-[10px] font-medium text-accent-500">Seller</div>
+                    <div className="text-[10px] font-medium text-accent-500">{type === "sale" ? "Seller" : "Buyer"}</div>
                     <div className="text-xs font-semibold text-accent-700">
-                      {listing.seller}
+                      {isApiListing(listing) ? listing.creator_name : 'seller' in listing ? listing.seller : 'Unknown'}
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Match Reasons for Matched Listings */}
@@ -268,7 +396,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
           <div className="px-4 py-3 border-t border-neutral-200 bg-primary-50 shrink-0">
             {type !== "matched" ? (
               <div className="flex gap-3">
-                <Button className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
+                <Button onClick={handleContact} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Contact
                 </Button>
               </div>
@@ -277,7 +405,7 @@ export function ListingDetailsModal({ listing, type, onClose }: ListingDetailsMo
                 <Button onClick={handleCheckout} className="flex-1 bg-secondary-500 hover:bg-secondary-600 text-accent-700">
                   Checkout
                 </Button>
-                <Button className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
+                <Button onClick={handleContact} className="flex-1 bg-primary-200 hover:bg-primary-300 text-accent-700">
                   Contact
                 </Button>
                 <Button className="flex-1 bg-error-500 hover:bg-error-900 text-white">

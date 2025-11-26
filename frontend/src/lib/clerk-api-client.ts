@@ -3,9 +3,22 @@
  * Handles authenticated requests using Clerk JWT tokens
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError } from "axios";
+import { useAuth } from "@clerk/nextjs";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Get API base URL - prioritize env var, fallback to production URL on run.app, else localhost
+function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  if (typeof window !== "undefined" && window.location.hostname.includes("run.app")) {
+    return "https://ngamje-backend-645994298827.asia-southeast1.run.app";
+  }
+
+  // Development fallback - update this to your local backend URL
+  return "http://localhost:8000";
+}
 
 export interface ApiError {
   detail: string;
@@ -19,10 +32,10 @@ export interface ApiError {
 export function createClerkApiClient(token: string | null) {
   // Create Axios instance with base configuration
   const axiosInstance: AxiosInstance = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: getApiBaseUrl(),
     timeout: 30000, // 30 second timeout
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -45,21 +58,22 @@ export function createClerkApiClient(token: string | null) {
         // Server responded with error status
         const errorData = error.response.data;
         const apiError: ApiError = {
-          detail: errorData?.detail || errorData?.message || 'An error occurred',
+          detail:
+            errorData?.detail || errorData?.message || "An error occurred",
           status: error.response.status,
         };
         return Promise.reject(apiError);
       } else if (error.request) {
         // Request made but no response received
         const apiError: ApiError = {
-          detail: 'Network error. Please check your connection.',
+          detail: "Network error. Please check your connection.",
           status: 0,
         };
         return Promise.reject(apiError);
       } else {
         // Something else happened
         const apiError: ApiError = {
-          detail: error.message || 'An error occurred',
+          detail: error.message || "An error occurred",
           status: 0,
         };
         return Promise.reject(apiError);
@@ -133,9 +147,6 @@ export function createClerkApiClient(token: string | null) {
  * ```
  */
 export function useClerkApiClient() {
-  // Dynamic import to avoid issues with SSR
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useAuth } = require('@clerk/nextjs');
   const { getToken } = useAuth();
 
   return async () => {

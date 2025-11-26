@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { MoreVertical, Bell, UserPlus, Circle, User } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,49 +10,36 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { ThreadData } from "@/utils/mock-all-data-used";
+import { ThreadDisplay } from "@/types/thread";
 // import { motion } from "framer-motion";
 import TierBadge from "@/components/threads/TierBadge";
 
-/* ---------------- Helper Functions ---------------- */
-function getTierLevel(current: number, goal: number): number {
-  if (goal <= 0) return 0;
-  const progress = (current / goal) * 100;
-  if (progress >= 75) return 3;
-  if (progress >= 50) return 2;
-  if (progress >= 25) return 1;
-  return 0;
-}
-
 /* ---------------- Props ---------------- */
 type ThreadCardProps = {
-  thread: ThreadData;
+  thread: ThreadDisplay;
 };
 
 /* ---------------- Component ---------------- */
 export default function ThreadCard({ thread }: ThreadCardProps) {
   const router = useRouter();
-  const tierLevel = getTierLevel(thread.currentTokens, thread.goalTokens);
+  // Use tier directly from the API/database, default to 0 if not set
+  const tierLevel: number = thread.tier ?? 0;
 
   return (
     <Card
       className="flex flex-col h-full border border-gray-100 overflow-hidden transition-shadow hover:shadow-lg cursor-pointer p-0"
-      onClick={() => router.push(`/threads/${thread.category}`)}
+      onClick={() => router.push(`/threads/${thread.id}`)}
     >
       {/* Header Section */}
       <CardHeader className="p-0 m-0 relative flex-shrink-0">
         <div className="relative w-full h-40 sm:h-44 md:h-48 lg:h-52">
-          <Image
+          <SafeImage
             src={thread.imageUrl}
             alt={thread.title}
             width={800}
             height={400}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src =
-                "https://placehold.co/800x400/cccccc/333333?text=No+Image";
-            }}
+            maxRetries={3}
           />
 
           {/* Menu for options */}

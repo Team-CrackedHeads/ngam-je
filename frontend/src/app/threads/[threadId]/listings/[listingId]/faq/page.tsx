@@ -1,0 +1,883 @@
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { ChevronLeft, Search } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import SafeImage from "@/components/ui/SafeImage";
+import { useAuth } from "@clerk/nextjs";
+import AISummary from "@/components/threads/product-faq/AISummary";
+import Question from "@/components/threads/product-faq/Question";
+import {Question as QuestionType,Answer,VoteType} from "@/components/threads/product-faq/types";
+import { createClerkApiClient } from "@/lib/clerk-api-client";
+import { fetchListingById } from "@/lib/api/listings";
+import {
+  fetchFAQsByListingId,
+  createQuestion,
+  answerQuestion,
+  voteFAQ,
+  FAQ,
+  getAISummary,  // AI INTEGRATION
+  askAIQuestion // AI INTEGRATION
+} from "@/lib/api/faqs";
+import {
+  fetchRepliesByFAQId,
+  createReply,
+  voteReply,
+  FAQReply,
+} from "@/lib/api/faq-replies";
+import type { Listing } from "@/types/listing";
+import axios from "axios";
+
+const FAQPage: React.FC = () => {
+  // Get params from URL
+  const params = useParams();
+  const router = useRouter();
+  const { getToken } = useAuth();
+  const listingId = parseInt(params.listingId as string);
+  const threadId = params.threadId as string;
+
+  // State for listing and FAQs
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [_faqs, setFaqs] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<QuestionType[]>([]);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+
+  // Convert backend FAQ replies to frontend Answer format (recursive)
+  const convertRepliesToAnswers = useCallback(
+    (replies: FAQReply[]): Answer[] => {
+      return replies.map((reply) => ({
+        id: `reply-${reply.id}`,
+        user: reply.username === currentUsername ? "You" : reply.username,
+        text: reply.text,
+        likes: reply.helpful_count,
+        dislikes: reply.not_helpful_count,
+        replies: reply.replies ? convertRepliesToAnswers(reply.replies) : [],
+      }));
+    },
+    [currentUsername]
+  );
+
+  // Convert backend FAQ format to frontend Question format
+  const convertFAQsToQuestions = useCallback(
+    (faqList: FAQ[], repliesMap: Map<number, FAQReply[]>): QuestionType[] => {
+      return faqList.map((faq) => {
+        const answers: Answer[] = [];
+
+        // If the FAQ has an answer, add it
+        if (faq.answer && faq.answer_username) {
+          // Get replies for this FAQ from the map
+          const faqReplies = repliesMap.get(faq.id) || [];
+
+          answers.push({
+            id: `answer-${faq.id}`,
+            user: faq.answer_username === currentUsername ? "You" : faq.answer_username,
+            text: faq.answer,
+            isAccepted: faq.is_accepted,
+            likes: faq.helpful_count,
+            dislikes: faq.not_helpful_count,
+            replies: convertRepliesToAnswers(faqReplies),
+          });
+        }
+
+        return {
+          id: faq.id.toString(),
+          question: faq.question,
+          description: "", // Backend doesn't have separate description
+          answers,
+          isAnsweredByPoster:
+            faq.answer_user_id?.toString() === listing?.user_id?.toString(),
+        };
+      });
+    },
+    [listing?.user_id, convertRepliesToAnswers, currentUsername]
+  );
+
+  // Fetch current user's username
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = await getToken();
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setCurrentUsername(response.data.username);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, [getToken]);
+
+  // Fetch listing and FAQs
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = await getToken();
+        const apiClient = createClerkApiClient(token);
+
+        // Fetch listing and FAQs in parallel
+        const [listingData, faqData] = await Promise.all([
+          fetchListingById(apiClient.instance, listingId),
+          fetchFAQsByListingId(apiClient.instance, listingId),
+        ]);
+
+        // Fetch replies for each FAQ
+        const repliesMap = new Map<number, FAQReply[]>();
+        await Promise.all(
+          faqData.map(async (faq) => {
+            try {
+              const replies = await fetchRepliesByFAQId(
+                apiClient.instance,
+                faq.id
+              );
+              repliesMap.set(faq.id, replies);
+            } catch (error) {
+              console.error(
+                `Failed to fetch replies for FAQ ${faq.id}:`,
+                error
+              );
+              repliesMap.set(faq.id, []);
+            }
+          })
+        );
+
+        setListing(listingData);
+        setFaqs(faqData);
+        setQuestions(convertFAQsToQuestions(faqData, repliesMap));
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [getToken, listingId, convertFAQsToQuestions]);
+
+  const handleBackClick = () => {
+    // Go back to the listing page
+    router.push(`/threads/${threadId}/listings/${listingId}`);
+  };
+
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(
+    null
+  );
+  const [newAnswerInputs, setNewAnswerInputs] = useState<{
+    [key: string]: string;
+  }>({});
+  const [replyInputs, setReplyInputs] = useState<{ [key: string]: string }>({});
+  const [replyVisible, setReplyVisible] = useState<Set<string>>(new Set());
+  const [collapsedAnswers, setCollapsedAnswers] = useState<Set<string>>(
+    new Set()
+  );
+  const [activeTab, setActiveTab] = useState<"unanswered" | "answered">(
+    "answered"
+  );
+  const [userVotes, setUserVotes] = useState<{ [answerId: string]: VoteType }>(
+    {}
+  );
+  const [showAskQuestion, setShowAskQuestion] = useState(false);
+  const [newQuestionText, setNewQuestionText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
+
+  // AI FAQ INTEGRATION: State for AI Summary
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiQuestionLoading, setAiQuestionLoading] = useState(false);
+  const [aiProgressMessage, setAiProgressMessage] = useState<string>("");
+  
+
+  const toggleQuestion = (questionId: string) => {
+    setExpandedQuestionId((prev) => (prev === questionId ? null : questionId));
+  };
+
+  const handleNewAnswerChange = (questionId: string, value: string) => {
+    setNewAnswerInputs((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const submitNewAnswer = async (questionId: string) => {
+    const newAnswerText = newAnswerInputs[questionId]?.trim();
+    if (!newAnswerText) return;
+
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Call API to submit answer
+      const updatedFAQ = await answerQuestion(
+        apiClient.instance,
+        parseInt(questionId),
+        {
+          answer: newAnswerText,
+        }
+      );
+
+      // Update local state with the new answer
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId
+            ? {
+                ...q,
+                answers: [
+                  {
+                    id: `answer-${updatedFAQ.id}`,
+                    user: updatedFAQ.answer_username || "You",
+                    text: updatedFAQ.answer || newAnswerText,
+                    isAccepted: updatedFAQ.is_accepted,
+                    likes: updatedFAQ.helpful_count,
+                    dislikes: updatedFAQ.not_helpful_count,
+                    replies: [],
+                  },
+                ],
+              }
+            : q
+        )
+      );
+      setNewAnswerInputs((prev) => ({ ...prev, [questionId]: "" }));
+    } catch (error) {
+      console.error("Failed to submit answer:", error);
+      alert("Failed to submit answer. Please try again.");
+    }
+  };
+
+  const handleLikeDislike = async (
+    questionId: string,
+    answerId: string,
+    type: "like" | "dislike"
+  ) => {
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+      const currentVote = userVotes[answerId] || null;
+
+      // Only call API if this is a new vote or changing vote
+      if (currentVote !== type) {
+        // Determine if voting on main answer or nested reply
+        if (answerId.startsWith("reply-")) {
+          // Vote on a reply
+          const replyId = parseInt(answerId.replace("reply-", ""));
+          await voteReply(apiClient.instance, replyId, type === "like");
+        } else {
+          // Vote on main FAQ answer
+          await voteFAQ(
+            apiClient.instance,
+            parseInt(questionId),
+            type === "like"
+          );
+        }
+
+        // Helper function to update votes in nested structure
+        const updateVotes = (answers: Answer[]): Answer[] =>
+          answers.map((a) => {
+            if (a.id === answerId) {
+              let likes = a.likes || 0;
+              let dislikes = a.dislikes || 0;
+
+              // Remove previous vote
+              if (currentVote === "like") likes--;
+              if (currentVote === "dislike") dislikes--;
+
+              // Add new vote
+              if (type === "like") likes++;
+              else dislikes++;
+
+              return { ...a, likes, dislikes };
+            }
+            // Recursively update nested replies
+            if (a.replies && a.replies.length > 0) {
+              return { ...a, replies: updateVotes(a.replies) };
+            }
+            return a;
+          });
+
+        // Update local state
+        setQuestions((prev) =>
+          prev.map((q) => {
+            if (q.id !== questionId) return q;
+            return {
+              ...q,
+              answers: updateVotes(q.answers),
+            };
+          })
+        );
+
+        setUserVotes((prevVotes) => ({
+          ...prevVotes,
+          [answerId]: type,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to vote:", error);
+      alert("Failed to vote. Please try again.");
+    }
+  };
+
+  const toggleCollapseAnswer = (answerId: string) => {
+    setCollapsedAnswers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(answerId)) newSet.delete(answerId);
+      else newSet.add(answerId);
+      return newSet;
+    });
+  };
+
+  const toggleReplyField = (answerId: string) => {
+    setReplyVisible((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(answerId)) newSet.delete(answerId);
+      else newSet.add(answerId);
+      return newSet;
+    });
+  };
+
+  const handleReplyChange = (answerId: string, value: string) => {
+    setReplyInputs((prev) => ({ ...prev, [answerId]: value }));
+  };
+
+  const handleAskQuestion = async () => {
+    const questionText = newQuestionText.trim();
+    if (!questionText || questionText.length < 5) {
+      alert("Question must be at least 5 characters long.");
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Create new question via API
+      const newFAQ = await createQuestion(apiClient.instance, {
+        listing_id: listingId,
+        question: questionText,
+      });
+
+      // Add to local state
+      const newQuestion: QuestionType = {
+        id: newFAQ.id.toString(),
+        question: newFAQ.question,
+        description: "",
+        answers: [],
+        isAnsweredByPoster: false,
+      };
+
+      setQuestions((prev) => [newQuestion, ...prev]);
+      setNewQuestionText("");
+      setShowAskQuestion(false);
+
+      // Switch to unanswered tab to see the new question
+      setActiveTab("unanswered");
+    } catch (error) {
+      console.error("Failed to ask question:", error);
+      let errorMessage = "Failed to ask question. Please try again.";
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { detail?: unknown } } };
+        const detail = err.response?.data?.detail;
+        if (Array.isArray(detail) && detail[0]?.msg) {
+          errorMessage = detail[0].msg;
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        }
+      }
+      alert(errorMessage);
+    }
+  };
+
+  const submitReply = async (questionId: string, parentAnswerId: string) => {
+    const replyText = replyInputs[parentAnswerId]?.trim();
+    if (!replyText) return;
+
+    try {
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Determine parent_reply_id (null if replying to main answer, otherwise extract ID from answerId)
+      let parentReplyId: number | null = null;
+      if (parentAnswerId.startsWith("reply-")) {
+        parentReplyId = parseInt(parentAnswerId.replace("reply-", ""));
+      }
+
+      // Create reply via API
+      const newReply = await createReply(apiClient.instance, {
+        faq_id: parseInt(questionId),
+        parent_reply_id: parentReplyId,
+        text: replyText,
+      });
+
+      // Helper function to add reply to nested structure
+      const addReply = (answers: Answer[]): Answer[] =>
+        answers.map((a) => {
+          if (a.id === parentAnswerId) {
+            return {
+              ...a,
+              replies: [
+                ...(a.replies || []),
+                {
+                  id: `reply-${newReply.id}`,
+                  user: newReply.username === currentUsername ? "You" : newReply.username,
+                  text: newReply.text,
+                  likes: newReply.helpful_count,
+                  dislikes: newReply.not_helpful_count,
+                  replies: [],
+                },
+              ],
+            };
+          }
+          if (a.replies && a.replies.length > 0) {
+            return { ...a, replies: addReply(a.replies) };
+          }
+          return a;
+        });
+
+      // Update local state
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId ? { ...q, answers: addReply(q.answers) } : q
+        )
+      );
+      setReplyInputs((prev) => ({ ...prev, [parentAnswerId]: "" }));
+      setReplyVisible((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(parentAnswerId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Failed to submit reply:", error);
+      alert("Failed to submit reply. Please try again.");
+    }
+  };
+
+  // AI FAQ INTEGRATION: Generate AI Summary Handler 
+  const handleGenerateAISummary = async () => {
+    try {
+      setAiSummaryLoading(true);
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      const summaryData = await getAISummary(apiClient.instance, listingId);
+
+      // Format the summary with key features and common questions
+      let formattedSummary = summaryData.summary;
+
+      if (summaryData.key_features && summaryData.key_features.length > 0) {
+        formattedSummary += "\n\n## Key Features\n";
+        summaryData.key_features.forEach(feature => {
+          formattedSummary += `- ${feature}\n`;
+        });
+      }
+
+      if (summaryData.common_questions && summaryData.common_questions.length > 0) {
+        formattedSummary += "\n\n## Common Questions\n";
+        summaryData.common_questions.forEach(q => {
+          formattedSummary += `- ${q}\n`;
+        });
+      }
+
+      setAiSummary(formattedSummary);
+    } catch (error) {
+      // Enhanced error logging to see the actual error details
+      console.error("Failed to generate AI summary:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error: error,
+        response: axios.isAxiosError(error) ? error.response?.data : undefined,
+        status: axios.isAxiosError(error) ? error.response?.status : undefined,
+      });
+
+      // Show more specific error message to user
+      let errorMessage = "Failed to generate summary. Please try again later.";
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          errorMessage = "Listing not found. Please refresh the page.";
+        } else if (error.response?.status === 500) {
+          errorMessage = "Server error. The AI service might be unavailable.";
+        } else if (error.response?.data?.detail) {
+          errorMessage = `Error: ${error.response.data.detail}`;
+        }
+      }
+      setAiSummary(errorMessage);
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  // AI INTEGRATION: Ask AI Question Handler
+  const handleAskAIQuestion = async (question: string) => {
+    try {
+      // Step 1: Start loading with progress messages
+      setAiQuestionLoading(true);
+      setAiProgressMessage("Understanding your question...");
+
+      // Small delay to show the first message
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 2: Authenticating
+      setAiProgressMessage("Authenticating your request...");
+      const token = await getToken();
+      const apiClient = createClerkApiClient(token);
+
+      // Step 3: Getting user info
+      setAiProgressMessage("Retrieving user information...");
+      const userResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Step 4: Analyzing product context
+      setAiProgressMessage("Analyzing product details...");
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Step 5: Searching database
+      setAiProgressMessage("Searching for similar questions...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 6: Generating AI response
+      setAiProgressMessage("Consulting AI knowledge base...");
+      const aiResponse = await askAIQuestion(apiClient.instance, {
+        listing_id: listingId,
+        question: question,
+        user_id: userResponse.data.id,
+      });
+
+      // Step 7: Processing and formatting
+      setAiProgressMessage("Formatting the answer...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 8: Finalizing
+      setAiProgressMessage("Almost done...");
+
+      // Add the AI-answered question to the questions list
+      const newQuestion: QuestionType = {
+        id: aiResponse.data.id.toString(),
+        question: aiResponse.data.question,
+        description: "",
+        answers: aiResponse.data.answer ? [{
+          id: `answer-${aiResponse.data.id}`,
+          user: aiResponse.data.answer_username || "AI Assistant",
+          text: aiResponse.data.answer,
+          isAccepted: aiResponse.data.is_accepted,
+          likes: aiResponse.data.helpful_count,
+          dislikes: aiResponse.data.not_helpful_count,
+          replies: [],
+        }] : [],
+        isAnsweredByPoster: false,
+      };
+
+      setQuestions((prev) => [newQuestion, ...prev]);
+
+      // Show a notification based on whether it was found or created
+      if (aiResponse.status === "found") {
+        alert("Similar question found! Showing existing answer.");
+      } else {
+        alert("AI has generated an answer for your question!");
+      }
+
+      // Switch to answered tab to see the result
+      setActiveTab("answered");
+    } catch (error) {
+      console.error("Failed to ask AI question:", error);
+      alert("Failed to get AI answer. Please try again.");
+    } finally {
+      // Clear loading state
+      setAiQuestionLoading(false);
+      setAiProgressMessage("");
+    }
+  };
+
+  // Predefined tags for filtering
+  const tags = [
+    { id: "all", label: "All" },
+    { id: "popular", label: "Popular" },
+    { id: "recent", label: "Recent" },
+    { id: "buyer", label: "Buyer" },
+    { id: "seller", label: "Seller" },
+  ];
+
+  // Filter questions based on tab, search, and tag
+  const filteredQuestions = questions.filter((q) => {
+    // Tab filter
+    const tabMatch = activeTab === "answered" ? q.answers.length > 0 : q.answers.length === 0;
+
+    // Search filter
+    const searchMatch = searchQuery.trim() === "" ||
+      q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.answers.some(a => a.text.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Tag filter
+    let tagMatch = true;
+    if (selectedTag === "all") {
+      tagMatch = true;
+    } else if (selectedTag === "popular") {
+      const totalLikes = q.answers.reduce((sum, a) => sum + (a.likes || 0), 0);
+      tagMatch = totalLikes >= 3;
+    } else if (selectedTag === "recent") {
+      const questionDate = new Date(q.createdAt || Date.now());
+      const daysSince = (Date.now() - questionDate.getTime()) / (1000 * 60 * 60 * 24);
+      tagMatch = daysSince <= 7;
+    } else if (selectedTag === "buyer") {
+      // Show questions asked by buyers (isAnsweredByPoster = false means buyer asked)
+      tagMatch = !q.isAnsweredByPoster;
+    } else if (selectedTag === "seller") {
+      // Show questions asked by sellers (isAnsweredByPoster = true means seller asked)
+      tagMatch = q.isAnsweredByPoster;
+    }
+
+    return tabMatch && searchMatch && tagMatch;
+  });
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700 mx-auto"></div>
+          <p className="mt-4 text-primary-600">Loading FAQs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error handling for missing listing
+  if (!listing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Listing Not Found</h1>
+          <button
+            onClick={() => router.push(`/threads/${threadId}`)}
+            className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg"
+          >
+            Back to Thread
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[color:var(--color-primary-100)] text-[color:var(--color-primary-900)] p-4 md:p-6 lg:p-8">
+      {/* Header - Card Style */}
+      <div className="flex items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-[color:var(--color-border)]">
+        <button
+          onClick={handleBackClick}
+          className="p-2.5 rounded-lg hover:bg-[color:var(--color-primary-100)] transition-all hover:shadow-sm"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6 text-[color:var(--color-primary-700)]" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-[color:var(--color-primary-800)]">
+            {listing.title}
+          </h1>
+          <p className="text-sm text-[color:var(--color-muted-foreground)] mt-1">
+            Community Q&A and Discussions
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Search Bar */}
+          <div className="bg-white rounded-xl shadow-sm border border-[color:var(--color-border)] p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[color:var(--color-muted-foreground)]" />
+              <input
+                type="text"
+                placeholder="Search questions and answers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-[color:var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Tags/Filters */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth [-webkit-overflow-scrolling:touch]">
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => setSelectedTag(tag.id)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all snap-start flex-shrink-0 ${
+                  selectedTag === tag.id
+                    ? "bg-[#f5cb5c] text-[#242423] shadow-md font-bold"
+                    : "bg-white text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-secondary-100)] border border-[color:var(--color-border)] font-medium"
+                }`}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex justify-center border-b border-[color:var(--color-border)] space-x-6">
+            <button
+              className={`px-6 py-3 text-base font-semibold ${
+                activeTab === "answered"
+                  ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
+                  : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
+              }`}
+              onClick={() => setActiveTab("answered")}
+            >
+              Answered
+            </button>
+            <button
+              className={`px-6 py-3 text-base font-semibold ${
+                activeTab === "unanswered"
+                  ? "border-b-2 border-[color:var(--color-primary-700)] text-[color:var(--color-primary-800)]"
+                  : "text-[color:var(--color-muted-foreground)] hover:text-[color:var(--color-primary-700)]"
+              }`}
+              onClick={() => setActiveTab("unanswered")}
+            >
+              Unanswered
+            </button>
+          </div>
+
+          {/* AI Summary - Mobile */}
+          <div className="lg:hidden mt-6">
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
+            />
+          </div>
+
+          <div className="space-y-4 mb-20 lg:mb-6">
+            {filteredQuestions.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 px-4">
+                <SafeImage
+                  src="/images/faq-placeholder.svg"
+                  alt="No FAQs found"
+                  width={250}
+                  height={250}
+                  className="mb-6"
+                />
+                <p className="text-lg font-medium text-[color:var(--color-primary-800)] mb-2">
+                  No {activeTab} questions yet
+                </p>
+                <p className="text-sm text-[color:var(--color-muted-foreground)] text-center max-w-md mb-4">
+                  {activeTab === "unanswered"
+                    ? "No unanswered questions yet. Be the first to ask!"
+                    : "No questions have been answered yet. Check back later!"}
+                </p>
+                {activeTab === "unanswered" && (
+                  <button
+                    onClick={() => setShowAskQuestion(!showAskQuestion)}
+                    className="px-6 py-3 text-sm font-medium bg-[#f5cb5c] text-[#242423] rounded-lg hover:bg-[#dda302] transition-colors shadow-sm"
+                  >
+                    Ask Question
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Ask Question Form - show above questions when form is open */}
+            {showAskQuestion && (
+              <div className="bg-[color:var(--color-card)] p-6 rounded-lg border border-[color:var(--color-border)] shadow-sm">
+                <h3 className="text-lg font-semibold text-[color:var(--color-primary-800)] mb-4">
+                  Ask a Question
+                </h3>
+                <textarea
+                  value={newQuestionText}
+                  onChange={(e) => setNewQuestionText(e.target.value)}
+                  placeholder="What would you like to know about this listing?"
+                  className="w-full p-3 border border-[color:var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-500)] min-h-[100px] resize-y"
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  {newQuestionText.trim().length < 5 ? (
+                    <span className="text-red-500">
+                      Minimum 5 characters required ({newQuestionText.trim().length}/5)
+                    </span>
+                  ) : (
+                    <span className="text-green-600">
+                      {newQuestionText.trim().length} characters
+                    </span>
+                  )}
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    onClick={() => {
+                      setShowAskQuestion(false);
+                      setNewQuestionText("");
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-[color:var(--color-primary-700)] hover:bg-[color:var(--color-primary-100)] rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAskQuestion}
+                    disabled={!newQuestionText.trim() || newQuestionText.trim().length < 5}
+                    className="px-4 py-2 text-sm font-medium bg-[#f5cb5c] text-[#242423] rounded-lg hover:bg-[#8a9256] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Submit Question
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {filteredQuestions.map((q) => (
+              <Question
+                key={q.id}
+                id={q.id}
+                question={q.question}
+                description={q.description}
+                answers={q.answers}
+                isExpanded={expandedQuestionId === q.id}
+                newAnswerInput={newAnswerInputs[q.id] || ""}
+                onToggle={() => toggleQuestion(q.id)}
+                onNewAnswerChange={(value) =>
+                  handleNewAnswerChange(q.id, value)
+                }
+                onSubmitAnswer={() => submitNewAnswer(q.id)}
+                onLikeDislike={(answerId, type) =>
+                  handleLikeDislike(q.id, answerId, type)
+                }
+                userVotes={userVotes}
+                collapsedAnswers={collapsedAnswers}
+                onToggleCollapse={toggleCollapseAnswer}
+                replyVisible={replyVisible}
+                onToggleReply={toggleReplyField}
+                replyInputs={replyInputs}
+                onReplyChange={handleReplyChange}
+                onSubmitReply={(parentAnswerId) =>
+                  submitReply(q.id, parentAnswerId)
+                }
+                initialVisibleAnswers={3}
+                initialVisibleReplies={3}
+                maxDepth={3}
+                createdAt={q.createdAt}
+                askedBy={q.askedBy}
+                userRole={q.isAnsweredByPoster ? "seller" : "buyer"}
+                lastActivity={q.lastActivity}
+                viewCount={q.viewCount}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden lg:block">
+          <div className="sticky top-6">
+            <AISummary
+              content={aiSummary}
+              isLoading={aiSummaryLoading}
+              onGenerateSummary={handleGenerateAISummary}
+              onAskQuestion={handleAskAIQuestion}
+              isQuestionLoading={aiQuestionLoading}
+              progressMessage={aiProgressMessage}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FAQPage;

@@ -4,28 +4,18 @@ KYC verification endpoints.
 Handles initiation of KYC verification, status checks, and Didit webhooks.
 """
 
-import hmac
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from src.app.api.deps import get_current_user, get_db
-# ============================================================================
-# TEMPORARY: KYC Bypass Mode for Development
-# TODO: Remove this import before production deployment
-# ============================================================================
+
 from src.app.core.config import get_settings
-# ============================================================================
-from src.app.services import didit_service
+from src.app.services.kyc import didit_service
 from src.models.user import User
 
 router = APIRouter()
-# ============================================================================
-# TEMPORARY: KYC Bypass Mode for Development
-# TODO: Remove this line before production deployment
-# ============================================================================
 settings = get_settings()
-# ============================================================================
 
 
 @router.post("/initiate")
@@ -48,19 +38,24 @@ async def initiate_kyc_verification(
     if current_user.kyc_status == "in_progress" and current_user.kyc_session_id:
         # Return existing session if still in progress
         try:
-            status_data = await didit_service.get_verification_status(
-                current_user.kyc_session_id
-            )
+            status_data = await didit_service.get_verification_status(current_user.kyc_session_id)
             # If session is still valid, return it
             if status_data.get("status") in ["pending", "in_progress"]:
+                # Use session_token to construct verification URL
+                verification_url = f"https://verify.didit.me/session/{current_user.kyc_session_token}"
                 return {
                     "message": "KYC verification already in progress",
-                    "verification_url": f"https://verify.didit.me/session/{current_user.kyc_session_id}",
+                    "verification_url": verification_url,
+                    "session_id": current_user.kyc_session_id,
                     "kyc_status": current_user.kyc_status,
                 }
         except Exception:
-            # Session might be expired or invalid, create a new one
-            pass
+            # Session might be expired or invalid, reset and create a new one
+            current_user.kyc_status = "pending"
+            current_user.kyc_session_id = None
+            current_user.kyc_session_token = None
+            current_user.kyc_initiated_at = None
+            db.commit()
 
     # Get webhook callback URL from settings
     callback_url = settings.DIDIT_CALLBACK_URL
@@ -82,9 +77,10 @@ async def initiate_kyc_verification(
             },
         )
 
-        # Update user's KYC status and session ID
+        # Update user's KYC status, session ID, and session token
         current_user.kyc_status = "in_progress"
         current_user.kyc_session_id = session_data["session_id"]
+        current_user.kyc_session_token = session_data["session_token"]
         current_user.kyc_initiated_at = datetime.now(timezone.utc)
         db.commit()
 
@@ -114,37 +110,6 @@ async def get_kyc_status(
     }
 
 
-# ============================================================================
-# TEMPORARY: KYC Bypass Mode for Development
-# TODO: Remove this entire endpoint before production deployment
-# ============================================================================
-@router.post("/dev/approve")
-async def dev_approve_kyc(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    DEV ONLY: Manually approve KYC for testing purposes.
-    Only works when KYC_SKIP_VERIFICATION is enabled.
-    """
-    if not settings.KYC_SKIP_VERIFICATION:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This endpoint is only available in bypass mode (KYC_SKIP_VERIFICATION=true)",
-        )
-
-    current_user.kyc_status = "verified"
-    current_user.kyc_verified_at = datetime.now(timezone.utc)
-    db.commit()
-
-    return {
-        "message": "KYC manually approved for development",
-        "kyc_status": "verified",
-        "kyc_verified_at": current_user.kyc_verified_at,
-    }
-# ============================================================================
-
-
 @router.get("/webhook")
 @router.post("/webhook")
 async def didit_webhook(
@@ -157,10 +122,14 @@ async def didit_webhook(
     """
     Receive webhook notifications from Didit when verification status changes.
 
+    This endpoint handles both:
+    1. Webhook notifications from Didit (server-to-server)
+    2. User redirects after completing verification (browser)
+
     This endpoint must be publicly accessible and configured in Didit dashboard.
     Didit sends webhooks as GET requests with query parameters.
     """
-    # Handle GET request (Didit sends status via query params)
+    # Handle GET request (Didit sends status via query params OR redirects user here)
     if request.method == "GET":
         # Didit sends it as 'status' but we capture it as 'verification_status'
         # Also check for 'status' param if sent that way
@@ -175,7 +144,9 @@ async def didit_webhook(
         data = {
             "session_id": verificationSessionId,
             "status": status_value.lower(),
-            "decision": {"status": "approved" if status_value.lower() == "approved" else "rejected"},
+            "decision": {
+                "status": "approved" if status_value.lower() == "approved" else "rejected"
+            },
         }
     else:
         # Handle POST request (for future compatibility)
@@ -184,7 +155,9 @@ async def didit_webhook(
         signature = request.headers.get("x-signature", "")
 
         # Verify webhook signature
-        if signature and not didit_service.verify_webhook_signature(body.decode("utf-8"), signature):
+        if signature and not didit_service.verify_webhook_signature(
+            body.decode("utf-8"), signature
+        ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid webhook signature",
@@ -234,4 +207,17 @@ async def didit_webhook(
 
     db.commit()
 
+    # Check if this is a browser redirect (user completing KYC) vs webhook
+    # Browser requests have Accept: text/html header
+    accept_header = request.headers.get("accept", "")
+    is_browser = "text/html" in accept_header
+
+    if is_browser:
+        # Redirect user back to frontend profile page with success message
+        from fastapi.responses import RedirectResponse
+        frontend_url = settings.cors_origins[0] if settings.cors_origins else "http://localhost:3000"
+        redirect_url = f"{frontend_url}/profile?kyc_completed=true"
+        return RedirectResponse(url=redirect_url, status_code=303)
+
+    # Return JSON for webhook
     return {"message": "Webhook processed successfully", "user_id": user.id}

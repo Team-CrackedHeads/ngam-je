@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { X, Upload, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import { useClerkApiClient } from "@/lib/clerk-api-client";
 /* TierBadge Component */
 function TierBadge({ tierLevel }: { tierLevel: number }) {
   const tierLabels = ["Tier 0", "Tier 1", "Tier 2", "Tier 3"];
@@ -31,17 +32,21 @@ function TierBadge({ tierLevel }: { tierLevel: number }) {
 type CreateThreadModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onThreadCreated?: () => void; // Callback to refresh threads
 };
 
-function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
+function CreateThreadsSection({ isOpen, onClose, onThreadCreated }: CreateThreadModalProps) {
   const router = useRouter();
+  const getApiClient = useClerkApiClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [tierLevel] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [_isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -78,17 +83,45 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
     }
   };
 
-  const handleSubmit = () => {
-    const threadData = { imagePreview, tierLevel, title, description, tags };
-    console.log("Thread Created:", threadData);
+  const handleSubmit = async () => {
+    if (!title || !description || !category) {
+      alert("Please fill in title, description, and category");
+      return;
+    }
 
-    setImagePreview(null);
-    setTitle("");
-    setDescription("");
-    setTags([]);
-    setTagInput("");
-    setIsPreviewMode(false);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      const apiClient = await getApiClient();
+
+      await apiClient.post("/api/v1/threads/", {
+        title,
+        description,
+        image_url: imagePreview,
+        category,
+        tags,
+      });
+
+      // Reset form
+      setImagePreview(null);
+      setTitle("");
+      setDescription("");
+      setCategory("");
+      setTags([]);
+      setTagInput("");
+      setIsPreviewMode(false);
+
+      // Refresh threads list
+      if (onThreadCreated) {
+        onThreadCreated();
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to create thread:", error);
+      alert("Failed to create thread. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /* --- Preview Mode before creating the thread --- */
@@ -109,7 +142,7 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
           <div className="p-6 space-y-4">
             {imagePreview && (
               <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                <Image
+                <SafeImage
                   src={imagePreview}
                   alt="Preview"
                   fill
@@ -206,7 +239,7 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
               </div>
             ) : (
               <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                <Image
+                <SafeImage
                   src={imagePreview}
                   alt="Preview"
                   fill
@@ -292,6 +325,27 @@ function CreateThreadsSection({ isOpen, onClose }: CreateThreadModalProps) {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">
               {description.length}/100 characters
+            </p>
+          </div>
+
+          {/* Category */}
+          <div className="mb-6">
+            <Label
+              htmlFor="category"
+              className="text-sm font-medium text-gray-700 mb-2 block"
+            >
+              Category
+            </Label>
+            <Input
+              id="category"
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g., gaming, fashion, books"
+              className="w-full text-base"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Choose a category that best describes your thread
             </p>
           </div>
 

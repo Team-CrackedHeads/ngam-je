@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/SafeImage";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,13 +162,13 @@ export function ListingComparisonModalMobile({
                         </td>
                         <td className="p-2">
                           <div className="relative aspect-square w-20 mx-auto rounded-lg overflow-hidden bg-primary-100">
-                            <Image src={userListing.images[0]} alt={userListing.title} fill className="object-cover" />
+                            <SafeImage src={userListing.images[0]} alt={userListing.title} fill className="object-cover" />
                           </div>
                         </td>
                         {listings.map(listing => (
                           <td key={listing.id} className="p-2">
                             <div className="relative aspect-square w-20 mx-auto rounded-lg overflow-hidden bg-primary-100">
-                              <Image src={listing.images[0]} alt={listing.title} fill className="object-cover" />
+                              <SafeImage src={listing.images[0]} alt={listing.title} fill className="object-cover" />
                             </div>
                           </td>
                         ))}
@@ -288,7 +288,7 @@ export function ListingComparisonModalMobile({
                 <div className="space-y-4">
                   {/* Image */}
                   <div className="aspect-[4/3] rounded-xl overflow-hidden relative bg-primary-100">
-                    <Image
+                    <SafeImage
                       src={userListing.images[0]}
                       alt={userListing.title}
                       fill
@@ -369,7 +369,7 @@ export function ListingComparisonModalMobile({
                   {/* Images Row */}
                   {listings.map((listing) => (
                     <div key={`img-${listing.id}`} className="aspect-[4/3] rounded-xl overflow-hidden relative bg-primary-100">
-                      <Image
+                      <SafeImage
                         src={listing.images[0]}
                         alt={listing.title}
                         fill

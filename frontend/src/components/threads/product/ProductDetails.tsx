@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { UnifiedListingData } from "@/utils/mock-all-data-used";
 import { ImageGalleryModal } from "./ImageGalleryModal";
 import ProductFAQSummary from "./ProductFAQSummary";
@@ -9,6 +10,8 @@ import ProductDetailsMiddle from "./ProductDetailsMiddle";
 import ProductDetailsBottom from "./ProductDetailsBottom";
 import MakeOfferBuy from "@/components/create-listing/MakeOfferBuy";
 import MakeOfferSell from "@/components/create-listing/MakeOfferSell";
+import { createClerkApiClient } from "@/lib/clerk-api-client";
+import { fetchListingRecommendations } from "@/lib/api/recommendations";
 
 // --- EXPORTED SHARED STYLES (NO SEPARATE FILE) ---
 export const buttonClasses = `
@@ -35,7 +38,51 @@ export const ProductDetails = ({
   // ADDED: Router and params for navigation
   const router = useRouter();
   const params = useParams();
-  const category = params.threadCategory as string;
+  const threadId = params.threadId ? parseInt(params.threadId as string) : undefined;
+  const { getToken, isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+
+  // Check if current user owns this listing (using database user ID)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const isOwnListing = currentUserId !== null && currentUserId.toString() === listing.userId;
+
+  // State for recommendation count
+  const [recommendationCount, setRecommendationCount] = useState<number>(0);
+
+  // Fetch current user's database ID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = await getToken();
+        const apiClient = createClerkApiClient(token);
+        const user = await apiClient.get<{ id: number }>("/api/v1/users/me");
+        setCurrentUserId(user.id);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      }
+    };
+    fetchCurrentUser();
+  }, [getToken]);
+
+  // Fetch recommendation count for own listings
+  useEffect(() => {
+    const fetchRecommendationCount = async () => {
+      if (!isOwnListing) return;
+
+      try {
+        const token = await getToken();
+        const apiClient = createClerkApiClient(token);
+        const response = await fetchListingRecommendations(
+          apiClient.instance,
+          typeof listing.id === 'string' ? parseInt(listing.id) : listing.id
+        );
+        setRecommendationCount(response.total);
+      } catch (error) {
+        console.error("Failed to fetch recommendation count:", error);
+      }
+    };
+    fetchRecommendationCount();
+  }, [isOwnListing, listing.id, getToken]);
 
   // State for gallery modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,21 +120,22 @@ export const ProductDetails = ({
   };
 
   // ADDED: Action button handlers
-  const handleChatClick = () => {
-    console.log("Chat clicked");
-    // TODO: Implement chat functionality
-  };
-
   const handleFAQClick = () => {
-    router.push(`/threads/${category}/${listing.id}/faq`);
+    if (threadId) {
+      router.push(`/threads/${threadId}/listings/${listing.id}/faq`);
+    }
   };
 
   const handleMakeOfferClick = () => {
-    setIsMakeOfferModalOpen(true);
+    if (isSignedIn) {
+      setIsMakeOfferModalOpen(true);
+    } else {
+      openSignIn();
+    }
   };
 
-  // Set main image source - use gallery first, then imageUrl fallback
-  const mainImageSrc = hasGalleryImages ? galleryImages[0] : listing.imageUrl;
+  // Set main image source - use imageUrl (first uploaded image), gallery contains remaining images
+  const mainImageSrc = listing.imageUrl;
 
   return (
     <>
@@ -111,9 +159,12 @@ export const ProductDetails = ({
       <div className="shadow-sm mt-4 md:mt-6 w-full sm:rounded-lg sm:max-w-4xl sm:mx-auto bg-white p-6">
         <ProductDetailsBottom
           seller={listing.seller}
-          onChat={handleChatClick}
           onFAQ={handleFAQClick}
           onBuyNow={handleMakeOfferClick}
+          isOwnListing={isOwnListing}
+          listingType={listing.listingType}
+          listingId={listing.id}
+          recommendationCount={recommendationCount}
         />
       </div>
 
@@ -133,29 +184,31 @@ export const ProductDetails = ({
         <MakeOfferBuy
           isOpen={isMakeOfferModalOpen}
           onClose={() => setIsMakeOfferModalOpen(false)}
-          sourceListingId={listing.id}
+          sourceListingId={String(listing.id)}
           sourceTitle={listing.title}
           sourceDescription={listing.description}
           sourceImages={listing.gallery || [listing.imageUrl]}
           sourceOwnershipProof={null}
           sourceTags={listing.tags}
           sourcePrice={listing.price}
-          category={category}
+          category={listing.category}
           sourceFAQs={listing.faqs || []}
         />
       ) : (
         <MakeOfferSell
           isOpen={isMakeOfferModalOpen}
           onClose={() => setIsMakeOfferModalOpen(false)}
-          sourceListingId={listing.id}
+          sourceListingId={String(listing.id)}
           sourceTitle={listing.title}
           sourcePrice={listing.price}
-          category={category}
+          category={listing.category}
           sourceFAQs={listing.faqs || []}
         />
       )}
 
-      <ProductFAQSummary listingId={listing.id} category={category} />
+      {threadId && (
+        <ProductFAQSummary listingId={listing.id} threadId={threadId} />
+      )}
     </>
   );
 };

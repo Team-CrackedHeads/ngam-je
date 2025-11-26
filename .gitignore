@@ -85,7 +85,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-uv.lock
 
 # dependencies
 **/node_modules
@@ -134,7 +133,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Bun
-bun.lockb
+# bun.lockb - Lockfile should be committed for reproducible builds
 
 # IDEs
 .vscode/
@@ -183,8 +182,9 @@ chroma/
 faiss/
 pinecone/
 
-# AI Models
-models/
+# AI Models (exclude backend source code models)
+/models/
+ai_models/
 *.pkl
 *.model
 
@@ -199,3 +199,10 @@ CLAUDE.md
 
 # Developer Scripts (Darren)
 git-prune-gone.sh
+
+# Cloud SQL
+cloud-sql-proxy
+cloud_sql_proxy
+test_cloud_sql_connection.py
+*.dump
+*.sql.backup
