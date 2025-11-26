@@ -1,233 +1,145 @@
-# Ngam-Je
+<p align="center">
+  <img src="public/ngamje-logo.png" alt="Ngam-je Logo" width="200" height="200"/>
+</p>
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/frontend-next.js%20%7C%20react-blue?style=for-the-badge" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/backend-fastapi%20%7C%20python-green?style=for-the-badge" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/storage-postgresql%20%7C%20redis-yellow?style=for-the-badge" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/infra-docker%20%7C%20gcp-lightgrey?style=for-the-badge" /></a>
+</p>
+<p align="center">
+  Powered by Google Gemini AI and Celery. Designed for intelligent marketplace matching, AI-driven negotiations, and seamless buyer-seller connections.
+</p>
 
-An AI-powered full-stack application built with modern technologies for agentic AI workflows.
+# 🏆 1st Runner Up - Gamuda AI Academy Cohort 4 🏆
 
-## Tech Stack
+**Ngam-je** is an AI-powered marketplace platform that revolutionizes how buyers and sellers connect. Using advanced AI matching algorithms, automated negotiations, and intelligent price analysis, Ngam-je creates a seamless trading experience where deals happen faster and fairer.
 
-### Frontend
+This project was developed as the capstone project for Gamuda AI Academy Cohort 4 and achieved **1st Runner Up** recognition.
 
-- **Next.js 15** with TypeScript
-- **React 19** for UI components
+---
+
+## ⚙️ Tech Stack Overview
+
+### Front-End
+- **Next.js 15** with App Router and TypeScript
+- **React 19** for modern UI components
 - **Tailwind CSS** for styling
+- **Shadcn/UI** component library
+- **Clerk** for authentication
+- **Stripe** for payment processing
+- **Google Maps API** for location services
 - **Bun** for package management
-- **ESLint** for code quality
 
-### Backend
-
-- **FastAPI** with Python 3.12
-- **uv** for dependency management
+### Back-End
+- **FastAPI** for high-performance API routing
+- **Python 3.12** with **uv** dependency management
+- **Google Gemini** for AI-powered features
+- **Celery** for background task processing
+- **SQLAlchemy 2.0** with Alembic migrations
+- **Redis** for caching and task queues
+- **Cloudinary** for image storage
+- **SerpAPI** for price intelligence
 - **Pydantic v2** for data validation
-- **SQLAlchemy 2.0** for ORM
-- **Alembic** for database migrations
-- **LangChain** for AI orchestration
-- **Google Gemini** for AI capabilities
 
-### Database & Infrastructure
+### Storage & Database
+- **PostgreSQL 16** for persistent relational data
+- **Redis 7** for caching and message queuing
+- **Google Cloud Storage** for file uploads
 
-- **PostgreSQL 16** (Alpine) for relational database
-- **pgAdmin 9.9** for database management
-- **Docker & Docker Compose** for containerization
-- **Alembic** for version-controlled schema migrations
-- **Google Cloud Storage** (GCS) for file storage
-- **Google Cloud Secret Manager** for production secrets
+### Infrastructure & Deployment
+- **Docker** for containerization
+- **Google Cloud Run** for serverless deployment
+- **Google Cloud SQL** for managed PostgreSQL
+- **Google Cloud Secret Manager** for secrets management
+- **GitHub Actions** for CI/CD
 
-### Development Tools
+---
 
-- **Black** & **Ruff** for Python code quality
-- **pytest** for backend testing
-- **pre-commit** for automated code checks
+## 📺 Demo Videos
 
-## Project Structure
+### Commercial Video
 
-```
-ngam-je/
-├── frontend/              # Next.js application
-│   ├── src/
-│   │   ├── app/          # Next.js App Router
-│   │   ├── components/   # React components
-│   │   └── lib/          # Utilities
-│   └── package.json
-├── backend/              # FastAPI application
-│   ├── src/
-│   │   ├── app/         # API routes & business logic
-│   │   ├── models/      # SQLAlchemy models
-│   │   ├── schemas/     # Pydantic schemas
-│   │   └── database.py  # Database configuration
-│   ├── alembic/         # Database migrations
-│   ├── tests/           # Backend tests
-│   └── pyproject.toml
-├── docs/                # Documentation
-│   ├── docker/          # Docker setup guides
-│   ├── database/        # Database & Alembic guides
-│   ├── features/        # Feature documentation
-│   └── git/             # Git workflow guides
-├── git-scripts/         # Git automation scripts
-├── docker-compose.yml   # Docker services configuration
-└── README.md
-```
+<!-- Add your commercial video here -->
+<video controls src=""></video>
 
-## Quick Start
+---
 
-### Prerequisites
+### Full Featured Walkthrough
 
-- **Docker** (20.10+) & **Docker Compose** (2.0+)
-- **Python 3.12**
-- **Bun** (latest)
-- **uv** - Python package manager ([install](https://docs.astral.sh/uv/))
-- **Git**
+<div align="center">
 
-### 1. Clone the Repository
+  <p><h3>AI-Powered Marketplace Features</h3>
+  "Ngam-je uses AI to understand your buying and selling needs, matches you with the perfect counterpart, and even negotiates deals on your behalf."
+  <!-- Add your walkthrough video here -->
+  <video controls muted src=""></video></p>
 
-```bash
-git clone <repository-url>
-cd ngam-je
-```
+</div>
 
-### 2. Start Database Services
+---
 
-```bash
-# Start PostgreSQL and pgAdmin
-docker compose up -d
-```
+## 🎯 Key Features
 
-**Access Services:**
-- PostgreSQL: `localhost:5432`
-- pgAdmin: http://localhost:5050 (Email: `admin@localhost.com`, Password: `admin`)
+### 🤖 AI Matching Algorithm
+Intelligent matching system powered by Google Gemini that analyzes listings and finds the perfect buyer-seller pairs based on:
+- Product details and specifications
+- Pricing compatibility
+- Location proximity
+- User preferences and history
 
-For detailed Docker setup, see [Docker Setup Guide](docs/docker/setup.md).
+### 💬 Automated Negotiations
+AI agents that negotiate on behalf of buyers and sellers:
+- Real-time price negotiations
+- Smart counteroffers based on market data
+- Win-win deal finding
+- Transparent negotiation history
 
-### 3. Backend Setup
+### 📊 Price Intelligence
+Market research and price analysis using SerpAPI:
+- Real-time market price comparison
+- Price trend analysis
+- Competitive pricing suggestions
+- Historical price data
 
-```bash
-cd backend
+### 🎨 AI Content Generation
+Automated listing creation and enhancement:
+- AI-generated product descriptions
+- Image enhancement and generation
+- Tag and category suggestions
+- FAQ generation from product details
 
-# Install dependencies
-uv sync
+### 🔐 Secure Authentication & Payments
+Enterprise-grade security and payment processing:
+- Clerk authentication with social login
+- Multi-factor authentication
+- Role-based access control
+- Stripe payment integration
+- Subscription management
 
-# Run database migrations
-uv run alembic upgrade head
+---
 
-# Start development server
-uv run fastapi dev
-```
+## 👥 Team
 
-The API will be available at http://localhost:8000
+<!-- Add your team members here -->
+- **Darren Siew Jun Zhen** - [@DarrenSJZ](https://github.com/DarrenSJZ)
+- Add other team members...
 
-**API Documentation:**
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+---
 
-For detailed backend setup, see [Backend README](backend/README.md).
+## 👏 Acknowledgements
 
-### 4. Frontend Setup
+Thanks to the amazing open-source community and tool maintainers. Built with:
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Next.js](https://nextjs.org/)
+- [Google Gemini](https://ai.google.dev/)
+- [Clerk](https://clerk.com/)
+- [Stripe](https://stripe.com/)
+- [Shadcn/UI](https://ui.shadcn.com/)
 
-```bash
-cd frontend
+Special thanks to **Gamuda AI Academy** for the guidance and support throughout Cohort 4.
 
-# Install dependencies
-bun install
+---
 
-# Start development server
-bun dev
-```
-
-The frontend will be available at http://localhost:3000
-
-## Development Workflow
-
-### Database Migrations
-
-We use **Alembic** for version-controlled database schema changes (think "Git for databases"):
-
-```bash
-cd backend
-
-# Create a new migration after changing models
-uv run alembic revision --autogenerate -m "add user profiles"
-
-# Apply migrations
-uv run alembic upgrade head
-
-# Rollback last migration
-uv run alembic downgrade -1
-
-# View migration history
-uv run alembic history
-```
-
-For a comprehensive guide on Alembic, see [Database Migration Guide](docs/database/alembic-guide.md).
-
-### Code Quality
-
-**Backend:**
-```bash
-cd backend
-
-# Format code
-uv run black src/
-
-# Lint code
-uv run ruff check src/
-
-# Run tests
-uv run pytest
-```
-
-**Frontend:**
-```bash
-cd frontend
-
-# Lint code
-bun run lint
-
-# Type check
-bun run type-check
-```
-
-### Adding Dependencies
-
-**Backend:**
-```bash
-cd backend
-uv add package-name              # Production dependency
-uv add --dev package-name        # Development dependency
-```
-
-**Frontend:**
-```bash
-cd frontend
-bun add package-name             # Production dependency
-bun add --dev package-name       # Development dependency
-```
-
-## Documentation
-
-- [Docker Setup Guide](docs/docker/setup.md) - Complete Docker and database setup
-- [Backend README](backend/README.md) - Backend architecture and development
-- [Database Migration Guide](docs/database/alembic-guide.md) - Alembic workflow and best practices
-- [Git Workflow Guide](docs/git-workflow.md) - Git Flow strategy and conventions
-
-## Architecture
-
-This project follows a **monorepo architecture** with clear separation between frontend and backend:
-
-- **Frontend**: Next.js with App Router, server-side rendering
-- **Backend**: FastAPI with layered architecture (API → Services → Models)
-- **Database**: PostgreSQL with SQLAlchemy ORM and Alembic migrations
-- **Infrastructure**: Docker Compose for local development, GCP for production
-
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Create a feature branch: `git checkout -b feat/your-feature`
-2. Make your changes following our code style
-3. Run tests and linting
-4. Commit with conventional commits: `feat:`, `fix:`, `docs:`, etc.
-5. Push and create a Pull Request
-
-For detailed guidelines, see [Backend Contributing](backend/README.md#contributing).
-
-## License
+## 📄 License
 
 See LICENSE file for details.
