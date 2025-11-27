@@ -180,7 +180,7 @@ This project was developed as the capstone project for Gamuda AI Academy Cohort 
 
 ## 👏 Acknowledgements
 
-Thanks to the amazing open-source community and tool maintainers. Built with:
+Thanks to the amazing open-source community and tool maintainers.
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Next.js](https://nextjs.org/)
 - [Google Gemini](https://ai.google.dev/)
